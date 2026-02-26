@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "exam-suchana",
+  "private_key_id": "8d23e82d708205e2fe486dfe77dc846cba500e8b",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC+5uC1ge0u010x\n8CiwLMuymsXemKFz/kPUZO2+DOrjRSytduTG+tiRJrUXWif7vZivmFrf0xy66K/o\nroWn3yWxzPqt98sbsiI0d8nx75clIosC1b4tswjKK3vcVDbjieKyAETMYZkoFyWR\nXlE8Qu4zl/Z7R9Mc07OQYTLB3MV5NbuuhdkjmMO8UpkYpioyTdBp0+a4tGOW8oTu\nAXa4sOWRrB/4QO6Z9G2wgc4dXaCmJpHi+W1JGm9P8WXKn749cANDwZkkHjsryu4v\n6hpto21slybFxZ7hkx0TM6rUfBYKwB7/F+pbMfd/VOT5yU/O49/zNB5XS/0z/Yvl\n2xhAMFNzAgMBAAECggEAD5S+gHIDTtAXiizk1URCt+gkAEAK5XG6TYqTUPCy9yu9\nMsdCcu8kX+x92VMVclmOLb7Mo/oSHTtCqEYeSI5RAEsPpsVTwYXvfsLMK7/3YSOJ\nnwidBhPXwtB7wobpF/c4FnkpJFlO69O/0DaXgMihsnpTtsos8+xfeohEYUhIodTZ\nvZOr4CimCyW9UDU1uTNufdwJ5y4B9TTnafdCkGg1xA5Db9AsRAVBtp3CEBspfCA0\nWKDKdA0AmHECu8QPU0sAWvO8QtTMgcdl6HjOjI32GA61UU5D4FtcRrDvko2IX0b2\nmU8v3a+kM7YtUDifNQpbctek6VKlCaikGMpDVJ3+qQKBgQDrQlLLM/jzE5phEU9i\nch2HoW4VsMJjzWXVXJw4uDUwPvYyZEb3jqYvcEIbiRt8zfLyOFLA7jr4OiaSoWXT\npUz64JI29zZNCAjVCedxTGc0SSdGiSq+k/XziYOfmNewTsJ+NbfcPI46+49FCepD\n6gbifEx9oH+qk92sHX1jsLWznQKBgQDPu29V7LpFiqBc4ggOCVu1H2F5AdLWCyvi\nZp/wuZD/WVBYx4opYgy8gpt1nNy+2O81wwFEaXK+2l6neeEVvyBq1iOZkcpuwhTo\n9dRhLgmCUIexJHS5OFpeOoSfbiD6olJw3cYJATrJOnsngO+uWFIspPDsnuPBsVJI\nJLes3F+eTwKBgGSx76QgK7dHNbXEZfkaJP+PngHUtW9oU+T+DbPNTJ7I5DHvb9y4\nBvOZFgKZLdW+hPUeHHWNwlnK8gWi5WWwhAGBq7OxHmHcRYOCCLka3bWodhIf1dba\nl9RUkKz4C6HgJClHLtoqZSpj0A/ZzZaiDa5VS5wd3WcSgTgRK0FHOo6VAoGBAL8G\nU8mmGVzdr736NQIDZQvXwaCvJpyiRUa6rJWHb2kBTrt1Mv3/Jksrp52uE+iEQOUl\nX8LzXQtYb/Z+Q5fl2/+iz7XmtUrIusXHWffLh/8H4t/o8FVrFt7T3SVm9njEUB9u\nMTASq2Zkmt+m18Fxgo9/VfWh3zs8vreM3ELfnCZNAoGAJzwLPLNoweuPjzWZzcld\nOFDV7kEPKKyXOKq1vC2a+MMK+35gPPpWclsW+DOWXxoiSWQa3L2P8FTLLcosn6Jm\n9Et7FhMPNhbOi5iObzjSJxS2ip1Mr43RVyhKuoolGVu0BpwQQO2sBNVWx5umbiBk\ndBchaNmdDfXgirwOdLKAEGE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "exam-suchana@exam-suchana.iam.gserviceaccount.com",
+  "client_id": "118355940963664309211",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/exam-suchana%40exam-suchana.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
