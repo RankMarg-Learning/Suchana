@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 import { API_CONFIG } from '../config/api.config';
-import { ExamCategory, ExamLevel, ExamStatus, LifecycleEventType } from '../constants/enums';
+import { ExamCategory, ExamLevel, ExamStatus, LifecycleEventType, LifecycleStage } from '../constants/enums';
 
 const apiClient = axios.create({
     baseURL: API_CONFIG.BASE_URL,
@@ -31,13 +31,13 @@ export interface LifecycleEvent {
     id: string;
     examId: string;
     eventType: LifecycleEventType;
-    stage?: string;
+    stage: LifecycleStage;
     title: string;
     description?: string;
     startsAt?: string;
     endsAt?: string;
     isTBD: boolean;
-    isConfirmed: boolean;
+    isImportant: boolean;
     actionUrl?: string;
     actionLabel?: string;
 }

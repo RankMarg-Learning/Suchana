@@ -1,6 +1,3 @@
-// ============================================================
-// src/middleware/errorHandler.ts  — Global Express error handler
-// ============================================================
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { sendError } from '../utils/apiResponse';
@@ -34,7 +31,6 @@ function isPrismaKnownError(err: unknown): err is PrismaKnownError {
     );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function errorHandler(
     err: unknown,
     req: Request,
@@ -49,19 +45,16 @@ export function errorHandler(
         method: req.method,
     });
 
-    // Known operational error
     if (err instanceof AppError) {
         sendError(res, err.statusCode, err.code, err.message, err.details);
         return;
     }
 
-    // Zod validation error
     if (err instanceof ZodError) {
         sendError(res, 422, 'VALIDATION_ERROR', 'Invalid request data', err.flatten());
         return;
     }
 
-    // Prisma known request errors (P2xxx codes)
     if (isPrismaKnownError(err)) {
         if (err.code === 'P2002') {
             sendError(res, 409, 'CONFLICT', 'A record with this identifier already exists', {
@@ -79,11 +72,9 @@ export function errorHandler(
         return;
     }
 
-    // Unknown / unexpected
     sendError(res, 500, 'INTERNAL_SERVER_ERROR', 'An unexpected error occurred');
 }
 
-// 404 handler
 export function notFoundHandler(req: Request, res: Response): void {
     sendError(res, 404, 'ROUTE_NOT_FOUND', `Cannot ${req.method} ${req.path}`);
 }

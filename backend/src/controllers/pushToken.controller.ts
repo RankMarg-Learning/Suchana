@@ -1,6 +1,3 @@
-// ============================================================
-// src/controllers/pushToken.controller.ts  — Push token HTTP handlers
-// ============================================================
 import { Request, Response, NextFunction } from 'express';
 import * as pushTokenService from '../services/pushToken.service';
 import { sendSuccess } from '../utils/apiResponse';

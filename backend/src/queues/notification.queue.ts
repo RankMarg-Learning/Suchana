@@ -1,6 +1,3 @@
-// ============================================================
-// src/queues/notification.queue.ts  — BullMQ notification queue
-// ============================================================
 import { Queue } from 'bullmq';
 import { bullRedisConnection } from '../config/redis';
 import { logger } from '../utils/logger';

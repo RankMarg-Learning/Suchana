@@ -1,6 +1,3 @@
-// ============================================================
-// src/workers/notification.worker.ts  — BullMQ notification worker
-// ============================================================
 import { Worker, Job } from 'bullmq';
 import { bullRedisConnection } from '../config/redis';
 import prisma from '../config/database';
@@ -10,7 +7,6 @@ import { logger } from '../utils/logger';
 import { env } from '../config/env';
 import { NotificationStatus } from '../constants/enums';
 
-// ─── FCM Sender (stub — replace with firebase-admin in production) ──────────
 interface FcmResult {
     successCount: number;
     failureCount: number;
@@ -25,7 +21,6 @@ async function sendFcmNotification(
 ): Promise<FcmResult> {
     if (!env.FCM_PROJECT_ID || !env.FCM_CLIENT_EMAIL || !env.FCM_PRIVATE_KEY) {
         logger.warn('FCM credentials not configured — notification delivery skipped (dev mode)');
-        // In dev mode, simulate success
         return { successCount: tokens.length, failureCount: 0 };
     }
 

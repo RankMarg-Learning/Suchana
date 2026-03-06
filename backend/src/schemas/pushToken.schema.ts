@@ -1,6 +1,3 @@
-// ============================================================
-// src/schemas/pushToken.schema.ts  — Zod schemas for push tokens
-// ============================================================
 import { z } from 'zod';
 import { PushPlatform } from '../constants/enums';
 

@@ -57,16 +57,6 @@ export async function addLifecycleEvent(
         },
     });
 
-    await prisma.adminAuditLog.create({
-        data: {
-            adminId,
-            action: 'CREATE_LIFECYCLE_EVENT',
-            entityType: 'LifecycleEvent',
-            entityId: event.id,
-            afterState: event as unknown as Prisma.InputJsonValue,
-        },
-    });
-
     // Invalidate exam timeline cache
     await cacheService.del(TIMELINE_CACHE_KEY(examId));
     await cacheService.delPattern('exams:list:*');
@@ -111,16 +101,6 @@ export async function updateLifecycleEvent(
         },
     });
 
-    await prisma.adminAuditLog.create({
-        data: {
-            adminId,
-            action: 'UPDATE_LIFECYCLE_EVENT',
-            entityType: 'LifecycleEvent',
-            entityId: eventId,
-            beforeState: existing as unknown as Prisma.InputJsonValue,
-            afterState: updated as unknown as Prisma.InputJsonValue,
-        },
-    });
 
     await cacheService.del(TIMELINE_CACHE_KEY(examId));
 
@@ -153,15 +133,6 @@ export async function deleteLifecycleEvent(examId: string, eventId: string, admi
 
     await prisma.lifecycleEvent.delete({ where: { id: eventId } });
 
-    await prisma.adminAuditLog.create({
-        data: {
-            adminId,
-            action: 'DELETE_LIFECYCLE_EVENT',
-            entityType: 'LifecycleEvent',
-            entityId: eventId,
-            beforeState: existing as unknown as Prisma.InputJsonValue,
-        },
-    });
 
     await notificationQueue.removeJob(eventId);
     await cacheService.del(TIMELINE_CACHE_KEY(examId));

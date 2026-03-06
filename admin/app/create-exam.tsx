@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TextInput, 
-  TouchableOpacity, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TextInput,
+  TouchableOpacity,
   Alert,
   ActivityIndicator,
   Switch,
@@ -55,7 +55,7 @@ export default function CreateExamScreen() {
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
-  
+
   const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<ExamFormValues>({
     defaultValues: {
       category: ExamCategory.OTHER,
@@ -114,13 +114,13 @@ export default function CreateExamScreen() {
     try {
       setLoading(true);
       const payload = {
-        title: data.title,
-        shortTitle: data.shortTitle,
-        conductingBody: data.conductingBody,
+        title: data.title?.trim(),
+        shortTitle: data.shortTitle?.trim(),
+        conductingBody: data.conductingBody?.trim(),
         category: data.category,
         examLevel: data.examLevel,
         status: data.status,
-        state: data.examLevel === ExamLevel.STATE ? data.state : null,
+        state: data.examLevel === ExamLevel.STATE ? data.state?.trim() : null,
         minAge: data.minAge ? parseInt(data.minAge, 10) : null,
         maxAge: data.maxAge ? parseInt(data.maxAge, 10) : null,
         qualificationCriteria: {
@@ -132,7 +132,7 @@ export default function CreateExamScreen() {
         description: data.description?.trim() || null,
         isPublished: data.isPublished,
       };
-      
+
       if (isEdit) {
         await examService.updateExam(id as string, payload);
         Alert.alert('Success', 'Exam updated successfully');
@@ -145,8 +145,8 @@ export default function CreateExamScreen() {
       console.error(err);
       let errorMsg = `Failed to ${isEdit ? 'update' : 'create'} exam`;
       if (err.response?.data?.errors) {
-        errorMsg = typeof err.response.data.errors === 'string' 
-          ? err.response.data.errors 
+        errorMsg = typeof err.response.data.errors === 'string'
+          ? err.response.data.errors
           : Object.values(err.response.data.errors).join('\n');
       } else if (err.response?.data?.message) {
         errorMsg = err.response.data.message;
@@ -167,14 +167,19 @@ export default function CreateExamScreen() {
   }
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       style={{ flex: 1 }}
     >
       <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-        <Stack.Screen options={{ title: isEdit ? 'Edit Exam' : 'Create New Exam' }} />
+        <Stack.Screen options={{
+          title: isEdit ? 'Edit Exam' : 'Create New Exam',
+          headerTitleStyle: { fontWeight: '800' }
+        }} />
 
         <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Basic Information</Text>
+
           <Text style={styles.label}>Full Exam Title *</Text>
           <Controller
             control={control}
@@ -234,9 +239,9 @@ export default function CreateExamScreen() {
             render={({ field: { onChange, value } }) => (
               <View style={styles.chipContainer}>
                 {LEVELS.map(lvl => (
-                  <TouchableOpacity 
-                    key={lvl} 
-                    style={[styles.chip, value === lvl && styles.chipActive]} 
+                  <TouchableOpacity
+                    key={lvl}
+                    style={[styles.chip, value === lvl && styles.chipActive]}
                     onPress={() => onChange(lvl)}
                   >
                     <Text style={[styles.chipText, value === lvl && styles.chipTextActive]}>{lvl}</Text>
@@ -273,12 +278,14 @@ export default function CreateExamScreen() {
               <View style={styles.categoryContainer}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryScroll}>
                   {CATEGORIES.map(cat => (
-                    <TouchableOpacity 
-                      key={cat} 
-                      style={[styles.categoryChip, value === cat && styles.categoryChipActive]} 
+                    <TouchableOpacity
+                      key={cat}
+                      style={[styles.categoryChip, value === cat && styles.categoryChipActive]}
                       onPress={() => onChange(cat)}
                     >
-                      <Text style={[styles.categoryChipText, value === cat && styles.categoryChipTextActive]}>{cat}</Text>
+                      <Text style={[styles.categoryChipText, value === cat && styles.categoryChipTextActive]}>
+                        {cat.replace(/_/g, ' ')}
+                      </Text>
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
@@ -293,12 +300,14 @@ export default function CreateExamScreen() {
             render={({ field: { onChange, value } }) => (
               <View style={styles.chipContainer}>
                 {STATUSES.map(stat => (
-                  <TouchableOpacity 
-                    key={stat} 
-                    style={[styles.chip, value === stat && styles.chipActive]} 
+                  <TouchableOpacity
+                    key={stat}
+                    style={[styles.chip, value === stat && styles.chipActive]}
                     onPress={() => onChange(stat)}
                   >
-                    <Text style={[styles.chipText, value === stat && styles.chipTextActive]}>{stat}</Text>
+                    <Text style={[styles.chipText, value === stat && styles.chipTextActive]}>
+                      {stat.replace(/_/g, ' ')}
+                    </Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -324,7 +333,7 @@ export default function CreateExamScreen() {
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Eligibility & Details</Text>
-          
+
           <View style={styles.row}>
             <View style={{ flex: 1, marginRight: 8 }}>
               <Text style={styles.label}>Min Age</Text>
@@ -367,9 +376,9 @@ export default function CreateExamScreen() {
             render={({ field: { onChange, value } }) => (
               <View style={styles.chipContainer}>
                 {QUALIFICATIONS.map(q => (
-                  <TouchableOpacity 
-                    key={q.value} 
-                    style={[styles.chip, value === q.value && styles.chipActive]} 
+                  <TouchableOpacity
+                    key={q.value}
+                    style={[styles.chip, value === q.value && styles.chipActive]}
                     onPress={() => onChange(q.value)}
                   >
                     <Text style={[styles.chipText, value === q.value && styles.chipTextActive]}>{q.label}</Text>
@@ -451,8 +460,8 @@ export default function CreateExamScreen() {
           </View>
         </View>
 
-        <TouchableOpacity 
-          style={[styles.submitButton, loading && styles.disabledButton]} 
+        <TouchableOpacity
+          style={[styles.submitButton, loading && styles.disabledButton]}
           onPress={handleSubmit(onSubmit)}
           disabled={loading}
         >
@@ -470,7 +479,7 @@ export default function CreateExamScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#F5F7FA',
   },
   content: {
     padding: 16,
@@ -480,70 +489,76 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#F5F7FA',
   },
   loadingText: {
     marginTop: 10,
     color: '#666',
+    fontWeight: '600',
   },
   card: {
     backgroundColor: '#FFF',
-    borderRadius: 16,
-    padding: 16,
+    borderRadius: 20,
+    padding: 20,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05,
-    shadowRadius: 5,
-    elevation: 2,
+    shadowRadius: 10,
+    elevation: 3,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#333',
-    marginBottom: 16,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#1A1A1A',
+    marginBottom: 20,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+    paddingLeft: 12,
   },
   label: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: '700',
+    color: '#444',
     marginBottom: 8,
-    marginTop: 8,
+    marginTop: 12,
   },
   input: {
-    backgroundColor: '#F9F9F9',
+    backgroundColor: '#F9FAFB',
     borderWidth: 1,
-    borderColor: '#EEE',
-    borderRadius: 10,
-    padding: 12,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 14,
     fontSize: 16,
-    color: '#333',
+    color: '#1A1A1A',
   },
   textArea: {
-    height: 100,
+    height: 120,
     textAlignVertical: 'top',
   },
   chipContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginVertical: 8,
+    marginVertical: 4,
   },
   chip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: '#EEE',
+    borderColor: '#E5E7EB',
   },
   chipActive: {
-    backgroundColor: '#E3F2FD',
+    backgroundColor: '#EEF6FF',
     borderColor: '#2196F3',
   },
   chipText: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#666',
+    fontWeight: '700',
+    color: '#6B7280',
+    textTransform: 'capitalize',
   },
   chipTextActive: {
     color: '#2196F3',
@@ -553,15 +568,15 @@ const styles = StyleSheet.create({
   },
   categoryScroll: {
     paddingRight: 16,
-    gap: 8,
+    gap: 10,
   },
   categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 100,
-    backgroundColor: '#F0F0F0',
+    paddingHorizontal: 18,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: '#F3F4F6',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#E5E7EB',
   },
   categoryChipActive: {
     backgroundColor: '#2196F3',
@@ -569,25 +584,26 @@ const styles = StyleSheet.create({
   },
   categoryChipText: {
     fontSize: 13,
-    color: '#666',
-    fontWeight: '600',
+    color: '#4B5563',
+    fontWeight: '700',
   },
   categoryChipTextActive: {
     color: '#FFF',
   },
   inputError: {
-    borderColor: '#F44336',
+    borderColor: '#EF4444',
   },
   errorText: {
-    color: '#F44336',
+    color: '#EF4444',
     fontSize: 12,
     marginTop: 4,
+    fontWeight: '600',
   },
   row: {
     flexDirection: 'row',
   },
   publishCard: {
-    paddingVertical: 12,
+    paddingVertical: 16,
   },
   switchRow: {
     flexDirection: 'row',
@@ -596,27 +612,33 @@ const styles = StyleSheet.create({
   },
   publishTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     color: '#1A1A1A',
   },
   publishSubtitle: {
     fontSize: 12,
-    color: '#666',
+    color: '#6B7280',
     marginTop: 2,
   },
   submitButton: {
     backgroundColor: '#2196F3',
-    borderRadius: 12,
-    padding: 18,
+    borderRadius: 16,
+    padding: 20,
     alignItems: 'center',
     marginTop: 8,
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 6,
   },
   disabledButton: {
-    backgroundColor: '#BBDEFB',
+    backgroundColor: '#93C5FD',
   },
   submitButtonText: {
     color: '#FFF',
     fontSize: 16,
     fontWeight: '800',
+    letterSpacing: 0.5,
   },
 });

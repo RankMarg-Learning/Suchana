@@ -1,10 +1,6 @@
-// ============================================================
-// src/schemas/exam.schema.ts  — Zod schemas for Exam endpoints
-// ============================================================
 import { z } from 'zod';
 import { ExamCategory, ExamStatus, ExamLevel } from '../constants/enums';
 
-// ─── Create Exam ────────────────────────────────────────────
 export const createExamSchema = z.object({
     title: z.string().min(5, 'Title must be at least 5 characters').max(200),
     shortTitle: z.string().min(2).max(50),
@@ -23,14 +19,12 @@ export const createExamSchema = z.object({
     isPublished: z.boolean().default(false),
 });
 
-// ─── Update Exam ────────────────────────────────────────────
 export const updateExamSchema = createExamSchema
     .partial()
     .extend({
         status: z.nativeEnum(ExamStatus).optional(),
     });
 
-// ─── List Exams Query ────────────────────────────────────────
 export const listExamQuerySchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
@@ -43,7 +37,6 @@ export const listExamQuerySchema = z.object({
     state: z.string().optional(),
 });
 
-// ─── Exam ID param ──────────────────────────────────────────
 export const examIdParamSchema = z.object({
     id: z.string().min(1, 'Exam ID is required'),
 });

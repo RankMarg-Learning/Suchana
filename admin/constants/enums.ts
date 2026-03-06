@@ -1,19 +1,13 @@
-// ============================================================
-// admin/constants/enums.ts — Mirroring backend enums
-// ============================================================
-
 export const ExamCategory = {
-    UPSC: 'UPSC',
-    SSC: 'SSC',
-    BANKING: 'BANKING',
-    RAILWAY: 'RAILWAY',
-    DEFENCE: 'DEFENCE',
-    STATE_PSC: 'STATE_PSC',
-    TEACHING: 'TEACHING',
-    POLICE: 'POLICE',
-    MEDICAL: 'MEDICAL',
-    ENGINEERING: 'ENGINEERING',
-    LAW: 'LAW',
+    BANKING: 'BANKING',    // SBI, IBPS, RBI, NABARD
+    SSC: 'SSC',        // SSC CGL, CHSL, MTS, GD
+    RAILWAYS: 'RAILWAYS',   // RRB NTPC, Group D, ALP
+    UPSC: 'UPSC',       // Civil Services, CAPF, CDS, NDA
+    STATE_PSC: 'STATE_PSC',  // BPSC, UPPSC, MPSC, RPSC
+    DEFENCE: 'DEFENCE',    // NDA, CDS, AFCAT, Navy
+    TEACHING: 'TEACHING',   // CTET, STET, KVS, NVS
+    POLICE: 'POLICE',     // UP Police, Delhi Police, CRPF
+    INSURANCE: 'INSURANCE',  // LIC, NIACL, GIC
     OTHER: 'OTHER',
 } as const;
 
@@ -23,38 +17,53 @@ export const ExamLevel = {
     NATIONAL: 'NATIONAL',
     STATE: 'STATE',
     DISTRICT: 'DISTRICT',
-    OTHER: 'OTHER',
 } as const;
 
 export type ExamLevel = (typeof ExamLevel)[keyof typeof ExamLevel];
 
 export const ExamStatus = {
     UPCOMING: 'UPCOMING',
-    ACTIVE: 'ACTIVE',
-    COMPLETED: 'COMPLETED',
-    CANCELLED: 'CANCELLED',
+    REGISTRATION_OPEN: 'REGISTRATION_OPEN',
+    REGISTRATION_CLOSED: 'REGISTRATION_CLOSED',
+    ADMIT_CARD_OUT: 'ADMIT_CARD_OUT',
+    EXAM_ONGOING: 'EXAM_ONGOING',
+    RESULT_DECLARED: 'RESULT_DECLARED',
+    ARCHIVED: 'ARCHIVED',
 } as const;
 
 export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
 
-export const LifecycleEventType = {
-    NOTIFICATION_OUT: 'NOTIFICATION_OUT',
+export const LifecycleStage = {
+    NOTIFICATION: 'NOTIFICATION',
     REGISTRATION: 'REGISTRATION',
-    CORRECTION_WINDOW: 'CORRECTION_WINDOW',
-    EXAM_CITY_INTIMATION: 'EXAM_CITY_INTIMATION',
-    ADMIT_CARD_RELEASE: 'ADMIT_CARD_RELEASE',
-    EXAM_DATE: 'EXAM_DATE',
-    ANSWER_KEY_PROVISIONAL: 'ANSWER_KEY_PROVISIONAL',
-    ANSWER_KEY_FINAL: 'ANSWER_KEY_FINAL',
+    ADMIT_CARD: 'ADMIT_CARD',
+    EXAM: 'EXAM',
+    ANSWER_KEY: 'ANSWER_KEY',
     RESULT: 'RESULT',
-    SCORE_CARD_RELEASE: 'SCORE_CARD_RELEASE',
-    CUTOFF_RELEASE: 'CUTOFF_RELEASE',
-    PHYSICAL_TEST: 'PHYSICAL_TEST',
-    SKILL_TEST: 'SKILL_TEST',
-    INTERVIEW: 'INTERVIEW',
     DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',
-    FINAL_MERIT_LIST: 'FINAL_MERIT_LIST',
-    JOINING_DATE: 'JOINING_DATE',
+    JOINING: 'JOINING',
+} as const;
+
+export type LifecycleStage = (typeof LifecycleStage)[keyof typeof LifecycleStage];
+
+export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
+    NOTIFICATION: 10,
+    REGISTRATION: 20,
+    ADMIT_CARD: 30,
+    EXAM: 40,
+    ANSWER_KEY: 50,
+    RESULT: 60,
+    DOCUMENT_VERIFICATION: 70,
+    JOINING: 80,
+};
+
+export const LifecycleEventType = {
+    RELEASE: 'RELEASE',     // Notification out, admit card released, result out
+    START: 'START',       // Registration window opens, exam starts
+    END: 'END',         // Last date to apply, form submission closes
+    CORRECTION: 'CORRECTION',  // Form correction window
+    RESCHEDULED: 'RESCHEDULED', // Event date changed
+    CANCELLED: 'CANCELLED',   // Event cancelled
     OTHER: 'OTHER',
 } as const;
 

@@ -1,6 +1,3 @@
-// ============================================================
-// src/routes/exam.routes.ts
-// ============================================================
 import { Router } from 'express';
 import * as examController from '../controllers/exam.controller';
 import * as lifecycleController from '../controllers/lifecycle.controller';

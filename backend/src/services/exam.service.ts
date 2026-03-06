@@ -1,6 +1,3 @@
-// ============================================================
-// src/services/exam.service.ts  — Exam CRUD business logic
-// ============================================================
 import { Prisma } from '@prisma/client';
 import { ExamCategory, ExamStatus, ExamLevel } from '../constants/enums';
 import prisma from '../config/database';
@@ -14,7 +11,6 @@ import { logger } from '../utils/logger';
 const EXAM_LIST_CACHE_KEY = 'exams:list';
 const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams: detail:${id} `;
 
-// ─── List / Search ───────────────────────────────────────────
 export async function listExams(query: ListExamQuery) {
     const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state } = query;
     const cacheKey = `${EXAM_LIST_CACHE_KEY}:${JSON.stringify(query)} `;
@@ -121,16 +117,6 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
         },
     });
 
-    // Audit
-    await prisma.adminAuditLog.create({
-        data: {
-            adminId,
-            action: 'CREATE_EXAM',
-            entityType: 'Exam',
-            entityId: exam.id,
-            afterState: exam as unknown as Prisma.InputJsonValue,
-        },
-    });
 
     // Invalidate list cache
     await cacheService.delPattern('exams:list:*');
@@ -154,18 +140,7 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
 
     const updated = await prisma.exam.update({ where: { id }, data });
 
-    await prisma.adminAuditLog.create({
-        data: {
-            adminId,
-            action: 'UPDATE_EXAM',
-            entityType: 'Exam',
-            entityId: id,
-            beforeState: existing as unknown as Prisma.InputJsonValue,
-            afterState: updated as unknown as Prisma.InputJsonValue,
-        },
-    });
 
-    // Invalidate caches
     await Promise.all([
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),
         cacheService.del(`exams: slug:${existing.slug} `),
@@ -182,15 +157,6 @@ export async function deleteExam(id: string, adminId: string) {
 
     await prisma.exam.delete({ where: { id } });
 
-    await prisma.adminAuditLog.create({
-        data: {
-            adminId,
-            action: 'DELETE_EXAM',
-            entityType: 'Exam',
-            entityId: id,
-            beforeState: existing as unknown as Prisma.InputJsonValue,
-        },
-    });
 
     await Promise.all([
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),

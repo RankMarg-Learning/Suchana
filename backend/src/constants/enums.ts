@@ -35,9 +35,6 @@ export const ExamStatus = {
 export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
 export const EXAM_STATUSES = Object.values(ExamStatus);
 
-// ─── Lifecycle Stage ──────────────────────────────────────────
-// Used: LifecycleEvent.stage, StagedLifecycleEvent.stage
-// stageOrder MUST match STAGE_ORDER_MAP below for correct timeline rendering.
 export const LifecycleStage = {
     NOTIFICATION: 'NOTIFICATION',           // stageOrder: 10
     REGISTRATION: 'REGISTRATION',           // stageOrder: 20
@@ -51,8 +48,6 @@ export const LifecycleStage = {
 export type LifecycleStage = (typeof LifecycleStage)[keyof typeof LifecycleStage];
 export const LIFECYCLE_STAGES = Object.values(LifecycleStage);
 
-// The canonical sort order for timeline display.
-// When inserting staged events into LifecycleEvent, use this map to set stageOrder.
 export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
     NOTIFICATION: 10,
     REGISTRATION: 20,
@@ -66,7 +61,7 @@ export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
 
 // ─── Event Type (fine-grained within a stage) ─────────────────
 // Used: LifecycleEvent.eventType, StagedLifecycleEvent.eventType
-export const EventType = {
+export const LifecycleEventType = {
     RELEASE: 'RELEASE',     // Notification out, admit card released, result out
     START: 'START',       // Registration window opens, exam starts
     END: 'END',         // Last date to apply, form submission closes
@@ -75,8 +70,8 @@ export const EventType = {
     CANCELLED: 'CANCELLED',   // Event cancelled
     OTHER: 'OTHER',
 } as const;
-export type EventType = (typeof EventType)[keyof typeof EventType];
-export const EVENT_TYPES = Object.values(EventType);
+export type LifecycleEventType = (typeof LifecycleEventType)[keyof typeof LifecycleEventType];
+export const LIFECYCLE_EVENT_TYPES = Object.values(LifecycleEventType);
 
 // ─── Staged Exam Review Status ────────────────────────────────
 // Used: StagedExam.reviewStatus

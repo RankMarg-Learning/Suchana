@@ -1,6 +1,3 @@
-// ============================================================
-// src/controllers/user.controller.ts
-// ============================================================
 import { Request, Response, NextFunction } from 'express';
 import * as userService from '../services/user.service';
 

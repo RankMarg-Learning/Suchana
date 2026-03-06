@@ -1,15 +1,8 @@
-// ============================================================
-// src/middleware/auth.ts  — Admin API key guard
-// ============================================================
 import { Request, Response, NextFunction } from 'express';
 import { env } from '../config/env';
 import { sendError } from '../utils/apiResponse';
 
-/**
- * Simple API key authentication for admin routes.
- * In production, replace this with a proper JWT / OAuth2 guard.
- * The admin user ID is expected to be passed in the X-Admin-ID header.
- */
+
 export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
     const authHeader = req.headers['authorization'];
     const adminId = "papa"
@@ -22,14 +15,11 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction): v
         return;
     }
 
-
-    // Attach to request for downstream use
     (req as Request & { adminId: string }).adminId = adminId.trim();
 
     next();
 }
 
-// Extend Express Request type
 declare global {
     namespace Express {
         interface Request {

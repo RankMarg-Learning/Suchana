@@ -1,28 +1,19 @@
-// ============================================================
-// src/schemas/user.schema.ts — Zod validation for User routes
-// ============================================================
 import { z } from 'zod';
 
 export const registerUserSchema = z.object({
     name: z.string().min(1).max(100),
     phone: z.string().regex(/^\d{10}$/, 'Phone must be 10 digits'),
-    // Location
     state: z.string().optional(),
     city: z.string().optional(),
-    // Eligibility
     dateOfBirth: z.coerce.date().optional(),
     gender: z.enum(['MALE', 'FEMALE', 'OTHER']).optional(),
     qualification: z.enum(['10TH_PASS', '12TH_PASS', 'GRADUATE', 'POST_GRADUATE', 'PHD', 'OTHER']).optional(),
-    // Preferences
     preferredCategories: z.array(z.string()).optional().default([]),
     preferredExamLevel: z.enum(['NATIONAL', 'STATE', 'BOTH']).optional(),
     savedExamIds: z.array(z.string()).optional().default([]),
-    // Occupation
     employmentStatus: z.enum(['STUDENT', 'EMPLOYED', 'UNEMPLOYED', 'OTHER']).optional(),
-    // App
     languagePreference: z.enum(['HINDI', 'ENGLISH']).optional().default('HINDI'),
     notificationsEnabled: z.boolean().optional().default(true),
-    // Push token
     fcmToken: z.string().optional(),
     platform: z.enum(['android', 'ios', 'web']).optional(),
     appVersion: z.string().optional(),

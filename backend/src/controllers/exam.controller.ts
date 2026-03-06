@@ -1,6 +1,3 @@
-// ============================================================
-// src/controllers/exam.controller.ts  — Exam HTTP handlers
-// ============================================================
 import { Request, Response, NextFunction } from 'express';
 import * as examService from '../services/exam.service';
 import { sendSuccess, buildPaginationMeta } from '../utils/apiResponse';
