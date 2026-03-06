@@ -1,65 +1,132 @@
-// ============================================================
-// src/constants/enums.ts  — Application-level enums (flexible)
-// ============================================================
-
 export const ExamCategory = {
-    UPSC: 'UPSC',
-    SSC: 'SSC',
-    BANKING: 'BANKING',
-    RAILWAY: 'RAILWAY',
-    DEFENCE: 'DEFENCE',
-    STATE_PSC: 'STATE_PSC',
-    TEACHING: 'TEACHING',
-    POLICE: 'POLICE',
-    MEDICAL: 'MEDICAL',
-    ENGINEERING: 'ENGINEERING',
-    LAW: 'LAW',
+    BANKING: 'BANKING',    // SBI, IBPS, RBI, NABARD
+    SSC: 'SSC',        // SSC CGL, CHSL, MTS, GD
+    RAILWAYS: 'RAILWAYS',   // RRB NTPC, Group D, ALP
+    UPSC: 'UPSC',       // Civil Services, CAPF, CDS, NDA
+    STATE_PSC: 'STATE_PSC',  // BPSC, UPPSC, MPSC, RPSC
+    DEFENCE: 'DEFENCE',    // NDA, CDS, AFCAT, Navy
+    TEACHING: 'TEACHING',   // CTET, STET, KVS, NVS
+    POLICE: 'POLICE',     // UP Police, Delhi Police, CRPF
+    INSURANCE: 'INSURANCE',  // LIC, NIACL, GIC
     OTHER: 'OTHER',
 } as const;
-
 export type ExamCategory = (typeof ExamCategory)[keyof typeof ExamCategory];
+export const EXAM_CATEGORIES = Object.values(ExamCategory);
+
 
 export const ExamLevel = {
     NATIONAL: 'NATIONAL',
     STATE: 'STATE',
     DISTRICT: 'DISTRICT',
-    OTHER: 'OTHER',
 } as const;
-
 export type ExamLevel = (typeof ExamLevel)[keyof typeof ExamLevel];
+export const EXAM_LEVELS = Object.values(ExamLevel);
+
 
 export const ExamStatus = {
     UPCOMING: 'UPCOMING',
-    ACTIVE: 'ACTIVE',
-    COMPLETED: 'COMPLETED',
-    CANCELLED: 'CANCELLED',
+    REGISTRATION_OPEN: 'REGISTRATION_OPEN',
+    REGISTRATION_CLOSED: 'REGISTRATION_CLOSED',
+    ADMIT_CARD_OUT: 'ADMIT_CARD_OUT',
+    EXAM_ONGOING: 'EXAM_ONGOING',
+    RESULT_DECLARED: 'RESULT_DECLARED',
+    ARCHIVED: 'ARCHIVED',
 } as const;
-
 export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
+export const EXAM_STATUSES = Object.values(ExamStatus);
 
-export const LifecycleEventType = {
-    NOTIFICATION_OUT: 'NOTIFICATION_OUT',
-    REGISTRATION: 'REGISTRATION', // Combined start/end
-    CORRECTION_WINDOW: 'CORRECTION_WINDOW',
-    EXAM_CITY_INTIMATION: 'EXAM_CITY_INTIMATION',
-    ADMIT_CARD_RELEASE: 'ADMIT_CARD_RELEASE',
-    EXAM_DATE: 'EXAM_DATE',
-    ANSWER_KEY_PROVISIONAL: 'ANSWER_KEY_PROVISIONAL',
-    ANSWER_KEY_FINAL: 'ANSWER_KEY_FINAL',
-    RESULT: 'RESULT', // Flexible Result type (Prelims, Mains, etc. passed as Title/Stage)
-    SCORE_CARD_RELEASE: 'SCORE_CARD_RELEASE',
-    CUTOFF_RELEASE: 'CUTOFF_RELEASE',
-    PHYSICAL_TEST: 'PHYSICAL_TEST',
-    SKILL_TEST: 'SKILL_TEST',
-    INTERVIEW: 'INTERVIEW',
-    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',
-    FINAL_MERIT_LIST: 'FINAL_MERIT_LIST',
-    JOINING_DATE: 'JOINING_DATE',
+// ─── Lifecycle Stage ──────────────────────────────────────────
+// Used: LifecycleEvent.stage, StagedLifecycleEvent.stage
+// stageOrder MUST match STAGE_ORDER_MAP below for correct timeline rendering.
+export const LifecycleStage = {
+    NOTIFICATION: 'NOTIFICATION',           // stageOrder: 10
+    REGISTRATION: 'REGISTRATION',           // stageOrder: 20
+    ADMIT_CARD: 'ADMIT_CARD',             // stageOrder: 30
+    EXAM: 'EXAM',                   // stageOrder: 40
+    ANSWER_KEY: 'ANSWER_KEY',             // stageOrder: 50
+    RESULT: 'RESULT',                 // stageOrder: 60
+    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',  // stageOrder: 70
+    JOINING: 'JOINING',                // stageOrder: 80
+} as const;
+export type LifecycleStage = (typeof LifecycleStage)[keyof typeof LifecycleStage];
+export const LIFECYCLE_STAGES = Object.values(LifecycleStage);
+
+// The canonical sort order for timeline display.
+// When inserting staged events into LifecycleEvent, use this map to set stageOrder.
+export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
+    NOTIFICATION: 10,
+    REGISTRATION: 20,
+    ADMIT_CARD: 30,
+    EXAM: 40,
+    ANSWER_KEY: 50,
+    RESULT: 60,
+    DOCUMENT_VERIFICATION: 70,
+    JOINING: 80,
+};
+
+// ─── Event Type (fine-grained within a stage) ─────────────────
+// Used: LifecycleEvent.eventType, StagedLifecycleEvent.eventType
+export const EventType = {
+    RELEASE: 'RELEASE',     // Notification out, admit card released, result out
+    START: 'START',       // Registration window opens, exam starts
+    END: 'END',         // Last date to apply, form submission closes
+    CORRECTION: 'CORRECTION',  // Form correction window
+    RESCHEDULED: 'RESCHEDULED', // Event date changed
+    CANCELLED: 'CANCELLED',   // Event cancelled
     OTHER: 'OTHER',
 } as const;
+export type EventType = (typeof EventType)[keyof typeof EventType];
+export const EVENT_TYPES = Object.values(EventType);
 
-export type LifecycleEventType = (typeof LifecycleEventType)[keyof typeof LifecycleEventType];
+// ─── Staged Exam Review Status ────────────────────────────────
+// Used: StagedExam.reviewStatus
+export const ReviewStatus = {
+    PENDING: 'PENDING',           // AI structured, waiting for admin
+    APPROVED: 'APPROVED',          // Admin approved, moved to Exam table
+    REJECTED: 'REJECTED',          // Admin rejected
+    NEEDS_CORRECTION: 'NEEDS_CORRECTION',  // Admin flagged for AI re-extraction
+} as const;
+export type ReviewStatus = (typeof ReviewStatus)[keyof typeof ReviewStatus];
+export const REVIEW_STATUSES = Object.values(ReviewStatus);
 
+// ─── Scrape Job Status ─────────────────────────────────────────
+// Used: ScrapeJob.status
+export const ScrapeJobStatus = {
+    RUNNING: 'RUNNING',
+    COMPLETED: 'COMPLETED',
+    FAILED: 'FAILED',
+    PARTIAL: 'PARTIAL',   // Some URLs succeeded, some failed
+} as const;
+export type ScrapeJobStatus = (typeof ScrapeJobStatus)[keyof typeof ScrapeJobStatus];
+
+// ─── Scrape Source Type ────────────────────────────────────────
+// Used: ScrapeSource.sourceType
+export const ScrapeSourceType = {
+    LISTING: 'LISTING',  // Page lists multiple exam notifications
+    DETAIL: 'DETAIL',   // Page is about a single exam
+} as const;
+export type ScrapeSourceType = (typeof ScrapeSourceType)[keyof typeof ScrapeSourceType];
+
+// ─── Notification Status ──────────────────────────────────────
+// Used: NotificationLog.status
+export const NotificationStatus = {
+    PENDING: 'PENDING',
+    SENT: 'SENT',
+    PARTIAL: 'PARTIAL',
+    FAILED: 'FAILED',
+} as const;
+export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus];
+
+// ─── Push Platform ─────────────────────────────────────────────
+// Used: PushToken.platform, User.platform
+export const PushPlatform = {
+    ANDROID: 'ANDROID',
+    IOS: 'IOS',
+} as const;
+export type PushPlatform = (typeof PushPlatform)[keyof typeof PushPlatform];
+
+// ─── Qualification Level ──────────────────────────────────────
+// Used: User.qualification
 export const QualificationLevel = {
     TEN_PASS: '10TH_PASS',
     TWELVE_PASS: '12TH_PASS',
@@ -68,23 +135,5 @@ export const QualificationLevel = {
     PHD: 'PHD',
     OTHER: 'OTHER',
 } as const;
-
 export type QualificationLevel = (typeof QualificationLevel)[keyof typeof QualificationLevel];
-
-export const NotificationStatus = {
-    PENDING: 'PENDING',
-    QUEUED: 'QUEUED',
-    SENT: 'SENT',
-    FAILED: 'FAILED',
-    SKIPPED: 'SKIPPED',
-} as const;
-
-export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus];
-
-export const PushPlatform = {
-    FCM: 'FCM',
-    APNS: 'APNS',
-} as const;
-
-export type PushPlatform = (typeof PushPlatform)[keyof typeof PushPlatform];
 

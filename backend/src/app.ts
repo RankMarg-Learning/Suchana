@@ -1,6 +1,3 @@
-// ============================================================
-// src/app.ts  — Express application factory
-// ============================================================
 import express, { Application } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -13,14 +10,11 @@ import { logger } from './utils/logger';
 export function createApp(): Application {
     const app = express();
 
-    // ─── Security ──────────────────────────────────────────────
     app.use(helmet());
 
-    // ─── CORS ──────────────────────────────────────────────────
     app.use(
         cors({
             origin: (origin, callback) => {
-                // Allow requests with no origin (mobile apps, Postman)
                 if (!origin || env.CORS_ORIGINS.includes(origin) || !env.IS_PROD) {
                     callback(null, true);
                 } else {
@@ -33,21 +27,17 @@ export function createApp(): Application {
         })
     );
 
-    // ─── Request Parsing ───────────────────────────────────────
     app.use(express.json({ limit: '1mb' }));
     app.use(express.urlencoded({ extended: true }));
 
-    // ─── HTTP Logging ──────────────────────────────────────────
     app.use(
         morgan(env.IS_PROD ? 'combined' : 'dev', {
             stream: { write: (msg) => logger.http(msg.trim()) },
         })
     );
 
-    // ─── Routes ────────────────────────────────────────────────
     app.use(router);
 
-    // ─── Error Handling ────────────────────────────────────────
     app.use(notFoundHandler);
     app.use(errorHandler);
 

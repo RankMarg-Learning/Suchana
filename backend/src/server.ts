@@ -1,6 +1,3 @@
-// ============================================================
-// src/server.ts  — Application entry point
-// ============================================================
 import { createApp } from './app';
 import { env } from './config/env';
 
@@ -12,19 +9,14 @@ let worker: ReturnType<typeof startNotificationWorker> | null = null;
 
 async function bootstrap(): Promise<void> {
     logger.info('🚀 Starting Government Exam Execution Platform Backend...');
-
-
     logger.info('✅ Database connected');
 
-    // Redis is connected lazily (on first operation), just log readiness
     await redis.ping();
     logger.info('✅ Redis connected');
 
-    // Start notification worker
     worker = startNotificationWorker();
     logger.info('✅ Notification worker started');
 
-    // Start HTTP server
     const app = createApp();
     const server = app.listen(env.PORT, '0.0.0.0', () => {
         logger.info(`✅ Server listening on port ${env.PORT}`);
@@ -34,7 +26,6 @@ async function bootstrap(): Promise<void> {
         logger.info(`   Health      : http://localhost:${env.PORT}/api/${env.API_VERSION}/health`);
     });
 
-    // ─── Graceful Shutdown ─────────────────────────────────────
     const shutdown = async (signal: string) => {
         logger.info(`${signal} received — shutting down gracefully...`);
 

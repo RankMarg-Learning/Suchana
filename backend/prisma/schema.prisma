@@ -8,162 +8,292 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-/// Exam — core entity representing a government exam cycle
-model Exam {
-  id                    String           @id @default(cuid())
-  title                 String
-  shortTitle            String
-  slug                  String           @unique
-  description           String?
-  conductingBody        String
-  category              String
-  examLevel             String           @default("NATIONAL") // NATIONAL, STATE, OTHER
-  state                 String?          // For STATE level exams (e.g. Maharashtra, Bihar)
+model ScrapeSource {
+  id String @id @default(cuid())
+
+  url String @unique
+
+  label String
+
+  sourceType String @default("LISTING")
+
+  hintCategory String?
+
+  selectorHints Json?
+
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scrapeJobs ScrapeJob[]
+
+  @@index([isActive])
+  @@index([sourceType])
+}
+
+model ScrapeJob {
+  id             String @id @default(cuid())
+  scrapeSourceId String
+
+  status          String  @default("RUNNING")
+  candidatesFound Int     @default(0)
+  rawPayload      Json?
+  errorMessage    String?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  scrapeSource ScrapeSource @relation(fields: [scrapeSourceId], references: [id], onDelete: Cascade)
+  stagedExams  StagedExam[]
+
+  @@index([scrapeSourceId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+model StagedExam {
+  id          String @id @default(cuid())
+  scrapeJobId String
+
+  existingExamId String?
+
+  title      String
+  shortTitle String?
+  slug       String?
+
+  description    String?
+  conductingBody String?
+
+  category String?
+
+  examLevel String?
+  state     String?
+
   minAge                Int?
   maxAge                Int?
-  qualificationCriteria Json?            // Structured qualification data
-  totalVacancies        Int?
+  qualificationCriteria Json?
+
+  totalVacancies Int?
+  applicationFee Json?
+
+  officialWebsite String?
+  notificationUrl String?
+
+  aiConfidence Float?
+  aiNotes      String?
+
+  reviewStatus String @default("PENDING")
+
+  reviewNote String?
+  reviewedBy String?
+  reviewedAt DateTime?
+
+  deduplicationKey String?
+
+  contentHash String?
+
+  isDuplicate Boolean @default(false)
+
+  duplicateOfStagedId String?
+
+  mergedSourceUrls String[]
+
+  sourceCount Int @default(1)
+
+  stagedEvents StagedLifecycleEvent[]
+
+  sourceUrl String?
+  scrapedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scrapeJob ScrapeJob @relation(fields: [scrapeJobId], references: [id], onDelete: Cascade)
+
+  @@index([scrapeJobId])
+  @@index([reviewStatus])
+  @@index([existingExamId])
+  @@index([category, reviewStatus])
+  @@index([createdAt])
+  @@index([deduplicationKey])
+  @@index([contentHash])
+  @@index([isDuplicate, reviewStatus])
+}
+
+model StagedLifecycleEvent {
+  id           String @id @default(cuid())
+  stagedExamId String
+  stage        String
+  eventType    String
+  stageOrder   Int    @default(0)
+
+  title       String
+  description String?
+  startsAt    DateTime?
+  endsAt      DateTime?
+  isTBD       Boolean   @default(false)
+
+  isImportant Boolean @default(false)
+
+  actionUrl   String?
+  actionLabel String?
+
+  createdAt DateTime @default(now())
+
+  stagedExam StagedExam @relation(fields: [stagedExamId], references: [id], onDelete: Cascade)
+
+  @@index([stagedExamId])
+  @@index([stage])
+}
+
+model Exam {
+  id         String @id @default(cuid())
+  title      String
+  shortTitle String
+  slug       String @unique
+
+  description    String?
+  conductingBody String
+
+  category String
+
+  examLevel String  @default("NATIONAL")
+  state     String?
+
+  minAge                Int?
+  maxAge                Int?
+  qualificationCriteria Json?
+  totalVacancies        Json?
   applicationFee        Json?
   officialWebsite       String?
   notificationUrl       String?
-  status                String           @default("UPCOMING")
-  isPublished           Boolean          @default(false)
-  publishedAt           DateTime?
-  createdBy             String
-  createdAt             DateTime         @default(now())
-  updatedAt             DateTime         @updatedAt
-  lifecycleEvents       LifecycleEvent[]
+
+  status      String    @default("UPCOMING")
+  isPublished Boolean   @default(false)
+  publishedAt DateTime?
+
+  deduplicationKey String? @unique
+
+  sourceStagedExamId String?
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lifecycleEvents LifecycleEvent[]
 
   @@index([category])
-  @@index([status])
   @@index([examLevel])
-  @@index([conductingBody])
+  @@index([state])
+  @@index([status])
   @@index([isPublished, status])
+  @@index([conductingBody])
 }
 
-/// LifecycleEvent - a milestone within an exam's lifecycle
 model LifecycleEvent {
-  id               String            @id @default(cuid())
-  examId           String
-  stage            String?           // e.g. PRELIMS, MAINS, TIER_1, PAPER_1
-  eventType        String            // REGISTRATION, EXAM_DATE, RESULT, etc.
-  title            String            // Display Title: "Apply Online", "Prelims Admit Card"
-  description      String?
-  startsAt         DateTime?         // Nullable if TBD
-  endsAt           DateTime?         // For ranges like Registration window
-  isTBD            Boolean           @default(false)
-  isConfirmed      Boolean           @default(true)
-  actionUrl        String?           // Deep link or external link
-  actionLabel      String?           // Custom label: "Apply Now", "Check Result"
-  notificationSent Boolean           @default(false)
-  notifiedAt       DateTime?
-  createdBy        String
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  exam             Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
-  notifications    NotificationLog[]
+  id        String @id @default(cuid())
+  examId    String
+  stage     String
+  eventType String
 
-  @@index([examId])
-  @@index([eventType])
-  @@index([startsAt])
-  @@index([stage])
+  stageOrder Int @default(0) // Use gaps of 10 so new events can be inserted between without renumbering.
+
+  title       String
+  description String?
+
+  startsAt DateTime?
+  endsAt   DateTime?
+
+  isTBD Boolean @default(false)
+
+  isImportant Boolean @default(false)
+
+  actionUrl   String?
+  actionLabel String?
+
+  notificationSent Boolean   @default(false)
+  notifiedAt       DateTime?
+
+  sourceStagedEventId String?
+
+  createdBy String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exam          Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
+  notifications NotificationLog[]
+
+  @@index([examId, stageOrder])
+  @@index([examId, isImportant])
   @@index([notificationSent, startsAt])
+  @@index([eventType])
 }
 
-/// Device push token — registered by mobile app
 model PushToken {
   id          String   @id @default(cuid())
   userId      String
   token       String   @unique
   deviceModel String?
   appVersion  String?
+  platform    String
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  platform    String
 
   @@index([userId])
   @@index([isActive])
 }
 
-/// NotificationLog — audit trail for every push notification attempt
 model NotificationLog {
-  id               String         @id @default(cuid())
+  id               String    @id @default(cuid())
   lifecycleEventId String
   title            String
   body             String
   data             Json?
-  targetTokens     Int            @default(0)
-  successCount     Int            @default(0)
-  failureCount     Int            @default(0)
+  targetTokens     Int       @default(0)
+  successCount     Int       @default(0)
+  failureCount     Int       @default(0)
   errorMessage     String?
   sentAt           DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  status           String         @default("PENDING")
-  lifecycleEvent   LifecycleEvent @relation(fields: [lifecycleEventId], references: [id], onDelete: Cascade)
+  status           String    @default("PENDING")
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  lifecycleEvent LifecycleEvent @relation(fields: [lifecycleEventId], references: [id], onDelete: Cascade)
 
   @@index([lifecycleEventId])
   @@index([status])
   @@index([createdAt])
 }
 
-/// AdminAuditLog — tracks all admin mutations for compliance
-model AdminAuditLog {
-  id          String   @id @default(cuid())
-  adminId     String
-  action      String
-  entityType  String
-  entityId    String
-  beforeState Json?
-  afterState  Json?
-  ipAddress   String?
-  userAgent   String?
-  createdAt   DateTime @default(now())
-
-  @@index([adminId])
-  @@index([entityType, entityId])
-  @@index([createdAt])
-}
-
-/// User — mobile app user for personalized exam feed, targeting and notifications
-/// Personalization fields power:
-///   - Exam eligibility filtering (age, gender, qualification)
-///   - Ad targeting demographics (age group, state, education, employment)
-///   - Notification delivery (fcmToken, platform)
 model User {
-  id                  String   @id @default(cuid())
-  name                String
-  phone               String   @unique
+  id    String @id @default(cuid())
+  name  String
+  phone String @unique
 
-  // ── Location & Demography (ad targeting + state-level exam filter) ──
-  state               String?           // e.g. "Bihar", "Maharashtra"
-  city                String?
+  state String?
+  city  String?
 
-  // ── Eligibility-based personalization ──────────────────────────────
-  dateOfBirth         DateTime?         // For age-based exam filter (min/max age)
-  gender              String?           // MALE | FEMALE | OTHER
-  qualification       String?           // 10TH_PASS | 12TH_PASS | GRADUATE | POST_GRADUATE | PHD
+  dateOfBirth   DateTime?
+  gender        String?
+  qualification String?
 
-  // ── Exam preferences ───────────────────────────────────────────────
-  preferredCategories String[]          // ["UPSC", "SSC", "BANKING", ...]
-  preferredExamLevel  String?           // NATIONAL | STATE | BOTH
-  savedExamIds        String[]          // IDs of bookmarked exams
+  preferredCategories String[]
+  preferredExamLevel  String?
 
-  // ── Occupation (ad targeting: student vs. working professional) ─────
-  employmentStatus    String?           // STUDENT | EMPLOYED | UNEMPLOYED | OTHER
+  savedExamIds String[]
 
-  // ── App preferences ────────────────────────────────────────────────
-  languagePreference  String   @default("HINDI")  // HINDI | ENGLISH
+  employmentStatus String?
+
+  languagePreference   String  @default("HINDI")
   notificationsEnabled Boolean @default(true)
 
-  // ── Push notification delivery ─────────────────────────────────────
-  fcmToken            String?
-  platform            String?           // android | ios | web
-  appVersion          String?
+  fcmToken   String?
+  platform   String?
+  appVersion String?
 
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([phone])
   @@index([state])
