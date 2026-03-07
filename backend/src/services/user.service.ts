@@ -18,6 +18,8 @@ export async function registerOrUpdateUser(dto: RegisterUserDto) {
             dateOfBirth: dto.dateOfBirth,
             gender: dto.gender,
             qualification: dto.qualification,
+            degree: dto.degree,
+            specialization: dto.specialization,
             preferredCategories: dto.preferredCategories ?? [],
             preferredExamLevel: dto.preferredExamLevel,
             savedExamIds: dto.savedExamIds ?? [],
@@ -75,11 +77,27 @@ function calculateMatchScore(user: any, exam: any): number {
         if (exam.minAge && exam.maxAge && age >= exam.minAge && age <= exam.maxAge) score += 15;
     }
 
-    // 2. Qualification check (Simple keyword match for now)
-    if (user.qualification && exam.title) {
-        const qual = user.qualification.toLowerCase();
-        const title = exam.title.toLowerCase();
-        if (title.includes(qual)) score += 15;
+    // 2. Qualification & Specialization check
+    if (exam.title || exam.description) {
+        const text = ((exam.title || '') + ' ' + (exam.description || '')).toLowerCase();
+
+        // Qualification Level (e.g. Graduate, 12th)
+        if (user.qualification) {
+            const qual = user.qualification.toLowerCase().replace('_PASS', '');
+            if (text.includes(qual)) score += 10;
+        }
+
+        // Degree (e.g. B.Tech, BSC)
+        if (user.degree) {
+            const degree = user.degree.toLowerCase();
+            if (text.includes(degree)) score += 15;
+        }
+
+        // Specialization (e.g. Computers, Civil)
+        if (user.specialization) {
+            const spec = user.specialization.toLowerCase();
+            if (text.includes(spec)) score += 15;
+        }
     }
 
     // 3. Category match

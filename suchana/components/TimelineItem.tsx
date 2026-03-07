@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
 import {
   Bell,
@@ -55,6 +55,7 @@ function getStatus(event: LifecycleEvent): { label: string; color: string } {
 }
 
 export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast: boolean }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const stage = event.stage || '';
   const eventType = event.eventType || '';
   const IconComponent = STAGE_ICONS[stage] || EVENT_ICONS[eventType] || Pin;
@@ -83,7 +84,23 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
           {formatDate(event.startsAt)}
           {event.endsAt ? ` – ${formatDate(event.endsAt)}` : ''}
         </Text>
-        {event.description ? <Text style={styles.desc}>{event.description}</Text> : null}
+
+        {event.description ? (
+          <View style={styles.descContainer}>
+            <Text
+              style={styles.desc}
+              numberOfLines={isExpanded ? undefined : 1}
+            >
+              {event.description}
+            </Text>
+            {event.description.length > 50 && (
+              <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                <Text style={styles.moreBtn}>{isExpanded ? 'Show less' : 'more'}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : null}
+
         {event.actionUrl ? (
           <TouchableOpacity
             style={styles.actionBtn}
@@ -122,14 +139,24 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 10, fontWeight: '700' },
   stage: { color: '#A78BFA', fontSize: 12, fontWeight: '600', marginTop: 2 },
   date: { color: '#9CA3AF', fontSize: 12, marginTop: 4 },
-  desc: { color: '#6B7280', fontSize: 12, marginTop: 4 },
+  descContainer: { marginTop: 4 },
+  desc: { color: '#D1D5DB', fontSize: 12, lineHeight: 18 },
+  moreBtn: {
+    color: '#A78BFA',
+    fontSize: 12,
+    fontWeight: '700',
+    marginTop: 2,
+    alignSelf: 'flex-start'
+  },
   actionBtn: {
-    marginTop: 8,
+    marginTop: 10,
     backgroundColor: '#3B0764',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 8,
     alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: '#5B21B6',
   },
-  actionText: { color: '#C4B5FD', fontSize: 13, fontWeight: '700' },
+  actionText: { color: '#EDE9FE', fontSize: 13, fontWeight: '800' },
 });

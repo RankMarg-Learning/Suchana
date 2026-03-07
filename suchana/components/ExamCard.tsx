@@ -6,17 +6,28 @@ import { Target, Clock, Bookmark, BookmarkCheck } from 'lucide-react-native';
 import type { Exam } from '@/types/exam';
 
 const CATEGORY_COLORS: Record<string, string> = {
+  ENGINEERING_ENTRANCE: '#0891B2',
+  MEDICAL_ENTRANCE: '#EF4444',
+  LAW_ENTRANCE: '#7C3AED',
+  MBA_ENTRANCE: '#DB2777',
+  GOVERNMENT_JOBS: '#059669',
+  BANKING_JOBS: '#059669',
+  RAILWAY_JOBS: '#DC2626',
+  DEFENCE_JOBS: '#1D4ED8',
+  POLICE_JOBS: '#374151',
+  TEACHING_ELIGIBILITY: '#DB2777',
+  STATE_PSC: '#D97706',
   UPSC: '#7C3AED',
   SSC: '#2563EB',
-  BANKING: '#059669',
-  RAILWAY: '#DC2626',
-  DEFENCE: '#1D4ED8',
-  STATE_PSC: '#D97706',
-  TEACHING: '#DB2777',
-  POLICE: '#374151',
-  MEDICAL: '#EF4444',
-  ENGINEERING: '#0891B2',
-  LAW: '#7C3AED',
+  PROFESSIONAL_CERTIFICATION: '#7C3AED',
+  SCHOOL_BOARD: '#2563EB',
+  SCHOLARSHIP_EXAMS: '#D97706',
+  OLYMPIAD_EXAMS: '#DC2626',
+  AGRICULTURE_ENTRANCE: '#059669',
+  PARAMEDICAL_ENTRANCE: '#EF4444',
+  FOREIGN_STUDY_EXAMS: '#1D4ED8',
+  SKILL_CERTIFICATION: '#374151',
+  UNIVERSITY_ENTRANCE: '#0891B2',
   OTHER: '#6B7280',
 };
 
@@ -38,10 +49,19 @@ interface Props {
   exam: Exam & { matchScore?: number };
   isSaved?: boolean;
   onSaveToggle?: () => void;
+  onPress?: () => void;
 }
 
-export function ExamCard({ exam, isSaved, onSaveToggle }: Props) {
+export function ExamCard({ exam, isSaved, onSaveToggle, onPress }: Props) {
   const router = useRouter();
+
+  const handlePress = () => {
+    if (onPress) {
+      onPress();
+    } else {
+      router.push({ pathname: '/exam/[id]', params: { id: exam.id } });
+    }
+  };
   const catColor = CATEGORY_COLORS[exam.category] ?? '#6B7280';
   const status = STATUS_CONFIG[exam.status] ?? STATUS_CONFIG.UPCOMING;
   const isNew = isNewExam(exam);
@@ -59,69 +79,67 @@ export function ExamCard({ exam, isSaved, onSaveToggle }: Props) {
     <TouchableOpacity
       style={styles.container}
       activeOpacity={0.9}
-      onPress={() => router.push({ pathname: '/exam/[id]', params: { id: exam.id } })}>
+      onPress={handlePress}>
 
       <LinearGradient
-        colors={isUrgent ? ['#27120a', '#1C1C1E'] : ['#1C1C1E', '#1C1C1E']}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+        colors={['#18181b', '#09090b']}
         style={[styles.card, isUrgent && styles.cardUrgent]}>
 
-        {/* Top Header Row */}
+        {/* Top Header */}
         <View style={styles.header}>
           <View style={styles.catRow}>
             <View style={[styles.dot, { backgroundColor: catColor }]} />
             <Text style={styles.categoryText}>{exam.category.replace('_', ' ')}</Text>
-            {isNew && <View style={styles.newDot} />}
+            {isNew && (
+              <View style={styles.newBadge}>
+                <Text style={styles.newBadgeText}>NEW</Text>
+              </View>
+            )}
           </View>
-
-          <View style={[styles.statusBadge, { backgroundColor: status.bg + '55' }]}>
+          <View style={[styles.statusBadge, { borderColor: status.color + '44', backgroundColor: status.bg + '33' }]}>
             <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
           </View>
         </View>
 
-        {/* Title & Body */}
-        <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={2}>{exam.title}</Text>
-          <Text style={styles.conductingBody}>{exam.conductingBody}</Text>
+        {/* Title */}
+        <Text style={styles.title} numberOfLines={2}>{exam.title}</Text>
+        <Text style={styles.conductingBody}>{exam.conductingBody}</Text>
+
+        {/* Key Stats Row */}
+        <View style={styles.statsRow}>
+          {exam.totalVacancies != null && (
+            <View style={styles.statItem}>
+              <Target size={14} color="#7C3AED" />
+              <Text style={styles.statText}>
+                <Text style={styles.statHighlight}>{typeof exam.totalVacancies === 'number' ? exam.totalVacancies.toLocaleString('en-IN') : 'Check'}</Text> Vacancies
+              </Text>
+            </View>
+          )}
+          {score > 0 && (
+            <View style={[styles.statItem, { backgroundColor: scoreColor + '11', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2, marginLeft: 'auto' }]}>
+              <Text style={[styles.matchScoreText, { color: scoreColor }]}>{score}% Match</Text>
+            </View>
+          )}
         </View>
 
-        {/* Progress / Match Score Section */}
-        {score > 0 && (
-          <View style={styles.matchSection}>
-            <View style={styles.matchBarBg}>
-              <View style={[styles.matchBarFill, { width: `${score}%`, backgroundColor: scoreColor }]} />
-            </View>
-            <Text style={[styles.matchText, { color: scoreColor }]}>
-              {score}% Match
-            </Text>
-          </View>
-        )}
-
-        {/* Footer Area */}
+        {/* Footer */}
         <View style={styles.footer}>
-          <View style={styles.meta}>
-            {exam.totalVacancies != null && (
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Target size={14} color="#F4F4F5" style={{ marginRight: 6 }} />
-                <Text style={styles.vacancyText}>
-                  <Text style={{ fontWeight: '800', color: '#F4F4F5' }}>{exam.totalVacancies.toLocaleString('en-IN')}</Text> Vacancies
-                </Text>
-              </View>
-            )}
-            {isUrgent && (
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
-                <Clock size={12} color="#FBBF24" style={{ marginRight: 6 }} />
-                <Text style={styles.urgentText}>Ends in {daysLeft}d</Text>
-              </View>
-            )}
-          </View>
+          {isUrgent ? (
+            <View style={styles.urgentRow}>
+              <Clock size={12} color="#FBBF24" />
+              <Text style={styles.urgentText}>Closing in {daysLeft} days</Text>
+            </View>
+          ) : (
+            <View style={styles.dateRow}>
+              <Clock size={12} color="#71717A" />
+              <Text style={styles.dateText}>Posted {new Date(exam.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
+            </View>
+          )}
 
           <TouchableOpacity
             onPress={onSaveToggle}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
             style={styles.saveBtn}>
-            {isSaved ? <BookmarkCheck size={20} color="#7C3AED" fill="#7C3AED" /> : <Bookmark size={20} color="#94a3b8" />}
+            {isSaved ? <BookmarkCheck size={20} color="#7C3AED" fill="#7C3AED" /> : <Bookmark size={20} color="#52525B" />}
           </TouchableOpacity>
         </View>
 
@@ -133,128 +151,40 @@ export function ExamCard({ exam, isSaved, onSaveToggle }: Props) {
 const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
-    borderRadius: 20,
-    backgroundColor: '#1C1C1E',
+    borderRadius: 24,
+    backgroundColor: '#18181b',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
     elevation: 8,
   },
   card: {
-    borderRadius: 20,
-    padding: 16,
-    borderWidth: 1.5,
-    borderColor: '#2C2C2E',
-  },
-  cardUrgent: {
-    borderColor: '#78350F',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  catRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  categoryText: {
-    color: '#9CA3AF',
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1,
-    textTransform: 'uppercase',
-  },
-  newDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#10B981',
-  },
-  statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    borderRadius: 24,
+    padding: 18,
     borderWidth: 1,
-    borderColor: '#3F3F46',
+    borderColor: 'rgba(255,255,255,0.05)',
   },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '800',
-  },
-  content: {
-    marginBottom: 16,
-  },
-  title: {
-    color: '#F4F4F5',
-    fontSize: 18,
-    fontWeight: '800',
-    lineHeight: 24,
-    marginBottom: 4,
-  },
-  conductingBody: {
-    color: '#71717A',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  matchSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 16,
-    backgroundColor: '#27272A',
-    padding: 8,
-    borderRadius: 12,
-  },
-  matchBarBg: {
-    flex: 1,
-    height: 6,
-    backgroundColor: '#3F3F46',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  matchBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  matchText: {
-    fontSize: 12,
-    fontWeight: '800',
-    width: 70,
-    textAlign: 'right',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-end',
-  },
-  meta: {
-    flex: 1,
-    gap: 4,
-  },
-  vacancyText: {
-    color: '#A1A1AA',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  urgentText: {
-    color: '#FBBF24',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  saveBtn: {
-    backgroundColor: '#27272A',
-    padding: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#3F3F46',
-  },
+  cardUrgent: { borderColor: 'rgba(251,191,36,0.3)' },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  catRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dot: { width: 6, height: 6, borderRadius: 3 },
+  categoryText: { color: '#71717A', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
+  newBadge: { backgroundColor: '#10B981', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 },
+  newBadgeText: { color: '#FFF', fontSize: 8, fontWeight: '900' },
+  statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
+  statusText: { fontSize: 9, fontWeight: '900', textTransform: 'uppercase' },
+  title: { color: '#F4F4F5', fontSize: 18, fontWeight: '900', lineHeight: 24, marginBottom: 4 },
+  conductingBody: { color: '#52525B', fontSize: 13, fontWeight: '600', marginBottom: 16 },
+  statsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 12 },
+  statItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  statText: { color: '#71717A', fontSize: 13, fontWeight: '500' },
+  statHighlight: { color: '#E4E4E7', fontWeight: '800' },
+  matchScoreText: { fontSize: 11, fontWeight: '800' },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.03)', paddingTop: 12 },
+  urgentRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  urgentText: { color: '#FBBF24', fontSize: 12, fontWeight: '700' },
+  dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  dateText: { color: '#52525B', fontSize: 12, fontWeight: '500' },
+  saveBtn: { padding: 4 },
 });

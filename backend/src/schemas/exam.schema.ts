@@ -32,6 +32,7 @@ export const listExamQuerySchema = z.object({
     isPublished: z.string().transform((v) => v === 'true').pipe(z.boolean()).optional(),
     examLevel: z.nativeEnum(ExamLevel).optional(),
     state: z.string().optional(),
+    lifecycleStage: z.string().optional(),
 });
 
 export const examIdParamSchema = z.object({

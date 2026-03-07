@@ -24,15 +24,15 @@ import { useRouter } from 'expo-router';
 const CATEGORIES: { label: string; value: ExamCategory }[] = [
   { label: 'UPSC', value: 'UPSC' },
   { label: 'SSC', value: 'SSC' },
-  { label: 'Banking', value: 'BANKING' },
-  { label: 'Railway', value: 'RAILWAY' },
-  { label: 'Defence', value: 'DEFENCE' },
+  { label: 'Banking', value: 'BANKING_JOBS' },
+  { label: 'Railway', value: 'RAILWAY_JOBS' },
+  { label: 'Defence', value: 'DEFENCE_JOBS' },
   { label: 'State PSC', value: 'STATE_PSC' },
-  { label: 'Teaching', value: 'TEACHING' },
-  { label: 'Police', value: 'POLICE' },
-  { label: 'Medical', value: 'MEDICAL' },
-  { label: 'Engineering', value: 'ENGINEERING' },
-  { label: 'Law', value: 'LAW' },
+  { label: 'Teaching', value: 'TEACHING_ELIGIBILITY' },
+  { label: 'Police', value: 'POLICE_JOBS' },
+  { label: 'Medical', value: 'MEDICAL_ENTRANCE' },
+  { label: 'Engineering', value: 'ENGINEERING_ENTRANCE' },
+  { label: 'Law', value: 'LAW_ENTRANCE' },
 ];
 
 export default function ProfileScreen() {

@@ -9,22 +9,24 @@ import { ExamCard } from '@/components/ExamCard';
 import { CategoryChip } from '@/components/CategoryChip';
 import { AdBanner } from '@/components/AdBanner';
 import { useUser } from '@/context/UserContext';
+import { useAds } from '@/context/AdsContext';
 import { toggleSavedExam } from '@/services/userService';
-import { Search, X, Inbox } from 'lucide-react-native';
+import { Search, X, Inbox, Trophy, Briefcase, FileCheck, ChevronRight } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
 import type { Exam, ExamCategory, ExamLevel } from '@/types/exam';
-import { useFocusEffect } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 
 const CATEGORIES: { label: string; value: ExamCategory }[] = [
   { label: 'UPSC', value: 'UPSC' },
   { label: 'SSC', value: 'SSC' },
-  { label: 'Banking', value: 'BANKING' },
-  { label: 'Railway', value: 'RAILWAY' },
-  { label: 'Defence', value: 'DEFENCE' },
+  { label: 'Banking', value: 'BANKING_JOBS' },
+  { label: 'Railway', value: 'RAILWAY_JOBS' },
+  { label: 'Defence', value: 'DEFENCE_JOBS' },
   { label: 'State PSC', value: 'STATE_PSC' },
-  { label: 'Teaching', value: 'TEACHING' },
-  { label: 'Police', value: 'POLICE' },
-  { label: 'Medical', value: 'MEDICAL' },
-  { label: 'Engineering', value: 'ENGINEERING' },
+  { label: 'Teaching', value: 'TEACHING_ELIGIBILITY' },
+  { label: 'Police', value: 'POLICE_JOBS' },
+  { label: 'Medical', value: 'MEDICAL_ENTRANCE' },
+  { label: 'Engineering', value: 'ENGINEERING_ENTRANCE' },
 ];
 
 const LEVELS: { label: string; value: ExamLevel | '' }[] = [
@@ -33,8 +35,62 @@ const LEVELS: { label: string; value: ExamLevel | '' }[] = [
   { label: 'State', value: 'STATE' },
 ];
 
+function ExploreSection({ title, subtitle, stage, onSaveToggle, savedIds, onNavigate }: any) {
+  const { data: sectionExams, isLoading } = useQuery({
+    queryKey: ['explore-section', stage],
+    queryFn: async () => {
+      const { exams } = await fetchExams({ isPublished: true, limit: 10, lifecycleStage: stage });
+      return exams;
+    },
+  });
+
+  if (!isLoading && (!sectionExams || sectionExams.length === 0)) return null;
+
+  return (
+    <View style={styles.sectionContainer}>
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>{title}</Text>
+          <Text style={styles.sectionSubtitle}>{subtitle}</Text>
+        </View>
+        <TouchableOpacity style={styles.viewAllBtn}>
+          <Text style={styles.viewAllText}>View All</Text>
+          <ChevronRight size={14} color="#7C3AED" />
+        </TouchableOpacity>
+      </View>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.sectionScroll}>
+        {isLoading ? (
+          <ActivityIndicator color="#7C3AED" style={{ marginHorizontal: 20 }} />
+        ) : (
+          sectionExams?.map((exam: any) => (
+            <View key={exam.id} style={{ width: 280, marginRight: 12 }}>
+              <ExamCard
+                exam={exam}
+                isSaved={savedIds?.includes(exam.id)}
+                onSaveToggle={() => onSaveToggle(exam.id)}
+                onPress={() => onNavigate(exam.id)}
+              />
+            </View>
+          ))
+        )}
+      </ScrollView>
+    </View>
+  );
+}
+
 export default function ExploreScreen() {
+  const router = useRouter();
   const { user, userId, refreshUser } = useUser();
+  const { showInterstitial } = useAds();
+
+  const handleNavigate = async (examId: string) => {
+    await showInterstitial();
+    router.push({ pathname: '/exam/[id]', params: { id: examId } });
+  };
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -118,6 +174,43 @@ export default function ExploreScreen() {
               )}
             </View>
 
+            {/* Explore Sections (Only when no search/filter) */}
+            {!(search || level || selectedCats.length > 0) && (
+              <View style={{ marginBottom: 24 }}>
+                <ExploreSection
+                  title="Job Updates"
+                  subtitle="Latest recruitments"
+                  icon="briefcase"
+                  stage="REGISTRATION"
+                  onSaveToggle={handleSave}
+                  savedIds={user?.savedExamIds}
+                  onNavigate={handleNavigate}
+                />
+                <ExploreSection
+                  title="Admit Cards"
+                  subtitle="Download your hall tickets"
+                  icon="id-card"
+                  stage="ADMIT_CARD"
+                  onSaveToggle={handleSave}
+                  savedIds={user?.savedExamIds}
+                  onNavigate={handleNavigate}
+                />
+                <ExploreSection
+                  title="Results Out"
+                  subtitle="Check your final scores"
+                  icon="trophy"
+                  stage="RESULT"
+                  onSaveToggle={handleSave}
+                  savedIds={user?.savedExamIds}
+                  onNavigate={handleNavigate}
+                />
+              </View>
+            )}
+
+            <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
+              <Text style={styles.sectionTitle}>Discover More</Text>
+            </View>
+
             {/* Level filter */}
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.levelRow}>
               {LEVELS.map(l => (
@@ -160,6 +253,7 @@ export default function ExploreScreen() {
               exam={item}
               isSaved={user?.savedExamIds?.includes(item.id)}
               onSaveToggle={() => handleSave(item.id)}
+              onPress={() => handleNavigate(item.id)}
             />
             {(index + 1) % 6 === 0 && <AdBanner />}
           </View>
@@ -216,4 +310,17 @@ const styles = StyleSheet.create({
   clearFilters: { color: '#7C3AED', fontSize: 13, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 60 },
   emptyTxt: { color: '#6B7280', fontSize: 16 },
+  sectionContainer: { marginTop: 24 },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    marginBottom: 12
+  },
+  sectionTitle: { color: '#F4F4F5', fontSize: 18, fontWeight: '800' },
+  sectionSubtitle: { color: '#71717A', fontSize: 12, fontWeight: '500' },
+  viewAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  viewAllText: { color: '#7C3AED', fontSize: 13, fontWeight: '700' },
+  sectionScroll: { paddingHorizontal: 16 },
 });

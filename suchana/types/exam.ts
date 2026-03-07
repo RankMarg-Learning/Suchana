@@ -45,9 +45,29 @@ export interface Exam {
 }
 
 export type ExamCategory =
-    | 'UPSC' | 'SSC' | 'BANKING' | 'RAILWAY' | 'DEFENCE'
-    | 'STATE_PSC' | 'TEACHING' | 'POLICE' | 'MEDICAL'
-    | 'ENGINEERING' | 'LAW' | 'OTHER';
+    | 'ENGINEERING_ENTRANCE'
+    | 'MEDICAL_ENTRANCE'
+    | 'LAW_ENTRANCE'
+    | 'MBA_ENTRANCE'
+    | 'GOVERNMENT_JOBS'
+    | 'BANKING_JOBS'
+    | 'RAILWAY_JOBS'
+    | 'DEFENCE_JOBS'
+    | 'POLICE_JOBS'
+    | 'TEACHING_ELIGIBILITY'
+    | 'STATE_PSC'
+    | 'UPSC'
+    | 'SSC'
+    | 'PROFESSIONAL_CERTIFICATION'
+    | 'SCHOOL_BOARD'
+    | 'SCHOLARSHIP_EXAMS'
+    | 'OLYMPIAD_EXAMS'
+    | 'AGRICULTURE_ENTRANCE'
+    | 'PARAMEDICAL_ENTRANCE'
+    | 'FOREIGN_STUDY_EXAMS'
+    | 'SKILL_CERTIFICATION'
+    | 'UNIVERSITY_ENTRANCE'
+    | 'OTHER';
 
 export type ExamLevel = 'NATIONAL' | 'STATE' | 'DISTRICT' | 'OTHER';
 
@@ -63,6 +83,8 @@ export interface User {
     dateOfBirth: string | null;
     gender: 'MALE' | 'FEMALE' | 'OTHER' | null;
     qualification: string | null;
+    degree: string | null;
+    specialization: string | null;
     preferredCategories: ExamCategory[];
     preferredExamLevel: 'NATIONAL' | 'STATE' | 'BOTH' | null;
     savedExamIds: string[];
@@ -81,6 +103,8 @@ export interface RegisterUserPayload {
     dateOfBirth?: string;
     gender?: 'MALE' | 'FEMALE' | 'OTHER';
     qualification?: string;
+    degree?: string;
+    specialization?: string;
     preferredCategories?: ExamCategory[];
     preferredExamLevel?: 'NATIONAL' | 'STATE' | 'BOTH';
     employmentStatus?: 'STUDENT' | 'EMPLOYED' | 'UNEMPLOYED' | 'OTHER';

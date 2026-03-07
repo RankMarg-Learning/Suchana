@@ -32,15 +32,19 @@ const INDIA_STATES = [
 const CATEGORIES: { label: string; value: ExamCategory }[] = [
   { label: 'UPSC', value: 'UPSC' },
   { label: 'SSC', value: 'SSC' },
-  { label: 'Banking', value: 'BANKING' },
-  { label: 'Railway', value: 'RAILWAY' },
-  { label: 'Defence', value: 'DEFENCE' },
+  { label: 'Bank Jobs', value: 'BANKING_JOBS' },
+  { label: 'Railway', value: 'RAILWAY_JOBS' },
+  { label: 'Defence', value: 'DEFENCE_JOBS' },
+  { label: 'Police', value: 'POLICE_JOBS' },
   { label: 'State PSC', value: 'STATE_PSC' },
-  { label: 'Teaching', value: 'TEACHING' },
-  { label: 'Police', value: 'POLICE' },
-  { label: 'Medical', value: 'MEDICAL' },
-  { label: 'Engineering', value: 'ENGINEERING' },
-  { label: 'Law', value: 'LAW' },
+  { label: 'Teaching', value: 'TEACHING_ELIGIBILITY' },
+  { label: 'Govt Jobs', value: 'GOVERNMENT_JOBS' },
+  { label: 'Engineering', value: 'ENGINEERING_ENTRANCE' },
+  { label: 'Medical', value: 'MEDICAL_ENTRANCE' },
+  { label: 'Law', value: 'LAW_ENTRANCE' },
+  { label: 'MBA', value: 'MBA_ENTRANCE' },
+  { label: 'Certifications', value: 'PROFESSIONAL_CERTIFICATION' },
+  { label: 'Scholarships', value: 'SCHOLARSHIP_EXAMS' },
 ];
 
 const STEPS = [
@@ -48,6 +52,7 @@ const STEPS = [
   { label: 'Location', icon: MapPin },
   { label: 'Interests', icon: Target },
   { label: 'Profile', icon: GraduationCap },
+  { label: 'Specialisation', icon: Search },
 ];
 
 export default function OnboardingScreen() {
@@ -61,6 +66,8 @@ export default function OnboardingScreen() {
   const [state, setState] = useState('');
   const [categories, setCategories] = useState<ExamCategory[]>([]);
   const [qualification, setQualification] = useState('');
+  const [degree, setDegree] = useState('');
+  const [specialization, setSpecialization] = useState('');
   const [employment, setEmployment] = useState('');
   const [gender, setGender] = useState('');
 
@@ -84,6 +91,8 @@ export default function OnboardingScreen() {
         state: state || undefined,
         preferredCategories: categories,
         qualification: (qualification as any) || undefined,
+        degree: degree.trim() || undefined,
+        specialization: specialization.trim() || undefined,
         employmentStatus: (employment as any) || undefined,
         gender: (gender as any) || undefined,
         platform: Platform.OS as any,
@@ -264,6 +273,31 @@ export default function OnboardingScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
+            </View>
+          )}
+
+          {/* Step 4: Specialisation */}
+          {step === 4 && (
+            <View>
+              <Text style={styles.label}>Your Degree / Diploma</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. B.Tech, BSC, Diploma"
+                placeholderTextColor="#4B5563"
+                value={degree}
+                onChangeText={setDegree}
+              />
+              <Text style={styles.label}>Branch / Specialisation</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g. Computer Science, Civil, Commerce"
+                placeholderTextColor="#4B5563"
+                value={specialization}
+                onChangeText={setSpecialization}
+              />
+              <Text style={styles.hint}>
+                Help us show you exact "Job Roles" that match your {degree || 'Degree'} {specialization ? `in ${specialization}` : ''}.
+              </Text>
             </View>
           )}
         </ScrollView>

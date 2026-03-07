@@ -274,9 +274,11 @@ model User {
   state String?
   city  String?
 
-  dateOfBirth   DateTime?
-  gender        String?
-  qualification String?
+  dateOfBirth    DateTime?
+  gender         String?
+  qualification  String?
+  degree         String?
+  specialization String?
 
   preferredCategories String[]
   preferredExamLevel  String?
@@ -298,5 +300,7 @@ model User {
   @@index([phone])
   @@index([state])
   @@index([qualification])
+  @@index([degree])
+  @@index([specialization])
   @@index([employmentStatus])
 }

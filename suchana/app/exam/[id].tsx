@@ -27,6 +27,8 @@ import { toggleSavedExam } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
 import { TimelineItem } from '@/components/TimelineItem';
 import { NativeAdCard } from '@/components/NativeAdCard';
+import { AdBanner } from '@/components/AdBanner';
+import { useAds } from '@/context/AdsContext';
 import type { Exam, LifecycleEvent } from '@/types/exam';
 
 const { width } = Dimensions.get('window');
@@ -54,7 +56,13 @@ export default function ExamDetailScreen() {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { user, userId, refreshUser } = useUser();
+  const { showInterstitial } = useAds();
   const [countdown, setCountdown] = useState('');
+
+  const handleExternalLink = async (url: string) => {
+    await showInterstitial();
+    Linking.openURL(url);
+  };
 
   // Fetch exam detail
   const { data: exam, isLoading: examLoading } = useQuery({
@@ -180,6 +188,7 @@ export default function ExamDetailScreen() {
               <Share2 size={22} color="#FFF" />
             </TouchableOpacity>
           </View>
+          <AdBanner />
         </View>
 
         {/* Hero Section */}
@@ -235,7 +244,7 @@ export default function ExamDetailScreen() {
           <View style={styles.actionSection}>
             <TouchableOpacity
               style={styles.primaryActionBtn}
-              onPress={() => Linking.openURL(regEvent.actionUrl!)}
+              onPress={() => handleExternalLink(regEvent.actionUrl!)}
               activeOpacity={0.8}
             >
               <View style={styles.btnContent}>
@@ -335,14 +344,14 @@ export default function ExamDetailScreen() {
         {/* Official Links */}
         <View style={styles.linkGrid}>
           {exam.officialWebsite && (
-            <TouchableOpacity style={styles.linkCard} onPress={() => Linking.openURL(exam.officialWebsite!)}>
+            <TouchableOpacity style={styles.linkCard} onPress={() => handleExternalLink(exam.officialWebsite!)}>
               <Globe size={20} color="#FFF" />
               <Text style={styles.linkCardTitle}>Official Website</Text>
               <Text style={styles.linkCardSub}>Visit Portal</Text>
             </TouchableOpacity>
           )}
           {exam.notificationUrl && (
-            <TouchableOpacity style={[styles.linkCard, { backgroundColor: '#312e81' }]} onPress={() => Linking.openURL(exam.notificationUrl!)}>
+            <TouchableOpacity style={[styles.linkCard, { backgroundColor: '#312e81' }]} onPress={() => handleExternalLink(exam.notificationUrl!)}>
               <FileText size={20} color="#c7d2fe" />
               <Text style={[styles.linkCardTitle, { color: '#c7d2fe' }]}>Notification</Text>
               <Text style={[styles.linkCardSub, { color: '#818cf8' }]}>Download PDF</Text>
@@ -357,7 +366,7 @@ export default function ExamDetailScreen() {
         <View style={styles.footerSticky}>
           <TouchableOpacity
             style={[styles.primaryActionBtn, { backgroundColor: '#1e1b4b' }]}
-            onPress={() => Linking.openURL(exam.notificationUrl!)}>
+            onPress={() => handleExternalLink(exam.notificationUrl!)}>
             <FileText size={20} color="#FFF" />
             <Text style={styles.primaryActionText}>View Full Notification</Text>
           </TouchableOpacity>

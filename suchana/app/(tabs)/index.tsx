@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { MapPin, Sparkles, ArrowRight, Search } from 'lucide-react-native';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@/context/UserContext';
 import { getPersonalizedExams } from '@/services/userService';
 import { fetchExams } from '@/services/examService';
@@ -16,54 +16,69 @@ import { ExamCard } from '@/components/ExamCard';
 import { CategoryChip } from '@/components/CategoryChip';
 import { NativeAdCard } from '@/components/NativeAdCard';
 import { DeadlineBanner } from '@/components/DeadlineBanner';
+import { AdBanner } from '@/components/AdBanner';
+import { useAds } from '@/context/AdsContext';
 import type { Exam, ExamCategory } from '@/types/exam';
 
 const CATEGORIES: { label: string; value: ExamCategory }[] = [
-  { label: 'All', value: 'OTHER' },
   { label: 'UPSC', value: 'UPSC' },
   { label: 'SSC', value: 'SSC' },
-  { label: 'Banking', value: 'BANKING' },
-  { label: 'Railway', value: 'RAILWAY' },
-  { label: 'Defence', value: 'DEFENCE' },
+  { label: 'Bank', value: 'BANKING_JOBS' },
+  { label: 'Railway', value: 'RAILWAY_JOBS' },
+  { label: 'Defence', value: 'DEFENCE_JOBS' },
   { label: 'State PSC', value: 'STATE_PSC' },
-  { label: 'Teaching', value: 'TEACHING' },
-  { label: 'Police', value: 'POLICE' },
+  { label: 'Teaching', value: 'TEACHING_ELIGIBILITY' },
+  { label: 'Police', value: 'POLICE_JOBS' },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, userId, refreshUser } = useUser();
+  const { showInterstitial } = useAds();
   const [activeCategory, setActiveCategory] = useState<ExamCategory | null>(null);
 
-  // Main exams query
+  const handleNavigate = async (examId: string) => {
+    await showInterstitial();
+    router.push({ pathname: '/exam/[id]', params: { id: examId } });
+  };
+
+  // Main infinite exams query
   const {
-    data: examData,
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
     isLoading,
     isRefetching,
-    refetch
-  } = useQuery({
-    queryKey: ['exams', userId, user?.preferredCategories],
-    queryFn: async () => {
-      if (userId && user?.preferredCategories?.length) {
-        const { exams } = await getPersonalizedExams(userId);
-        return exams;
-      } else {
-        const { exams } = await fetchExams({ isPublished: true, limit: 20 });
-        return exams;
-      }
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: ['exams', userId, activeCategory],
+    queryFn: async ({ pageParam = 1 }) => {
+      const { exams } = await fetchExams({
+        isPublished: true,
+        limit: 10,
+        page: pageParam as number,
+        category: activeCategory || undefined
+      });
+      return { exams, pageParam };
     },
-    enabled: true,
+    getNextPageParam: (lastPage) => {
+      if (lastPage.exams.length < 10) return undefined;
+      return lastPage.pageParam + 1;
+    },
+    initialPageParam: 1,
   });
 
-  const { data: allExams } = useQuery({
-    queryKey: ['allExams'],
+  const allExamsData = data?.pages.flatMap(page => page.exams) ?? [];
+
+  const { data: deadlineExams } = useQuery({
+    queryKey: ['deadlineExams'],
     queryFn: async () => {
       const { exams } = await fetchExams({ isPublished: true, limit: 50 });
       return exams;
     },
   });
-  console.log("All Exams", allExams);
 
   // Save mutation
   const saveMutation = useMutation({
@@ -75,8 +90,8 @@ export default function HomeScreen() {
   });
 
   const filteredExams = activeCategory
-    ? (examData ?? []).filter(e => e.category === activeCategory)
-    : (examData ?? []);
+    ? allExamsData.filter(e => e.category === activeCategory)
+    : allExamsData;
 
   const handleSave = (examId: string) => {
     if (!userId) return;
@@ -148,7 +163,7 @@ export default function HomeScreen() {
             </LinearGradient>
 
             <View style={styles.body}>
-              <DeadlineBanner exams={allExams ?? []} />
+              <DeadlineBanner exams={deadlineExams ?? []} />
 
               <ScrollView
                 horizontal
@@ -176,6 +191,7 @@ export default function HomeScreen() {
               <Text style={styles.sectionTitle}>
                 {user?.preferredCategories?.length ? 'For You' : 'Recently Updated'}
               </Text>
+              <AdBanner style={{ marginHorizontal: 16 }} />
             </View>
           </View>
         }
@@ -185,11 +201,21 @@ export default function HomeScreen() {
               exam={item}
               isSaved={user?.savedExamIds?.includes(item.id)}
               onSaveToggle={() => handleSave(item.id)}
+              onPress={() => handleNavigate(item.id)}
             />
             {/* Native Ad Placement - Strategic Monetization */}
             {(index + 1) % 4 === 0 && <NativeAdCard />}
           </View>
         )}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+        }}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={
+          isFetchingNextPage ? (
+            <ActivityIndicator size="small" color="#7C3AED" style={{ marginVertical: 20 }} />
+          ) : <View style={{ height: 20 }} />
+        }
         ListEmptyComponent={
           <View style={styles.empty}>
             <Search size={64} color="#3F3F46" strokeWidth={1} style={{ marginBottom: 20 }} />

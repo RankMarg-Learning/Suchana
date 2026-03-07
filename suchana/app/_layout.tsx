@@ -36,32 +36,36 @@ function NavigationGuard() {
 
 export const unstable_settings = { anchor: '(tabs)' };
 
+import { AdsProvider } from '@/context/AdsContext';
+
 export default function RootLayout() {
   // Ask for notification + location permissions once on first-ever launch
   useFirstLaunchPermissions();
 
   return (
     <QueryClientProvider client={queryClient}>
-      <UserProvider>
-        <ThemeProvider value={DarkTheme}>
-          <NavigationGuard />
-          <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="exam/[id]"
-              options={{
-                headerShown: true,
-                headerStyle: { backgroundColor: '#0D0D0F' },
-                headerTintColor: '#F4F4F5',
-                headerTitle: '',
-                headerBackTitle: 'Back',
-              }}
-            />
-          </Stack>
-          <StatusBar style="light" />
-        </ThemeProvider>
-      </UserProvider>
+      <AdsProvider>
+        <UserProvider>
+          <ThemeProvider value={DarkTheme}>
+            <NavigationGuard />
+            <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+              <Stack.Screen
+                name="exam/[id]"
+                options={{
+                  headerShown: true,
+                  headerStyle: { backgroundColor: '#0D0D0F' },
+                  headerTintColor: '#F4F4F5',
+                  headerTitle: '',
+                  headerBackTitle: 'Back',
+                }}
+              />
+            </Stack>
+            <StatusBar style="light" />
+          </ThemeProvider>
+        </UserProvider>
+      </AdsProvider>
     </QueryClientProvider>
   );
 }

@@ -12,7 +12,7 @@ const EXAM_LIST_CACHE_KEY = 'exams:list';
 const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams: detail:${id} `;
 
 export async function listExams(query: ListExamQuery) {
-    const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state } = query;
+    const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state, lifecycleStage } = query;
     const cacheKey = `${EXAM_LIST_CACHE_KEY}:${JSON.stringify(query)} `;
 
     return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_LIST, async () => {
@@ -32,6 +32,18 @@ export async function listExams(query: ListExamQuery) {
                     { conductingBody: { contains: search, mode: 'insensitive' } },
                 ],
             }),
+            ...(lifecycleStage && {
+                lifecycleEvents: {
+                    some: {
+                        stage: lifecycleStage,
+                        OR: [
+                            { endsAt: { gte: new Date() } },
+                            { endsAt: null },
+                            { startsAt: { gte: new Date() } }
+                        ]
+                    }
+                }
+            })
         };
 
         const [exams, total] = await Promise.all([

@@ -14,6 +14,7 @@ export async function fetchExams(params?: {
     page?: number;
     limit?: number;
     isPublished?: boolean;
+    lifecycleStage?: string;
 }): Promise<{ exams: Exam[]; total: number }> {
     const { data } = await client.get('/', { params: { isPublished: true, ...params } });
     // Backend standard success helper returns { success: true, data: T, meta: { total, etc. } }
