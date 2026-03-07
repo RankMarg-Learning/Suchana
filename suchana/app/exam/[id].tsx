@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, Share,
   TouchableOpacity, ActivityIndicator, Linking,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Bookmark,
@@ -13,7 +14,12 @@ import {
   Globe,
   FileText,
   Calendar,
-  ChevronRight
+  ChevronRight,
+  UserCheck,
+  IndianRupee,
+  Briefcase,
+  ExternalLink,
+  Target
 } from 'lucide-react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchExamById, fetchTimeline } from '@/services/examService';
@@ -23,15 +29,7 @@ import { TimelineItem } from '@/components/TimelineItem';
 import { NativeAdCard } from '@/components/NativeAdCard';
 import type { Exam, LifecycleEvent } from '@/types/exam';
 
-function formatFee(fee: any): string {
-  if (!fee) return 'No fee info';
-  const parts: string[] = [];
-  if (fee.general) parts.push(`General: ₹${fee.general}`);
-  if (fee.obc) parts.push(`OBC: ₹${fee.obc}`);
-  if (fee.sc_st) parts.push(`SC/ST: ₹${fee.sc_st}`);
-  if (fee.female) parts.push(`Female: ₹${fee.female}`);
-  return parts.join(' · ') || 'Check official website';
-}
+const { width } = Dimensions.get('window');
 
 function formatCountdown(endsAt: string): string {
   const diff = new Date(endsAt).getTime() - Date.now();
@@ -39,13 +37,16 @@ function formatCountdown(endsAt: string): string {
   const days = Math.floor(diff / 86400000);
   const hours = Math.floor((diff % 86400000) / 3600000);
   const mins = Math.floor((diff % 3600000) / 60000);
-  if (days > 0) return `${days}d ${hours}h left`;
-  if (hours > 0) return `${hours}h ${mins}m left`;
+  if (days > 0) return `${days}d left`;
+  if (hours > 0) return `${hours}h left`;
   return `${mins}m left`;
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  UPCOMING: '#FBBF24', ACTIVE: '#10B981', COMPLETED: '#94a3b8', CANCELLED: '#EF4444',
+  UPCOMING: '#FBBF24',
+  ACTIVE: '#10B981',
+  COMPLETED: '#94a3b8',
+  CANCELLED: '#EF4444',
 };
 
 export default function ExamDetailScreen() {
@@ -78,7 +79,7 @@ export default function ExamDetailScreen() {
 
   useEffect(() => {
     if (exam) {
-      navigation.setOptions({ title: exam.shortTitle });
+      navigation.setOptions({ title: exam.shortTitle || 'Exam Detail' });
     }
   }, [exam]);
 
@@ -131,87 +132,180 @@ export default function ExamDetailScreen() {
   const score = (exam as any).matchScore ?? 0;
   const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#6B7280';
 
+  // Helper to render JSON key-values on new lines
+  const renderJsonLines = (data: any, labelStyle?: any) => {
+    if (!data) return <Text style={styles.factValue}>N/A</Text>;
+
+    // If it's a number (for vacancies)
+    if (typeof data === 'number') return <Text style={styles.hugeText}>{data.toLocaleString('en-IN')}</Text>;
+
+    // If it's not an object, just show it
+    if (typeof data !== 'object') return <Text style={styles.factValue}>{String(data)}</Text>;
+
+    const entries = Object.entries(data).filter(([key]) => key !== 'level' && key !== 'id');
+
+    if (entries.length === 0) return <Text style={styles.factValue}>N/A</Text>;
+
+    return (
+      <View style={{ gap: 8 }}>
+        {entries.map(([key, value]) => (
+          <View key={key} style={styles.kvLine}>
+            <Text style={[styles.kvLabel, labelStyle]}>{key}:</Text>
+            <Text style={styles.factValue}>{String(value)}</Text>
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.root} edges={['bottom']}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 60 }}>
+      <Stack.Screen options={{ headerShown: false }} />
 
-        {/* Hero Section with Gradient */}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
+
+        {/* Header Navigation Area */}
+        <View style={styles.customHeader}>
+          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconBtn}>
+            <ChevronRight size={24} color="#FFF" style={{ transform: [{ rotate: '180deg' }] }} />
+          </TouchableOpacity>
+          <View style={styles.headerActionRow}>
+            <TouchableOpacity
+              style={styles.headerIconBtn}
+              onPress={handleSave}
+              disabled={saveMutation.isPending}>
+              {isSaved ? <BookmarkCheck size={22} color="#7C3AED" fill="#7C3AED" /> : <Bookmark size={22} color="#FFF" />}
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.headerIconBtn} onPress={handleShare}>
+              <Share2 size={22} color="#FFF" />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Hero Section */}
         <LinearGradient
           colors={['#1e1b4b', '#0D0D0F']}
-          style={styles.heroGradient}>
+          style={styles.heroSection}>
 
-          <View style={styles.headerRow}>
-            <View style={[styles.statusBadge, { borderColor: statusColor + '66' }]}>
-              <Text style={[styles.statusTxt, { color: statusColor }]}>{exam.status}</Text>
-            </View>
-            <View style={styles.actionBtns}>
-              <TouchableOpacity
-                style={styles.circleBtn}
-                onPress={handleSave}
-                disabled={saveMutation.isPending}>
-                {isSaved ? <BookmarkCheck size={20} color="#7C3AED" fill="#7C3AED" /> : <Bookmark size={20} color="#94a3b8" />}
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.circleBtn} onPress={handleShare}>
-                <Share2 size={20} color="#94a3b8" />
-              </TouchableOpacity>
-            </View>
+          <View style={[styles.statusBadge, { borderColor: statusColor + '77' }]}>
+            <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
+            <Text style={[styles.statusTxt, { color: statusColor }]}>{exam.status}</Text>
           </View>
 
           <Text style={styles.title}>{exam.title}</Text>
-          <Text style={styles.subtitle}>{exam.conductingBody}</Text>
+          <Text style={styles.conductingBody}>{exam.conductingBody}</Text>
 
-          {/* Match Score Display */}
-          {score > 0 && (
-            <View style={styles.matchScoreCard}>
+          <View style={styles.tagsContainer}>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>{exam.category.replace(/_/g, ' ')}</Text>
+            </View>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>{exam.examLevel}</Text>
+            </View>
+            {exam.state && (
+              <View style={styles.tag}>
+                <Text style={styles.tagText}>{exam.state}</Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
+
+        {/* Match Score Display - Important One */}
+        {score > 0 && (
+          <View style={styles.matchScoreCard}>
+            <LinearGradient
+              colors={['#27272a', '#18181b']}
+              style={styles.matchGlass}>
               <View style={styles.matchHeader}>
-                <Text style={styles.matchLabel}>Eligibility Match</Text>
+                <View>
+                  <Text style={styles.matchLabel}>Eligibility Match</Text>
+                  <Text style={styles.matchHint}>Based on your profile</Text>
+                </View>
                 <Text style={[styles.matchValue, { color: scoreColor }]}>{score}%</Text>
               </View>
               <View style={styles.progressBarBg}>
                 <View style={[styles.progressBarFill, { width: `${score}%`, backgroundColor: scoreColor }]} />
               </View>
-              <Text style={styles.matchHint}>Based on your profile qualifications & age.</Text>
-            </View>
-          )}
+            </LinearGradient>
+          </View>
+        )}
 
-          {/* Facts Grid */}
-          <View style={styles.factsGrid}>
-            <View style={styles.factItem}>
-              <Text style={styles.factLabel}>VACANCIES</Text>
-              <Text style={styles.factValue}>{exam.totalVacancies?.toLocaleString('en-IN') ?? 'N/A'}</Text>
+        {/* Primary Action Buttons - If Registry is active */}
+        {isRegActive && regEvent?.actionUrl && (
+          <View style={styles.actionSection}>
+            <TouchableOpacity
+              style={styles.primaryActionBtn}
+              onPress={() => Linking.openURL(regEvent.actionUrl!)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.btnContent}>
+                <ExternalLink size={20} color="#FFF" />
+                <Text style={styles.primaryActionText}>Apply Now</Text>
+              </View>
+              <View style={styles.countdownBadge}>
+                <Text style={styles.countdownText}>{countdown}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Important Quick Facts Section - "Important Once First" */}
+        <View style={styles.importantContainer}>
+
+          {/* Vacancies Card */}
+          <View style={styles.factCard}>
+            <View style={styles.factHeader}>
+              <Briefcase size={20} color="#7C3AED" />
+              <Text style={styles.factTitle}>Total Vacancies</Text>
             </View>
-            <View style={styles.factItem}>
-              <Text style={styles.factLabel}>LEVEL</Text>
-              <Text style={styles.factValue}>{exam.examLevel}</Text>
+            {typeof exam.totalVacancies === 'number' ? (
+              <Text style={styles.hugeText}>{exam.totalVacancies.toLocaleString('en-IN')}</Text>
+            ) : (
+              renderJsonLines(exam.totalVacancies)
+            )}
+          </View>
+
+          {/* Eligibility Card */}
+          <View style={styles.factCard}>
+            <View style={styles.factHeader}>
+              <UserCheck size={20} color="#7C3AED" />
+              <Text style={styles.factTitle}>Eligibility</Text>
             </View>
-            <View style={[styles.factItem, { flex: 2, minWidth: '100%' }]}>
-              <Text style={styles.factLabel}>APPLICATION FEE</Text>
-              <Text style={styles.factValue}>{formatFee(exam.applicationFee)}</Text>
+            <View style={styles.eligibilityMain}>
+              <Text style={styles.eligibilityLevel}>
+                {exam.qualificationCriteria?.level?.replace(/_/g, ' ') || 'Check Rules'}
+              </Text>
+              {(exam.minAge || exam.maxAge) && (
+                <Text style={styles.ageText}>
+                  Age: {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} yrs
+                </Text>
+              )}
+            </View>
+            {exam.qualificationCriteria?.rules && (
+              <View style={styles.rulesContainer}>
+                {renderJsonLines(exam.qualificationCriteria.rules)}
+              </View>
+            )}
+          </View>
+
+          {/* Fees Card */}
+          <View style={styles.factCard}>
+            <View style={styles.factHeader}>
+              <IndianRupee size={20} color="#7C3AED" />
+              <Text style={styles.factTitle}>Application Fee</Text>
+            </View>
+            <View style={styles.feeGrid}>
+              {renderJsonLines(exam.applicationFee)}
             </View>
           </View>
-        </LinearGradient>
 
-        {/* Official Links */}
-        <View style={styles.linkRow}>
-          {exam.officialWebsite && (
-            <TouchableOpacity style={styles.linkBtn} onPress={() => Linking.openURL(exam.officialWebsite!)}>
-              <Globe size={18} color="#000" style={{ marginRight: 8 }} />
-              <Text style={styles.linkBtnTxt}>Official Website</Text>
-            </TouchableOpacity>
-          )}
-          {exam.notificationUrl && (
-            <TouchableOpacity style={[styles.linkBtn, { backgroundColor: '#312e81' }]} onPress={() => Linking.openURL(exam.notificationUrl!)}>
-              <FileText size={18} color="#c7d2fe" style={{ marginRight: 8 }} />
-              <Text style={[styles.linkBtnTxt, { color: '#c7d2fe' }]}>PDF Notification</Text>
-            </TouchableOpacity>
-          )}
         </View>
 
         {/* Timeline Section */}
         <View style={styles.section}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 20 }}>
-            <Calendar size={20} color="#7C3AED" style={{ marginRight: 10 }} />
-            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Exam Timeline</Text>
+          <View style={styles.sectionHeader}>
+            <Calendar size={20} color="#7C3AED" />
+            <Text style={styles.sectionTitle}>Exam Timeline</Text>
           </View>
           {!Array.isArray(timeline) || timeline.length === 0 ? (
             <View style={styles.emptyTimeline}>
@@ -225,26 +319,47 @@ export default function ExamDetailScreen() {
         </View>
 
         {/* Ad Placement */}
-        <NativeAdCard style={{ marginHorizontal: 20, marginTop: 20 }} />
+        <NativeAdCard style={{ marginHorizontal: 20, marginBottom: 30 }} />
 
-        {/* About Section */}
+        {/* Secondary Info Sections */}
         {exam.description && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About Examination</Text>
+            <View style={styles.sectionHeader}>
+              <Target size={20} color="#7C3AED" />
+              <Text style={styles.sectionTitle}>About Examination</Text>
+            </View>
             <Text style={styles.description}>{exam.description}</Text>
           </View>
         )}
 
+        {/* Official Links */}
+        <View style={styles.linkGrid}>
+          {exam.officialWebsite && (
+            <TouchableOpacity style={styles.linkCard} onPress={() => Linking.openURL(exam.officialWebsite!)}>
+              <Globe size={20} color="#FFF" />
+              <Text style={styles.linkCardTitle}>Official Website</Text>
+              <Text style={styles.linkCardSub}>Visit Portal</Text>
+            </TouchableOpacity>
+          )}
+          {exam.notificationUrl && (
+            <TouchableOpacity style={[styles.linkCard, { backgroundColor: '#312e81' }]} onPress={() => Linking.openURL(exam.notificationUrl!)}>
+              <FileText size={20} color="#c7d2fe" />
+              <Text style={[styles.linkCardTitle, { color: '#c7d2fe' }]}>Notification</Text>
+              <Text style={[styles.linkCardSub, { color: '#818cf8' }]}>Download PDF</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
       </ScrollView>
 
-      {/* Floating Apply Button */}
-      {isRegActive && regEvent?.actionUrl && (
-        <View style={styles.stickyFooter}>
+      {/* Primary Action Button Fixed at Bottom (If Active) */}
+      {!isRegActive && exam.notificationUrl && (
+        <View style={styles.footerSticky}>
           <TouchableOpacity
-            style={styles.applyBtn}
-            onPress={() => Linking.openURL(regEvent.actionUrl!)}
-            activeOpacity={0.9}>
-            <Text style={styles.applyBtnTxt}>Apply Now • {countdown}</Text>
+            style={[styles.primaryActionBtn, { backgroundColor: '#1e1b4b' }]}
+            onPress={() => Linking.openURL(exam.notificationUrl!)}>
+            <FileText size={20} color="#FFF" />
+            <Text style={styles.primaryActionText}>View Full Notification</Text>
           </TouchableOpacity>
         </View>
       )}
@@ -253,125 +368,206 @@ export default function ExamDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0D0F' },
-  loader: { flex: 1, backgroundColor: '#0D0D0F', justifyContent: 'center', alignItems: 'center' },
+  root: { flex: 1, backgroundColor: '#09090b' },
+  loader: { flex: 1, backgroundColor: '#09090b', justifyContent: 'center', alignItems: 'center' },
   errorTxt: { color: '#94a3b8', fontSize: 16 },
-  heroGradient: {
-    paddingTop: 20,
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
-  headerRow: {
+
+  // Custom Header
+  customHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
   },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 10,
-    borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-  },
-  statusTxt: { fontSize: 11, fontWeight: '800', letterSpacing: 0.5 },
-  actionBtns: { flexDirection: 'row', gap: 10 },
-  circleBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+  headerIconBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  title: { color: '#fff', fontSize: 24, fontWeight: '900', marginBottom: 8 },
-  subtitle: { color: '#94a3b8', fontSize: 16, fontWeight: '600', marginBottom: 24 },
-  matchScoreCard: {
-    backgroundColor: '#1e1b4b',
+  headerActionRow: { flexDirection: 'row', gap: 10 },
+
+  // Hero Section
+  heroSection: {
+    paddingTop: 80,
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+  },
+  title: {
+    color: '#fff',
+    fontSize: 28,
+    fontWeight: '900',
+    lineHeight: 34,
+    marginBottom: 8
+  },
+  conductingBody: {
+    color: '#a1a1aa',
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 20
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 20,
-    padding: 16,
-    marginBottom: 24,
     borderWidth: 1,
-    borderColor: '#312e81',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    alignSelf: 'flex-start',
+    marginBottom: 16,
+    gap: 6
+  },
+  statusDot: { width: 8, height: 8, borderRadius: 4 },
+  statusTxt: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
+  tagsContainer: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
+  tag: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  tagText: { color: '#d4d4d8', fontSize: 12, fontWeight: '700' },
+
+  // Match Score
+  matchScoreCard: {
+    marginHorizontal: 20,
+    marginTop: -30,
+    marginBottom: 20,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  matchGlass: {
+    padding: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   matchHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-end',
-    marginBottom: 10,
+    alignItems: 'center',
+    marginBottom: 16,
   },
-  matchLabel: { color: '#c7d2fe', fontSize: 13, fontWeight: '700' },
-  matchValue: { fontSize: 24, fontWeight: '900' },
+  matchLabel: { color: '#7C3AED', fontSize: 14, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
+  matchHint: { color: '#71717a', fontSize: 12, fontWeight: '500' },
+  matchValue: { fontSize: 32, fontWeight: '900' },
   progressBarBg: {
-    height: 8,
-    backgroundColor: '#312e81',
-    borderRadius: 4,
-    marginBottom: 8,
+    height: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 5,
     overflow: 'hidden',
   },
-  progressBarFill: { height: '100%', borderRadius: 4 },
-  matchHint: { color: '#6366f1', fontSize: 11, fontWeight: '600' },
-  factsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap', gap: 12,
+  progressBarFill: { height: '100%', borderRadius: 5 },
+
+  // Action Buttons
+  actionSection: {
+    paddingHorizontal: 20,
+    marginBottom: 24,
   },
-  factItem: {
-    flex: 1,
-    minWidth: '45%',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
-    padding: 14,
+  primaryActionBtn: {
+    height: 64,
+    backgroundColor: '#7C3AED',
+    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    shadowColor: '#7C3AED',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.4,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  btnContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  primaryActionText: { color: '#FFF', fontSize: 18, fontWeight: '900' },
+  countdownBadge: {
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  countdownText: { color: '#FFF', fontSize: 14, fontWeight: '800' },
+
+  // Important Info Cards
+  importantContainer: {
+    paddingHorizontal: 20,
+    gap: 16,
+    marginBottom: 40,
+  },
+  factCard: {
+    backgroundColor: '#18181b',
+    borderRadius: 24,
+    padding: 20,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
-  factLabel: { color: '#64748b', fontSize: 10, fontWeight: '800', letterSpacing: 1, marginBottom: 4 },
-  factValue: { color: '#f1f5f9', fontSize: 14, fontWeight: '700' },
-  linkRow: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    gap: 12,
-    marginTop: -20,
-    marginBottom: 30,
+  factHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
+  factTitle: { color: '#a1a1aa', fontSize: 14, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
+  hugeText: { color: '#FFF', fontSize: 36, fontWeight: '900' },
+  factValue: { color: '#e4e4e7', fontSize: 16, fontWeight: '700', lineHeight: 22, flex: 1 },
+  kvLine: { flexDirection: 'row', gap: 6, alignItems: 'center' },
+  kvLabel: { color: '#71717a', fontWeight: '600', minWidth: 80 },
+  feeGrid: { gap: 10 },
+
+  // Eligibility specific
+  eligibilityMain: { marginBottom: 12 },
+  eligibilityLevel: { color: '#FFF', fontSize: 24, fontWeight: '900', marginBottom: 4 },
+  ageText: { color: '#7C3AED', fontSize: 15, fontWeight: '800' },
+  rulesContainer: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)',
   },
-  linkBtn: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    height: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  linkBtnTxt: { color: '#000', fontSize: 14, fontWeight: '800' },
-  section: { paddingHorizontal: 20, marginBottom: 30 },
-  sectionTitle: { color: '#fff', fontSize: 20, fontWeight: '800', marginBottom: 20 },
-  description: { color: '#94a3b8', fontSize: 15, lineHeight: 24 },
+
+  // Timeline
+  section: { paddingHorizontal: 20, marginBottom: 40 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
+  sectionTitle: { color: '#FFF', fontSize: 22, fontWeight: '900' },
+  description: { color: '#a1a1aa', fontSize: 16, lineHeight: 26 },
   emptyTimeline: { padding: 40, alignItems: 'center' },
-  emptyTimelineText: { color: '#475569', fontSize: 15, fontWeight: '600' },
-  stickyFooter: {
+  emptyTimelineText: { color: '#52525b', fontSize: 15, fontWeight: '600' },
+
+  // Link Cards
+  linkGrid: { flexDirection: 'row', paddingHorizontal: 20, gap: 12, marginBottom: 40 },
+  linkCard: {
+    flex: 1,
+    backgroundColor: '#27272a',
+    padding: 16,
+    borderRadius: 20,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  linkCardTitle: { color: '#FFF', fontSize: 13, fontWeight: '800' },
+  linkCardSub: { color: '#71717a', fontSize: 11, fontWeight: '600' },
+
+  // Sticky Footer
+  footerSticky: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
     padding: 20,
-    backgroundColor: '#0D0D0F',
+    backgroundColor: 'rgba(9,9,11,0.9)',
     borderTopWidth: 1,
-    borderTopColor: '#1C1C1E',
-  },
-  applyBtn: {
-    backgroundColor: '#4f46e5',
-    borderRadius: 16,
-    height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  applyBtnTxt: { color: '#fff', fontSize: 16, fontWeight: '900' },
+    borderTopColor: 'rgba(255,255,255,0.05)',
+  }
 });

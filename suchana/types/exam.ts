@@ -23,27 +23,25 @@ export interface Exam {
     slug: string;
     description: string | null;
     conductingBody: string;
-    category: ExamCategory;
-    examLevel: ExamLevel;
+    category: string;
+    examLevel: string;
     state: string | null;
-    totalVacancies: number | null;
-    applicationFee: ApplicationFee | null;
+    minAge: number | null;
+    maxAge: number | null;
+    qualificationCriteria: {
+        level?: string;
+        rules?: Record<string, any>;
+    } | null;
+    totalVacancies: number | Record<string, any> | null;
+    applicationFee: Record<string, any> | null;
     officialWebsite: string | null;
     notificationUrl: string | null;
-    status: ExamStatus;
+    status: string;
     isPublished: boolean;
     publishedAt: string | null;
     createdAt: string;
     lifecycleEvents?: LifecycleEvent[];
     _count?: { lifecycleEvents: number };
-}
-
-export interface ApplicationFee {
-    general?: number;
-    obc?: number;
-    sc_st?: number;
-    female?: number;
-    currency?: string;
 }
 
 export type ExamCategory =
