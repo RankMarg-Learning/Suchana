@@ -111,6 +111,7 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
             ...dto,
             qualificationCriteria: dto.qualificationCriteria as Prisma.InputJsonValue,
             applicationFee: dto.applicationFee as Prisma.InputJsonValue,
+            totalVacancies: dto.totalVacancies as Prisma.InputJsonValue,
             slug,
             createdBy: adminId,
             publishedAt: dto.isPublished ? new Date() : null,
@@ -134,6 +135,7 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
         ...dto,
         qualificationCriteria: dto.qualificationCriteria as Prisma.InputJsonValue,
         applicationFee: dto.applicationFee as Prisma.InputJsonValue,
+        totalVacancies: dto.totalVacancies as Prisma.InputJsonValue,
         // Auto-set publishedAt when first publish
         ...(dto.isPublished && !existing.isPublished && { publishedAt: new Date() }),
     };

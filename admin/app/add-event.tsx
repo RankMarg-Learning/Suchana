@@ -10,10 +10,14 @@ import {
   ActivityIndicator,
   Switch,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Pressable
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { format } from 'date-fns';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
+import { Ionicons } from '@expo/vector-icons';
 import { lifecycleService } from '@/services/api.service';
 import { LifecycleEventType, LifecycleStage } from '@/constants/enums';
 
@@ -28,6 +32,7 @@ type EventFormValues = {
   isImportant: boolean;
   actionUrl: string;
   actionLabel: string;
+  stageOrder: string;
 };
 
 const EVENT_TYPES = Object.values(LifecycleEventType);
@@ -45,6 +50,13 @@ export default function AddEventScreen() {
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
 
+  // Picker states
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [startPickerMode, setStartPickerMode] = useState<'date' | 'time'>('date');
+
+  const [showEndPicker, setShowEndPicker] = useState(false);
+  const [endPickerMode, setEndPickerMode] = useState<'date' | 'time'>('date');
+
   const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<EventFormValues>({
     defaultValues: {
       eventType: LifecycleEventType.OTHER,
@@ -57,6 +69,7 @@ export default function AddEventScreen() {
       title: '',
       description: '',
       actionUrl: '',
+      stageOrder: '0',
     }
   });
 
@@ -84,6 +97,7 @@ export default function AddEventScreen() {
           isImportant: event.isImportant || false,
           actionUrl: event.actionUrl || '',
           actionLabel: event.actionLabel || 'Apply Now',
+          stageOrder: event.stageOrder?.toString() || '0',
         });
       }
     } catch (err) {
@@ -114,6 +128,7 @@ export default function AddEventScreen() {
         isImportant: data.isImportant,
         actionUrl: data.actionUrl?.trim() || null,
         actionLabel: data.actionLabel?.trim() || null,
+        stageOrder: data.stageOrder ? parseInt(data.stageOrder, 10) : 0,
       };
 
       if (isEdit) {
@@ -258,6 +273,25 @@ export default function AddEventScreen() {
             />
           </View>
 
+          <View style={styles.row}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Stage Order (Number)</Text>
+              <Controller
+                control={control}
+                name="stageOrder"
+                render={({ field: { onChange, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="e.g. 10, 20, 30"
+                    keyboardType="numeric"
+                    onChangeText={onChange}
+                    value={value}
+                  />
+                )}
+              />
+            </View>
+          </View>
+
           {!isTBD && (
             <View style={styles.row}>
               <View style={{ flex: 1, marginRight: 8 }}>
@@ -265,14 +299,53 @@ export default function AddEventScreen() {
                 <Controller
                   control={control}
                   name="startsAt"
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="YYYY-MM-DDTHH:mm"
-                      onChangeText={onChange}
-                      value={value}
-                    />
-                  )}
+                  render={({ field: { onChange, value } }) => {
+                    const date = value ? new Date(value) : new Date();
+                    return (
+                      <View>
+                        <TouchableOpacity
+                          style={styles.dateSelector}
+                          onPress={() => {
+                            setStartPickerMode('date');
+                            setShowStartPicker(true);
+                          }}
+                        >
+                          <Ionicons name="calendar-outline" size={18} color="#2196F3" />
+                          <Text style={styles.dateSelectorText}>
+                            {value ? format(new Date(value), 'MMM d, yyyy • HH:mm') : 'Select Date & Time'}
+                          </Text>
+                        </TouchableOpacity>
+
+                        {showStartPicker && (
+                          <DateTimePicker
+                            value={date}
+                            mode={startPickerMode}
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={(event, selectedDate) => {
+                              if (event.type === 'dismissed') {
+                                setShowStartPicker(false);
+                                return;
+                              }
+
+                              const currentDate = selectedDate || date;
+                              if (Platform.OS === 'android' && startPickerMode === 'date') {
+                                // On Android, after picking date, immediately show time picker
+                                setShowStartPicker(false);
+                                onChange(currentDate.toISOString().slice(0, 16));
+                                setTimeout(() => {
+                                  setStartPickerMode('time');
+                                  setShowStartPicker(true);
+                                }, 100);
+                              } else {
+                                setShowStartPicker(false);
+                                onChange(currentDate.toISOString().slice(0, 16));
+                              }
+                            }}
+                          />
+                        )}
+                      </View>
+                    );
+                  }}
                 />
               </View>
               <View style={{ flex: 1, marginLeft: 8 }}>
@@ -280,14 +353,57 @@ export default function AddEventScreen() {
                 <Controller
                   control={control}
                   name="endsAt"
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      placeholder="YYYY-MM-DDTHH:mm"
-                      onChangeText={onChange}
-                      value={value}
-                    />
-                  )}
+                  render={({ field: { onChange, value } }) => {
+                    const date = value ? new Date(value) : new Date();
+                    return (
+                      <View>
+                        <TouchableOpacity
+                          style={styles.dateSelector}
+                          onPress={() => {
+                            setEndPickerMode('date');
+                            setShowEndPicker(true);
+                          }}
+                        >
+                          <Ionicons name="time-outline" size={18} color="#666" />
+                          <Text style={styles.dateSelectorText}>
+                            {value ? format(new Date(value), 'MMM d, yyyy • HH:mm') : 'Select End Date'}
+                          </Text>
+                          {value && (
+                            <TouchableOpacity onPress={() => onChange('')} style={{ marginLeft: 'auto' }}>
+                              <Ionicons name="close-circle" size={16} color="#CCC" />
+                            </TouchableOpacity>
+                          )}
+                        </TouchableOpacity>
+
+                        {showEndPicker && (
+                          <DateTimePicker
+                            value={date}
+                            mode={endPickerMode}
+                            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                            onChange={(event, selectedDate) => {
+                              if (event.type === 'dismissed') {
+                                setShowEndPicker(false);
+                                return;
+                              }
+
+                              const currentDate = selectedDate || date;
+                              if (Platform.OS === 'android' && endPickerMode === 'date') {
+                                setShowEndPicker(false);
+                                onChange(currentDate.toISOString().slice(0, 16));
+                                setTimeout(() => {
+                                  setEndPickerMode('time');
+                                  setShowEndPicker(true);
+                                }, 100);
+                              } else {
+                                setShowEndPicker(false);
+                                onChange(currentDate.toISOString().slice(0, 16));
+                              }
+                            }}
+                          />
+                        )}
+                      </View>
+                    );
+                  }}
                 />
               </View>
             </View>
@@ -435,6 +551,22 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: 16,
     color: '#1A1A1A',
+  },
+  dateSelector: {
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    minHeight: 52,
+  },
+  dateSelectorText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
   },
   textArea: {
     height: 120,

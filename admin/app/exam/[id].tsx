@@ -1,11 +1,11 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  ActivityIndicator, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  ActivityIndicator,
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
@@ -32,13 +32,13 @@ export default function ExamDetailScreen() {
         examService.getExamById(id),
         lifecycleService.getEventsByExamId(id)
       ]);
-      
+
       setExam(examRes.data || examRes);
-      
+
       // The backend returns { success: true, data: { exam, events: [] } }
-      const timelineData = timelineRes.data?.events || 
-                          (Array.isArray(timelineRes.data) ? timelineRes.data : 
-                          (Array.isArray(timelineRes) ? timelineRes : []));
+      const timelineData = timelineRes.data?.events ||
+        (Array.isArray(timelineRes.data) ? timelineRes.data :
+          (Array.isArray(timelineRes) ? timelineRes : []));
       setTimeline(timelineData);
     } catch (err: any) {
       console.error(err);
@@ -67,8 +67,8 @@ export default function ExamDetailScreen() {
       'Are you sure you want to delete this exam? This will remove all associated events.',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
+        {
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -86,10 +86,10 @@ export default function ExamDetailScreen() {
   const handleEditEvent = (event: LifecycleEvent) => {
     router.push({
       pathname: '/add-event',
-      params: { 
-        examId: id, 
+      params: {
+        examId: id,
         examTitle: exam?.shortTitle,
-        eventId: event.id 
+        eventId: event.id
       }
     });
   };
@@ -100,8 +100,8 @@ export default function ExamDetailScreen() {
       `Are you sure you want to delete "${event.title}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
+        {
+          text: 'Delete',
           style: 'destructive',
           onPress: async () => {
             try {
@@ -136,8 +136,8 @@ export default function ExamDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
-      <Stack.Screen 
-        options={{ 
+      <Stack.Screen
+        options={{
           title: exam.shortTitle,
           headerRight: () => (
             <View style={{ flexDirection: 'row', gap: 16 }}>
@@ -149,18 +149,45 @@ export default function ExamDetailScreen() {
               </TouchableOpacity>
             </View>
           )
-        }} 
+        }}
       />
-      
+
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>General Information</Text>
           <View style={styles.infoGrid}>
             <InfoItem label="Title" value={exam.title} fullWidth />
             <InfoItem label="Conducting Body" value={exam.conductingBody} />
+            <InfoItem label="Short Name" value={exam.shortTitle} />
             <InfoItem label="Category" value={exam.category} />
             <InfoItem label="Status" value={exam.status} />
+            <InfoItem label="Level" value={exam.examLevel} />
+            {exam.state && <InfoItem label="State" value={exam.state} />}
+            <InfoItem label="Published" value={exam.isPublished ? 'Yes' : 'No'} />
+          </View>
+          {exam.description && (
+            <View style={{ marginTop: 16 }}>
+              <Text style={styles.infoLabel}>Description</Text>
+              <Text style={styles.descriptionText}>{exam.description}</Text>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Eligibility & Details</Text>
+          <View style={styles.infoGrid}>
+            <InfoItem label="Min Age" value={exam.minAge?.toString() || 'N/A'} />
+            <InfoItem label="Max Age" value={exam.maxAge?.toString() || 'N/A'} />
+            <InfoItem label="Qualification" value={(exam.qualificationCriteria as any)?.level || 'N/A'} />
             <InfoItem label="Vacancies" value={exam.totalVacancies?.toString() || 'N/A'} />
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Official Resources</Text>
+          <View style={styles.infoGrid}>
+            <InfoItem label="Website" value={exam.officialWebsite || 'N/A'} fullWidth />
+            <InfoItem label="Notification" value={exam.notificationUrl || 'N/A'} fullWidth />
           </View>
         </View>
 
@@ -175,10 +202,10 @@ export default function ExamDetailScreen() {
         <View style={styles.card}>
           {timeline.length > 0 ? (
             timeline.map((event, index) => (
-              <TimelineItem 
-                key={event.id} 
-                event={event} 
-                isLast={index === timeline.length - 1} 
+              <TimelineItem
+                key={event.id}
+                event={event}
+                isLast={index === timeline.length - 1}
                 onEdit={() => handleEditEvent(event)}
                 onDelete={() => handleDeleteEvent(event)}
               />
@@ -276,5 +303,11 @@ const styles = StyleSheet.create({
   emptyTimelineText: {
     color: '#999',
     fontStyle: 'italic',
+  },
+  descriptionText: {
+    fontSize: 14,
+    color: '#555',
+    lineHeight: 20,
+    marginTop: 4,
   },
 });

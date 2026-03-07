@@ -1,12 +1,12 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  FlatList, 
-  ActivityIndicator, 
-  RefreshControl, 
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  RefreshControl,
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
@@ -67,9 +67,9 @@ export default function ExamsScreen() {
       `Are you sure you want to delete "${exam.shortTitle}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive', 
+        {
+          text: 'Delete',
+          style: 'destructive',
           onPress: async () => {
             try {
               await examService.deleteExam(exam.id);
@@ -108,7 +108,7 @@ export default function ExamsScreen() {
           <Text style={styles.headerSubtitle}>Admin Control Panel</Text>
         </View>
         <View style={styles.headerActions}>
-           <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
+          <TouchableOpacity style={styles.refreshButton} onPress={onRefresh}>
             <Ionicons name="refresh" size={20} color="#666" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.addButton} onPress={handleCreateExam}>
@@ -131,11 +131,12 @@ export default function ExamsScreen() {
           data={exams}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <ExamCard 
-              exam={item} 
-              onPress={() => handleExamPress(item)} 
+            <ExamCard
+              exam={item}
+              onPress={() => handleExamPress(item)}
               onEdit={() => handleEditExam(item)}
               onDelete={() => handleDeleteExam(item)}
+              onManageEvents={() => handleExamPress(item)}
             />
           )}
           contentContainerStyle={styles.listContent}

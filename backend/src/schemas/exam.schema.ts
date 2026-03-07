@@ -12,18 +12,15 @@ export const createExamSchema = z.object({
     minAge: z.number().int().positive().optional().nullable(),
     maxAge: z.number().int().positive().optional().nullable(),
     qualificationCriteria: z.any().optional().nullable(), // Will be structured JSON
-    totalVacancies: z.number().int().positive().optional().nullable(),
-    applicationFee: z.record(z.string(), z.number()).optional().nullable(),
+    totalVacancies: z.any().optional().nullable(), // Changed to any to support structured JSON or number
+    applicationFee: z.any().optional().nullable(), // Changed to any for flexibility
     officialWebsite: z.string().url().or(z.literal('')).optional().nullable(),
     notificationUrl: z.string().url().or(z.literal('')).optional().nullable(),
+    status: z.nativeEnum(ExamStatus).default(ExamStatus.UPCOMING),
     isPublished: z.boolean().default(false),
 });
 
-export const updateExamSchema = createExamSchema
-    .partial()
-    .extend({
-        status: z.nativeEnum(ExamStatus).optional(),
-    });
+export const updateExamSchema = createExamSchema.partial();
 
 export const listExamQuerySchema = z.object({
     page: z.coerce.number().int().min(1).default(1),

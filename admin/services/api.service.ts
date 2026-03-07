@@ -16,15 +16,24 @@ export interface Exam {
     title: string;
     shortTitle: string;
     slug: string;
+    description?: string;
     category: ExamCategory;
     status: ExamStatus;
     examLevel: ExamLevel;
     state?: string;
     conductingBody: string;
+    minAge?: number;
+    maxAge?: number;
     totalVacancies?: number;
     qualificationCriteria?: any;
+    applicationFee?: any;
+    officialWebsite?: string;
+    notificationUrl?: string;
     isPublished: boolean;
     createdAt: string;
+    _count?: {
+        lifecycleEvents: number;
+    };
 }
 
 export interface LifecycleEvent {
@@ -32,6 +41,7 @@ export interface LifecycleEvent {
     examId: string;
     eventType: LifecycleEventType;
     stage: LifecycleStage;
+    stageOrder: number;
     title: string;
     description?: string;
     startsAt?: string;

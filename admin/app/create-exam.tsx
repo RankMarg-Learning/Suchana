@@ -13,10 +13,12 @@ import {
   Platform
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { examService } from '@/services/api.service';
 import { Ionicons } from '@expo/vector-icons';
 import { ExamCategory, ExamLevel, ExamStatus, QualificationLevel } from '@/constants/enums';
+
+type KeyValueItem = { key: string; value: string };
 
 type ExamFormValues = {
   title: string;
@@ -29,11 +31,14 @@ type ExamFormValues = {
   minAge: string;
   maxAge: string;
   qualificationLevel: QualificationLevel;
+  qualificationRules: KeyValueItem[];
   totalVacancies: string;
+  totalVacanciesBreakdown: KeyValueItem[];
   officialWebsite: string;
   notificationUrl: string;
   isPublished: boolean;
   status: ExamStatus;
+  applicationFee: KeyValueItem[];
 };
 
 const CATEGORIES = Object.values(ExamCategory);
@@ -49,10 +54,65 @@ const QUALIFICATIONS = [
 
 const STATUSES = Object.values(ExamStatus);
 
+function DynamicListSection({ label, control, name, placeholderKey, placeholderValue }: any) {
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name
+  });
+
+  return (
+    <View style={{ marginTop: 12 }}>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <Text style={styles.labelSmall}>{label}</Text>
+        <TouchableOpacity
+          style={styles.addBtnSmall}
+          onPress={() => append({ key: '', value: '' })}
+        >
+          <Ionicons name="add-circle" size={18} color="#2196F3" />
+          <Text style={styles.addBtnTextSmall}>Add Row</Text>
+        </TouchableOpacity>
+      </View>
+
+      {fields.map((field: any, index: number) => (
+        <View key={field.id} style={styles.kvRow}>
+          <Controller
+            control={control}
+            name={`${name}.${index}.key`}
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                style={[styles.input, styles.kvInput, { flex: 1.5 }]}
+                placeholder={placeholderKey}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+          />
+          <Controller
+            control={control}
+            name={`${name}.${index}.value`}
+            render={({ field: { onChange, value } }) => (
+              <TextInput
+                style={[styles.input, styles.kvInput, { flex: 1 }]}
+                placeholder={placeholderValue}
+                onChangeText={onChange}
+                value={value}
+              />
+            )}
+          />
+          <TouchableOpacity onPress={() => remove(index)} style={styles.removeBtn}>
+            <Ionicons name="close-circle" size={22} color="#EF4444" />
+          </TouchableOpacity>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function CreateExamScreen() {
   const router = useRouter();
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id } = useLocalSearchParams();
   const isEdit = !!id;
+
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEdit);
 
@@ -70,9 +130,15 @@ export default function CreateExamScreen() {
       minAge: '',
       maxAge: '',
       qualificationLevel: QualificationLevel.GRADUATE,
+      qualificationRules: [],
       totalVacancies: '',
+      totalVacanciesBreakdown: [],
       officialWebsite: '',
       notificationUrl: '',
+      applicationFee: [
+        { key: 'General', value: '100' },
+        { key: 'SC/ST', value: '0' }
+      ],
     }
   });
 
@@ -89,6 +155,12 @@ export default function CreateExamScreen() {
       setFetching(true);
       const response = await examService.getExamById(id as string);
       const data = response.data || response;
+
+      const transformToKV = (obj: any): KeyValueItem[] => {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return [];
+        return Object.entries(obj).map(([key, value]) => ({ key, value: String(value) }));
+      };
+
       reset({
         ...data,
         examLevel: data.examLevel || ExamLevel.NATIONAL,
@@ -97,10 +169,13 @@ export default function CreateExamScreen() {
         state: data.state || '',
         minAge: data.minAge?.toString() || '',
         maxAge: data.maxAge?.toString() || '',
-        totalVacancies: data.totalVacancies?.toString() || '',
+        totalVacancies: typeof data.totalVacancies === 'number' ? data.totalVacancies.toString() : '',
+        totalVacanciesBreakdown: typeof data.totalVacancies === 'object' ? transformToKV(data.totalVacancies) : [],
         officialWebsite: data.officialWebsite || '',
         notificationUrl: data.notificationUrl || '',
         qualificationLevel: data.qualificationCriteria?.level || QualificationLevel.GRADUATE,
+        qualificationRules: transformToKV(data.qualificationCriteria?.rules || {}),
+        applicationFee: transformToKV(data.applicationFee || {}),
       });
     } catch (err) {
       console.error(err);
@@ -113,6 +188,17 @@ export default function CreateExamScreen() {
   const onSubmit = async (data: ExamFormValues) => {
     try {
       setLoading(true);
+
+      const transformFromKV = (items: KeyValueItem[]) => {
+        if (!items || items.length === 0) return null;
+        return items.reduce((acc, item) => {
+          if (item.key.trim()) {
+            acc[item.key.trim()] = isNaN(Number(item.value)) ? item.value.trim() : Number(item.value);
+          }
+          return acc;
+        }, {} as Record<string, any>);
+      };
+
       const payload = {
         title: data.title?.trim(),
         shortTitle: data.shortTitle?.trim(),
@@ -124,13 +210,17 @@ export default function CreateExamScreen() {
         minAge: data.minAge ? parseInt(data.minAge, 10) : null,
         maxAge: data.maxAge ? parseInt(data.maxAge, 10) : null,
         qualificationCriteria: {
-          level: data.qualificationLevel
+          level: data.qualificationLevel,
+          rules: transformFromKV(data.qualificationRules)
         },
-        totalVacancies: data.totalVacancies ? parseInt(data.totalVacancies, 10) : null,
+        totalVacancies: data.totalVacanciesBreakdown.length > 0
+          ? transformFromKV(data.totalVacanciesBreakdown)
+          : (data.totalVacancies ? parseInt(data.totalVacancies, 10) : null),
         officialWebsite: data.officialWebsite?.trim() || null,
         notificationUrl: data.notificationUrl?.trim() || null,
         description: data.description?.trim() || null,
         isPublished: data.isPublished,
+        applicationFee: transformFromKV(data.applicationFee),
       };
 
       if (isEdit) {
@@ -388,7 +478,15 @@ export default function CreateExamScreen() {
             )}
           />
 
-          <Text style={styles.label}>Total Vacancies</Text>
+          <DynamicListSection
+            label="Additional Qualification Rules"
+            control={control}
+            name="qualificationRules"
+            placeholderKey="Rule (e.g. Type Test)"
+            placeholderValue="Requirement (e.g. 30 WPM)"
+          />
+
+          <Text style={styles.label}>Total Vacancies (Base Number)</Text>
           <Controller
             control={control}
             name="totalVacancies"
@@ -396,11 +494,19 @@ export default function CreateExamScreen() {
               <TextInput
                 style={styles.input}
                 keyboardType="numeric"
-                placeholder="1000"
+                placeholder="Total count"
                 onChangeText={onChange}
                 value={value}
               />
             )}
+          />
+
+          <DynamicListSection
+            label="Vacancies Breakdown (Optional)"
+            control={control}
+            name="totalVacanciesBreakdown"
+            placeholderKey="Post Name"
+            placeholderValue="Count"
           />
         </View>
 
@@ -436,6 +542,14 @@ export default function CreateExamScreen() {
                 keyboardType="url"
               />
             )}
+          />
+
+          <DynamicListSection
+            label="Application Fee Structure"
+            control={control}
+            name="applicationFee"
+            placeholderKey="Category (e.g. OBC)"
+            placeholderValue="Amount"
           />
         </View>
 
@@ -534,6 +648,10 @@ const styles = StyleSheet.create({
   },
   textArea: {
     height: 120,
+    textAlignVertical: 'top',
+  },
+  textAreaSmall: {
+    height: 80,
     textAlignVertical: 'top',
   },
   chipContainer: {
@@ -641,4 +759,38 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.5,
   },
+  labelSmall: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#6B7280',
+    textTransform: 'uppercase',
+  },
+  kvRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 8,
+    alignItems: 'center',
+  },
+  kvInput: {
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    fontSize: 14,
+  },
+  addBtnSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#EEF6FF',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  addBtnTextSmall: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2196F3',
+  },
+  removeBtn: {
+    padding: 2,
+  }
 });

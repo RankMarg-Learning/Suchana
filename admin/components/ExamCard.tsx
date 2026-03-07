@@ -1,80 +1,177 @@
-
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Exam } from '../services/api.service';
+import { ExamStatus } from '../constants/enums';
 
 interface ExamCardProps {
   exam: Exam;
   onPress: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
+  onManageEvents?: () => void;
 }
 
-export const ExamCard: React.FC<ExamCardProps> = ({ exam, onPress, onEdit, onDelete }) => {
-  const getStatusColor = (status: string) => {
+const RenderMetadata = ({ icon, color, label, data }: any) => {
+  if (!data) return null;
+
+  const entries = typeof data === 'object' && !Array.isArray(data)
+    ? Object.entries(data)
+    : [[label, String(data)]];
+
+  return (
+    <View style={styles.metaSection}>
+      <View style={styles.metaHeader}>
+        <Ionicons name={icon} size={14} color={color} />
+        <Text style={[styles.metaLabel, { color }]}>{label}</Text>
+      </View>
+      <View style={styles.metaList}>
+        {entries.map(([key, val]: any, idx) => (
+          <View key={idx} style={styles.metaChip}>
+            <Text style={styles.metaChipKey}>{key}: </Text>
+            <Text style={styles.metaChipVal}>{String(val)}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+export const ExamCard: React.FC<ExamCardProps> = ({
+  exam,
+  onPress,
+  onEdit,
+  onDelete,
+  onManageEvents
+}) => {
+  const eventCount = exam._count?.lifecycleEvents || 0;
+
+  const getStatusStyle = (status: string): { bg: string; text: string; icon: any } => {
     switch (status) {
-      case 'ACTIVE': return '#4CAF50';
-      case 'UPCOMING': return '#2196F3';
-      case 'COMPLETED': return '#9E9E9E';
-      case 'CANCELLED': return '#F44336';
-      default: return '#757575';
+      case ExamStatus.REGISTRATION_OPEN:
+        return { bg: '#E8F5E9', text: '#2E7D32', icon: 'flash' };
+      case ExamStatus.UPCOMING:
+        return { bg: '#E3F2FD', text: '#1565C0', icon: 'calendar-outline' };
+      case ExamStatus.RESULT_DECLARED:
+        return { bg: '#F3E5F5', text: '#7B1FA2', icon: 'trophy' };
+      case ExamStatus.ADMIT_CARD_OUT:
+        return { bg: '#FFF3E0', text: '#E65100', icon: 'card' };
+      default:
+        return { bg: '#F5F5F5', text: '#616161', icon: 'list' };
     }
   };
 
+  const statusStyle = getStatusStyle(exam.status);
+  const isMissingLinks = !exam.officialWebsite || !exam.notificationUrl;
+
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={onPress}
+      activeOpacity={0.75}
+    >
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
+        <View style={styles.headerMain}>
           <Text style={styles.title} numberOfLines={2}>{exam.title}</Text>
-          <View style={styles.shortTitleRow}>
-            <Text style={styles.shortTitle}>{exam.shortTitle}</Text>
-            <View style={styles.dotSeparator} />
-            <Text style={styles.categoryText}>{exam.category}</Text>
-          </View>
-        </View>
-        <View style={styles.headerRight}>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(exam.status) }]}>
-            <Text style={styles.statusText}>{exam.status}</Text>
+          <View style={styles.badgeRow}>
+            <View style={[styles.statusBadge, { backgroundColor: statusStyle.bg }]}>
+              <Ionicons name={statusStyle.icon} size={12} color={statusStyle.text} style={{ marginRight: 4 }} />
+              <Text style={[styles.statusText, { color: statusStyle.text }]}>
+                {exam.status.replace(/_/g, ' ')}
+              </Text>
+            </View>
+            {exam.isPublished ? (
+              <View style={styles.liveBadge}>
+                <View style={styles.liveDot} />
+                <Text style={styles.liveText}>LIVE</Text>
+              </View>
+            ) : (
+              <View style={styles.draftBadge}>
+                <Text style={styles.draftText}>DRAFT</Text>
+              </View>
+            )}
           </View>
         </View>
       </View>
 
+      <View style={styles.divider} />
+
       <View style={styles.body}>
-        <View style={styles.infoRow}>
-          <View style={styles.iconContainer}>
-            <Ionicons name="business" size={14} color="#2196F3" />
+        <View style={styles.infoGrid}>
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Conducting Body</Text>
+            <Text style={styles.infoValue} numberOfLines={1}>{exam.conductingBody || 'N/A'}</Text>
           </View>
-          <Text style={styles.infoText} numberOfLines={1}>{exam.conductingBody}</Text>
-        </View>
-        {exam.totalVacancies && (
-          <View style={styles.infoRow}>
-            <View style={styles.iconContainer}>
-              <Ionicons name="people" size={14} color="#4CAF50" />
+          <View style={styles.infoItem}>
+            <Text style={styles.infoLabel}>Events Added</Text>
+            <View style={styles.eventCountRow}>
+              <Text style={[styles.infoValue, { color: eventCount === 0 ? '#EF4444' : '#1A1A1A' }]}>
+                {eventCount} Events
+              </Text>
+              {eventCount === 0 && <Ionicons name="alert-circle" size={14} color="#EF4444" style={{ marginLeft: 4 }} />}
             </View>
-            <Text style={styles.infoText}>{exam.totalVacancies.toLocaleString()} Vacancies</Text>
+          </View>
+        </View>
+
+        {/* Dynamic Data Lists */}
+        <View style={styles.metadataContainer}>
+          <RenderMetadata
+            icon="people"
+            color="#10B981"
+            label="Vacancies"
+            data={exam.totalVacancies}
+          />
+          <RenderMetadata
+            icon="wallet"
+            color="#6366F1"
+            label="Fees"
+            data={exam.applicationFee}
+          />
+        </View>
+
+        <View style={styles.statsRow}>
+          <View style={styles.statChip}>
+            <Ionicons name="folder-outline" size={14} color="#6B7280" />
+            <Text style={styles.statText}>{exam.category}</Text>
+          </View>
+          <View style={styles.statChip}>
+            <Ionicons name="location-outline" size={14} color="#6B7280" />
+            <Text style={styles.statText}>{exam.examLevel === 'STATE' ? exam.state : exam.examLevel}</Text>
+          </View>
+        </View>
+
+        {isMissingLinks && (
+          <View style={styles.warningBox}>
+            <Ionicons name="warning-outline" size={14} color="#B45309" />
+            <Text style={styles.warningText}>Missing Official URLs</Text>
           </View>
         )}
       </View>
 
       <View style={styles.footer}>
-        <View style={styles.dateContainer}>
-          <Ionicons name="time-outline" size={12} color="#999" />
-          <Text style={styles.dateValue}>{new Date(exam.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</Text>
-        </View>
-        
-        <View style={styles.actionButtons}>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.editButton]} 
+        <View style={styles.actionsLeft}>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.editBtn]}
             onPress={(e) => { e.stopPropagation(); onEdit?.(); }}
           >
-            <Ionicons name="pencil" size={16} color="#2196F3" />
+            <Ionicons name="create-outline" size={18} color="#2563EB" />
+            <Text style={styles.editBtnText}>Edit Info</Text>
           </TouchableOpacity>
-          <TouchableOpacity 
-            style={[styles.actionButton, styles.deleteButton]} 
+        </View>
+
+        <View style={styles.actionsRight}>
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.manageBtn]}
+            onPress={(e) => { e.stopPropagation(); onManageEvents?.() || onPress(); }}
+          >
+            <Text style={styles.manageBtnText}>Manage Timeline</Text>
+            <Ionicons name="arrow-forward" size={16} color="#FFF" style={{ marginLeft: 6 }} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.deleteIconButton}
             onPress={(e) => { e.stopPropagation(); onDelete?.(); }}
           >
-            <Ionicons name="trash" size={16} color="#F44336" />
+            <Ionicons name="trash-outline" size={20} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </View>
@@ -86,128 +183,247 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: '#FFF',
     borderRadius: 24,
-    padding: 20,
+    padding: 16,
     marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 6,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 12,
+    elevation: 4,
     borderWidth: 1,
-    borderColor: '#F0F0F0',
+    borderColor: '#F3F4F6',
   },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  headerMain: {
+    gap: 8,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#1A1A1A',
-    lineHeight: 26,
-    letterSpacing: -0.5,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#111827',
+    lineHeight: 24,
   },
-  shortTitleRow: {
+  badgeRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flexWrap: 'wrap',
+  },
+  statusBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
   },
-  shortTitle: {
-    fontSize: 13,
-    color: '#666',
-    fontWeight: '600',
-  },
-  dotSeparator: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: '#CCC',
-    marginHorizontal: 8,
-  },
-  categoryText: {
-    fontSize: 12,
-    color: '#2196F3',
+  statusText: {
+    fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
   },
-  headerRight: {
-    alignItems: 'flex-end',
-    marginLeft: 12,
-  },
-  statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  statusText: {
-    fontSize: 10,
-    fontWeight: '900',
-    color: '#FFF',
-    letterSpacing: 1,
-  },
-  body: {
-    marginTop: 16,
-    marginBottom: 20,
-    gap: 8,
-  },
-  infoRow: {
+  liveBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-  },
-  iconContainer: {
-    width: 28,
-    height: 28,
+    backgroundColor: '#EFF6FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 8,
-    backgroundColor: '#F8F9FA',
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#BFDBFE',
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#2563EB',
+    marginRight: 6,
+  },
+  liveText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#2563EB',
+  },
+  draftBadge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  draftText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#6B7280',
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#F3F4F6',
+    marginVertical: 4,
+  },
+  body: {
+    paddingVertical: 12,
+    gap: 12,
+  },
+  infoGrid: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  infoItem: {
+    flex: 1,
+  },
+  infoLabel: {
+    fontSize: 11,
+    color: '#9CA3AF',
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  infoValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#374151',
+  },
+  eventCountRow: {
+    flexDirection: 'row',
     alignItems: 'center',
   },
-  infoText: {
-    fontSize: 14,
-    color: '#444',
+  statsRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  statChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 10,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  statText: {
+    fontSize: 12,
+    color: '#4B5563',
     fontWeight: '600',
+  },
+  warningBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFBEB',
+    padding: 8,
+    borderRadius: 10,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#FEF3C7',
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#B45309',
+    fontWeight: '700',
   },
   footer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 8,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: '#F5F5F5',
+    borderTopColor: '#F3F4F6',
+    justifyContent: 'space-between',
   },
-  dateContainer: {
+  actionsLeft: {
+    flexDirection: 'row',
+  },
+  actionsRight: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 12,
   },
-  dateValue: {
-    fontSize: 12,
-    color: '#999',
-    fontWeight: '500',
-  },
-  actionButtons: {
+  actionBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    gap: 6,
   },
-  actionButton: {
+  editBtn: {
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    backgroundColor: '#EFF6FF',
+  },
+  editBtnText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2563EB',
+  },
+  manageBtn: {
+    backgroundColor: '#2563EB',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  manageBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFF',
+  },
+  deleteIconButton: {
     width: 40,
     height: 40,
     borderRadius: 14,
+    backgroundColor: '#FEF2F2',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
   },
-  editButton: {
-    backgroundColor: '#E3F2FD',
+  metadataContainer: {
+    gap: 12,
+    marginVertical: 4,
   },
-  deleteButton: {
-    backgroundColor: '#FFEBEE',
+  metaSection: {
+    gap: 6,
   },
+  metaHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  metaLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  metaList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  metaChip: {
+    flexDirection: 'row',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  metaChipKey: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#6B7280',
+  },
+  metaChipVal: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#111827',
+  }
 });
