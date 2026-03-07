@@ -1,31 +1,32 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Target, Clock, Bookmark, BookmarkCheck } from 'lucide-react-native';
 import type { Exam } from '@/types/exam';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  UPSC:        '#7C3AED',
-  SSC:         '#2563EB',
-  BANKING:     '#059669',
-  RAILWAY:     '#DC2626',
-  DEFENCE:     '#1D4ED8',
-  STATE_PSC:   '#D97706',
-  TEACHING:    '#DB2777',
-  POLICE:      '#374151',
-  MEDICAL:     '#EF4444',
+  UPSC: '#7C3AED',
+  SSC: '#2563EB',
+  BANKING: '#059669',
+  RAILWAY: '#DC2626',
+  DEFENCE: '#1D4ED8',
+  STATE_PSC: '#D97706',
+  TEACHING: '#DB2777',
+  POLICE: '#374151',
+  MEDICAL: '#EF4444',
   ENGINEERING: '#0891B2',
-  LAW:         '#7C3AED',
-  OTHER:       '#6B7280',
+  LAW: '#7C3AED',
+  OTHER: '#6B7280',
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  UPCOMING:  { label: 'Upcoming', color: '#FCD34D', bg: '#4B3800' },
-  ACTIVE:    { label: 'Active',   color: '#6EE7B7', bg: '#064E3B' },
-  COMPLETED: { label: 'Closed',  color: '#9CA3AF', bg: '#1F2937' },
+  UPCOMING: { label: 'Upcoming', color: '#FCD34D', bg: '#4B3800' },
+  ACTIVE: { label: 'Active', color: '#6EE7B7', bg: '#064E3B' },
+  COMPLETED: { label: 'Closed', color: '#9CA3AF', bg: '#1F2937' },
   CANCELLED: { label: 'Cancelled', color: '#FCA5A5', bg: '#450A0A' },
 };
 
-/** Returns true if exam was created/updated in last 3 days */
 function isNewExam(exam: Exam): boolean {
   if (!exam.createdAt) return false;
   const created = new Date(exam.createdAt).getTime();
@@ -34,7 +35,7 @@ function isNewExam(exam: Exam): boolean {
 }
 
 interface Props {
-  exam: Exam;
+  exam: Exam & { matchScore?: number };
   isSaved?: boolean;
   onSaveToggle?: () => void;
 }
@@ -45,137 +46,215 @@ export function ExamCard({ exam, isSaved, onSaveToggle }: Props) {
   const status = STATUS_CONFIG[exam.status] ?? STATUS_CONFIG.UPCOMING;
   const isNew = isNewExam(exam);
 
-  // Next upcoming registration event
-  const nextReg = exam.lifecycleEvents?.find(e => e.eventType === 'REGISTRATION');
+  const nextReg = exam.lifecycleEvents?.find(e => e.stage === 'REGISTRATION');
   const daysLeft = nextReg?.endsAt
     ? Math.ceil((new Date(nextReg.endsAt).getTime() - Date.now()) / 86400000)
     : null;
   const isUrgent = daysLeft !== null && daysLeft <= 7 && daysLeft >= 0;
-  const isRegOpen = daysLeft !== null && daysLeft > 0;
+
+  const score = exam.matchScore ?? 0;
+  const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#6B7280';
 
   return (
     <TouchableOpacity
-      style={[styles.card, isUrgent && styles.cardUrgent]}
-      activeOpacity={0.88}
+      style={styles.container}
+      activeOpacity={0.9}
       onPress={() => router.push({ pathname: '/exam/[id]', params: { id: exam.id } })}>
 
-      {/* Urgent deadline strip */}
-      {isUrgent && (
-        <View style={styles.urgentStrip}>
-          <Text style={styles.urgentText}>⏰ Apply closes in {daysLeft}d</Text>
-        </View>
-      )}
+      <LinearGradient
+        colors={isUrgent ? ['#27120a', '#1C1C1E'] : ['#1C1C1E', '#1C1C1E']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.card, isUrgent && styles.cardUrgent]}>
 
-      {/* Header row */}
-      <View style={styles.headerRow}>
-        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', flex: 1 }}>
-          <View style={[styles.categoryBadge, { backgroundColor: catColor + '22', borderColor: catColor }]}>
-            <Text style={[styles.categoryText, { color: catColor }]}>{exam.category.replace('_', ' ')}</Text>
+        {/* Top Header Row */}
+        <View style={styles.header}>
+          <View style={styles.catRow}>
+            <View style={[styles.dot, { backgroundColor: catColor }]} />
+            <Text style={styles.categoryText}>{exam.category.replace('_', ' ')}</Text>
+            {isNew && <View style={styles.newDot} />}
           </View>
-          {isNew && (
-            <View style={styles.newBadge}>
-              <Text style={styles.newBadgeText}>NEW</Text>
+
+          <View style={[styles.statusBadge, { backgroundColor: status.bg + '55' }]}>
+            <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+          </View>
+        </View>
+
+        {/* Title & Body */}
+        <View style={styles.content}>
+          <Text style={styles.title} numberOfLines={2}>{exam.title}</Text>
+          <Text style={styles.conductingBody}>{exam.conductingBody}</Text>
+        </View>
+
+        {/* Progress / Match Score Section */}
+        {score > 0 && (
+          <View style={styles.matchSection}>
+            <View style={styles.matchBarBg}>
+              <View style={[styles.matchBarFill, { width: `${score}%`, backgroundColor: scoreColor }]} />
             </View>
-          )}
-        </View>
-        <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
-          <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
-        </View>
-      </View>
-
-      {/* Title */}
-      <Text style={styles.title} numberOfLines={2}>{exam.title}</Text>
-      <Text style={styles.body}>{exam.conductingBody}</Text>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        <View style={styles.footerLeft}>
-          {exam.totalVacancies != null && (
-            <Text style={styles.meta}>
-              <Text style={styles.metaLabel}>Vacancies: </Text>
-              {exam.totalVacancies.toLocaleString('en-IN')}
+            <Text style={[styles.matchText, { color: scoreColor }]}>
+              {score}% Match
             </Text>
-          )}
-          {exam.examLevel && (
-            <View style={styles.levelChip}>
-              <Text style={styles.levelText}>{exam.examLevel}</Text>
-            </View>
-          )}
-          {/* Registration open pill */}
-          {isRegOpen && !isUrgent && (
-            <View style={styles.regOpenChip}>
-              <Text style={styles.regOpenText}>📝 Apply Open</Text>
-            </View>
-          )}
+          </View>
+        )}
+
+        {/* Footer Area */}
+        <View style={styles.footer}>
+          <View style={styles.meta}>
+            {exam.totalVacancies != null && (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Target size={14} color="#F4F4F5" style={{ marginRight: 6 }} />
+                <Text style={styles.vacancyText}>
+                  <Text style={{ fontWeight: '800', color: '#F4F4F5' }}>{exam.totalVacancies.toLocaleString('en-IN')}</Text> Vacancies
+                </Text>
+              </View>
+            )}
+            {isUrgent && (
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4 }}>
+                <Clock size={12} color="#FBBF24" style={{ marginRight: 6 }} />
+                <Text style={styles.urgentText}>Ends in {daysLeft}d</Text>
+              </View>
+            )}
+          </View>
+
+          <TouchableOpacity
+            onPress={onSaveToggle}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            style={styles.saveBtn}>
+            {isSaved ? <BookmarkCheck size={20} color="#7C3AED" fill="#7C3AED" /> : <Bookmark size={20} color="#94a3b8" />}
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={onSaveToggle} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-          <Text style={{ fontSize: 20 }}>{isSaved ? '🔖' : '🔕'}</Text>
-        </TouchableOpacity>
-      </View>
+
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
+  container: {
+    marginBottom: 16,
+    borderRadius: 20,
     backgroundColor: '#1C1C1E',
-    borderRadius: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  card: {
+    borderRadius: 20,
     padding: 16,
-    marginBottom: 12,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#2C2C2E',
   },
   cardUrgent: {
     borderColor: '#78350F',
   },
-  urgentStrip: {
-    backgroundColor: '#4B1C00',
-    borderRadius: 8,
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  catRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  categoryText: {
+    color: '#9CA3AF',
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  newDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#10B981',
+  },
+  statusBadge: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    marginBottom: 10,
-    alignSelf: 'flex-start',
-  },
-  urgentText: { color: '#FBBF24', fontSize: 12, fontWeight: '600' },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  categoryBadge: {
-    borderRadius: 6,
+    borderRadius: 8,
     borderWidth: 1,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
+    borderColor: '#3F3F46',
   },
-  categoryText: { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  newBadge: {
-    backgroundColor: '#065F46',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderWidth: 1,
-    borderColor: '#059669',
+  statusText: {
+    fontSize: 10,
+    fontWeight: '800',
   },
-  newBadgeText: { color: '#6EE7B7', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  statusBadge: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  statusText: { fontSize: 11, fontWeight: '600' },
-  title: { color: '#F4F4F5', fontSize: 16, fontWeight: '700', marginBottom: 4, lineHeight: 22 },
-  body:  { color: '#9CA3AF', fontSize: 13, marginBottom: 12 },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  footerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8, flex: 1, flexWrap: 'wrap' },
-  meta: { color: '#6B7280', fontSize: 12 },
-  metaLabel: { color: '#9CA3AF', fontWeight: '600' },
-  levelChip: {
+  content: {
+    marginBottom: 16,
+  },
+  title: {
+    color: '#F4F4F5',
+    fontSize: 18,
+    fontWeight: '800',
+    lineHeight: 24,
+    marginBottom: 4,
+  },
+  conductingBody: {
+    color: '#71717A',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  matchSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 16,
     backgroundColor: '#27272A',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+    padding: 8,
+    borderRadius: 12,
   },
-  levelText: { color: '#A1A1AA', fontSize: 10, fontWeight: '600', letterSpacing: 0.5 },
-  regOpenChip: {
-    backgroundColor: '#052e16',
-    borderRadius: 4,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+  matchBarBg: {
+    flex: 1,
+    height: 6,
+    backgroundColor: '#3F3F46',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  matchBarFill: {
+    height: '100%',
+    borderRadius: 3,
+  },
+  matchText: {
+    fontSize: 12,
+    fontWeight: '800',
+    width: 70,
+    textAlign: 'right',
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  meta: {
+    flex: 1,
+    gap: 4,
+  },
+  vacancyText: {
+    color: '#A1A1AA',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  urgentText: {
+    color: '#FBBF24',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  saveBtn: {
+    backgroundColor: '#27272A',
+    padding: 10,
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#166534',
+    borderColor: '#3F3F46',
   },
-  regOpenText: { color: '#86efac', fontSize: 10, fontWeight: '600' },
 });

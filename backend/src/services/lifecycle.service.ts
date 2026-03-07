@@ -16,9 +16,7 @@ import { logger } from '../utils/logger';
 
 const TIMELINE_CACHE_KEY = (examId: string) => `timeline:${examId}`;
 
-// ─── Get Timeline for an exam ────────────────────────────────
 export async function getExamTimeline(examId: string) {
-    // Verify exam exists first
     const exam = await prisma.exam.findUnique({
         where: { id: examId },
         select: { id: true, title: true, shortTitle: true, slug: true, status: true },

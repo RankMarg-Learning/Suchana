@@ -10,6 +10,7 @@ import { CategoryChip } from '@/components/CategoryChip';
 import { AdBanner } from '@/components/AdBanner';
 import { useUser } from '@/context/UserContext';
 import { toggleSavedExam } from '@/services/userService';
+import { Search, X, Inbox } from 'lucide-react-native';
 import type { Exam, ExamCategory, ExamLevel } from '@/types/exam';
 import { useFocusEffect } from 'expo-router';
 
@@ -56,7 +57,7 @@ export default function ExploreScreen() {
       });
       setExams(list);
       setTotal(t);
-    } catch (_) {}
+    } catch (_) { }
     finally { setLoading(false); }
   }, [search, selectedCats, level]);
 
@@ -92,12 +93,15 @@ export default function ExploreScreen() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" />}
         ListHeaderComponent={
           <View>
-            <Text style={styles.title}>🔍 Explore Exams</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', padding: 16 }}>
+              <Search size={22} color="#7C3AED" style={{ marginRight: 10 }} />
+              <Text style={[styles.title, { padding: 0 }]}>Explore Exams</Text>
+            </View>
             <AdBanner style={{ marginHorizontal: 16, marginBottom: 8 }} />
 
             {/* Search */}
             <View style={styles.searchBox}>
-              <Text style={styles.searchIcon}>🔎</Text>
+              <Search size={18} color="#4B5563" style={{ marginRight: 10 }} />
               <TextInput
                 style={styles.searchInput}
                 placeholder="Search exams, boards, posts…"
@@ -108,8 +112,8 @@ export default function ExploreScreen() {
                 returnKeyType="search"
               />
               {search.length > 0 && (
-                <TouchableOpacity onPress={() => { setSearch(''); }}>
-                  <Text style={styles.clearBtn}>✕</Text>
+                <TouchableOpacity onPress={() => { setSearch(''); }} style={{ padding: 4 }}>
+                  <X size={18} color="#6B7280" />
                 </TouchableOpacity>
               )}
             </View>
@@ -163,7 +167,7 @@ export default function ExploreScreen() {
         ListEmptyComponent={
           !loading ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>📭</Text>
+              <Inbox size={48} color="#3F3F46" strokeWidth={1.5} style={{ marginBottom: 16 }} />
               <Text style={styles.emptyTxt}>No exams match your filters.</Text>
             </View>
           ) : null
@@ -188,9 +192,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2C2C2E',
   },
-  searchIcon: { fontSize: 16, marginRight: 8 },
   searchInput: { flex: 1, color: '#F4F4F5', fontSize: 15, paddingVertical: 14 },
-  clearBtn: { color: '#6B7280', fontSize: 16, paddingLeft: 8 },
   levelRow: { paddingHorizontal: 16, paddingBottom: 10, gap: 8 },
   levelBtn: {
     borderRadius: 8,
@@ -213,6 +215,5 @@ const styles = StyleSheet.create({
   resultCount: { color: '#6B7280', fontSize: 13 },
   clearFilters: { color: '#7C3AED', fontSize: 13, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: 16 },
   emptyTxt: { color: '#6B7280', fontSize: 16 },
 });

@@ -4,6 +4,17 @@ import {
   ScrollView, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import {
+  User,
+  MapPin,
+  Target,
+  GraduationCap,
+  Briefcase,
+  Search,
+  Rocket,
+  ChevronLeft,
+  ChevronRight
+} from 'lucide-react-native';
 import { registerUser } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
 import { CategoryChip } from '@/components/CategoryChip';
@@ -11,11 +22,11 @@ import type { ExamCategory } from '@/types/exam';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const INDIA_STATES = [
-  'Andhra Pradesh','Arunachal Pradesh','Assam','Bihar','Chhattisgarh','Goa','Gujarat',
-  'Haryana','Himachal Pradesh','Jharkhand','Karnataka','Kerala','Madhya Pradesh',
-  'Maharashtra','Manipur','Meghalaya','Mizoram','Nagaland','Odisha','Punjab',
-  'Rajasthan','Sikkim','Tamil Nadu','Telangana','Tripura','Uttar Pradesh',
-  'Uttarakhand','West Bengal','Delhi','Jammu & Kashmir','Ladakh',
+  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
+  'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh',
+  'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+  'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
+  'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir', 'Ladakh',
 ];
 
 const CATEGORIES: { label: string; value: ExamCategory }[] = [
@@ -32,7 +43,12 @@ const CATEGORIES: { label: string; value: ExamCategory }[] = [
   { label: 'Law', value: 'LAW' },
 ];
 
-const STEPS = ['👋 Who are you?', '📍 Your Location', '🎯 Exam Interests', '🎓 Your Profile'];
+const STEPS = [
+  { label: 'Identity', icon: User },
+  { label: 'Location', icon: MapPin },
+  { label: 'Interests', icon: Target },
+  { label: 'Profile', icon: GraduationCap },
+];
 
 export default function OnboardingScreen() {
   const router = useRouter();
@@ -102,7 +118,15 @@ export default function OnboardingScreen() {
           <Text style={styles.skipTxt}>Skip</Text>
         </TouchableOpacity>
       </View>
-      <Text style={styles.stepTitle}>{STEPS[step]}</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 16 }}>
+        {(() => {
+          const StepIcon = STEPS[step].icon;
+          return <StepIcon size={24} color="#7C3AED" style={{ marginRight: 12 }} />;
+        })()}
+        <Text style={[styles.stepTitle, { paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }]}>
+          {STEPS[step].label}
+        </Text>
+      </View>
       <Text style={styles.optionalHint}>Optional · for personalised exam recommendations</Text>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
@@ -184,14 +208,21 @@ export default function OnboardingScreen() {
             <View>
               <Text style={styles.label}>Gender</Text>
               <View style={styles.optionRow}>
-                {['MALE', 'FEMALE', 'OTHER'].map(g => (
+                {[
+                  { v: 'MALE', l: 'Male', i: User },
+                  { v: 'FEMALE', l: 'Female', i: User },
+                  { v: 'OTHER', l: 'Other', i: User },
+                ].map(g => (
                   <TouchableOpacity
-                    key={g}
-                    style={[styles.optBtn, gender === g && styles.optBtnActive]}
-                    onPress={() => setGender(prev => prev === g ? '' : g)}>
-                    <Text style={[styles.optTxt, gender === g && styles.optTxtActive]}>
-                      {g === 'MALE' ? '👨 Male' : g === 'FEMALE' ? '👩 Female' : '🧑 Other'}
-                    </Text>
+                    key={g.v}
+                    style={[styles.optBtn, gender === g.v && styles.optBtnActive]}
+                    onPress={() => setGender(prev => prev === g.v ? '' : g.v)}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <g.i size={14} color={gender === g.v ? '#C4B5FD' : '#9CA3AF'} style={{ marginRight: 6 }} />
+                      <Text style={[styles.optTxt, gender === g.v && styles.optTxtActive]}>
+                        {g.l}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -218,15 +249,18 @@ export default function OnboardingScreen() {
               <Text style={styles.label}>Employment Status</Text>
               <View style={styles.optionRow}>
                 {[
-                  { v: 'STUDENT', l: '🎒 Student' },
-                  { v: 'EMPLOYED', l: '💼 Employed' },
-                  { v: 'UNEMPLOYED', l: '🔍 Job Seeking' },
+                  { v: 'STUDENT', l: 'Student', i: GraduationCap },
+                  { v: 'EMPLOYED', l: 'Employed', i: Briefcase },
+                  { v: 'UNEMPLOYED', l: 'Job Seeking', i: Search },
                 ].map(e => (
                   <TouchableOpacity
                     key={e.v}
                     style={[styles.optBtn, employment === e.v && styles.optBtnActive]}
                     onPress={() => setEmployment(prev => prev === e.v ? '' : e.v)}>
-                    <Text style={[styles.optTxt, employment === e.v && styles.optTxtActive]}>{e.l}</Text>
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <e.i size={14} color={employment === e.v ? '#C4B5FD' : '#9CA3AF'} style={{ marginRight: 6 }} />
+                      <Text style={[styles.optTxt, employment === e.v && styles.optTxtActive]}>{e.l}</Text>
+                    </View>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -239,23 +273,34 @@ export default function OnboardingScreen() {
       <View style={styles.footer}>
         {step > 0 && (
           <TouchableOpacity style={styles.backBtn} onPress={() => setStep(s => s - 1)}>
-            <Text style={styles.backTxt}>← Back</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <ChevronLeft size={20} color="#9CA3AF" style={{ marginRight: 4 }} />
+              <Text style={styles.backTxt}>Back</Text>
+            </View>
           </TouchableOpacity>
         )}
         {step < STEPS.length - 1 ? (
           <TouchableOpacity
             style={[styles.nextBtn, !canProceed() && styles.nextBtnDisabled]}
             onPress={() => canProceed() && setStep(s => s + 1)}>
-            <Text style={styles.nextTxt}>Next →</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={styles.nextTxt}>Next</Text>
+              <ChevronRight size={20} color="#fff" style={{ marginLeft: 4 }} />
+            </View>
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
             style={[styles.nextBtn, loading && styles.nextBtnDisabled]}
             onPress={handleFinish}
             disabled={loading}>
-            {loading
-              ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.nextTxt}>Let's Go 🚀</Text>}
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.nextTxt}>Let's Go</Text>
+                <Rocket size={20} color="#fff" style={{ marginLeft: 8 }} />
+              </View>
+            )}
           </TouchableOpacity>
         )}
       </View>

@@ -56,11 +56,40 @@ export async function updateUser(id: string, dto: UpdateUserDto) {
 }
 
 // ─── Personalized Exam List ───────────────────────────────────
-// Filters exams by:
-//   1. User's preferredCategories (exam category)
-//   2. User's state (national exams + matching state exams)
-//   3. User's qualification (minQualification match if we add it later)
-//   Shows only published exams.
+/**
+ * Calculates a match score (0-100) based on user profile and exam requirements
+ */
+function calculateMatchScore(user: any, exam: any): number {
+    let score = 70; // Base score for being in a preferred category
+
+    // 1. Age check
+    if (user.dateOfBirth && (exam.minAge || exam.maxAge)) {
+        const birthDate = new Date(user.dateOfBirth);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+
+        if (exam.minAge && age < exam.minAge) score -= 30;
+        if (exam.maxAge && age > exam.maxAge) score -= 30;
+        if (exam.minAge && exam.maxAge && age >= exam.minAge && age <= exam.maxAge) score += 15;
+    }
+
+    // 2. Qualification check (Simple keyword match for now)
+    if (user.qualification && exam.title) {
+        const qual = user.qualification.toLowerCase();
+        const title = exam.title.toLowerCase();
+        if (title.includes(qual)) score += 15;
+    }
+
+    // 3. Category match
+    if (user.preferredCategories.includes(exam.category)) {
+        score += 10;
+    }
+
+    return Math.min(100, Math.max(0, score));
+}
+
 export async function getUserExams(id: string, page: number = 1, limit: number = 20) {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) throw new AppError(404, 'USER_NOT_FOUND', `User "${id}" not found`);
@@ -106,11 +135,12 @@ export async function getUserExams(id: string, page: number = 1, limit: number =
                 isPublished: true,
                 publishedAt: true,
                 createdAt: true,
+                minAge: true,
+                maxAge: true,
                 _count: { select: { lifecycleEvents: true } },
                 lifecycleEvents: {
                     where: {
                         eventType: 'REGISTRATION',
-                        startsAt: { gte: new Date() },
                     },
                     orderBy: { startsAt: 'asc' },
                     take: 1,
@@ -128,7 +158,13 @@ export async function getUserExams(id: string, page: number = 1, limit: number =
         prisma.exam.count({ where }),
     ]);
 
-    return { exams, total, page, limit };
+    // Add matchScore to each exam
+    const examsWithScore = exams.map(exam => ({
+        ...exam,
+        matchScore: calculateMatchScore(user, exam)
+    }));
+
+    return { exams: examsWithScore, total, page, limit };
 }
 
 // ─── Toggle saved exam ────────────────────────────────────────

@@ -16,7 +16,11 @@ export async function fetchExams(params?: {
     isPublished?: boolean;
 }): Promise<{ exams: Exam[]; total: number }> {
     const { data } = await client.get('/', { params: { isPublished: true, ...params } });
-    return data;
+    // Backend standard success helper returns { success: true, data: T, meta: { total, etc. } }
+    return {
+        exams: data.data ?? [],
+        total: data.meta?.total ?? 0
+    };
 }
 
 export async function fetchExamById(id: string): Promise<Exam> {
@@ -26,5 +30,10 @@ export async function fetchExamById(id: string): Promise<Exam> {
 
 export async function fetchTimeline(examId: string): Promise<LifecycleEvent[]> {
     const { data } = await client.get(`/${examId}/timeline`);
-    return data.data ?? data;
+    // Backend returns { success: true, data: { exam, events } }
+    if (data.data?.events && Array.isArray(data.data.events)) return data.data.events;
+    if (data.events && Array.isArray(data.events)) return data.events;
+    if (Array.isArray(data.data)) return data.data;
+    if (Array.isArray(data)) return data;
+    return [];
 }

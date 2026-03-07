@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 
 const PERMISSIONS_ASKED_KEY = '@suchana_permissions_asked';
 
@@ -22,86 +22,105 @@ export function useFirstLaunchPermissions() {
                 const alreadyAsked = await AsyncStorage.getItem(PERMISSIONS_ASKED_KEY);
                 if (alreadyAsked) return;
 
-                // Mark as asked immediately so we never ask again even if this crashes
                 await AsyncStorage.setItem(PERMISSIONS_ASKED_KEY, 'true');
 
-                // ─── Notifications ──────────────────────────────────────────────────
-                // On Android 13+ and iOS, we need explicit permission
-                if (Platform.OS !== 'web') {
-                    const { status: existingStatus } =
-                        await Notifications.getPermissionsAsync();
+                const isExpoGo = Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
 
-                    if (existingStatus !== 'granted') {
-                        await new Promise<void>(resolve => {
-                            Alert.alert(
-                                '🔔 Stay Ahead of Deadlines',
-                                'Get instant alerts for exam registrations, admit cards, and results — so you never miss a deadline.',
-                                [
-                                    {
-                                        text: 'Not Now',
-                                        style: 'cancel',
-                                        onPress: () => resolve(),
-                                    },
-                                    {
-                                        text: 'Allow Notifications',
-                                        onPress: async () => {
-                                            await Notifications.requestPermissionsAsync({
-                                                ios: {
-                                                    allowAlert: true,
-                                                    allowBadge: true,
-                                                    allowSound: true,
-                                                },
-                                            });
-                                            resolve();
+                if (Platform.OS !== 'web' && !isExpoGo) {
+                    try {
+                        const Notifications = require('expo-notifications');
+
+                        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+
+                        if (existingStatus !== 'granted') {
+                            await new Promise<void>(resolve => {
+                                Alert.alert(
+                                    '🔔 Stay Ahead of Deadlines',
+                                    'Get instant alerts for exam registrations, admit cards, and results — so you never miss a deadline.',
+                                    [
+                                        {
+                                            text: 'Not Now',
+                                            style: 'cancel',
+                                            onPress: () => resolve(),
                                         },
-                                    },
-                                ],
-                            );
-                        });
-                    }
+                                        {
+                                            text: 'Allow Notifications',
+                                            onPress: async () => {
+                                                try {
+                                                    await Notifications.requestPermissionsAsync({
+                                                        ios: {
+                                                            allowAlert: true,
+                                                            allowBadge: true,
+                                                            allowSound: true,
+                                                        },
+                                                    });
+                                                } catch (e) {
+                                                    console.warn('Failed to request notifications permission:', e);
+                                                }
+                                                resolve();
+                                            },
+                                        },
+                                    ],
+                                );
+                            });
+                        }
 
-                    // Configure how notifications behave when app is in foreground
-                    Notifications.setNotificationHandler({
-                        handleNotification: async () => ({
-                            shouldShowAlert: true,
-                            shouldPlaySound: true,
-                            shouldSetBadge: true,
-                            shouldShowBanner: true,
-                            shouldShowList: true,
-                        }),
-                    });
+                        // Configure how notifications behave when app is in foreground
+                        Notifications.setNotificationHandler({
+                            handleNotification: async () => ({
+                                shouldShowAlert: true,
+                                shouldPlaySound: true,
+                                shouldSetBadge: true,
+                                shouldShowBanner: true,
+                                shouldShowList: true,
+                            }),
+                        });
+                    } catch (e) {
+                        console.warn('Notifications setup failed (Expected if in Expo Go Android):', e);
+                    }
+                } else if (isExpoGo) {
+                    console.info('Skipping expo-notifications in Expo Go (SDK 54+ Android limitation). Use Development Build for push notifications.');
                 }
 
                 // ─── Location ───────────────────────────────────────────────────────
                 // Only ask on native; used to auto-suggest state in personalisation
                 if (Platform.OS !== 'web') {
-                    const { status: locStatus } =
-                        await Location.getForegroundPermissionsAsync();
+                    try {
+                        const { status: locStatus } =
+                            await Location.getForegroundPermissionsAsync();
 
-                    if (locStatus !== 'granted') {
-                        await new Promise<void>(resolve => {
-                            Alert.alert(
-                                '📍 Local Exam Alerts',
-                                'Allow location access to automatically detect your state and show relevant State PSC, Police and teaching exams near you.',
-                                [
-                                    {
-                                        text: 'Not Now',
-                                        style: 'cancel',
-                                        onPress: () => resolve(),
-                                    },
-                                    {
-                                        text: 'Allow Location',
-                                        onPress: async () => {
-                                            await Location.requestForegroundPermissionsAsync();
-                                            resolve();
+                        if (locStatus !== 'granted') {
+                            await new Promise<void>(resolve => {
+                                Alert.alert(
+                                    '📍 Local Exam Alerts',
+                                    'Allow location access to automatically detect your state and show relevant State PSC, Police and teaching exams near you.',
+                                    [
+                                        {
+                                            text: 'Not Now',
+                                            style: 'cancel',
+                                            onPress: () => resolve(),
                                         },
-                                    },
-                                ],
-                            );
-                        });
+                                        {
+                                            text: 'Allow Location',
+                                            onPress: async () => {
+                                                try {
+                                                    await Location.requestForegroundPermissionsAsync();
+                                                } catch (e) {
+                                                    console.warn('Failed to request location permission:', e);
+                                                }
+                                                resolve();
+                                            },
+                                        },
+                                    ],
+                                );
+                            });
+                        }
+                    } catch (e) {
+                        console.warn('Location permissions check failed:', e);
                     }
                 }
-            } catch (_) {
+            } catch (err) {
+                console.error('Error in useFirstLaunchPermissions catch block:', err);
                 // Silently swallow — permissions are not critical
             }
         })();

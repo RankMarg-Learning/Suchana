@@ -5,6 +5,16 @@ import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { UserProvider, useUser } from '@/context/UserContext';
 import { useFirstLaunchPermissions } from '@/hooks/useFirstLaunchPermissions';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 function NavigationGuard() {
   const { isOnboarded, isLoading } = useUser();
@@ -31,25 +41,27 @@ export default function RootLayout() {
   useFirstLaunchPermissions();
 
   return (
-    <UserProvider>
-      <ThemeProvider value={DarkTheme}>
-        <NavigationGuard />
-        <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-          <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-          <Stack.Screen
-            name="exam/[id]"
-            options={{
-              headerShown: true,
-              headerStyle: { backgroundColor: '#0D0D0F' },
-              headerTintColor: '#F4F4F5',
-              headerTitle: '',
-              headerBackTitle: 'Back',
-            }}
-          />
-        </Stack>
-        <StatusBar style="light" />
-      </ThemeProvider>
-    </UserProvider>
+    <QueryClientProvider client={queryClient}>
+      <UserProvider>
+        <ThemeProvider value={DarkTheme}>
+          <NavigationGuard />
+          <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="exam/[id]"
+              options={{
+                headerShown: true,
+                headerStyle: { backgroundColor: '#0D0D0F' },
+                headerTintColor: '#F4F4F5',
+                headerTitle: '',
+                headerBackTitle: 'Back',
+              }}
+            />
+          </Stack>
+          <StatusBar style="light" />
+        </ThemeProvider>
+      </UserProvider>
+    </QueryClientProvider>
   );
 }

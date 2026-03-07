@@ -1,26 +1,42 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import {
+  Bell,
+  ClipboardList,
+  Contact,
+  BookOpen,
+  Key,
+  Award,
+  FolderCheck,
+  PartyPopper,
+  FileText,
+  Clock,
+  XCircle,
+  AlertCircle,
+  RefreshCcw,
+  Pin
+} from 'lucide-react-native';
 import type { LifecycleEvent } from '@/types/exam';
 
-const EVENT_ICONS: Record<string, string> = {
-  NOTIFICATION_OUT:       '📢',
-  REGISTRATION:           '📝',
-  CORRECTION_WINDOW:      '✏️',
-  ADMIT_CARD_RELEASE:     '🪪',
-  EXAM_CITY_INTIMATION:   '📍',
-  EXAM_DATE:              '📅',
-  ANSWER_KEY_PROVISIONAL: '🔑',
-  ANSWER_KEY_FINAL:       '✅',
-  RESULT:                 '🏆',
-  SCORE_CARD_RELEASE:     '📊',
-  CUTOFF_RELEASE:         '📉',
-  PHYSICAL_TEST:          '💪',
-  SKILL_TEST:             '🛠️',
-  INTERVIEW:              '🎤',
-  DOCUMENT_VERIFICATION:  '📂',
-  FINAL_MERIT_LIST:       '🏅',
-  JOINING_DATE:           '🎉',
-  OTHER:                  '📌',
+const STAGE_ICONS: Record<string, any> = {
+  NOTIFICATION: Bell,
+  REGISTRATION: ClipboardList,
+  ADMIT_CARD: Contact,
+  EXAM: BookOpen,
+  ANSWER_KEY: Key,
+  RESULT: Award,
+  DOCUMENT_VERIFICATION: FolderCheck,
+  JOINING: PartyPopper,
+};
+
+const EVENT_ICONS: Record<string, any> = {
+  RELEASE: FileText,
+  START: Clock,
+  END: XCircle,
+  CORRECTION: AlertCircle,
+  RESCHEDULED: RefreshCcw,
+  CANCELLED: XCircle,
+  OTHER: Pin,
 };
 
 function formatDate(iso: string | null | undefined) {
@@ -39,7 +55,9 @@ function getStatus(event: LifecycleEvent): { label: string; color: string } {
 }
 
 export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast: boolean }) {
-  const icon = EVENT_ICONS[event.eventType] ?? '📌';
+  const stage = event.stage || '';
+  const eventType = event.eventType || '';
+  const IconComponent = STAGE_ICONS[stage] || EVENT_ICONS[eventType] || Pin;
   const status = getStatus(event);
 
   return (
@@ -47,7 +65,7 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
       {/* Left: connector */}
       <View style={styles.connector}>
         <View style={[styles.dot, { borderColor: status.color }]}>
-          <Text style={styles.icon}>{icon}</Text>
+          <IconComponent size={18} color={status.color} strokeWidth={2.5} />
         </View>
         {!isLast && <View style={styles.line} />}
       </View>
@@ -79,7 +97,7 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
 }
 
 const styles = StyleSheet.create({
-  row:       { flexDirection: 'row', marginBottom: 0 },
+  row: { flexDirection: 'row', marginBottom: 0 },
   connector: { width: 40, alignItems: 'center' },
   dot: {
     width: 36,
@@ -103,8 +121,8 @@ const styles = StyleSheet.create({
   },
   statusText: { fontSize: 10, fontWeight: '700' },
   stage: { color: '#A78BFA', fontSize: 12, fontWeight: '600', marginTop: 2 },
-  date:  { color: '#9CA3AF', fontSize: 12, marginTop: 4 },
-  desc:  { color: '#6B7280', fontSize: 12, marginTop: 4 },
+  date: { color: '#9CA3AF', fontSize: 12, marginTop: 4 },
+  desc: { color: '#6B7280', fontSize: 12, marginTop: 4 },
   actionBtn: {
     marginTop: 8,
     backgroundColor: '#3B0764',

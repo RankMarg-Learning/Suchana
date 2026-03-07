@@ -58,6 +58,18 @@ export async function listExams(query: ListExamQuery) {
                     publishedAt: true,
                     createdAt: true,
                     _count: { select: { lifecycleEvents: true } },
+                    lifecycleEvents: {
+                        where: { eventType: 'REGISTRATION' },
+                        orderBy: { endsAt: 'asc' },
+                        take: 1,
+                        select: {
+                            id: true,
+                            title: true,
+                            eventType: true,
+                            startsAt: true,
+                            endsAt: true,
+                        }
+                    },
                 },
             }),
             prisma.exam.count({ where }),

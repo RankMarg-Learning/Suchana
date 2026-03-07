@@ -4,6 +4,17 @@ import {
   Switch, Alert, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  User,
+  MapPin,
+  GraduationCap,
+  Briefcase,
+  Bell,
+  BellOff,
+  ClipboardList,
+  CheckCircle,
+  ChevronRight
+} from 'lucide-react-native';
 import { useUser } from '@/context/UserContext';
 import { updateUser } from '@/services/userService';
 import { CategoryChip } from '@/components/CategoryChip';
@@ -62,7 +73,9 @@ export default function ProfileScreen() {
     return (
       <SafeAreaView style={styles.root} edges={['top']}>
         <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 }}>
-          <Text style={{ fontSize: 64, marginBottom: 20 }}>🧑‍💼</Text>
+          <View style={{ marginBottom: 20, backgroundColor: '#1C1C1E', padding: 24, borderRadius: 40 }}>
+            <User size={64} color="#7C3AED" />
+          </View>
           <Text style={{ color: '#F4F4F5', fontSize: 22, fontWeight: '800', marginBottom: 8, textAlign: 'center' }}>
             No Profile Yet
           </Text>
@@ -70,9 +83,10 @@ export default function ProfileScreen() {
             Set up your profile to get personalised exam recommendations, save exams, and receive deadline alerts.
           </Text>
           <TouchableOpacity
-            style={{ backgroundColor: '#7C3AED', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 32 }}
+            style={{ backgroundColor: '#7C3AED', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 32, flexDirection: 'row', alignItems: 'center' }}
             onPress={() => router.push('/onboarding')}>
-            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700' }}>Set Up Profile →</Text>
+            <Text style={{ color: '#fff', fontSize: 16, fontWeight: '700', marginRight: 8 }}>Set Up Profile</Text>
+            <ChevronRight size={20} color="#fff" />
           </TouchableOpacity>
         </View>
       </SafeAreaView>
@@ -90,20 +104,40 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.name}>{user.name}</Text>
           <Text style={styles.phone}>+91 {user.phone}</Text>
-          {user.state && <Text style={styles.state}>📍 {user.state}{user.city ? `, ${user.city}` : ''}</Text>}
+          {user.state && (
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
+              <MapPin size={14} color="#9CA3AF" style={{ marginRight: 6 }} />
+              <Text style={styles.state}>{user.state}{user.city ? `, ${user.city}` : ''}</Text>
+            </View>
+          )}
         </View>
 
         {/* Info chips */}
         <View style={styles.infoRow}>
-          {user.gender && <View style={styles.infoChip}><Text style={styles.infoChipTxt}>
-            {user.gender === 'MALE' ? '👨 Male' : user.gender === 'FEMALE' ? '👩 Female' : '🧑 Other'}
-          </Text></View>}
-          {user.qualification && <View style={styles.infoChip}><Text style={styles.infoChipTxt}>
-            🎓 {user.qualification.replace('_', ' ')}
-          </Text></View>}
-          {user.employmentStatus && <View style={styles.infoChip}><Text style={styles.infoChipTxt}>
-            💼 {user.employmentStatus}
-          </Text></View>}
+          {user.gender && (
+            <View style={styles.infoChip}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <User size={12} color="#9CA3AF" style={{ marginRight: 6 }} />
+                <Text style={styles.infoChipTxt}>{user.gender.charAt(0) + user.gender.slice(1).toLowerCase()}</Text>
+              </View>
+            </View>
+          )}
+          {user.qualification && (
+            <View style={styles.infoChip}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <GraduationCap size={12} color="#9CA3AF" style={{ marginRight: 6 }} />
+                <Text style={styles.infoChipTxt}>{user.qualification.replace('_', ' ')}</Text>
+              </View>
+            </View>
+          )}
+          {user.employmentStatus && (
+            <View style={styles.infoChip}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Briefcase size={12} color="#9CA3AF" style={{ marginRight: 6 }} />
+                <Text style={styles.infoChipTxt}>{user.employmentStatus.charAt(0) + user.employmentStatus.slice(1).toLowerCase()}</Text>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Stats */}
@@ -117,14 +151,19 @@ export default function ProfileScreen() {
             <Text style={styles.statLabel}>Categories</Text>
           </View>
           <View style={styles.statBox}>
-            <Text style={styles.statNum}>{user.notificationsEnabled ? '🔔' : '🔕'}</Text>
-            <Text style={styles.statLabel}>Notifs</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+              {user.notificationsEnabled ? <Bell size={18} color="#C4B5FD" /> : <BellOff size={18} color="#6B7280" />}
+            </View>
+            <Text style={styles.statLabel}>Alerts</Text>
           </View>
         </View>
 
         {/* Category preferences */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>📋 Exam Preferences</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+            <ClipboardList size={20} color="#7C3AED" style={{ marginRight: 10 }} />
+            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Exam Preferences</Text>
+          </View>
           <Text style={styles.sectionHint}>Select all categories you're preparing for</Text>
           <View style={styles.chipGrid}>
             {CATEGORIES.map(c => (
@@ -142,9 +181,12 @@ export default function ProfileScreen() {
         {/* Notifications toggle */}
         <View style={styles.section}>
           <View style={styles.toggleRow}>
-            <View>
-              <Text style={styles.toggleLabel}>🔔 Exam Notifications</Text>
-              <Text style={styles.toggleHint}>Get alerts for registration, admit card, results</Text>
+            <View style={{ flex: 1 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                <Bell size={18} color="#7C3AED" style={{ marginRight: 10 }} />
+                <Text style={[styles.toggleLabel, { marginBottom: 0 }]}>Exam Notifications</Text>
+              </View>
+              <Text style={styles.toggleHint}>Get alerts for registration, admit cards, and results</Text>
             </View>
             <Switch
               value={notifications}
@@ -159,7 +201,10 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.saveBtn} onPress={handleSave} disabled={saving}>
           {saving
             ? <ActivityIndicator color="#fff" />
-            : <Text style={styles.saveTxt}>Save Preferences</Text>}
+            : <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <CheckCircle size={20} color="#fff" style={{ marginRight: 8 }} />
+              <Text style={styles.saveTxt}>Save Preferences</Text>
+            </View>}
         </TouchableOpacity>
 
         {/* Logout */}
