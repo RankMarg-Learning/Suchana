@@ -1,36 +1,34 @@
 import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { AD_UNIT_IDS } from '@/constants/Ads';
 
-// Conditionally import the native dependency
 let BannerAd: any;
 let BannerAdSize: any;
 
-if (Platform.OS !== 'web') {
+const IS_EXPO_GO =
+  Constants.appOwnership === 'expo' ||
+  Constants.executionEnvironment === 'storeClient';
+
+if (Platform.OS !== 'web' && !IS_EXPO_GO) {
   try {
     const Ads = require('react-native-google-mobile-ads');
     BannerAd = Ads.BannerAd;
     BannerAdSize = Ads.BannerAdSize;
   } catch (e) {
-    console.warn('AdMob not available', e);
+    console.warn('AdMob Banner not available in this build', e);
   }
 }
 
 interface Props {
-  /** pass an AdMob unit ID from your AdMob account */
   adUnitId?: string;
   style?: object;
   size?: any;
 }
 
-/**
- * AdBanner — Google AdMob banner with automated size assessment.
- * Handles web compatibility by returning null or a placeholder on web.
- */
 export function AdBanner({ adUnitId = AD_UNIT_IDS.BANNER, style, size }: Props) {
   const [error, setError] = React.useState(false);
 
-  // Return null on web as AdMob doesn't support React Native Web
   if (Platform.OS === 'web') {
     return null;
   }

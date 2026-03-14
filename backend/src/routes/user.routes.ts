@@ -32,4 +32,7 @@ router.get('/:id/exams', validate(userIdParamSchema, 'params'), userController.g
 // POST /api/v1/users/:id/saved-exams — toggle bookmark on an exam
 router.post('/:id/saved-exams', validate(userIdParamSchema, 'params'), userController.toggleSavedExam);
 
+// GET /api/v1/users/:id/notifications — user notification inbox
+router.get('/:id/notifications', validate(userIdParamSchema, 'params'), userController.getUserNotifications);
+
 export { router as userRouter };

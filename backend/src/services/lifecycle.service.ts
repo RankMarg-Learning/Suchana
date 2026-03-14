@@ -1,7 +1,3 @@
-// ============================================================
-// src/services/lifecycle.service.ts  — Lifecycle event business logic
-// ============================================================
-import { Prisma } from '@prisma/client';
 import prisma from '../config/database';
 import { cacheService } from '../utils/cache';
 import { AppError } from '../middleware/errorHandler';
@@ -14,36 +10,34 @@ import type {
 } from '../schemas/lifecycle.schema';
 import { logger } from '../utils/logger';
 
-const TIMELINE_CACHE_KEY = (examId: string) => `timeline:${examId}`;
+const TTL = env.CACHE_TTL_TIMELINE;
+const key = (id: string) => `timeline:${id}`;
 
+/**
+ * Optimized Timeline Retrieval
+ */
 export async function getExamTimeline(examId: string) {
     const exam = await prisma.exam.findUnique({
         where: { id: examId },
         select: { id: true, title: true, shortTitle: true, slug: true, status: true },
     });
-    if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam "${examId}" not found`);
+    if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam ${examId} not found`);
 
-    return cacheService.getOrSet(
-        TIMELINE_CACHE_KEY(examId),
-        env.CACHE_TTL_TIMELINE,
-        async () => {
-            const events = await prisma.lifecycleEvent.findMany({
-                where: { examId },
-                orderBy: { startsAt: 'asc' },
-            });
-            return { exam, events };
-        }
-    );
+    return cacheService.getOrSet(key(examId), TTL, async () => {
+        const events = await prisma.lifecycleEvent.findMany({
+            where: { examId },
+            orderBy: { startsAt: 'asc' },
+        });
+        return { exam, events };
+    });
 }
 
-// ─── Add Lifecycle Event ─────────────────────────────────────
-export async function addLifecycleEvent(
-    examId: string,
-    dto: CreateLifecycleEventDto,
-    adminId: string
-) {
+/**
+ * Add Event with Auto-Notification Trigger
+ */
+export async function addLifecycleEvent(examId: string, dto: CreateLifecycleEventDto, adminId: string) {
     const exam = await prisma.exam.findUnique({ where: { id: examId } });
-    if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam "${examId}" not found`);
+    if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam ${examId} not found`);
 
     const event = await prisma.lifecycleEvent.create({
         data: {
@@ -55,12 +49,14 @@ export async function addLifecycleEvent(
         },
     });
 
-    // Invalidate exam timeline cache
-    await cacheService.del(TIMELINE_CACHE_KEY(examId));
-    await cacheService.delPattern('exams:list:*');
-    await cacheService.del(`exams:detail:${examId}`);
+    // Cache Invalidation
+    await Promise.all([
+        cacheService.del(key(examId)),
+        cacheService.delPattern('exams:list:*'),
+        cacheService.del(`exams:detail:${examId}`)
+    ]);
 
-    // Queue notification job (only if not TBD)
+    // Background Queueing
     if (!event.isTBD && event.startsAt) {
         await notificationQueue.enqueueLifecycleNotification({
             lifecycleEventId: event.id,
@@ -71,23 +67,13 @@ export async function addLifecycleEvent(
         });
     }
 
-    logger.info(`Lifecycle event created: ${event.id} for exam ${examId}`);
+    logger.info(`Event ${event.id} registered for exam ${examId}`);
     return event;
 }
 
-// ─── Update Lifecycle Event ──────────────────────────────────
-export async function updateLifecycleEvent(
-    examId: string,
-    eventId: string,
-    dto: UpdateLifecycleEventDto,
-    adminId: string
-) {
-    const existing = await prisma.lifecycleEvent.findFirst({
-        where: { id: eventId, examId },
-    });
-    if (!existing) {
-        throw new AppError(404, 'EVENT_NOT_FOUND', `Lifecycle event "${eventId}" not found`);
-    }
+export async function updateLifecycleEvent(examId: string, eventId: string, dto: UpdateLifecycleEventDto, adminId: string) {
+    const existing = await prisma.lifecycleEvent.findFirst({ where: { id: eventId, examId } });
+    if (!existing) throw new AppError(404, 'EVENT_NOT_FOUND', `Event ${eventId} not found`);
 
     const updated = await prisma.lifecycleEvent.update({
         where: { id: eventId },
@@ -99,12 +85,10 @@ export async function updateLifecycleEvent(
         },
     });
 
+    await cacheService.del(key(examId));
 
-    await cacheService.del(TIMELINE_CACHE_KEY(examId));
-
-    // If dates changed, re-queue notification
-    if (updated.startsAt !== existing.startsAt && !updated.isTBD && updated.startsAt) {
-        // Enqueue will deduplicate via jobId
+    // If dates changed, re-sync job
+    if (updated.startsAt?.getTime() !== existing.startsAt?.getTime() && !updated.isTBD && updated.startsAt) {
         const exam = await prisma.exam.findUnique({ where: { id: examId } });
         if (exam) {
             await notificationQueue.enqueueLifecycleNotification({
@@ -120,35 +104,32 @@ export async function updateLifecycleEvent(
     return updated;
 }
 
-// ─── Delete Lifecycle Event ──────────────────────────────────
-export async function deleteLifecycleEvent(examId: string, eventId: string, adminId: string) {
-    const existing = await prisma.lifecycleEvent.findFirst({
-        where: { id: eventId, examId },
-    });
-    if (!existing) {
-        throw new AppError(404, 'EVENT_NOT_FOUND', `Lifecycle event "${eventId}" not found`);
-    }
+export async function deleteLifecycleEvent(examId: string, eventId: string) {
+    const existing = await prisma.lifecycleEvent.findFirst({ where: { id: eventId, examId } });
+    if (!existing) throw new AppError(404, 'EVENT_NOT_FOUND', `Event ${eventId} not found`);
 
     await prisma.lifecycleEvent.delete({ where: { id: eventId } });
-
-
-    await notificationQueue.removeJob(eventId);
-    await cacheService.del(TIMELINE_CACHE_KEY(examId));
-    logger.info(`Lifecycle event deleted: ${eventId}`);
+    await Promise.all([
+        notificationQueue.removeJob(eventId),
+        cacheService.del(key(examId))
+    ]);
+    
+    logger.info(`Event ${eventId} purged`);
 }
 
-// ─── Get upcoming events (for worker polling) ────────────────
+/**
+ * For periodic safety checks (Job Scheduler)
+ */
 export async function getUpcomingNotifiableEvents(leadTimeHours: number) {
-    const now = new Date();
-    const cutoff = new Date(now.getTime() + leadTimeHours * 60 * 60 * 1000);
+    const cutoff = new Date(Date.now() + leadTimeHours * 3600000);
 
     return prisma.lifecycleEvent.findMany({
         where: {
             notificationSent: false,
             isTBD: false,
-            startsAt: { lte: cutoff, not: null },
+            startsAt: { lte: cutoff, gte: new Date() },
         },
-        include: { exam: { select: { title: true, shortTitle: true, isPublished: true } } },
+        include: { exam: { select: { shortTitle: true } } },
         orderBy: { startsAt: 'asc' },
     });
 }

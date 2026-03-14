@@ -1,6 +1,11 @@
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 
-const LOCALHOST = Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+const debuggerHost = Constants.expoConfig?.hostUri;
+const localhost = debuggerHost?.split(':').shift() || 'localhost';
+
+const LOCALHOST = Platform.OS === 'android' && !debuggerHost ? '10.0.2.2' : localhost;
+
 export const BASE_URL = `http://${LOCALHOST}:3001/api/v1`;
 
 export const API = {

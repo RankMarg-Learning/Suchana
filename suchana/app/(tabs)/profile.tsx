@@ -5,54 +5,30 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
+  Bell,
+  BellOff,
   User,
   MapPin,
   GraduationCap,
   Briefcase,
-  Bell,
-  BellOff,
-  ClipboardList,
   CheckCircle,
-  ChevronRight
+  ChevronRight,
 } from 'lucide-react-native';
 import { useUser } from '@/context/UserContext';
 import { updateUser } from '@/services/userService';
-import { CategoryChip } from '@/components/CategoryChip';
-import type { ExamCategory } from '@/types/exam';
 import { useRouter } from 'expo-router';
-
-const CATEGORIES: { label: string; value: ExamCategory }[] = [
-  { label: 'UPSC', value: 'UPSC' },
-  { label: 'SSC', value: 'SSC' },
-  { label: 'Banking', value: 'BANKING_JOBS' },
-  { label: 'Railway', value: 'RAILWAY_JOBS' },
-  { label: 'Defence', value: 'DEFENCE_JOBS' },
-  { label: 'State PSC', value: 'STATE_PSC' },
-  { label: 'Teaching', value: 'TEACHING_ELIGIBILITY' },
-  { label: 'Police', value: 'POLICE_JOBS' },
-  { label: 'Medical', value: 'MEDICAL_ENTRANCE' },
-  { label: 'Engineering', value: 'ENGINEERING_ENTRANCE' },
-  { label: 'Law', value: 'LAW_ENTRANCE' },
-];
 
 export default function ProfileScreen() {
   const { user, userId, refreshUser, logout } = useUser();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
-  const [cats, setCats] = useState<ExamCategory[]>(
-    (user?.preferredCategories as ExamCategory[]) ?? []
-  );
   const [notifications, setNotifications] = useState(user?.notificationsEnabled ?? true);
-
-  const toggleCat = (cat: ExamCategory) =>
-    setCats(p => p.includes(cat) ? p.filter(x => x !== cat) : [...p, cat]);
 
   const handleSave = async () => {
     if (!userId) return;
     setSaving(true);
     try {
       await updateUser(userId, {
-        preferredCategories: cats,
         notificationsEnabled: notifications,
       });
       await refreshUser();
@@ -92,7 +68,6 @@ export default function ProfileScreen() {
       </SafeAreaView>
     );
   }
-
 
   return (
     <SafeAreaView style={styles.root} edges={['top']}>
@@ -142,40 +117,24 @@ export default function ProfileScreen() {
 
         {/* Stats */}
         <View style={styles.statsRow}>
-          <View style={styles.statBox}>
+          <TouchableOpacity
+            style={styles.statBox}
+            onPress={() => router.push('/explore')}>
             <Text style={styles.statNum}>{user.savedExamIds?.length ?? 0}</Text>
             <Text style={styles.statLabel}>Saved</Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.statBox}>
             <Text style={styles.statNum}>{user.preferredCategories?.length ?? 0}</Text>
             <Text style={styles.statLabel}>Categories</Text>
           </View>
-          <View style={styles.statBox}>
+          <TouchableOpacity
+            style={styles.statBox}
+            onPress={() => router.push('/')}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
               {user.notificationsEnabled ? <Bell size={18} color="#C4B5FD" /> : <BellOff size={18} color="#6B7280" />}
             </View>
             <Text style={styles.statLabel}>Alerts</Text>
-          </View>
-        </View>
-
-        {/* Category preferences */}
-        <View style={styles.section}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-            <ClipboardList size={20} color="#7C3AED" style={{ marginRight: 10 }} />
-            <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Exam Preferences</Text>
-          </View>
-          <Text style={styles.sectionHint}>Select all categories you're preparing for</Text>
-          <View style={styles.chipGrid}>
-            {CATEGORIES.map(c => (
-              <CategoryChip
-                key={c.value}
-                label={c.label}
-                value={c.value}
-                selected={cats.includes(c.value)}
-                onPress={() => toggleCat(c.value)}
-              />
-            ))}
-          </View>
+          </TouchableOpacity>
         </View>
 
         {/* Notifications toggle */}
@@ -254,9 +213,6 @@ const styles = StyleSheet.create({
   statNum: { color: '#C4B5FD', fontSize: 22, fontWeight: '800' },
   statLabel: { color: '#6B7280', fontSize: 12, marginTop: 4 },
   section: { paddingHorizontal: 16, marginBottom: 20 },
-  sectionTitle: { color: '#F4F4F5', fontSize: 16, fontWeight: '700', marginBottom: 4 },
-  sectionHint: { color: '#6B7280', fontSize: 12, marginBottom: 12 },
-  chipGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   toggleRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -57,3 +57,11 @@ export async function deleteExam(req: Request, res: Response, next: NextFunction
         next(err);
     }
 }
+export async function getSavedExams(req: Request, res: Response, next: NextFunction) {
+    try {
+        const exams = await examService.getSavedExams(req.params.id as string);
+        sendSuccess(res, exams);
+    } catch (err) {
+        next(err);
+    }
+}

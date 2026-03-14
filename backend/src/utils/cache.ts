@@ -1,6 +1,3 @@
-// ============================================================
-// src/utils/cache.ts  — Redis cache service
-// ============================================================
 import { redis } from '../config/redis';
 import { logger } from './logger';
 

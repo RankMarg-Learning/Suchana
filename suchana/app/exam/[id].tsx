@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import Markdown from 'react-native-markdown-display';
 import {
   View, Text, StyleSheet, ScrollView, Share,
   TouchableOpacity, ActivityIndicator, Linking,
@@ -22,6 +23,7 @@ import {
   Target
 } from 'lucide-react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { ExamStatus } from '@/constants/enums';
 import { fetchExamById, fetchTimeline } from '@/services/examService';
 import { toggleSavedExam } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
@@ -29,6 +31,7 @@ import { TimelineItem } from '@/components/TimelineItem';
 import { NativeAdCard } from '@/components/NativeAdCard';
 import { AdBanner } from '@/components/AdBanner';
 import { useAds } from '@/context/AdsContext';
+import { cleanLabel } from '@/utils/format';
 import type { Exam, LifecycleEvent } from '@/types/exam';
 
 const { width } = Dimensions.get('window');
@@ -45,11 +48,15 @@ function formatCountdown(endsAt: string): string {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  UPCOMING: '#FBBF24',
-  ACTIVE: '#10B981',
-  COMPLETED: '#94a3b8',
-  CANCELLED: '#EF4444',
+  [ExamStatus.UPCOMING]: '#FBBF24',
+  [ExamStatus.REGISTRATION_OPEN]: '#10B981',
+  [ExamStatus.REGISTRATION_CLOSED]: '#F59E0B',
+  [ExamStatus.ADMIT_CARD_OUT]: '#8B5CF6',
+  [ExamStatus.EXAM_ONGOING]: '#EF4444',
+  [ExamStatus.RESULT_DECLARED]: '#3B82F6',
+  [ExamStatus.ARCHIVED]: '#94a3b8',
 };
+
 
 export default function ExamDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -58,25 +65,23 @@ export default function ExamDetailScreen() {
   const { user, userId, refreshUser } = useUser();
   const { showInterstitial } = useAds();
   const [countdown, setCountdown] = useState('');
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   const handleExternalLink = async (url: string) => {
     await showInterstitial();
     Linking.openURL(url);
   };
 
-  // Fetch exam detail
   const { data: exam, isLoading: examLoading } = useQuery({
     queryKey: ['exam', id],
     queryFn: () => fetchExamById(id),
   });
 
-  // Fetch timeline
   const { data: timeline = [], isLoading: timelineLoading } = useQuery({
     queryKey: ['timeline', id],
     queryFn: () => fetchTimeline(id),
   });
 
-  // Save mutation
   const saveMutation = useMutation({
     mutationFn: () => toggleSavedExam(userId!, id),
     onSuccess: () => {
@@ -140,26 +145,26 @@ export default function ExamDetailScreen() {
   const score = (exam as any).matchScore ?? 0;
   const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#6B7280';
 
-  // Helper to render JSON key-values on new lines
   const renderJsonLines = (data: any, labelStyle?: any) => {
     if (!data) return <Text style={styles.factValue}>N/A</Text>;
 
-    // If it's a number (for vacancies)
     if (typeof data === 'number') return <Text style={styles.hugeText}>{data.toLocaleString('en-IN')}</Text>;
 
-    // If it's not an object, just show it
-    if (typeof data !== 'object') return <Text style={styles.factValue}>{String(data)}</Text>;
+    if (typeof data !== 'object') {
+      const val = String(data);
+      return <Text style={styles.factValue}>{val.length < 20 ? cleanLabel(val) : val}</Text>;
+    }
 
     const entries = Object.entries(data).filter(([key]) => key !== 'level' && key !== 'id');
 
     if (entries.length === 0) return <Text style={styles.factValue}>N/A</Text>;
 
     return (
-      <View style={{ gap: 8 }}>
+      <View style={{ gap: 10 }}>
         {entries.map(([key, value]) => (
           <View key={key} style={styles.kvLine}>
-            <Text style={[styles.kvLabel, labelStyle]}>{key}:</Text>
-            <Text style={styles.factValue}>{String(value)}</Text>
+            <Text style={[styles.kvLabel, labelStyle]}>{cleanLabel(key)}:</Text>
+            <Text style={styles.factValue}>{typeof value === 'string' && value.length < 30 ? cleanLabel(value) : String(value)}</Text>
           </View>
         ))}
       </View>
@@ -172,7 +177,6 @@ export default function ExamDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
 
-        {/* Header Navigation Area */}
         <View style={styles.customHeader}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconBtn}>
             <ChevronRight size={24} color="#FFF" style={{ transform: [{ rotate: '180deg' }] }} />
@@ -198,7 +202,7 @@ export default function ExamDetailScreen() {
 
           <View style={[styles.statusBadge, { borderColor: statusColor + '77' }]}>
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
-            <Text style={[styles.statusTxt, { color: statusColor }]}>{exam.status}</Text>
+            <Text style={[styles.statusTxt, { color: statusColor }]}>{cleanLabel(exam.status)}</Text>
           </View>
 
           <Text style={styles.title}>{exam.title}</Text>
@@ -206,10 +210,10 @@ export default function ExamDetailScreen() {
 
           <View style={styles.tagsContainer}>
             <View style={styles.tag}>
-              <Text style={styles.tagText}>{exam.category.replace(/_/g, ' ')}</Text>
+              <Text style={styles.tagText}>{cleanLabel(exam.category)}</Text>
             </View>
             <View style={styles.tag}>
-              <Text style={styles.tagText}>{exam.examLevel}</Text>
+              <Text style={styles.tagText}>{cleanLabel(exam.examLevel)}</Text>
             </View>
             {exam.state && (
               <View style={styles.tag}>
@@ -282,7 +286,7 @@ export default function ExamDetailScreen() {
             </View>
             <View style={styles.eligibilityMain}>
               <Text style={styles.eligibilityLevel}>
-                {exam.qualificationCriteria?.level?.replace(/_/g, ' ') || 'Check Rules'}
+                {cleanLabel(exam.qualificationCriteria?.level) || 'Check Rules'}
               </Text>
               {(exam.minAge || exam.maxAge) && (
                 <Text style={styles.ageText}>
@@ -337,7 +341,23 @@ export default function ExamDetailScreen() {
               <Target size={20} color="#7C3AED" />
               <Text style={styles.sectionTitle}>About Examination</Text>
             </View>
-            <Text style={styles.description}>{exam.description}</Text>
+            <View>
+              {isDescExpanded ? (
+                <Markdown style={markdownStyles}>
+                  {exam.description}
+                </Markdown>
+              ) : (
+                <Text style={styles.description} numberOfLines={3}>
+                  {exam.description.replace(/[#*`\n]/g, ' ')}
+                </Text>
+              )}
+              
+              {exam.description.length > 100 && (
+                <TouchableOpacity onPress={() => setIsDescExpanded(!isDescExpanded)} style={{ marginTop: 8 }}>
+                  <Text style={styles.moreBtn}>{isDescExpanded ? 'Show less' : 'Read more...'}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         )}
 
@@ -578,5 +598,35 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(9,9,11,0.9)',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.05)',
-  }
+  },
+  moreBtn: {
+    color: '#7C3AED',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+});
+
+const markdownStyles = StyleSheet.create({
+  body: {
+    color: '#a1a1aa',
+    fontSize: 16,
+    lineHeight: 26,
+  },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 8,
+  },
+  strong: {
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  link: {
+    color: '#7C3AED',
+  },
+  bullet_list: {
+    marginBottom: 8,
+  },
+  ordered_list: {
+    marginBottom: 8,
+  },
 });

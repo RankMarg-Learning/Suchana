@@ -9,11 +9,11 @@ import type { CreateExamDto, UpdateExamDto, ListExamQuery } from '../schemas/exa
 import { logger } from '../utils/logger';
 
 const EXAM_LIST_CACHE_KEY = 'exams:list';
-const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams: detail:${id} `;
+const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams:detail:${id}`;
 
 export async function listExams(query: ListExamQuery) {
     const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state, lifecycleStage } = query;
-    const cacheKey = `${EXAM_LIST_CACHE_KEY}:${JSON.stringify(query)} `;
+    const cacheKey = `${EXAM_LIST_CACHE_KEY}:${JSON.stringify(query)}`;
 
     return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_LIST, async () => {
         const where: Prisma.ExamWhereInput = {
@@ -53,7 +53,8 @@ export async function listExams(query: ListExamQuery) {
                 take: limit,
                 orderBy: [
                     { isPublished: 'desc' },
-                    { createdAt: 'desc' },
+                    { publishedAt: 'desc' },
+                    { updatedAt: 'desc' },
                 ],
                 select: {
                     id: true,
@@ -68,6 +69,7 @@ export async function listExams(query: ListExamQuery) {
                     totalVacancies: true,
                     isPublished: true,
                     publishedAt: true,
+                    updatedAt: true,
                     createdAt: true,
                     _count: { select: { lifecycleEvents: true } },
                     lifecycleEvents: {
@@ -110,7 +112,7 @@ export async function getExamById(id: string) {
 
 // ─── Get By Slug ─────────────────────────────────────────────
 export async function getExamBySlug(slug: string) {
-    const cacheKey = `exams: slug:${slug} `;
+    const cacheKey = `exams:slug:${slug}`;
     return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_DETAIL, async () => {
         const exam = await prisma.exam.findUnique({
             where: { slug },
@@ -145,12 +147,11 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
 
     // Invalidate list cache
     await cacheService.delPattern('exams:list:*');
-    logger.info(`Exam created: ${exam.id} by admin ${adminId} `);
+    logger.info(`Exam created: ${exam.id} by admin ${adminId}`);
 
     return exam;
 }
 
-// ─── Update ──────────────────────────────────────────────────
 export async function updateExam(id: string, dto: UpdateExamDto, adminId: string) {
     const existing = await prisma.exam.findUnique({ where: { id } });
     if (!existing) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam "${id}" not found`);
@@ -189,6 +190,54 @@ export async function deleteExam(id: string, adminId: string) {
         cacheService.del(`exams: slug:${existing.slug} `),
         cacheService.delPattern('exams:list:*'),
     ]);
-
     logger.info(`Exam deleted: ${id} by admin ${adminId} `);
 }
+
+// ─── Get Saved Exams ─────────────────────────────────────────
+export async function getSavedExams(userId: string) {
+    const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { savedExamIds: true }
+    });
+
+    if (!user) throw new AppError(404, 'USER_NOT_FOUND', `User with ID "${userId}" not found`);
+
+    const exams = await prisma.exam.findMany({
+        where: {
+            id: { in: user.savedExamIds },
+            isPublished: true
+        },
+        select: {
+            id: true,
+            title: true,
+            shortTitle: true,
+            slug: true,
+            category: true,
+            conductingBody: true,
+            status: true,
+            examLevel: true,
+            state: true,
+            totalVacancies: true,
+            isPublished: true,
+            publishedAt: true,
+            createdAt: true,
+            _count: { select: { lifecycleEvents: true } },
+            lifecycleEvents: {
+                where: { eventType: 'REGISTRATION' },
+                orderBy: { endsAt: 'asc' },
+                take: 1,
+                select: {
+                    id: true,
+                    title: true,
+                    eventType: true,
+                    startsAt: true,
+                    endsAt: true,
+                }
+            },
+        }
+    });
+
+    return exams;
+}
+
+logger.info(`Exam service loaded`);

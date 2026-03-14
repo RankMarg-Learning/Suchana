@@ -32,3 +32,7 @@ export async function toggleSavedExam(userId: string, examId: string): Promise<U
     const { data } = await client.post(`/${userId}/saved-exams`, { examId });
     return data.data;
 }
+export async function getUserNotifications(userId: string): Promise<any[]> {
+    const { data } = await client.get(`/${userId}/notifications`);
+    return data.data ?? [];
+}

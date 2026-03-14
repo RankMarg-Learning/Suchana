@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Platform } from 'react-native';
+import Constants from 'expo-constants';
 import { AD_UNIT_IDS, AD_CONFIG } from '@/constants/Ads';
 
 interface AdsContextType {
@@ -14,7 +15,11 @@ let InterstitialAd: any;
 let AdEventType: any;
 let interstitial: any;
 
-if (Platform.OS !== 'web') {
+const IS_EXPO_GO = 
+    Constants.appOwnership === 'expo' || 
+    Constants.executionEnvironment === 'storeClient';
+
+if (Platform.OS !== 'web' && !IS_EXPO_GO) {
     try {
         const Ads = require('react-native-google-mobile-ads');
         InterstitialAd = Ads.InterstitialAd;
@@ -24,7 +29,7 @@ if (Platform.OS !== 'web') {
             requestNonPersonalizedAdsOnly: true,
         });
     } catch (e) {
-        console.warn('AdMob Interstitial not available', e);
+        console.warn('AdMob Interstitial not available in this build', e);
     }
 }
 

@@ -38,3 +38,9 @@ export async function toggleSavedExam(req: Request, res: Response, next: NextFun
         res.json({ success: true, data: user });
     } catch (err) { next(err); }
 }
+export async function getUserNotifications(req: Request, res: Response, next: NextFunction) {
+    try {
+        const result = await userService.getUserNotifications(req.params.id);
+        res.json({ success: true, data: result });
+    } catch (err) { next(err); }
+}

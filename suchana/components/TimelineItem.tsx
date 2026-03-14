@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
+import Markdown from 'react-native-markdown-display';
 import {
   Bell,
   ClipboardList,
@@ -16,6 +17,7 @@ import {
   RefreshCcw,
   Pin
 } from 'lucide-react-native';
+import { cleanLabel } from '@/utils/format';
 import type { LifecycleEvent } from '@/types/exam';
 
 const STAGE_ICONS: Record<string, any> = {
@@ -79,7 +81,7 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
             <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
           </View>
         </View>
-        {event.stage && <Text style={styles.stage}>{event.stage}</Text>}
+        {event.stage && <Text style={styles.stage}>{cleanLabel(event.stage)}</Text>}
         <Text style={styles.date}>
           {formatDate(event.startsAt)}
           {event.endsAt ? ` – ${formatDate(event.endsAt)}` : ''}
@@ -87,12 +89,16 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
 
         {event.description ? (
           <View style={styles.descContainer}>
-            <Text
-              style={styles.desc}
-              numberOfLines={isExpanded ? undefined : 1}
-            >
-              {event.description}
-            </Text>
+            {isExpanded ? (
+              <Markdown style={markdownStyles}>
+                {event.description}
+              </Markdown>
+            ) : (
+              <Text style={styles.desc} numberOfLines={1}>
+                {event.description.replace(/[#*`\n]/g, ' ')}
+              </Text>
+            )}
+            
             {event.description.length > 50 && (
               <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <Text style={styles.moreBtn}>{isExpanded ? 'Show less' : 'more'}</Text>
@@ -159,4 +165,29 @@ const styles = StyleSheet.create({
     borderColor: '#5B21B6',
   },
   actionText: { color: '#EDE9FE', fontSize: 13, fontWeight: '800' },
+});
+
+const markdownStyles = StyleSheet.create({
+  body: {
+    color: '#D1D5DB',
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 8,
+  },
+  strong: {
+    fontWeight: 'bold',
+    color: '#F4F4F5',
+  },
+  link: {
+    color: '#A78BFA',
+  },
+  bullet_list: {
+    marginBottom: 8,
+  },
+  ordered_list: {
+    marginBottom: 8,
+  },
 });

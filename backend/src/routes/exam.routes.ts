@@ -21,6 +21,9 @@ const router = Router();
 // GET /api/v1/exams?page=1&limit=20&category=UPSC&status=ACTIVE
 router.get('/', validate(listExamQuerySchema, 'query'), examController.listExams);
 
+// GET /api/v1/exams/saved/:id
+router.get('/saved/:id', validate(examIdParamSchema, 'params'), examController.getSavedExams);
+
 // GET /api/v1/exams/slug/:slug
 router.get('/slug/:slug', examController.getExamBySlug);
 

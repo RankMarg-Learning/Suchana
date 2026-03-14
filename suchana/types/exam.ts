@@ -1,3 +1,5 @@
+import { ExamCategory as Cat, ExamLevel as Lvl, ExamStatus as Status } from '@/constants/enums';
+
 // ─── Exam & Lifecycle TypeScript types (mirrors Prisma models) ───
 export interface LifecycleEvent {
     id: string;
@@ -23,8 +25,8 @@ export interface Exam {
     slug: string;
     description: string | null;
     conductingBody: string;
-    category: string;
-    examLevel: string;
+    category: ExamCategory;
+    examLevel: ExamLevel;
     state: string | null;
     minAge: number | null;
     maxAge: number | null;
@@ -36,42 +38,18 @@ export interface Exam {
     applicationFee: Record<string, any> | null;
     officialWebsite: string | null;
     notificationUrl: string | null;
-    status: string;
+    status: ExamStatus;
     isPublished: boolean;
     publishedAt: string | null;
+    updatedAt: string;
     createdAt: string;
     lifecycleEvents?: LifecycleEvent[];
     _count?: { lifecycleEvents: number };
 }
 
-export type ExamCategory =
-    | 'ENGINEERING_ENTRANCE'
-    | 'MEDICAL_ENTRANCE'
-    | 'LAW_ENTRANCE'
-    | 'MBA_ENTRANCE'
-    | 'GOVERNMENT_JOBS'
-    | 'BANKING_JOBS'
-    | 'RAILWAY_JOBS'
-    | 'DEFENCE_JOBS'
-    | 'POLICE_JOBS'
-    | 'TEACHING_ELIGIBILITY'
-    | 'STATE_PSC'
-    | 'UPSC'
-    | 'SSC'
-    | 'PROFESSIONAL_CERTIFICATION'
-    | 'SCHOOL_BOARD'
-    | 'SCHOLARSHIP_EXAMS'
-    | 'OLYMPIAD_EXAMS'
-    | 'AGRICULTURE_ENTRANCE'
-    | 'PARAMEDICAL_ENTRANCE'
-    | 'FOREIGN_STUDY_EXAMS'
-    | 'SKILL_CERTIFICATION'
-    | 'UNIVERSITY_ENTRANCE'
-    | 'OTHER';
-
-export type ExamLevel = 'NATIONAL' | 'STATE' | 'DISTRICT' | 'OTHER';
-
-export type ExamStatus = 'UPCOMING' | 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+export type ExamCategory = Cat;
+export type ExamLevel = Lvl;
+export type ExamStatus = Status;
 
 // ─── User types ───────────────────────────────────────────────
 export interface User {

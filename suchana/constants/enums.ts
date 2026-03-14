@@ -49,14 +49,14 @@ export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
 export const EXAM_STATUSES = Object.values(ExamStatus);
 
 export const LifecycleStage = {
-    NOTIFICATION: 'NOTIFICATION',
-    REGISTRATION: 'REGISTRATION',
-    ADMIT_CARD: 'ADMIT_CARD',
-    EXAM: 'EXAM',
-    ANSWER_KEY: 'ANSWER_KEY',
-    RESULT: 'RESULT',
-    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',
-    JOINING: 'JOINING',
+    NOTIFICATION: 'NOTIFICATION',           // stageOrder: 10
+    REGISTRATION: 'REGISTRATION',           // stageOrder: 20
+    ADMIT_CARD: 'ADMIT_CARD',             // stageOrder: 30
+    EXAM: 'EXAM',                   // stageOrder: 40
+    ANSWER_KEY: 'ANSWER_KEY',             // stageOrder: 50
+    RESULT: 'RESULT',                 // stageOrder: 60
+    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',  // stageOrder: 70
+    JOINING: 'JOINING',                // stageOrder: 80
 } as const;
 export type LifecycleStage = (typeof LifecycleStage)[keyof typeof LifecycleStage];
 export const LIFECYCLE_STAGES = Object.values(LifecycleStage);
@@ -84,6 +84,23 @@ export const LifecycleEventType = {
 } as const;
 export type LifecycleEventType = (typeof LifecycleEventType)[keyof typeof LifecycleEventType];
 export const LIFECYCLE_EVENT_TYPES = Object.values(LifecycleEventType);
+
+// ─── Notification Status ──────────────────────────────────────
+export const NotificationStatus = {
+    PENDING: 'PENDING',
+    QUEUED: 'QUEUED',
+    SENT: 'SENT',
+    PARTIAL: 'PARTIAL',
+    FAILED: 'FAILED',
+} as const;
+export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus];
+
+// ─── Push Platform ─────────────────────────────────────────────
+export const PushPlatform = {
+    ANDROID: 'ANDROID',
+    IOS: 'IOS',
+} as const;
+export type PushPlatform = (typeof PushPlatform)[keyof typeof PushPlatform];
 
 // ─── Qualification Level ──────────────────────────────────────
 export const QualificationLevel = {

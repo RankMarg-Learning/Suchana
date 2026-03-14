@@ -18,7 +18,7 @@ import {
 import { registerUser } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
 import { CategoryChip } from '@/components/CategoryChip';
-import type { ExamCategory } from '@/types/exam';
+import { ExamCategory, QualificationLevel } from '@/constants/enums';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const INDIA_STATES = [
@@ -29,22 +29,30 @@ const INDIA_STATES = [
   'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir', 'Ladakh',
 ];
 
+const DEGREES = [
+  'B.Tech', 'B.E', 'Diploma', 'B.Sc', 'M.Sc', 'B.Com', 'M.Com', 'B.A', 'M.A', 'B.Ed', 'LLB', 'MBBS', 'BCA', 'MCA', 'ITI', 'Other'
+];
+
+const SPECIALIZATIONS = [
+  'Computer Science', 'Civil', 'Mechanical', 'Electrical', 'Electronics', 'IT', 'General Science', 'Maths', 'Physics', 'Chemistry', 'Biology', 'Agriculture', 'Commerce', 'Economics', 'History', 'Geography', 'Polity', 'English', 'Other'
+];
+
 const CATEGORIES: { label: string; value: ExamCategory }[] = [
-  { label: 'UPSC', value: 'UPSC' },
-  { label: 'SSC', value: 'SSC' },
-  { label: 'Bank Jobs', value: 'BANKING_JOBS' },
-  { label: 'Railway', value: 'RAILWAY_JOBS' },
-  { label: 'Defence', value: 'DEFENCE_JOBS' },
-  { label: 'Police', value: 'POLICE_JOBS' },
-  { label: 'State PSC', value: 'STATE_PSC' },
-  { label: 'Teaching', value: 'TEACHING_ELIGIBILITY' },
-  { label: 'Govt Jobs', value: 'GOVERNMENT_JOBS' },
-  { label: 'Engineering', value: 'ENGINEERING_ENTRANCE' },
-  { label: 'Medical', value: 'MEDICAL_ENTRANCE' },
-  { label: 'Law', value: 'LAW_ENTRANCE' },
-  { label: 'MBA', value: 'MBA_ENTRANCE' },
-  { label: 'Certifications', value: 'PROFESSIONAL_CERTIFICATION' },
-  { label: 'Scholarships', value: 'SCHOLARSHIP_EXAMS' },
+  { label: 'UPSC', value: ExamCategory.UPSC },
+  { label: 'SSC', value: ExamCategory.SSC },
+  { label: 'Bank Jobs', value: ExamCategory.BANKING_JOBS },
+  { label: 'Railway', value: ExamCategory.RAILWAY_JOBS },
+  { label: 'Defence', value: ExamCategory.DEFENCE_JOBS },
+  { label: 'Police', value: ExamCategory.POLICE_JOBS },
+  { label: 'State PSC', value: ExamCategory.STATE_PSC },
+  { label: 'Teaching', value: ExamCategory.TEACHING_ELIGIBILITY },
+  { label: 'Govt Jobs', value: ExamCategory.GOVERNMENT_JOBS },
+  { label: 'Engineering', value: ExamCategory.ENGINEERING_ENTRANCE },
+  { label: 'Medical', value: ExamCategory.MEDICAL_ENTRANCE },
+  { label: 'Law', value: ExamCategory.LAW_ENTRANCE },
+  { label: 'MBA', value: ExamCategory.MBA_ENTRANCE },
+  { label: 'Certifications', value: ExamCategory.PROFESSIONAL_CERTIFICATION },
+  { label: 'Scholarships', value: ExamCategory.SCHOLARSHIP_EXAMS },
 ];
 
 const STEPS = [
@@ -239,10 +247,10 @@ export default function OnboardingScreen() {
               <Text style={styles.label}>Qualification</Text>
               <View style={styles.optionRow}>
                 {[
-                  { v: '10TH_PASS', l: '10th' },
-                  { v: '12TH_PASS', l: '12th' },
-                  { v: 'GRADUATE', l: 'Graduate' },
-                  { v: 'POST_GRADUATE', l: 'PG' },
+                  { v: QualificationLevel.TEN_PASS, l: '10th' },
+                  { v: QualificationLevel.TWELVE_PASS, l: '12th' },
+                  { v: QualificationLevel.GRADUATE, l: 'Graduate' },
+                  { v: QualificationLevel.POST_GRADUATE, l: 'PG' },
                 ].map(q => (
                   <TouchableOpacity
                     key={q.v}
@@ -280,22 +288,34 @@ export default function OnboardingScreen() {
           {step === 4 && (
             <View>
               <Text style={styles.label}>Your Degree / Diploma</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. B.Tech, BSC, Diploma"
-                placeholderTextColor="#4B5563"
-                value={degree}
-                onChangeText={setDegree}
-              />
-              <Text style={styles.label}>Branch / Specialisation</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="e.g. Computer Science, Civil, Commerce"
-                placeholderTextColor="#4B5563"
-                value={specialization}
-                onChangeText={setSpecialization}
-              />
-              <Text style={styles.hint}>
+              <View style={styles.stateGrid}>
+                {DEGREES.map(d => (
+                  <TouchableOpacity
+                    key={d}
+                    style={[styles.stateBtn, degree === d && styles.stateBtnActive]}
+                    onPress={() => setDegree(prev => prev === d ? '' : d)}>
+                    <Text style={[styles.stateTxt, degree === d && styles.stateTxtActive]}>
+                      {d}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={[styles.label, { marginTop: 24 }]}>Branch / Specialisation</Text>
+              <View style={styles.stateGrid}>
+                {SPECIALIZATIONS.map(s => (
+                  <TouchableOpacity
+                    key={s}
+                    style={[styles.stateBtn, specialization === s && styles.stateBtnActive]}
+                    onPress={() => setSpecialization(prev => prev === s ? '' : s)}>
+                    <Text style={[styles.stateTxt, specialization === s && styles.stateTxtActive]}>
+                      {s}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <Text style={[styles.hint, { marginTop: 16 }]}>
                 Help us show you exact "Job Roles" that match your {degree || 'Degree'} {specialization ? `in ${specialization}` : ''}.
               </Text>
             </View>

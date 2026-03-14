@@ -72,8 +72,7 @@ export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
     JOINING: 80,
 };
 
-// ─── Event Type (fine-grained within a stage) ─────────────────
-// Used: LifecycleEvent.eventType, StagedLifecycleEvent.eventType
+
 export const LifecycleEventType = {
     RELEASE: 'RELEASE',     // Notification out, admit card released, result out
     START: 'START',       // Registration window opens, exam starts
@@ -119,6 +118,7 @@ export type ScrapeSourceType = (typeof ScrapeSourceType)[keyof typeof ScrapeSour
 // Used: NotificationLog.status
 export const NotificationStatus = {
     PENDING: 'PENDING',
+    QUEUED: 'QUEUED',
     SENT: 'SENT',
     PARTIAL: 'PARTIAL',
     FAILED: 'FAILED',
@@ -138,6 +138,7 @@ export type PushPlatform = (typeof PushPlatform)[keyof typeof PushPlatform];
 export const QualificationLevel = {
     TEN_PASS: '10TH_PASS',
     TWELVE_PASS: '12TH_PASS',
+    DIPLOMA: 'DIPLOMA',
     GRADUATE: 'GRADUATE',
     POST_GRADUATE: 'POST_GRADUATE',
     PHD: 'PHD',

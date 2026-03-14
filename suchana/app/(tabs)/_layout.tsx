@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Bell, Bookmark, User } from 'lucide-react-native';
 
 const TAB_BAR_STYLE = {
   backgroundColor: '#0D0D0F',
@@ -23,18 +23,18 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
+          title: 'Updates',
           tabBarIcon: ({ color, size }) => (
-            <IconSymbol size={size} name="house.fill" color={color} />
+            <Bell size={size} color={color} />
           ),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
+          title: 'Saved',
           tabBarIcon: ({ color, size }) => (
-            <IconSymbol size={size} name="magnifyingglass" color={color} />
+            <Bookmark size={size} color={color} />
           ),
         }}
       />
@@ -43,7 +43,7 @@ export default function TabLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <IconSymbol size={size} name="person.fill" color={color} />
+            <User size={size} color={color} />
           ),
         }}
       />
