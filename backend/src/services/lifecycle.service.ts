@@ -104,7 +104,7 @@ export async function updateLifecycleEvent(examId: string, eventId: string, dto:
     return updated;
 }
 
-export async function deleteLifecycleEvent(examId: string, eventId: string) {
+export async function deleteLifecycleEvent(examId: string, eventId: string, _adminId?: string) {
     const existing = await prisma.lifecycleEvent.findFirst({ where: { id: eventId, examId } });
     if (!existing) throw new AppError(404, 'EVENT_NOT_FOUND', `Event ${eventId} not found`);
 

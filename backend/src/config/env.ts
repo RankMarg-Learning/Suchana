@@ -32,6 +32,8 @@ const envSchema = z.object({
 
     API_KEY_SECRET: z.string().min(16, 'API_KEY_SECRET must be at least 16 characters'),
     CORS_ORIGINS: z.string().default('http://localhost:3000'),
+
+    OPENAI_API_KEY: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);

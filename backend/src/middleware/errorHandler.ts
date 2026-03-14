@@ -31,6 +31,16 @@ function isPrismaKnownError(err: unknown): err is PrismaKnownError {
     );
 }
 
+function isPrismaConnectionError(err: unknown): boolean {
+    if (typeof err !== 'object' || err === null) return false;
+    const name = (err as Error).name;
+    return (
+        name === 'PrismaClientInitializationError' ||
+        name === 'PrismaClientConnectError' ||
+        (err as Error).message.includes('Can\'t reach database server')
+    );
+}
+
 export function errorHandler(
     err: unknown,
     req: Request,
@@ -69,6 +79,11 @@ export function errorHandler(
         sendError(res, 400, 'DATABASE_ERROR', 'Database constraint violation', {
             prismaCode: err.code,
         });
+        return;
+    }
+
+    if (isPrismaConnectionError(err)) {
+        sendError(res, 503, 'DATABASE_CONNECTION_ERROR', 'Service temporarily unavailable: Database connection failed. Please try again in a few moments.');
         return;
     }
 

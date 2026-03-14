@@ -52,6 +52,101 @@ export interface LifecycleEvent {
     actionLabel?: string;
 }
 
+// ─── New: Scraper Types ───────────────────────────────────────
+
+export interface ScrapeSource {
+    id: string;
+    url: string;
+    label: string;
+    sourceType: 'LISTING' | 'DETAIL';
+    hintCategory?: string;
+    isActive: boolean;
+    createdAt: string;
+    _count?: { scrapeJobs: number };
+    scrapeJobs?: ScrapeJob[];
+}
+
+export interface ScrapeJob {
+    id: string;
+    scrapeSourceId: string;
+    status: 'RUNNING' | 'COMPLETED' | 'FAILED' | 'PARTIAL';
+    candidatesFound: number;
+    rawPayload?: any;
+    errorMessage?: string;
+    startedAt: string;
+    completedAt?: string;
+    scrapeSource?: { id: string; label: string; url: string };
+    _count?: { stagedExams: number };
+}
+
+export interface StagedEvent {
+    id: string;
+    stagedExamId: string;
+    stage: string;
+    eventType: string;
+    stageOrder: number;
+    title: string;
+    description?: string;
+    startsAt?: string;
+    endsAt?: string;
+    isTBD: boolean;
+    isImportant: boolean;
+    actionUrl?: string;
+    actionLabel?: string;
+}
+
+export interface StagedExam {
+    id: string;
+    scrapeJobId: string;
+    existingExamId?: string;  // non-null → update candidate
+    title: string;
+    shortTitle?: string;
+    slug?: string;
+    description?: string;
+    conductingBody?: string;
+    category?: string;
+    examLevel?: string;
+    state?: string;
+    minAge?: number;
+    maxAge?: number;
+    totalVacancies?: number;
+    applicationFee?: any;
+    officialWebsite?: string;
+    notificationUrl?: string;
+    aiConfidence?: number;
+    aiNotes?: string;
+    reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_CORRECTION';
+    reviewNote?: string;
+    reviewedBy?: string;
+    reviewedAt?: string;
+    deduplicationKey?: string;
+    isDuplicate: boolean;
+    sourceCount: number;
+    mergedSourceUrls: string[];
+    sourceUrl?: string;
+    scrapedAt?: string;
+    createdAt: string;
+    stagedEvents: StagedEvent[];
+    scrapeJob?: {
+        id: string;
+        status: string;
+        scrapeSource?: { label: string; url: string };
+    };
+}
+
+export interface ReviewStats {
+    reviewQueue: {
+        pending: number;
+        approved: number;
+        rejected: number;
+        needsCorrection: number;
+        duplicates: number;
+    };
+    totalJobs: number;
+    recentJobs: ScrapeJob[];
+}
+
+// ─── Exam Service ─────────────────────────────────────────────
 export const examService = {
     getAllExams: async (params?: any) => {
         const response = await apiClient.get('/exams', { params });
@@ -94,4 +189,87 @@ export const lifecycleService = {
     },
 };
 
+// ─── Scraper Service ──────────────────────────────────────────
+export const scraperService = {
+    // Stats
+    getStats: async (): Promise<{ data: ReviewStats }> => {
+        const response = await apiClient.get('/scraper/stats');
+        return response.data;
+    },
+
+    // Sources
+    listSources: async (params?: any): Promise<{ data: ScrapeSource[]; meta: any }> => {
+        const response = await apiClient.get('/scraper/sources', { params });
+        return response.data;
+    },
+    getSource: async (id: string): Promise<{ data: ScrapeSource }> => {
+        const response = await apiClient.get(`/scraper/sources/${id}`);
+        return response.data;
+    },
+    createSource: async (data: Partial<ScrapeSource>): Promise<{ data: ScrapeSource }> => {
+        const response = await apiClient.post('/scraper/sources', data);
+        return response.data;
+    },
+    updateSource: async (id: string, data: Partial<ScrapeSource>): Promise<{ data: ScrapeSource }> => {
+        const response = await apiClient.patch(`/scraper/sources/${id}`, data);
+        return response.data;
+    },
+    deleteSource: async (id: string) => {
+        const response = await apiClient.delete(`/scraper/sources/${id}`);
+        return response.data;
+    },
+
+    // Jobs
+    listJobs: async (params?: any): Promise<{ data: ScrapeJob[] }> => {
+        const response = await apiClient.get('/scraper/jobs', { params });
+        return response.data;
+    },
+    getJob: async (id: string): Promise<{ data: ScrapeJob }> => {
+        const response = await apiClient.get(`/scraper/jobs/${id}`);
+        return response.data;
+    },
+
+    // Trigger
+    triggerScrape: async (sourceId: string): Promise<any> => {
+        const response = await apiClient.post('/scraper/trigger', { sourceId });
+        return response.data;
+    },
+    triggerScrapeSync: async (sourceId: string): Promise<any> => {
+        const response = await apiClient.post('/scraper/trigger/sync', { sourceId });
+        return response.data;
+    },
+
+    // Staged review queue
+    listStagedExams: async (params?: any): Promise<{ data: StagedExam[]; meta: any }> => {
+        const response = await apiClient.get('/scraper/staged', { params });
+        return response.data;
+    },
+    getStagedExam: async (id: string): Promise<{ data: StagedExam }> => {
+        const response = await apiClient.get(`/scraper/staged/${id}`);
+        return response.data;
+    },
+    reviewStagedExam: async (
+        id: string,
+        decision: 'APPROVED' | 'REJECTED' | 'NEEDS_CORRECTION',
+        reviewNote?: string,
+        corrections?: any,
+    ): Promise<any> => {
+        const response = await apiClient.post(`/scraper/staged/${id}/review`, {
+            decision,
+            reviewNote,
+            corrections,
+        });
+        return response.data;
+    },
+    updateStagedEvent: async (stagedExamId: string, eventId: string, data: any): Promise<any> => {
+        const response = await apiClient.patch(`/scraper/staged/${stagedExamId}/events/${eventId}`, data);
+        return response.data;
+    },
+    deleteStagedEvent: async (stagedExamId: string, eventId: string): Promise<any> => {
+        const response = await apiClient.delete(`/scraper/staged/${stagedExamId}/events/${eventId}`);
+        return response.data;
+    },
+};
+
 export default apiClient;
+
