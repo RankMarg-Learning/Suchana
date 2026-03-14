@@ -11,10 +11,7 @@ interface Props {
     style?: object;
 }
 
-/**
- * NativeAdCard — A premium looking ad card that matches the app's aesthetic.
- * This can be used as an inline ad between exam cards.
- */
+
 export function NativeAdCard({
     title = "Unlock Your Dream Career",
     description = "Join 10L+ aspirants on Suchana Pro for detailed mock tests and eligibility tracking.",
@@ -25,7 +22,6 @@ export function NativeAdCard({
 
     const handlePress = () => {
         if (onPress) onPress();
-        // Default fallback or tracking
     }
 
     return (

@@ -13,7 +13,6 @@ export interface NotificationJobData {
     startsAt: Date | null;
 }
 
-// Singleton queue
 export const notificationBullQueue = new Queue<NotificationJobData>(
     NOTIFICATION_QUEUE_NAME,
     {
@@ -22,10 +21,10 @@ export const notificationBullQueue = new Queue<NotificationJobData>(
             attempts: 3,
             backoff: {
                 type: 'exponential',
-                delay: 5000, // 5s, 10s, 20s
+                delay: 5000,
             },
-            removeOnComplete: 100, // Keep last 100 completed jobs
-            removeOnFail: 200,     // Keep last 200 failed jobs
+            removeOnComplete: 100,
+            removeOnFail: 200,
         },
     }
 );
@@ -38,7 +37,6 @@ class NotificationQueueService {
     async enqueueLifecycleNotification(data: NotificationJobData): Promise<void> {
         const { lifecycleEventId, startsAt, eventType } = data;
 
-        // Don't queue scheduled notifications for TBD dates
         if (!startsAt) {
             logger.info(`Notification skipping queue for TBD event ${lifecycleEventId}`);
             return;
@@ -51,8 +49,8 @@ class NotificationQueueService {
             `lifecycle:${eventType}:${lifecycleEventId}`,
             data,
             {
-                delay,           // Schedule delivery at event time
-                jobId: lifecycleEventId, // Deduplicate by event ID
+                delay,
+                jobId: lifecycleEventId,
             }
         );
 

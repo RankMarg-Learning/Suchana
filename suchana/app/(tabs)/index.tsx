@@ -15,35 +15,31 @@ import { AdBanner } from '@/components/AdBanner';
 import { NativeAdCard } from '@/components/NativeAdCard';
 import { ExamListRow } from '@/components/ExamListRow';
 
-// Home Screen
-
 export default function UpdatesScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, userId, refreshUser } = useUser();
 
-  // 1. Fetch Recently Updated Exams (Infinite Scroll)
   const {
-      data: examPages,
-      isLoading: loadingExams,
-      fetchNextPage,
-      hasNextPage,
-      isFetchingNextPage,
-      refetch: refetchExams,
-      isRefetching: refetchingExams
+    data: examPages,
+    isLoading: loadingExams,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch: refetchExams,
+    isRefetching: refetchingExams
   } = useInfiniteQuery({
     queryKey: ['updated-exams-infinite'],
     queryFn: ({ pageParam = 1 }) => fetchExams({ isPublished: true, limit: 15, page: pageParam }),
     getNextPageParam: (lastPage, allPages) => {
-        if (lastPage.exams.length < 15) return undefined;
-        return allPages.length + 1;
+      if (lastPage.exams.length < 15) return undefined;
+      return allPages.length + 1;
     },
     initialPageParam: 1,
   });
 
   const updatedExams = examPages?.pages.flatMap(p => p.exams) ?? [];
 
-  // 2. Fetch Active Registrations (Exams in REGISTRATION stage)
   const { data: registrations = [], isLoading: loadingRegs, refetch: refetchRegs, isRefetching: refetchingRegs } = useQuery({
     queryKey: ['active-registrations'],
     queryFn: async () => {
@@ -109,15 +105,15 @@ export default function UpdatesScreen() {
         renderItem={({ item }) => (
           <View style={{ paddingHorizontal: 16, marginBottom: 12 }}>
             <ExamListRow
-                exam={item}
-                isSaved={user?.savedExamIds?.includes(item.id)}
-                onSaveToggle={() => saveMutation.mutate(item.id)}
-                onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.id } })}
+              exam={item}
+              isSaved={user?.savedExamIds?.includes(item.id)}
+              onSaveToggle={() => saveMutation.mutate(item.id)}
+              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.id } })}
             />
           </View>
         )}
         onEndReached={() => {
-            if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+          if (hasNextPage && !isFetchingNextPage) fetchNextPage();
         }}
         onEndReachedThreshold={0.5}
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor="#7C3AED" />}
@@ -189,10 +185,10 @@ export default function UpdatesScreen() {
           </View>
         }
         ListFooterComponent={() => (
-           <View style={{ padding: 16 }}>
-             {isFetchingNextPage && <ActivityIndicator color="#7C3AED" style={{ marginBottom: 16 }} />}
-             <NativeAdCard />
-           </View>
+          <View style={{ padding: 16 }}>
+            {isFetchingNextPage && <ActivityIndicator color="#7C3AED" style={{ marginBottom: 16 }} />}
+            <NativeAdCard />
+          </View>
         )}
       />
     </SafeAreaView>
@@ -213,14 +209,14 @@ const styles = StyleSheet.create({
   nudgeTitle: { color: '#fff', fontSize: 14, fontWeight: '800' },
   nudgeSub: { color: '#a5b4fc', fontSize: 12 },
   iconCircle: {
-      width: 44,
-      height: 44,
-      borderRadius: 22,
-      backgroundColor: 'rgba(255,255,255,0.08)',
-      justifyContent: 'center',
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.1)',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
   section: { marginVertical: 12 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 12 },

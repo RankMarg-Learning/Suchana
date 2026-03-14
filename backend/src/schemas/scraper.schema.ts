@@ -34,15 +34,11 @@ export const listScrapeSourceQuerySchema = z.object({
 });
 export type ListScrapeSourceQuery = z.infer<typeof listScrapeSourceQuerySchema>;
 
-// ─── Trigger scrape ───────────────────────────────────────────
 export const triggerScrapeSchema = z.object({
     sourceId: z.string().cuid('Must be a valid source ID'),
 });
 export type TriggerScrapeDto = z.infer<typeof triggerScrapeSchema>;
 
-// ─── List staged exams ────────────────────────────────────────
-// NOTE: z.coerce.boolean() converts ANY non-empty string to true (including "false").
-// Use z.preprocess to handle query string booleans correctly.
 const booleanFromQuery = z.preprocess((val) => {
     if (val === 'true' || val === true || val === '1' || val === 1) return true;
     if (val === 'false' || val === false || val === '0' || val === 0) return false;
@@ -60,7 +56,6 @@ export const listStagedExamQuerySchema = z.object({
 export type ListStagedExamQuery = z.infer<typeof listStagedExamQuerySchema>;
 
 
-// ─── Corrections (inline edits before approval) ───────────────
 const correctionsSchema = z.object({
     title: z.string().optional(),
     shortTitle: z.string().optional(),
@@ -73,7 +68,6 @@ const correctionsSchema = z.object({
     notificationUrl: z.string().url().optional(),
 });
 
-// ─── Review decision ──────────────────────────────────────────
 export const reviewDecisionSchema = z.object({
     decision: z.enum([
         ReviewStatus.APPROVED,
@@ -85,7 +79,6 @@ export const reviewDecisionSchema = z.object({
 });
 export type ReviewDecisionDto = z.infer<typeof reviewDecisionSchema>;
 
-// ─── Update staged lifecycle event ───────────────────────────
 export const updateStagedEventSchema = z.object({
     stage: z.enum(LIFECYCLE_STAGES as unknown as [string, ...string[]]).optional(),
     eventType: z.enum(LIFECYCLE_EVENT_TYPES as unknown as [string, ...string[]]).optional(),

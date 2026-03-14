@@ -74,48 +74,41 @@ export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
 
 
 export const LifecycleEventType = {
-    RELEASE: 'RELEASE',     // Notification out, admit card released, result out
-    START: 'START',       // Registration window opens, exam starts
-    END: 'END',         // Last date to apply, form submission closes
-    CORRECTION: 'CORRECTION',  // Form correction window
-    RESCHEDULED: 'RESCHEDULED', // Event date changed
-    CANCELLED: 'CANCELLED',   // Event cancelled
+    RELEASE: 'RELEASE',
+    START: 'START',
+    END: 'END',
+    CORRECTION: 'CORRECTION',
+    RESCHEDULED: 'RESCHEDULED',
+    CANCELLED: 'CANCELLED',
     OTHER: 'OTHER',
 } as const;
 export type LifecycleEventType = (typeof LifecycleEventType)[keyof typeof LifecycleEventType];
 export const LIFECYCLE_EVENT_TYPES = Object.values(LifecycleEventType);
 
-// ─── Staged Exam Review Status ────────────────────────────────
-// Used: StagedExam.reviewStatus
 export const ReviewStatus = {
-    PENDING: 'PENDING',           // AI structured, waiting for admin
-    APPROVED: 'APPROVED',          // Admin approved, moved to Exam table
-    REJECTED: 'REJECTED',          // Admin rejected
-    NEEDS_CORRECTION: 'NEEDS_CORRECTION',  // Admin flagged for AI re-extraction
+    PENDING: 'PENDING',
+    APPROVED: 'APPROVED',
+    REJECTED: 'REJECTED',
+    NEEDS_CORRECTION: 'NEEDS_CORRECTION',
 } as const;
 export type ReviewStatus = (typeof ReviewStatus)[keyof typeof ReviewStatus];
 export const REVIEW_STATUSES = Object.values(ReviewStatus);
 
-// ─── Scrape Job Status ─────────────────────────────────────────
-// Used: ScrapeJob.status
 export const ScrapeJobStatus = {
     RUNNING: 'RUNNING',
     COMPLETED: 'COMPLETED',
     FAILED: 'FAILED',
-    PARTIAL: 'PARTIAL',   // Some URLs succeeded, some failed
+    PARTIAL: 'PARTIAL',
 } as const;
 export type ScrapeJobStatus = (typeof ScrapeJobStatus)[keyof typeof ScrapeJobStatus];
 
-// ─── Scrape Source Type ────────────────────────────────────────
-// Used: ScrapeSource.sourceType
+
 export const ScrapeSourceType = {
-    LISTING: 'LISTING',  // Page lists multiple exam notifications
-    DETAIL: 'DETAIL',   // Page is about a single exam
+    LISTING: 'LISTING',
+    DETAIL: 'DETAIL',
 } as const;
 export type ScrapeSourceType = (typeof ScrapeSourceType)[keyof typeof ScrapeSourceType];
 
-// ─── Notification Status ──────────────────────────────────────
-// Used: NotificationLog.status
 export const NotificationStatus = {
     PENDING: 'PENDING',
     QUEUED: 'QUEUED',
@@ -125,16 +118,13 @@ export const NotificationStatus = {
 } as const;
 export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus];
 
-// ─── Push Platform ─────────────────────────────────────────────
-// Used: PushToken.platform, User.platform
+
 export const PushPlatform = {
     ANDROID: 'ANDROID',
     IOS: 'IOS',
 } as const;
 export type PushPlatform = (typeof PushPlatform)[keyof typeof PushPlatform];
 
-// ─── Qualification Level ──────────────────────────────────────
-// Used: User.qualification
 export const QualificationLevel = {
     TEN_PASS: '10TH_PASS',
     TWELVE_PASS: '12TH_PASS',

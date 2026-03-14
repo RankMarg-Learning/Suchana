@@ -11,9 +11,9 @@ export const createExamSchema = z.object({
     conductingBody: z.string().min(2).max(100),
     minAge: z.number().int().positive().optional().nullable(),
     maxAge: z.number().int().positive().optional().nullable(),
-    qualificationCriteria: z.any().optional().nullable(), // Will be structured JSON
-    totalVacancies: z.any().optional().nullable(), // Changed to any to support structured JSON or number
-    applicationFee: z.any().optional().nullable(), // Changed to any for flexibility
+    qualificationCriteria: z.any().optional().nullable(),
+    totalVacancies: z.any().optional().nullable(),
+    applicationFee: z.any().optional().nullable(),
     officialWebsite: z.string().url().or(z.literal('')).optional().nullable(),
     notificationUrl: z.string().url().or(z.literal('')).optional().nullable(),
     status: z.nativeEnum(ExamStatus).default(ExamStatus.UPCOMING),

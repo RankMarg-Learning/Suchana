@@ -10,13 +10,12 @@ interface AdsContextType {
 
 const AdsContext = createContext<AdsContextType | undefined>(undefined);
 
-// Conditionally expose native dependencies
 let InterstitialAd: any;
 let AdEventType: any;
 let interstitial: any;
 
-const IS_EXPO_GO = 
-    Constants.appOwnership === 'expo' || 
+const IS_EXPO_GO =
+    Constants.appOwnership === 'expo' ||
     Constants.executionEnvironment === 'storeClient';
 
 if (Platform.OS !== 'web' && !IS_EXPO_GO) {

@@ -1,11 +1,6 @@
-// ============================================================
-// src/schemas/lifecycle.schema.ts  — Zod schemas for Lifecycle events
-// ============================================================
 import { z } from 'zod';
 import { LifecycleEventType, LifecycleStage } from '../constants/enums';
 
-// ─── Create Lifecycle Event ──────────────────────────────────
-// ─── Base Schema ──────────────────────────────────────────────
 const baseLifecycleEventSchema = z.object({
     stage: z.nativeEnum(LifecycleStage),
     eventType: z.nativeEnum(LifecycleEventType),

@@ -10,13 +10,7 @@ interface FcmResult {
 }
 
 export class NotificationService {
-    /**
-     * Finds users who should receive a notification for a specific lifecycle event.
-     * Logic:
-     * 1. Users who SAVED the exam.
-     * 2. Users whose preferred categories match the exam's category.
-     * 3. Exclude users with notifications disabled.
-     */
+
     static async getTargetUsersForEvent(examId: string, category: string) {
         return prisma.user.findMany({
             where: {

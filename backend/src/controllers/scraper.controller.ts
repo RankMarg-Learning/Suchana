@@ -1,7 +1,3 @@
-// ============================================================
-// src/controllers/scraper.controller.ts
-// Handles scraper management + review pipeline endpoints
-// ============================================================
 import { Request, Response, NextFunction } from 'express';
 import { sendSuccess, sendError, buildPaginationMeta } from '../utils/apiResponse';
 import * as scrapeSourceService from '../services/scrapeSource.service';
@@ -18,7 +14,6 @@ import type {
     UpdateStagedEventDto,
 } from '../schemas/scraper.schema';
 
-// ─── ScrapeSource CRUD ─────────────────────────────────────────
 
 export async function listScrapeSources(req: Request, res: Response, next: NextFunction) {
     try {
@@ -69,7 +64,6 @@ export async function deleteScrapeSource(req: Request, res: Response, next: Next
     }
 }
 
-// ─── Scrape Jobs ───────────────────────────────────────────────
 
 export async function listScrapeJobs(req: Request, res: Response, next: NextFunction) {
     try {
@@ -91,7 +85,6 @@ export async function getScrapeJobById(req: Request, res: Response, next: NextFu
     }
 }
 
-// ─── Trigger Scrape ────────────────────────────────────────────
 // POST /api/v1/scraper/trigger  — async fire-and-forget (202)
 export async function triggerScrape(req: Request, res: Response, next: NextFunction) {
     try {
@@ -105,7 +98,6 @@ export async function triggerScrape(req: Request, res: Response, next: NextFunct
 
         logger.info(`[Scraper] Admin triggered scrape for source ${sourceId}`);
 
-        // Fire-and-forget — respond immediately, job runs in background
         const scrapePromise = runScrapeJob({
             id: source.id,
             url: source.url,
@@ -157,8 +149,6 @@ export async function triggerScrapeSync(req: Request, res: Response, next: NextF
         next(err);
     }
 }
-
-// ─── Review Pipeline ───────────────────────────────────────────
 
 export async function listStagedExams(req: Request, res: Response, next: NextFunction) {
     try {
