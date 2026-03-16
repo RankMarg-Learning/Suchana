@@ -269,7 +269,7 @@ async function callAI(prompt: string): Promise<AiStructuredExam | null> {
     const openai = getOpenAI();
 
     const completion = await openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: 'gpt-5-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0,
         max_tokens: 1500,
