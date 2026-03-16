@@ -1,7 +1,3 @@
-// ============================================================
-// src/services/scraper.service.ts
-// Core scraper: fetch → clean → AI-extract → deduplicate
-// ============================================================
 import * as cheerio from 'cheerio';
 import { createHash } from 'crypto';
 import OpenAI from 'openai';
@@ -22,9 +18,7 @@ import {
 } from '../constants/enums';
 import { env } from '../config/env';
 
-// ─────────────────────────────────────────────────────────────
-// Types
-// ─────────────────────────────────────────────────────────────
+
 export interface ScrapeSourceConfig {
     id: string;
     url: string;
@@ -64,9 +58,7 @@ function getOpenAI(): OpenAI {
     return _openai;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Site-specific config (detected by hostname)
-// ─────────────────────────────────────────────────────────────
+
 interface SiteConfig {
     noiseSelectors: string[];
     contentSelectors: string[];
@@ -109,8 +101,7 @@ function getSiteConfig(url: string): SiteConfig {
     try {
         const hostname = new URL(url).hostname.replace(/^www\./, '');
         if (SITE_CONFIGS[hostname]) return SITE_CONFIGS[hostname];
-    } catch {}
-    // Default generic config
+    } catch { }
     return {
         noiseSelectors: ['header', 'footer', 'nav', '.sidebar', 'script', 'style', 'noscript', '.ad'],
         contentSelectors: ['main', 'article', '.content', '#content', '.post-content', 'table'],
@@ -119,9 +110,6 @@ function getSiteConfig(url: string): SiteConfig {
     };
 }
 
-// ─────────────────────────────────────────────────────────────
-// HTML fetch
-// ─────────────────────────────────────────────────────────────
 async function fetchHtml(url: string): Promise<string> {
     const res = await fetch(url, {
         headers: {
@@ -137,9 +125,6 @@ async function fetchHtml(url: string): Promise<string> {
     return res.text();
 }
 
-// ─────────────────────────────────────────────────────────────
-// HTML cleaning: strip noise → extract content → decode → collapse
-// ─────────────────────────────────────────────────────────────
 function decodeEntities(text: string): string {
     return text
         .replace(/&amp;/g, '&')
@@ -160,10 +145,8 @@ export function cleanHtml(html: string, url: string): { text: string; rawCharCou
     const siteConfig = getSiteConfig(url);
     const $ = cheerio.load(html);
 
-    // Strip noise selectors
     siteConfig.noiseSelectors.forEach((sel) => $(sel).remove());
 
-    // Try to extract content from priority selectors
     let contentText = '';
     for (const selector of siteConfig.contentSelectors) {
         const el = $(selector);
@@ -173,15 +156,12 @@ export function cleanHtml(html: string, url: string): { text: string; rawCharCou
         }
     }
 
-    // Fallback: use body text
     if (!contentText.trim()) {
         contentText = $('body').text();
     }
 
-    // Decode HTML entities
     contentText = decodeEntities(contentText);
 
-    // Collapse whitespace
     contentText = contentText
         .replace(/\t/g, ' ')
         .replace(/ {2,}/g, ' ')
@@ -191,15 +171,11 @@ export function cleanHtml(html: string, url: string): { text: string; rawCharCou
     const rawCharCount = contentText.length;
     logger.info(`[Scraper] Cleaned text length before truncation: ${rawCharCount} chars for URL: ${url}`);
 
-    // HARD TRUNCATE to 3000 chars
     const truncated = contentText.slice(0, 3000);
 
     return { text: truncated, rawCharCount };
 }
 
-// ─────────────────────────────────────────────────────────────
-// Extract listing links from a LISTING page
-// ─────────────────────────────────────────────────────────────
 export function extractListingLinks(html: string, baseUrl: string): string[] {
     const siteConfig = getSiteConfig(baseUrl);
     const $ = cheerio.load(html);
@@ -218,9 +194,6 @@ export function extractListingLinks(html: string, baseUrl: string): string[] {
     return links;
 }
 
-// ─────────────────────────────────────────────────────────────
-// AI extraction prompt
-// ─────────────────────────────────────────────────────────────
 const CURRENT_YEAR = new Date().getFullYear();
 
 function buildExtractionPrompt(cleanedText: string, sourceUrl: string, hintCategory?: string): string {
@@ -241,9 +214,10 @@ RULES:
 - aiConfidence: float 0.0–1.0 indicating your confidence in the extracted data.
 - description fields can use markdown for structure (bullet points, bold for key dates, etc.)
 - If totalVacancies is unknown, omit it (don't set to null).
-- conductingBody: the official organization name (e.g., "UPSC", "SSC", "Railway Recruitment Board").
+- conductingBody: the official org. name (e.g., "UPSC", "SSC").
 - For applicationFee, use JSON: {"general": 500, "obc": 300, "sc_st": 0, "female": 0, "currency": "INR"}
 - For qualificationCriteria, use JSON: {"minQualification": "GRADUATE", "degree": "B.Tech", "specialization": "Any", "notes": "..."}
+- only offical links use. no third party links.
 
 STAGE ORDER MAP (use these stageOrder values):
 NOTIFICATION=10, REGISTRATION=20, ADMIT_CARD=30, EXAM=40, ANSWER_KEY=50, RESULT=60, DOCUMENT_VERIFICATION=70, JOINING=80
@@ -256,8 +230,8 @@ ${cleanedText}
 Return ONLY valid JSON matching this schema (no markdown, no extra text):
 {
   "title": "Full exam title",
-  "shortTitle": "Short acronym/name",
-  "description": "Markdown description with key facts",
+  "shortTitle": "Short name",
+  "description": "Markdown description with remaining important info which is not stored in other fields",
   "conductingBody": "Organization name",
   "category": "ENUM_VALUE",
   "examLevel": "NATIONAL|STATE|DISTRICT",
@@ -265,7 +239,7 @@ Return ONLY valid JSON matching this schema (no markdown, no extra text):
   "examYear": ${CURRENT_YEAR},
   "minAge": 18,
   "maxAge": 30,
-  "totalVacancies": 1000,
+  "totalVacancies": { "Senior Assistant": 200, "Junior Assistant": 300},
   "applicationFee": {"general": 500, "sc_st": 0, "currency": "INR"},
   "qualificationCriteria": {"minQualification": "GRADUATE"},
   "officialWebsite": "https://...",
@@ -277,8 +251,8 @@ Return ONLY valid JSON matching this schema (no markdown, no extra text):
       "stage": "REGISTRATION",
       "eventType": "START",
       "stageOrder": 20,
-      "title": "Registration Opens",
-      "description": "Online application at official portal",
+      "title": "Registration",
+      "description": "IMP Detail of Stage show in markdown",
       "startsAt": "2026-03-01T00:00:00.000Z",
       "endsAt": "2026-03-31T23:59:59.000Z",
       "isTBD": false,
@@ -290,12 +264,10 @@ Return ONLY valid JSON matching this schema (no markdown, no extra text):
 }`;
 }
 
-// ─────────────────────────────────────────────────────────────
-// Call GPT-4o-mini
-// ─────────────────────────────────────────────────────────────
+
 async function callAI(prompt: string): Promise<AiStructuredExam | null> {
     const openai = getOpenAI();
-    
+
     const completion = await openai.chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
@@ -316,17 +288,11 @@ async function callAI(prompt: string): Promise<AiStructuredExam | null> {
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Content hash for debugging (using built-in crypto)
-// ─────────────────────────────────────────────────────────────
-function contentHash(title: string, conductingBody: string, totalVacancies?: number): string {
+function contentHash(title: string, conductingBody: string, totalVacancies?: any): string {
     const raw = `${title}|${conductingBody}|${totalVacancies ?? ''}`;
     return createHash('sha256').update(raw).digest('hex');
 }
 
-// ─────────────────────────────────────────────────────────────
-// deduplicationKey = slugify(`${conductingBody}-${category}-${year}`)
-// ─────────────────────────────────────────────────────────────
 function buildDeduplicationKey(conductingBody: string, category: string, year: number): string {
     const raw = `${conductingBody}-${category}-${year}`;
     return (slugifyPkg as unknown as (text: string, opts?: unknown) => string)(raw, {
@@ -336,9 +302,7 @@ function buildDeduplicationKey(conductingBody: string, category: string, year: n
     });
 }
 
-// ─────────────────────────────────────────────────────────────
-// Scrape a single DETAIL page, extract, deduplicate
-// ─────────────────────────────────────────────────────────────
+
 async function scrapeDetailPage(
     jobId: string,
     url: string,
@@ -355,14 +319,11 @@ async function scrapeDetailPage(
             return { sourceUrl: url, outcome: 'AI_FAILED', reason: 'AI returned no parseable JSON' };
         }
 
-        // Attach source metadata
         extracted.sourceUrl = url;
         extracted.scrapedAt = new Date();
 
-        // Log rawCharCount in job payload (done in caller via job update)
         logger.info(`[Scraper] AI extracted: "${extracted.title}" confidence=${extracted.aiConfidence} charsBefore=${rawCharCount}`);
 
-        // Run deduplication
         const dedupResult = await checkAndStage(jobId, extracted);
 
         const summary: DeduplicationSummary = {
@@ -388,11 +349,8 @@ async function scrapeDetailPage(
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Main scrape orchestrator
-// ─────────────────────────────────────────────────────────────
+
 export async function runScrapeJob(source: ScrapeSourceConfig): Promise<ScrapeResult> {
-    // Create job record
     const job = await prisma.scrapeJob.create({
         data: {
             scrapeSourceId: source.id,
@@ -415,13 +373,11 @@ export async function runScrapeJob(source: ScrapeSourceConfig): Promise<ScrapeRe
             logger.info(`[Scraper] Found ${detailUrls.length} detail URLs from listing`);
             rawPayloadLog['listingUrl'] = source.url;
             rawPayloadLog['detailUrlsFound'] = detailUrls.length;
-            rawPayloadLog['detailUrls'] = detailUrls.slice(0, 20); // cap log size
+            rawPayloadLog['detailUrls'] = detailUrls.slice(0, 20);
         } else {
-            // DETAIL mode: single URL
             detailUrls = [source.url];
         }
 
-        // Process detail pages sequentially to be respectful
         for (const url of detailUrls) {
             const summary = await scrapeDetailPage(jobId, url, source.hintCategory ?? undefined);
             results.push(summary);
@@ -430,7 +386,6 @@ export async function runScrapeJob(source: ScrapeSourceConfig): Promise<ScrapeRe
                 errors.push(`${url}: ${summary.reason}`);
             }
 
-            // Small delay between requests
             await new Promise((r) => setTimeout(r, 800));
         }
 
@@ -447,8 +402,8 @@ export async function runScrapeJob(source: ScrapeSourceConfig): Promise<ScrapeRe
             errors.length === 0
                 ? ScrapeJobStatus.COMPLETED
                 : errors.length < results.length
-                ? ScrapeJobStatus.PARTIAL
-                : ScrapeJobStatus.FAILED;
+                    ? ScrapeJobStatus.PARTIAL
+                    : ScrapeJobStatus.FAILED;
 
         await prisma.scrapeJob.update({
             where: { id: jobId },
@@ -477,12 +432,7 @@ export async function runScrapeJob(source: ScrapeSourceConfig): Promise<ScrapeRe
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Promote a StagedExam → Exam table (admin approval)
-// All field mapping from StagedExam schema → Exam schema happens here.
-// ─────────────────────────────────────────────────────────────
 export async function promoteStagedExam(stagedExamId: string, adminId: string): Promise<{ examId: string }> {
-    // Re-fetch fresh from DB (review.service may have just updated title/corrections)
     const staged = await prisma.stagedExam.findUnique({
         where: { id: stagedExamId },
         include: { stagedEvents: { orderBy: { stageOrder: 'asc' } } },
@@ -491,7 +441,6 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
     if (!staged) throw new Error(`StagedExam ${stagedExamId} not found`);
     if (staged.reviewStatus !== 'APPROVED') throw new Error(`StagedExam ${stagedExamId} is not APPROVED`);
 
-    // ── Build safe slug ──────────────────────────────────────
     async function buildUniqueSlug(base: string): Promise<string> {
         const slug = base
             .toLowerCase()
@@ -508,23 +457,16 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         return candidate;
     }
 
-    // ── Map staged → Exam fields ─────────────────────────────
-    // totalVacancies in Exam is Json?  — store as { count: N } for structured access
-    const totalVacanciesJson = staged.totalVacancies != null
-        ? { count: staged.totalVacancies }
-        : undefined;
+    const totalVacanciesJson = staged.totalVacancies ?? undefined;
 
-    // Safe deduplicationKey — null it if it would collide
     let deduplicationKey: string | undefined = staged.deduplicationKey ?? undefined;
     if (deduplicationKey) {
         const clash = await prisma.exam.findUnique({ where: { deduplicationKey } });
         if (clash && clash.id !== staged.existingExamId) {
-            // Append staged exam id suffix to avoid unique constraint failure
             deduplicationKey = `${deduplicationKey}-${stagedExamId.slice(-6)}`;
         }
     }
 
-    // ── Event rows builder ───────────────────────────────────
     const eventRows = staged.stagedEvents.map((ev) => ({
         stage: ev.stage,
         eventType: ev.eventType,
@@ -541,7 +483,6 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         createdBy: adminId,
     }));
 
-    // ── UPDATE existing exam ─────────────────────────────────
     if (staged.existingExamId) {
         const existing = await prisma.exam.findUnique({ where: { id: staged.existingExamId } });
         if (!existing) throw new Error(`Linked exam ${staged.existingExamId} no longer exists`);
@@ -572,14 +513,12 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                 },
             });
 
-            // Replace all lifecycle events with the scraped ones
             await tx.lifecycleEvent.deleteMany({ where: { examId: staged.existingExamId! } });
 
             if (eventRows.length > 0) {
                 await tx.lifecycleEvent.createMany({ data: eventRows.map(r => ({ ...r, examId: staged.existingExamId! })) });
             }
 
-            // Mark staged exam as promoted
             await tx.stagedExam.update({
                 where: { id: stagedExamId },
                 data: { existingExamId: staged.existingExamId },
@@ -590,7 +529,6 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         return { examId: staged.existingExamId };
     }
 
-    // ── CREATE new exam ──────────────────────────────────────
     const baseSlug = staged.slug ?? staged.title;
     const finalSlug = await buildUniqueSlug(baseSlug);
 
@@ -615,7 +553,6 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                 deduplicationKey: deduplicationKey ?? undefined,
                 sourceStagedExamId: staged.id,
                 createdBy: adminId,
-                // Auto-publish on approval so it immediately appears in live feed
                 status: 'ACTIVE',
                 isPublished: true,
                 publishedAt: new Date(),

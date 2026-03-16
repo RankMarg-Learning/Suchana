@@ -1,6 +1,3 @@
-// ============================================================
-// src/utils/apiResponse.ts  — Standardized JSON response helpers
-// ============================================================
 import { Response } from 'express';
 
 export interface ApiSuccessResponse<T> {
@@ -43,7 +40,6 @@ export function sendError(
     res.status(statusCode).json(body);
 }
 
-// Pagination meta helper
 export function buildPaginationMeta(
     total: number,
     page: number,

@@ -73,7 +73,7 @@ model StagedExam {
   maxAge                Int?
   qualificationCriteria Json?
 
-  totalVacancies Int?
+  totalVacancies Json?
   applicationFee Json?
 
   officialWebsite String?

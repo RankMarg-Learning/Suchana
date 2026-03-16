@@ -16,7 +16,7 @@ export interface AiStructuredExam {
     minAge?: number;
     maxAge?: number;
     qualificationCriteria?: Record<string, unknown>;
-    totalVacancies?: number;
+    totalVacancies?: any;
     applicationFee?: Record<string, unknown>;
     officialWebsite?: string;
     notificationUrl?: string;
