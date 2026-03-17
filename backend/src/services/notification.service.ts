@@ -1,7 +1,8 @@
-import { LifecycleEventType, NotificationStatus } from '../constants/enums';
+import { LifecycleStage, LifecycleEventType, NotificationStatus } from '../constants/enums';
 import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
+import { NotificationTemplates, NotificationContent } from '../utils/notificationTemplates';
 
 interface FcmResult {
     successCount: number;
@@ -11,16 +12,35 @@ interface FcmResult {
 
 export class NotificationService {
 
-    static async getTargetUsersForEvent(examId: string, category: string) {
+    /**
+     * Finds users who are either:
+     * 1. Bookmarked the exam
+     * 2. Have matching preferences (Category, Level, Qualification, etc.)
+     */
+    static async getTargetUsersForEvent(params: {
+        examId: string;
+        category: string;
+        examLevel: string;
+        qualification?: string;
+    }) {
+        const { examId, category, examLevel, qualification } = params;
+
         return prisma.user.findMany({
             where: {
                 notificationsEnabled: true,
                 OR: [
                     { savedExamIds: { has: examId } },
-                    { preferredCategories: { has: category } }
+                    { 
+                        AND: [
+                            category ? { preferredCategories: { has: category } } : {},
+                            examLevel ? { preferredExamLevel: examLevel } : {},
+                            // Match qualification if available
+                            qualification ? { qualification: { equals: qualification, mode: 'insensitive' } } : {}
+                        ]
+                    }
                 ]
             },
-            select: { id: true, fcmToken: true }
+            select: { id: true }
         });
     }
 
@@ -127,10 +147,24 @@ export class NotificationService {
 
         if (!event || event.notificationSent) return;
 
-        logger.info(`Orchestrating notification: ${event.exam.shortTitle} - ${event.title}`);
+        logger.info(`Orchestrating event notification: ${event.exam.shortTitle} - ${event.title}`);
+
+        const { title, body } = NotificationTemplates.getEventTemplate(
+            event.exam.shortTitle,
+            event.title,
+            event.stage as LifecycleStage,
+            event.eventType as LifecycleEventType,
+            event.startsAt || undefined
+        );
 
         // 1. Get recipients
-        const targetUsers = await this.getTargetUsersForEvent(event.examId, event.exam.category);
+        const targetUsers = await this.getTargetUsersForEvent({
+            examId: event.examId,
+            category: event.exam.category,
+            examLevel: event.exam.examLevel,
+            qualification: (event.exam.qualificationCriteria as any)?.level
+        });
+        
         const tokens = await this.getTokensForUsers(targetUsers.map(u => u.id));
 
         if (tokens.length === 0) {
@@ -141,13 +175,11 @@ export class NotificationService {
             return;
         }
 
-        const title = `📢 ${event.exam.shortTitle}`;
-        const body = event.title;
         const payload = {
             examId: event.examId,
             eventId: event.id,
             eventType: event.eventType,
-            click_action: 'FLUTTER_NOTIFICATION_CLICK', // Legacy support
+            click_action: 'FLUTTER_NOTIFICATION_CLICK',
         };
 
         // 2. Create Audit Log
@@ -184,5 +216,109 @@ export class NotificationService {
         ]);
 
         logger.info(`Notification complete. Targeted: ${tokens.length}, Success: ${result.successCount}`);
+    }
+
+    /**
+     * Triggered when a new exam is promoted to the live database.
+     */
+    static async handleNewExamNotification(examId: string) {
+        const exam = await prisma.exam.findUnique({
+            where: { id: examId }
+        });
+
+        if (!exam) return;
+
+        logger.info(`Orchestrating NEW EXAM notification: ${exam.shortTitle}`);
+
+        const vacancies = typeof exam.totalVacancies === 'number' 
+            ? exam.totalVacancies 
+            : (typeof exam.totalVacancies === 'object' ? Object.values(exam.totalVacancies as object).reduce((a, b) => a + (Number(b) || 0), 0) : undefined);
+
+        const { title, body } = NotificationTemplates.getNewExamTemplate(
+            exam.shortTitle,
+            exam.category,
+            vacancies
+        );
+
+        // 1. Get recipients who are NOT bookmarked (since it's new) but have matching preferences
+        const targetUsers = await prisma.user.findMany({
+            where: {
+                notificationsEnabled: true,
+                AND: [
+                    { preferredCategories: { has: exam.category } },
+                    { preferredExamLevel: exam.examLevel },
+                ]
+            },
+            select: { id: true }
+        });
+
+        if (targetUsers.length === 0) return;
+
+        const tokens = await this.getTokensForUsers(targetUsers.map(u => u.id));
+        if (tokens.length === 0) return;
+
+        const payload = {
+            examId: exam.id,
+            type: 'NEW_EXAM_NOTIFICATION',
+            click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        };
+
+        const result = await this.sendToTokens(tokens, title, body, payload);
+        logger.info(`New exam notification complete. Targeted: ${tokens.length}, Success: ${result.successCount}`);
+    }
+
+    /**
+     * Sends an ad-hoc notification.
+     * targetAudience: 'BOOKMARKED' (default) or 'INTERESTED' (bookmarks + preferences)
+     */
+    static async sendManualExamNotification(
+        examId: string, 
+        title?: string, 
+        body?: string, 
+        targetAudience: 'BOOKMARKED' | 'INTERESTED' = 'BOOKMARKED'
+    ) {
+        const exam = await prisma.exam.findUnique({
+            where: { id: examId }
+        });
+
+        if (!exam) throw new Error('Exam not found');
+
+        let targetUsers;
+        
+        if (targetAudience === 'INTERESTED') {
+            targetUsers = await this.getTargetUsersForEvent({
+                examId: exam.id,
+                category: exam.category,
+                examLevel: exam.examLevel,
+                qualification: (exam.qualificationCriteria as any)?.level
+            });
+        } else {
+            targetUsers = await prisma.user.findMany({
+                where: {
+                    notificationsEnabled: true,
+                    savedExamIds: { has: examId }
+                },
+                select: { id: true }
+            });
+        }
+
+        if (targetUsers.length === 0) return { successCount: 0, failureCount: 0, targetTokens: 0 };
+
+        const tokens = await this.getTokensForUsers(targetUsers.map(u => u.id));
+
+        if (tokens.length === 0) return { successCount: 0, failureCount: 0, targetTokens: 0 };
+
+        const finalTitle = title || `📢 Update: ${exam.shortTitle}`;
+        const finalBody = body || `The ${exam.shortTitle} status has changed. Tap for details.`;
+
+        const payload = {
+            examId: exam.id,
+            type: 'MANUAL_EXAM_UPDATE',
+            click_action: 'FLUTTER_NOTIFICATION_CLICK',
+        };
+
+        const result = await this.sendToTokens(tokens, finalTitle, finalBody, payload);
+
+        return { ...result, targetTokens: tokens.length };
     }
 }

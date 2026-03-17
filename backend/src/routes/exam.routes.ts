@@ -60,6 +60,14 @@ router.delete(
     examController.deleteExam
 );
 
+// POST /api/v1/exams/:id/notify-manual
+router.post(
+    '/:id/notify-manual',
+    requireAdmin,
+    validate(examIdParamSchema, 'params'),
+    examController.sendManualNotification
+);
+
 // ─── Lifecycle Event sub-routes  (UC-02) ──────────────────────
 
 // POST /api/v1/exams/:id/events

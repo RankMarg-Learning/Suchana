@@ -1,62 +1,61 @@
-// ============================================================
-// app/staged-detail/[id].tsx
-// Full Staged Exam Detail + Edit + Review screen
-// Admin can view all AI-extracted fields, edit any field,
-// edit/delete lifecycle events, then Approve / Reject / Flag
-// ============================================================
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity, SafeAreaView,
-  StatusBar, Alert, TextInput, ActivityIndicator, Modal, Switch,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  StatusBar, Alert, TextInput, ActivityIndicator, Modal, Switch, Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { scraperService, StagedExam, StagedEvent } from '@/services/api.service';
+import { 
+  EXAM_CATEGORIES, 
+  EXAM_LEVELS, 
+  LIFECYCLE_STAGES, 
+  LIFECYCLE_EVENT_TYPES, 
+  STAGE_ORDER_MAP 
+} from '@/constants/enums';
 
-// Exam categories & levels
-const EXAM_CATEGORIES = [
-  'GOVERNMENT_JOBS','BANKING_JOBS','RAILWAY_JOBS','DEFENCE_JOBS','POLICE_JOBS',
-  'TEACHING_ELIGIBILITY','STATE_PSC','UPSC','SSC','PROFESSIONAL_CERTIFICATION',
-  'SCHOOL_BOARD','SCHOLARSHIP_EXAMS','OLYMPIAD_EXAMS','AGRICULTURE_ENTRANCE',
-  'PARAMEDICAL_ENTRANCE','FOREIGN_STUDY_EXAMS','SKILL_CERTIFICATION',
-  'UNIVERSITY_ENTRANCE','ENGINEERING_ENTRANCE','MEDICAL_ENTRANCE','LAW_ENTRANCE',
-  'MBA_ENTRANCE','OTHER',
-];
-const EXAM_LEVELS = ['NATIONAL', 'STATE', 'DISTRICT'];
-const LIFECYCLE_STAGES = ['NOTIFICATION','REGISTRATION','ADMIT_CARD','EXAM','ANSWER_KEY','RESULT','DOCUMENT_VERIFICATION','JOINING'];
-const EVENT_TYPES = ['RELEASE','START','END','CORRECTION','RESCHEDULED','CANCELLED','OTHER'];
-
-const STAGE_ORDER: Record<string, number> = {
-  NOTIFICATION: 10, REGISTRATION: 20, ADMIT_CARD: 30, EXAM: 40,
-  ANSWER_KEY: 50, RESULT: 60, DOCUMENT_VERIFICATION: 70, JOINING: 80,
-};
+const { width } = Dimensions.get('window');
 
 // ─── Section Header ───────────────────────────────────────────
-const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
+const Section = ({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) => (
   <View style={styles.section}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {children}
+    <View style={styles.sectionHeaderInner}>
+      <Ionicons name={icon as any} size={20} color="#4F46E5" />
+      <Text style={styles.sectionTitle}>{title}</Text>
+    </View>
+    <View style={styles.sectionCard}>
+      {children}
+    </View>
   </View>
 );
 
 // ─── Field Row (editable label + value) ───────────────────────
 const Field = ({
-  label, value, onEdit, multiline = false, placeholder = '—',
+  label, value, onEdit, multiline = false, placeholder = '—', isLast = false
 }: {
   label: string;
   value?: string | number | null;
   onEdit: () => void;
   multiline?: boolean;
   placeholder?: string;
+  isLast?: boolean;
 }) => (
-  <TouchableOpacity style={styles.fieldRow} onPress={onEdit} activeOpacity={0.7}>
+  <TouchableOpacity 
+    style={[styles.fieldRow, isLast && { borderBottomWidth: 0 }]} 
+    onPress={onEdit} 
+    activeOpacity={0.7}
+  >
     <View style={styles.fieldContent}>
       <Text style={styles.fieldLabel}>{label}</Text>
-      <Text style={[styles.fieldValue, !value && styles.fieldValueEmpty]} numberOfLines={multiline ? 4 : 1}>
+      <Text style={[styles.fieldValue, !value && styles.fieldValueEmpty]} numberOfLines={multiline ? 4 : 2}>
         {value != null && value !== '' ? String(value) : placeholder}
       </Text>
     </View>
-    <Ionicons name="pencil-outline" size={16} color="#9CA3AF" />
+    <View style={styles.editIconBadge}>
+      <Ionicons name="pencil-outline" size={14} color="#6366F1" />
+    </View>
   </TouchableOpacity>
 );
 
@@ -68,10 +67,10 @@ const ChipModal = ({
   selected?: string; onSelect: (v: string) => void; onClose: () => void;
 }) => (
   <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-    <SafeAreaView style={styles.chipModal}>
-      <View style={styles.chipModalHeader}>
-        <Text style={styles.chipModalTitle}>{title}</Text>
-        <TouchableOpacity onPress={onClose}>
+    <SafeAreaView style={styles.modalBg}>
+      <View style={styles.modalHeader}>
+        <Text style={styles.modalHeaderTitle}>{title}</Text>
+        <TouchableOpacity onPress={onClose} style={styles.modalCloseBtn}>
           <Ionicons name="close" size={24} color="#374151" />
         </TouchableOpacity>
       </View>
@@ -85,7 +84,7 @@ const ChipModal = ({
             <Text style={[styles.chipItemText, selected === opt && styles.chipItemTextActive]}>
               {opt.replace(/_/g, ' ')}
             </Text>
-            {selected === opt && <Ionicons name="checkmark" size={18} color="#6366F1" />}
+            {selected === opt && <Ionicons name="checkmark-circle" size={20} color="#6366F1" />}
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -105,17 +104,17 @@ const TextEditModal = ({
   useEffect(() => { if (visible) setText(value); }, [visible, value]);
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={styles.chipModal}>
-        <View style={styles.chipModalHeader}>
+      <SafeAreaView style={styles.modalBg}>
+        <View style={styles.modalHeader}>
           <TouchableOpacity onPress={onClose}>
-            <Text style={{ color: '#6B7280', fontSize: 15 }}>Cancel</Text>
+            <Text style={styles.modalCancel}>Cancel</Text>
           </TouchableOpacity>
-          <Text style={styles.chipModalTitle}>{title}</Text>
+          <Text style={styles.modalHeaderTitle}>{title}</Text>
           <TouchableOpacity onPress={() => { onSave(text); onClose(); }}>
-            <Text style={{ color: '#6366F1', fontSize: 15, fontWeight: '700' }}>Save</Text>
+            <Text style={styles.modalSave}>Save</Text>
           </TouchableOpacity>
         </View>
-        <View style={{ padding: 20 }}>
+        <View style={{ padding: 24 }}>
           <TextInput
             style={[styles.editInput, multiline && styles.editInputMulti]}
             value={text}
@@ -126,6 +125,7 @@ const TextEditModal = ({
             textAlignVertical={multiline ? 'top' : 'center'}
             keyboardType={keyboardType}
             placeholder={`Enter ${title.toLowerCase()}…`}
+            placeholderTextColor="#9CA3AF"
           />
         </View>
       </SafeAreaView>
@@ -160,23 +160,24 @@ const EventCard = ({
   return (
     <View style={styles.eventCard}>
       <View style={styles.eventCardHeader}>
-        <View style={{ flex: 1 }}>
+        <View style={styles.eventBadges}>
           <TouchableOpacity onPress={() => setStageModal(true)} style={styles.stagePill}>
             <Text style={styles.stagePillText}>{event.stage}</Text>
-            <Ionicons name="chevron-down" size={12} color="#6366F1" />
+            <Ionicons name="chevron-down" size={10} color="#4F46E5" />
           </TouchableOpacity>
           <TouchableOpacity onPress={() => setTypeModal(true)} style={styles.typePill}>
             <Text style={styles.typePillText}>{event.eventType}</Text>
           </TouchableOpacity>
         </View>
-        <View style={styles.eventToggles}>
-          <View style={styles.miniToggle}>
+        <View style={styles.eventCardActions}>
+          <View style={styles.miniToggleContainer}>
             <Text style={styles.miniToggleLabel}>★</Text>
             <Switch
               value={isImportant}
               onValueChange={(v) => { setIsImportant(v); update({ isImportant: v }); }}
-              trackColor={{ true: '#F59E0B' }}
-              style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
+              trackColor={{ true: '#F59E0B', false: '#E5E7EB' }}
+              thumbColor={isImportant ? '#FFF' : '#F3F4F6'}
+              style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
             />
           </View>
           <TouchableOpacity onPress={() => {
@@ -184,43 +185,43 @@ const EventCard = ({
               { text: 'Cancel', style: 'cancel' },
               { text: 'Delete', style: 'destructive', onPress: () => onDelete(event.id) },
             ]);
-          }} style={styles.deleteEventBtn}>
+          }} style={styles.deleteBtn}>
             <Ionicons name="trash-outline" size={16} color="#EF4444" />
           </TouchableOpacity>
         </View>
       </View>
 
-      <TouchableOpacity onPress={() => setTitleEdit(true)} style={styles.eventTitle}>
+      <TouchableOpacity onPress={() => setTitleEdit(true)} style={styles.eventTitleRow}>
         <Text style={styles.eventTitleText}>{event.title}</Text>
-        <Ionicons name="pencil-outline" size={14} color="#9CA3AF" />
+        <Ionicons name="pencil" size={12} color="#9CA3AF" />
       </TouchableOpacity>
 
-      <View style={styles.datePair}>
-        <TouchableOpacity style={styles.dateBtn} onPress={() => setStartEdit(true)}>
-          <Text style={styles.dateBtnLabel}>Starts</Text>
-          <Text style={styles.dateBtnValue}>{event.isTBD ? 'TBD' : formatDate(event.startsAt) || '—'}</Text>
+      <View style={styles.eventDatesGrid}>
+        <TouchableOpacity style={styles.dateChip} onPress={() => setStartEdit(true)}>
+          <Text style={styles.dateLabel}>STARTS</Text>
+          <Text style={styles.dateValue}>{event.isTBD ? 'TBD' : formatDate(event.startsAt) || '—'}</Text>
         </TouchableOpacity>
-        <View style={styles.dateSep} />
-        <TouchableOpacity style={styles.dateBtn} onPress={() => setEndEdit(true)}>
-          <Text style={styles.dateBtnLabel}>Ends</Text>
-          <Text style={styles.dateBtnValue}>{formatDate(event.endsAt) || '—'}</Text>
+        <View style={styles.dateDivider} />
+        <TouchableOpacity style={styles.dateChip} onPress={() => setEndEdit(true)}>
+          <Text style={styles.dateLabel}>ENDS</Text>
+          <Text style={styles.dateValue}>{formatDate(event.endsAt) || '—'}</Text>
         </TouchableOpacity>
-        <View style={styles.tbdToggle}>
-          <Text style={styles.dateBtnLabel}>TBD</Text>
+        <View style={styles.tbdControl}>
+          <Text style={styles.dateLabel}>TBD</Text>
           <Switch
             value={isTBD}
             onValueChange={(v) => { setIsTBD(v); update({ isTBD: v }); }}
-            trackColor={{ true: '#6366F1' }}
-            style={{ transform: [{ scaleX: 0.75 }, { scaleY: 0.75 }] }}
+            trackColor={{ true: '#6366F1', false: '#E5E7EB' }}
+            thumbColor={isTBD ? '#FFF' : '#F3F4F6'}
+            style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
           />
         </View>
       </View>
 
-      {/* Sub-modals */}
       <ChipModal visible={stageModal} title="Stage" options={LIFECYCLE_STAGES} selected={event.stage}
-        onSelect={(v) => update({ stage: v, stageOrder: STAGE_ORDER[v] ?? event.stageOrder })}
+        onSelect={(v) => update({ stage: v, stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? event.stageOrder })}
         onClose={() => setStageModal(false)} />
-      <ChipModal visible={typeModal} title="Event Type" options={EVENT_TYPES} selected={event.eventType}
+      <ChipModal visible={typeModal} title="Event Type" options={LIFECYCLE_EVENT_TYPES} selected={event.eventType}
         onSelect={(v) => update({ eventType: v })} onClose={() => setTypeModal(false)} />
       <TextEditModal visible={titleEdit} title="Event Title" value={event.title}
         onSave={(v) => update({ title: v })} onClose={() => setTitleEdit(false)} />
@@ -246,7 +247,6 @@ export default function StagedDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Editable exam fields (local)
   const [title, setTitle] = useState('');
   const [shortTitle, setShortTitle] = useState('');
   const [conductingBody, setConductingBody] = useState('');
@@ -257,7 +257,6 @@ export default function StagedDetailScreen() {
   const [notificationUrl, setNotificationUrl] = useState('');
   const [description, setDescription] = useState('');
 
-  // Modal states
   const [editField, setEditField] = useState<{ key: string; title: string; value: string; multiline?: boolean; numeric?: boolean } | null>(null);
   const [catModal, setCatModal] = useState(false);
   const [levelModal, setLevelModal] = useState(false);
@@ -348,137 +347,136 @@ export default function StagedDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#6366F1" />
-          <Text style={styles.loadingText}>Loading staged exam…</Text>
-        </View>
-      </SafeAreaView>
+      <View style={styles.loadingCentered}>
+        <ActivityIndicator size="large" color="#4F46E5" />
+        <Text style={styles.loadingText}>Loading extraction details…</Text>
+      </View>
     );
   }
 
   if (!exam) return null;
 
   const isPending = exam.reviewStatus === 'PENDING' || exam.reviewStatus === 'NEEDS_CORRECTION';
-
   const CONF = exam.aiConfidence;
   const confColor = !CONF ? '#9CA3AF' : CONF >= 0.8 ? '#10B981' : CONF >= 0.6 ? '#F59E0B' : '#EF4444';
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <Stack.Screen options={{ title: 'Review Staged Exam', headerShown: true }} />
+      <StatusBar barStyle="light-content" />
+      <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-
-        {/* ── Banner ── */}
-        <View style={styles.banner}>
-          <View style={styles.bannerLeft}>
-            <Text style={styles.bannerStatus}>{exam.reviewStatus}</Text>
-            {exam.existingExamId && <View style={styles.updatePill}><Text style={styles.updatePillText}>UPDATE</Text></View>}
-            {exam.isDuplicate && <View style={styles.dupPill}><Text style={styles.dupPillText}>DUPLICATE</Text></View>}
-          </View>
-          {CONF !== undefined && (
-            <View style={[styles.confBadge, { borderColor: confColor }]}>
-              <Text style={[styles.confText, { color: confColor }]}>AI {Math.round(CONF * 100)}%</Text>
+        {/* Header Section */}
+        <LinearGradient colors={['#4F46E5', '#3730A3']} style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+            <Ionicons name="arrow-back" size={24} color="#FFF" />
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Review Extraction</Text>
+          <View style={styles.bannerRow}>
+            <View style={styles.statusGroup}>
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusBadgeText}>{exam.reviewStatus}</Text>
+              </View>
+              {exam.existingExamId && <View style={styles.updatePill}><Text style={styles.updatePillText}>UPDATE</Text></View>}
+              {exam.isDuplicate && <View style={styles.dupPill}><Text style={styles.dupPillText}>DUPLICATE</Text></View>}
             </View>
+            {CONF !== undefined && (
+              <View style={[styles.aiBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
+                <View style={[styles.aiDot, { backgroundColor: confColor }]} />
+                <Text style={[styles.aiConfText, { color: '#FFF' }]}>AI {Math.round(CONF * 100)}%</Text>
+              </View>
+            )}
+          </View>
+        </LinearGradient>
+
+        <View style={styles.mainContent}>
+          {/* AI Notes Banner */}
+          {exam.aiNotes && (
+            <LinearGradient colors={['#EEF2FF', '#E0E7FF']} style={styles.aiNotesBanner}>
+              <Ionicons name="sparkles" size={18} color="#4F46E5" />
+              <Text style={styles.aiNotesText}>{exam.aiNotes}</Text>
+            </LinearGradient>
           )}
-        </View>
 
-        {/* ── AI Notes ── */}
-        {exam.aiNotes && (
-          <View style={styles.aiNotes}>
-            <Ionicons name="bulb-outline" size={16} color="#6366F1" />
-            <Text style={styles.aiNotesText}>{exam.aiNotes}</Text>
-          </View>
-        )}
-
-        {/* ── Source Info ── */}
-        <View style={styles.sourceInfo}>
-          <Text style={styles.sourceInfoText} numberOfLines={1}>
-            📌 {exam.scrapeJob?.scrapeSource?.label ?? 'Unknown Source'}
-          </Text>
-          <Text style={styles.sourceInfoText} numberOfLines={1}>
-            🔗 {exam.sourceUrl ?? '—'}
-          </Text>
-          <Text style={styles.sourceInfoText}>
-            📅 Scraped: {exam.scrapedAt ? new Date(exam.scrapedAt).toLocaleString('en-IN') : '—'} · {exam.sourceCount} source(s)
-          </Text>
-        </View>
-
-        {/* ── Exam Fields ── */}
-        <Section title="Exam Details">
-          <Field label="Title" value={title} multiline onEdit={() => setEditField({ key: 'title', title: 'Title', value: title, multiline: true })} />
-          <Field label="Short Title / Acronym" value={shortTitle} onEdit={() => setEditField({ key: 'shortTitle', title: 'Short Title', value: shortTitle })} />
-          <Field label="Conducting Body" value={conductingBody} onEdit={() => setEditField({ key: 'conductingBody', title: 'Conducting Body', value: conductingBody })} />
-          <TouchableOpacity style={styles.fieldRow} onPress={() => setCatModal(true)}>
-            <View style={styles.fieldContent}>
-              <Text style={styles.fieldLabel}>Category</Text>
-              <Text style={[styles.fieldValue, !category && styles.fieldValueEmpty]}>{category ? category.replace(/_/g, ' ') : '—'}</Text>
-            </View>
-            <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.fieldRow} onPress={() => setLevelModal(true)}>
-            <View style={styles.fieldContent}>
-              <Text style={styles.fieldLabel}>Exam Level</Text>
-              <Text style={[styles.fieldValue, !examLevel && styles.fieldValueEmpty]}>{examLevel || '—'}</Text>
-            </View>
-            <Ionicons name="chevron-down" size={16} color="#9CA3AF" />
-          </TouchableOpacity>
-          <Field label="Total Vacancies" value={totalVacancies} onEdit={() => setEditField({ key: 'totalVacancies', title: 'Total Vacancies', value: totalVacancies, numeric: true })} />
-          <Field label="Official Website" value={officialWebsite} onEdit={() => setEditField({ key: 'officialWebsite', title: 'Official Website', value: officialWebsite })} placeholder="https://..." />
-          <Field label="Notification URL" value={notificationUrl} onEdit={() => setEditField({ key: 'notificationUrl', title: 'Notification URL', value: notificationUrl })} placeholder="https://..." />
-          <Field label="Description" value={description} multiline onEdit={() => setEditField({ key: 'description', title: 'Description', value: description, multiline: true })} placeholder="Add description..." />
-        </Section>
-
-        {/* ── Eligibility if present ── */}
-        {(exam.minAge || exam.maxAge) && (
-          <Section title="Eligibility">
-            <View style={styles.eligibilityRow}>
-              {exam.minAge && <View style={styles.eligCard}><Text style={styles.eligLabel}>Min Age</Text><Text style={styles.eligValue}>{exam.minAge}</Text></View>}
-              {exam.maxAge && <View style={styles.eligCard}><Text style={styles.eligLabel}>Max Age</Text><Text style={styles.eligValue}>{exam.maxAge}</Text></View>}
+          {/* Source Information */}
+          <Section title="Source Intelligence" icon="link">
+            <View style={styles.sourceBox}>
+              <View style={styles.sourceItem}>
+                <Ionicons name="globe-outline" size={16} color="#6B7280" />
+                <Text style={styles.sourceText}>{exam.scrapeJob?.scrapeSource?.label ?? 'Manual Import'}</Text>
+              </View>
+              <View style={styles.sourceItem}>
+                <Ionicons name="document-text-outline" size={16} color="#6B7280" />
+                <Text style={styles.sourceText} numberOfLines={1}>{exam.sourceUrl || 'No source URL'}</Text>
+              </View>
+              <View style={styles.sourceMetas}>
+                <Text style={styles.sourceMetaText}>Extracted {exam.scrapedAt ? new Date(exam.scrapedAt).toLocaleDateString() : 'now'}</Text>
+                <Text style={styles.sourceMetaText}>· {exam.sourceCount} sources merged</Text>
+              </View>
             </View>
           </Section>
-        )}
 
-        {/* ── Lifecycle Events ── */}
-        <Section title={`Lifecycle Events (${events.length})`}>
-          {events.length === 0 ? (
-            <Text style={styles.noEvents}>No events extracted by AI</Text>
-          ) : (
-            events
-              .slice()
-              .sort((a, b) => a.stageOrder - b.stageOrder)
-              .map((ev) => (
-                <EventCard
-                  key={ev.id}
-                  event={ev}
-                  onUpdate={handleEventUpdate}
-                  onDelete={handleEventDelete}
-                />
-              ))
-          )}
-        </Section>
+          {/* Basic Fields */}
+          <Section title="Core Details" icon="document-outline">
+            <Field label="Title" value={title} multiline onEdit={() => setEditField({ key: 'title', title: 'Exam Title', value: title, multiline: true })} />
+            <Field label="Conducting Body" value={conductingBody} onEdit={() => setEditField({ key: 'conductingBody', title: 'Conducting Body', value: conductingBody })} />
+            <TouchableOpacity style={styles.fieldRow} onPress={() => setCatModal(true)}>
+              <View style={styles.fieldContent}>
+                <Text style={styles.fieldLabel}>Category</Text>
+                <Text style={[styles.fieldValue, !category && styles.fieldValueEmpty]}>{category ? category.replace(/_/g, ' ') : 'Select Category'}</Text>
+              </View>
+              <View style={styles.editIconBadge}><Ionicons name="chevron-down" size={14} color="#6366F1" /></View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.fieldRow} onPress={() => setLevelModal(true)}>
+              <View style={styles.fieldContent}>
+                <Text style={styles.fieldLabel}>Level</Text>
+                <Text style={[styles.fieldValue, !examLevel && styles.fieldValueEmpty]}>{examLevel || 'Select Level'}</Text>
+              </View>
+              <View style={styles.editIconBadge}><Ionicons name="chevron-down" size={14} color="#6366F1" /></View>
+            </TouchableOpacity>
+            <Field label="Vacancies" value={totalVacancies} onEdit={() => setEditField({ key: 'totalVacancies', title: 'Total Vacancies', value: totalVacancies, numeric: true })} />
+            <Field label="Description" value={description} multiline isLast onEdit={() => setEditField({ key: 'description', title: 'Description', value: description, multiline: true })} />
+          </Section>
 
-        {/* ── Dedup Info ── */}
-        <View style={styles.dedupBox}>
-          <Text style={styles.dedupTitle}>Deduplication Info</Text>
-          <Text style={styles.dedupRow}>Key: {exam.deduplicationKey ?? '—'}</Text>
-          {exam.existingExamId && <Text style={styles.dedupRow}>🔗 Linked Exam ID: {exam.existingExamId}</Text>}
+          {/* Resources */}
+          <Section title="Links & Resources" icon="at-circle-outline">
+            <Field label="Official Website" value={officialWebsite} onEdit={() => setEditField({ key: 'officialWebsite', title: 'Official Website', value: officialWebsite })} />
+            <Field label="Primary Notification" value={notificationUrl} isLast onEdit={() => setEditField({ key: 'notificationUrl', title: 'Notification URL', value: notificationUrl })} />
+          </Section>
+
+          {/* Timeline */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderInner}>
+              <Ionicons name="time-outline" size={20} color="#4F46E5" />
+              <Text style={styles.sectionTitle}>Extracted Lifecycle ({events.length})</Text>
+            </View>
+            {events.length === 0 ? (
+              <View style={styles.emptyEvents}>
+                <Ionicons name="calendar-outline" size={40} color="#D1D5DB" />
+                <Text style={styles.emptyEventsText}>No timeline events extracted</Text>
+              </View>
+            ) : (
+              events
+                .slice()
+                .sort((a, b) => a.stageOrder - b.stageOrder)
+                .map((ev) => (
+                  <EventCard key={ev.id} event={ev} onUpdate={handleEventUpdate} onDelete={handleEventDelete} />
+                ))
+            )}
+          </View>
+
+          <View style={{ height: 140 }} />
         </View>
-
-        {/* ── Bottom padding ── */}
-        <View style={{ height: 120 }} />
       </ScrollView>
 
-      {/* ── Sticky Action Bar ── */}
+      {/* Footer Action Bar */}
       {isPending && (
         <View style={styles.actionBar}>
           <TouchableOpacity
             style={[styles.actionBarBtn, styles.rejectBtn]}
             onPress={() => { setReviewNote(''); setReviewModal('REJECTED'); }}
           >
-            <Ionicons name="close" size={18} color="#FFF" />
+            <Ionicons name="close" size={20} color="#FFF" />
             <Text style={styles.actionBarLabel}>Reject</Text>
           </TouchableOpacity>
           <TouchableOpacity
@@ -486,59 +484,50 @@ export default function StagedDetailScreen() {
             onPress={() => { setReviewNote(''); setReviewModal('NEEDS_CORRECTION'); }}
           >
             <Ionicons name="flag" size={18} color="#FFF" />
-            <Text style={styles.actionBarLabel}>Need Fix</Text>
+            <Text style={styles.actionBarLabel}>Fix</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBarBtn, styles.approveBtn]}
             onPress={() => { setReviewNote(''); setReviewModal('APPROVED'); }}
           >
-            <Ionicons name="checkmark" size={18} color="#FFF" />
-            <Text style={styles.actionBarLabel}>Approve</Text>
+            <LinearGradient colors={['#10B981', '#059669']} style={styles.approveGradient}>
+              <Ionicons name="rocket" size={20} color="#FFF" />
+              <Text style={styles.actionBarLabel}>Promote Live</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* ── Review Note Modal ── */}
-      <Modal
-        visible={reviewModal !== null}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setReviewModal(null)}
-      >
-        <SafeAreaView style={styles.chipModal}>
-          <View style={styles.chipModalHeader}>
+      {/* Status Decision Modal */}
+      <Modal visible={reviewModal !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setReviewModal(null)}>
+        <SafeAreaView style={styles.modalBg}>
+          <View style={[styles.modalHeader, { borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }]}>
             <TouchableOpacity onPress={() => setReviewModal(null)}>
-              <Text style={{ color: '#6B7280', fontSize: 15 }}>Cancel</Text>
+              <Text style={styles.modalCancel}>Cancel</Text>
             </TouchableOpacity>
-            <Text style={styles.chipModalTitle}>
-              {reviewModal === 'APPROVED' ? '✅ Approve & Promote' : reviewModal === 'REJECTED' ? '❌ Reject' : '🚩 Flag for Fix'}
+            <Text style={styles.modalHeaderTitle}>
+              {reviewModal === 'APPROVED' ? 'Promote to Live' : reviewModal === 'REJECTED' ? 'Reject Entry' : 'Manual Fix Required'}
             </Text>
             <TouchableOpacity onPress={() => reviewModal && handleReview(reviewModal)} disabled={submitting}>
-              {submitting
-                ? <ActivityIndicator size="small" color="#6366F1" />
-                : <Text style={{ color: '#6366F1', fontSize: 15, fontWeight: '700' }}>Submit</Text>
-              }
+              {submitting ? <ActivityIndicator size="small" color="#4F46E5" /> : <Text style={styles.modalSave}>Submit</Text>}
             </TouchableOpacity>
           </View>
-          <ScrollView style={{ flex: 1, padding: 20 }} keyboardShouldPersistTaps="handled">
+          <ScrollView style={{ padding: 24 }} keyboardShouldPersistTaps="handled">
             {reviewModal === 'APPROVED' && (
-              <View style={styles.promoteInfo}>
-                <Ionicons name="information-circle" size={20} color="#6366F1" />
-                <Text style={styles.promoteInfoText}>
-                  This will promote the staged exam to the live <Text style={{ fontWeight: '800' }}>Exam</Text> table
-                  {exam.existingExamId ? ' as an UPDATE to existing exam.' : ' as a NEW exam.'}{'\n'}
-                  All field edits you made on this screen will be saved.
+              <View style={styles.promoteAlert}>
+                <Ionicons name="shield-checkmark" size={22} color="#10B981" />
+                <Text style={styles.promoteAlertText}>
+                  This record will be merged into the master database and become visible to all mobile users.
                 </Text>
               </View>
             )}
-            <Text style={styles.noteLabel}>
-              {reviewModal === 'APPROVED' ? 'Admin Note (optional)' : 'Reason / Note'}
-            </Text>
+            <Text style={styles.noteInputLabel}>Feedback / Final Admin Notes</Text>
             <TextInput
               style={[styles.editInput, styles.editInputMulti]}
               value={reviewNote}
               onChangeText={setReviewNote}
-              placeholder={reviewModal === 'APPROVED' ? 'Any notes…' : 'Describe the issue…'}
+              placeholder="State reason or leave final notes for this promotion…"
+              placeholderTextColor="#9CA3AF"
               multiline
               numberOfLines={5}
               textAlignVertical="top"
@@ -548,7 +537,7 @@ export default function StagedDetailScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* ── Field Edit Modal ── */}
+      {/* Sub-modals for fields */}
       {editField && (
         <TextEditModal
           visible={true}
@@ -557,174 +546,121 @@ export default function StagedDetailScreen() {
           multiline={editField.multiline}
           keyboardType={editField.numeric ? 'numeric' : 'default'}
           onSave={(v) => {
-            const key = editField.key;
-            if (key === 'title') setTitle(v);
-            else if (key === 'shortTitle') setShortTitle(v);
-            else if (key === 'conductingBody') setConductingBody(v);
-            else if (key === 'totalVacancies') setTotalVacancies(v);
-            else if (key === 'officialWebsite') setOfficialWebsite(v);
-            else if (key === 'notificationUrl') setNotificationUrl(v);
-            else if (key === 'description') setDescription(v);
+            const k = editField.key;
+            if (k === 'title') setTitle(v);
+            else if (k === 'conductingBody') setConductingBody(v);
+            else if (k === 'totalVacancies') setTotalVacancies(v);
+            else if (k === 'officialWebsite') setOfficialWebsite(v);
+            else if (k === 'notificationUrl') setNotificationUrl(v);
+            else if (k === 'description') setDescription(v);
           }}
           onClose={() => setEditField(null)}
         />
       )}
-
-      {/* ── Category / Level chip modals ── */}
-      <ChipModal visible={catModal} title="Category" options={EXAM_CATEGORIES}
-        selected={category} onSelect={setCategory} onClose={() => setCatModal(false)} />
-      <ChipModal visible={levelModal} title="Exam Level" options={EXAM_LEVELS}
-        selected={examLevel} onSelect={setExamLevel} onClose={() => setLevelModal(false)} />
+      <ChipModal visible={catModal} title="Category" options={EXAM_CATEGORIES} selected={category} onSelect={setCategory} onClose={() => setCatModal(false)} />
+      <ChipModal visible={levelModal} title="Level" options={EXAM_LEVELS} selected={examLevel} onSelect={setExamLevel} onClose={() => setLevelModal(false)} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 12, color: '#6B7280' },
-  scrollContent: { paddingBottom: 20 },
-
-  // Banner
-  banner: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: '#FFF', paddingHorizontal: 20, paddingVertical: 14,
-    borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
+  loadingCentered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
+  loadingText: { marginTop: 12, color: '#4F46E5', fontWeight: '700' },
+  scrollContent: { paddingBottom: 40 },
+  
+  // Header
+  header: {
+    paddingTop: 60, paddingHorizontal: 24, paddingBottom: 30,
+    borderBottomLeftRadius: 32, borderBottomRightRadius: 32,
+    elevation: 10, shadowColor: '#4F46E5', shadowOpacity: 0.3, shadowRadius: 15,
   },
-  bannerLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  bannerStatus: { fontSize: 13, fontWeight: '800', color: '#374151' },
-  updatePill: { backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  updatePillText: { fontSize: 11, fontWeight: '700', color: '#6366F1' },
-  dupPill: { backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  dupPillText: { fontSize: 11, fontWeight: '700', color: '#9CA3AF' },
-  confBadge: { borderWidth: 1.5, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4 },
-  confText: { fontSize: 13, fontWeight: '700' },
+  backButton: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  headerTitle: { fontSize: 26, fontWeight: '900', color: '#FFF', marginBottom: 12 },
+  bannerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  statusGroup: { flexDirection: 'row', gap: 6 },
+  statusBadge: { backgroundColor: '#FFF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  statusBadgeText: { fontSize: 10, fontWeight: '900', color: '#4F46E5', textTransform: 'uppercase' },
+  updatePill: { backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  updatePillText: { fontSize: 10, fontWeight: '800', color: '#312E81' },
+  dupPill: { backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  dupPillText: { fontSize: 10, fontWeight: '800', color: '#991B1B' },
+  aiBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  aiDot: { width: 6, height: 6, borderRadius: 3 },
+  aiConfText: { fontSize: 12, fontWeight: '900' },
 
-  // AI Notes
-  aiNotes: {
-    flexDirection: 'row', gap: 10, backgroundColor: '#EEF2FF',
-    marginHorizontal: 16, marginTop: 12, borderRadius: 12, padding: 12, alignItems: 'flex-start',
-  },
-  aiNotesText: { flex: 1, fontSize: 13, color: '#4338CA', lineHeight: 18 },
+  mainContent: { paddingHorizontal: 20, marginTop: -20 },
+  aiNotesBanner: { flexDirection: 'row', gap: 12, padding: 16, borderRadius: 20, marginBottom: 20, alignItems: 'flex-start' },
+  aiNotesText: { flex: 1, fontSize: 13, color: '#3730A3', fontWeight: '600', lineHeight: 18 },
 
-  // Source
-  sourceInfo: {
-    backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 12,
-    padding: 12, gap: 4,
-  },
-  sourceInfoText: { fontSize: 12, color: '#6B7280' },
+  // Sections
+  section: { marginBottom: 20 },
+  sectionHeaderInner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10, paddingLeft: 6 },
+  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 1 },
+  sectionCard: { backgroundColor: '#FFF', borderRadius: 24, padding: 4, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
 
-  // Section
-  section: { marginHorizontal: 16, marginTop: 16 },
-  sectionTitle: { fontSize: 13, fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 },
-
-  // Field
-  fieldRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF',
-    paddingHorizontal: 16, paddingVertical: 13,
-    borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
-    borderRadius: 0,
-  },
+  // Field Rows
+  fieldRow: { flexDirection: 'row', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
   fieldContent: { flex: 1 },
-  fieldLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600', marginBottom: 3, textTransform: 'uppercase', letterSpacing: 0.3 },
-  fieldValue: { fontSize: 15, color: '#111827', fontWeight: '500' },
+  fieldLabel: { fontSize: 11, fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 },
+  fieldValue: { fontSize: 15, fontWeight: '600', color: '#1F2937' },
   fieldValueEmpty: { color: '#D1D5DB', fontStyle: 'italic' },
+  editIconBadge: { width: 28, height: 28, borderRadius: 10, backgroundColor: '#F5F3FF', justifyContent: 'center', alignItems: 'center' },
 
-  // Eligibility
-  eligibilityRow: { flexDirection: 'row', gap: 12 },
-  eligCard: { flex: 1, backgroundColor: '#FFF', padding: 14, borderRadius: 12, alignItems: 'center' },
-  eligLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
-  eligValue: { fontSize: 20, fontWeight: '800', color: '#111827', marginTop: 4 },
+  // Source Box
+  sourceBox: { padding: 16, gap: 8 },
+  sourceItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sourceText: { fontSize: 13, color: '#4B5563', fontWeight: '500' },
+  sourceMetas: { flexDirection: 'row', marginTop: 4 },
+  sourceMetaText: { fontSize: 11, color: '#9CA3AF', fontWeight: '500' },
 
-  // Event Card
-  eventCard: {
-    backgroundColor: '#FFF', borderRadius: 12, padding: 14, marginBottom: 10,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05,
-    shadowRadius: 4, elevation: 1,
-  },
-  eventCardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 },
-  stagePill: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#EEF2FF', alignSelf: 'flex-start',
-    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, marginBottom: 4,
-  },
-  stagePillText: { fontSize: 12, fontWeight: '700', color: '#6366F1' },
-  typePill: {
-    backgroundColor: '#F3F4F6', alignSelf: 'flex-start',
-    paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6,
-  },
-  typePillText: { fontSize: 11, fontWeight: '600', color: '#6B7280' },
-  eventToggles: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  miniToggle: { alignItems: 'center' },
+  // Events
+  eventCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 3, marginHorizontal: 2 },
+  eventCardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
+  eventBadges: { flexDirection: 'row', gap: 6 },
+  stagePill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F5F3FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  stagePillText: { fontSize: 11, fontWeight: '800', color: '#4F46E5' },
+  typePill: { backgroundColor: '#F9FAFB', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  typePillText: { fontSize: 10, fontWeight: '700', color: '#6B7280' },
+  eventCardActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  miniToggleContainer: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   miniToggleLabel: { fontSize: 12, color: '#F59E0B' },
-  deleteEventBtn: { padding: 6 },
-  eventTitle: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 10 },
-  eventTitleText: { flex: 1, fontSize: 14, fontWeight: '600', color: '#111827' },
-  datePair: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  dateBtn: { flex: 1, backgroundColor: '#F9FAFB', borderRadius: 8, padding: 8 },
-  dateBtnLabel: { fontSize: 10, color: '#9CA3AF', fontWeight: '600' },
-  dateBtnValue: { fontSize: 12, color: '#374151', fontWeight: '600', marginTop: 2 },
-  dateSep: { width: 1, height: 30, backgroundColor: '#E5E7EB' },
-  tbdToggle: { alignItems: 'center' },
+  deleteBtn: { padding: 6 },
+  eventTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  eventTitleText: { flex: 1, fontSize: 14, fontWeight: '700', color: '#1F2937' },
+  eventDatesGrid: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 12, padding: 12, gap: 10 },
+  dateChip: { flex: 1 },
+  dateLabel: { fontSize: 9, fontWeight: '800', color: '#9CA3AF', marginBottom: 2 },
+  dateValue: { fontSize: 13, fontWeight: '700', color: '#374151' },
+  dateDivider: { width: 1, height: 24, backgroundColor: '#E5E7EB' },
+  tbdControl: { alignItems: 'center' },
+  emptyEvents: { alignItems: 'center', padding: 40, backgroundColor: '#F9FAFB', borderRadius: 24, marginTop: 10 },
+  emptyEventsText: { marginTop: 12, color: '#9CA3AF', fontWeight: '600' },
 
-  // Dedup
-  dedupBox: {
-    marginHorizontal: 16, marginTop: 16, backgroundColor: '#F9FAFB',
-    borderRadius: 12, padding: 14, borderWidth: 1, borderColor: '#E5E7EB',
-  },
-  dedupTitle: { fontSize: 12, fontWeight: '700', color: '#9CA3AF', marginBottom: 6 },
-  dedupRow: { fontSize: 11, color: '#6B7280', fontFamily: 'monospace', marginBottom: 2 },
+  // Action Bar
+  actionBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 8, padding: 16, borderTopLeftRadius: 32, borderTopRightRadius: 32, backgroundColor: '#FFF', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20, elevation: 20 },
+  actionBarBtn: { flex: 1, borderRadius: 16, overflow: 'hidden', height: 56, justifyContent: 'center', alignItems: 'center' },
+  actionBarLabel: { color: '#FFF', fontWeight: '900', fontSize: 14 },
+  rejectBtn: { backgroundColor: '#EF4444', flexDirection: 'row', gap: 8 },
+  flagBtn: { backgroundColor: '#F59E0B', flexDirection: 'row', gap: 8 },
+  approveBtn: { flex: 2 },
+  approveGradient: { width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
 
-  noEvents: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', paddingVertical: 20 },
-
-  // Action bar
-  actionBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    flexDirection: 'row', gap: 10, padding: 16,
-    backgroundColor: '#FFF', borderTopWidth: 1, borderTopColor: '#F3F4F6',
-    shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.08, shadowRadius: 12, elevation: 8,
-  },
-  actionBarBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 6, paddingVertical: 13, borderRadius: 12,
-  },
-  actionBarLabel: { color: '#FFF', fontWeight: '700', fontSize: 14 },
-  approveBtn: { backgroundColor: '#10B981', flex: 2 },
-  flagBtn: { backgroundColor: '#F59E0B' },
-  rejectBtn: { backgroundColor: '#EF4444' },
-
-  // Chip Modal
-  chipModal: { flex: 1, backgroundColor: '#FFF' },
-  chipModalHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 16,
-    borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
-  },
-  chipModalTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  // Modals
+  modalBg: { flex: 1, backgroundColor: '#FFF' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
+  modalHeaderTitle: { fontSize: 18, fontWeight: '800', color: '#111827' },
+  modalCancel: { fontSize: 15, fontWeight: '600', color: '#6B7280' },
+  modalSave: { fontSize: 15, fontWeight: '800', color: '#4F46E5' },
+  modalCloseBtn: { padding: 4 },
   chipList: { padding: 16 },
-  chipItem: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 14, paddingHorizontal: 16, borderRadius: 12, marginBottom: 4,
-    backgroundColor: '#F9FAFB',
-  },
-  chipItemActive: { backgroundColor: '#EEF2FF' },
-  chipItemText: { fontSize: 14, color: '#374151', fontWeight: '500' },
-  chipItemTextActive: { color: '#6366F1', fontWeight: '700' },
-
-  // Text edit modal
-  editInput: {
-    borderWidth: 1.5, borderColor: '#E5E7EB', borderRadius: 12,
-    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: '#111827',
-    backgroundColor: '#FAFAFA',
-  },
-  editInputMulti: { minHeight: 120, paddingTop: 14 },
-
-  // Promote info
-  promoteInfo: {
-    flexDirection: 'row', gap: 12, backgroundColor: '#EEF2FF',
-    borderRadius: 14, padding: 14, marginBottom: 16, alignItems: 'flex-start',
-  },
-  promoteInfoText: { flex: 1, fontSize: 13, color: '#4338CA', lineHeight: 20 },
-  noteLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  chipItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderRadius: 16, marginBottom: 8, backgroundColor: '#F9FAFB' },
+  chipItemActive: { backgroundColor: '#EEF2FF', borderLeftWidth: 4, borderLeftColor: '#4F46E5' },
+  chipItemText: { fontSize: 15, fontWeight: '600', color: '#374151' },
+  chipItemTextActive: { color: '#312E81', fontWeight: '800' },
+  editInput: { borderWidth: 2, borderColor: '#F3F4F6', borderRadius: 16, padding: 16, fontSize: 16, color: '#111827', backgroundColor: '#F9FAFB' },
+  editInputMulti: { minHeight: 140, paddingTop: 16 },
+  promoteAlert: { flexDirection: 'row', gap: 12, backgroundColor: '#ECFDF5', padding: 16, borderRadius: 16, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#10B981' },
+  promoteAlertText: { flex: 1, fontSize: 13, color: '#065F46', fontWeight: '600', lineHeight: 18 },
+  noteInputLabel: { fontSize: 14, fontWeight: '800', color: '#1F2937', marginBottom: 10 },
 });

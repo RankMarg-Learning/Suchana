@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { NotificationService } from '../services/notification.service';
 import * as examService from '../services/exam.service';
 import { sendSuccess, buildPaginationMeta } from '../utils/apiResponse';
 import type { CreateExamDto, UpdateExamDto, ListExamQuery } from '../schemas/exam.schema';
@@ -61,6 +62,17 @@ export async function getSavedExams(req: Request, res: Response, next: NextFunct
     try {
         const exams = await examService.getSavedExams(req.params.id as string);
         sendSuccess(res, exams);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function sendManualNotification(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { id } = req.params;
+        const { title, body, targetAudience } = req.body;
+        const result = await NotificationService.sendManualExamNotification(id, title, body, targetAudience);
+        sendSuccess(res, result);
     } catch (err) {
         next(err);
     }

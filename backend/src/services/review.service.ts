@@ -7,6 +7,8 @@ import { AppError } from '../middleware/errorHandler';
 import { ReviewStatus } from '../constants/enums';
 import { logger } from '../utils/logger';
 import { slugify } from '../utils/slugify';
+import { NotificationService } from './notification.service';
+import { notificationQueue } from '../queues/notification.queue';
 import type {
     ListStagedExamQuery,
     ReviewDecisionDto,
@@ -278,6 +280,18 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         });
 
         logger.info(`[Promote] Updated existing Exam ${staged.existingExamId} from StagedExam ${stagedExamId}`);
+        
+        // Notify bookmarked users about the update
+        try {
+            await NotificationService.sendManualExamNotification(
+                staged.existingExamId,
+                `📢 Update: ${staged.shortTitle || staged.title}`,
+                `Important changes have been made to the ${staged.shortTitle || staged.title} timeline. Tap to view.`
+            );
+        } catch (e) {
+            logger.error(`Failed to send update notification for ${staged.existingExamId}:`, e);
+        }
+
         return { examId: staged.existingExamId };
     }
 
@@ -313,6 +327,13 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         });
         return { examId: exam.id };
     });
+
+    // Trigger New Exam Notification
+    try {
+        await notificationQueue.enqueueNewExamNotification(examId);
+    } catch (e) {
+        logger.error(`Failed to queue new exam notification for ${examId}:`, e);
+    }
 
     logger.info(`[Promote] Created new Exam ${examId} from StagedExam ${stagedExamId} · slug="${finalSlug}" · events=${eventRows.length}`);
     return { examId };

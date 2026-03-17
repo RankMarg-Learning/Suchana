@@ -1,16 +1,16 @@
-// ============================================================
-// app/(tabs)/review.tsx
-// Admin Review Queue — Staged Exam Review Pipeline
-// ============================================================
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View, Text, StyleSheet, FlatList, TouchableOpacity, SafeAreaView,
+  View, Text, StyleSheet, FlatList, TouchableOpacity,
   StatusBar, RefreshControl, Alert, Modal, ScrollView, TextInput,
-  ActivityIndicator,
+  ActivityIndicator, Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import { scraperService, StagedExam, StagedEvent } from '@/services/api.service';
+
+const { width } = Dimensions.get('window');
 
 type ReviewFilter = 'PENDING' | 'NEEDS_CORRECTION' | 'APPROVED' | 'REJECTED' | 'ALL';
 
@@ -74,7 +74,6 @@ const StagedExamCard = ({
 
   return (
     <TouchableOpacity style={[styles.card, { borderLeftColor: sc.border }]} onPress={onPress} activeOpacity={0.85}>
-      {/* Header row */}
       <View style={styles.cardHeader}>
         <View style={[styles.statusBadge, { backgroundColor: sc.bg }]}>
           <Text style={[styles.statusText, { color: sc.text }]}>{exam.reviewStatus}</Text>
@@ -90,67 +89,70 @@ const StagedExamCard = ({
           </View>
         )}
         {exam.aiConfidence !== undefined && (
-          <Text style={[styles.confidence, { color: CONFIDENCE_COLOR(exam.aiConfidence) }]}>
-            AI {Math.round(exam.aiConfidence * 100)}%
-          </Text>
+          <View style={styles.confidenceRow}>
+            <View style={[styles.aiDot, { backgroundColor: CONFIDENCE_COLOR(exam.aiConfidence) }]} />
+            <Text style={[styles.confidence, { color: CONFIDENCE_COLOR(exam.aiConfidence) }]}>
+              {Math.round(exam.aiConfidence * 100)}%
+            </Text>
+          </View>
         )}
       </View>
 
-      {/* Title */}
       <Text style={styles.cardTitle} numberOfLines={2}>{exam.title}</Text>
       {exam.conductingBody && (
         <Text style={styles.cardBody}>{exam.conductingBody}</Text>
       )}
 
-      {/* Meta row */}
       <View style={styles.metaRow}>
         {exam.category && (
           <View style={styles.catBadge}>
             <Text style={styles.catBadgeText}>{exam.category.replace(/_/g, ' ')}</Text>
           </View>
         )}
-        {exam.totalVacancies && (
+        <View style={styles.metaChip}>
+          <Ionicons name="people-outline" size={12} color="#6B7280" />
           <Text style={styles.metaItem}>
-            <Ionicons name="people-outline" size={12} /> {exam.totalVacancies} posts
+            {typeof exam.totalVacancies === 'object' && exam.totalVacancies !== null
+              ? (exam.totalVacancies as any).count || Object.values(exam.totalVacancies)[0] || '0'
+              : exam.totalVacancies || '0'} posts
           </Text>
-        )}
+        </View>
         {exam.sourceCount > 1 && (
-          <Text style={styles.metaItem}>
-            <Ionicons name="git-merge-outline" size={12} /> {exam.sourceCount} sources
-          </Text>
+          <View style={styles.metaChip}>
+            <Ionicons name="git-merge-outline" size={12} color="#6B7280" />
+            <Text style={styles.metaItem}>{exam.sourceCount} sources</Text>
+          </View>
         )}
       </View>
 
-      {/* Events preview */}
       {exam.stagedEvents.length > 0 && (
         <View style={styles.eventsPreview}>
+          <Text style={styles.previewTitle}>TIMELINE PREVIEW</Text>
           {exam.stagedEvents.slice(0, 3).map((ev) => (
             <EventRow key={ev.id} event={ev} />
           ))}
           {exam.stagedEvents.length > 3 && (
-            <Text style={styles.moreEvents}>+{exam.stagedEvents.length - 3} more events</Text>
+            <Text style={styles.moreEvents}>+{exam.stagedEvents.length - 3} more lifecycle events</Text>
           )}
         </View>
       )}
 
-      {/* Source meta */}
       <Text style={styles.sourceMeta} numberOfLines={1}>
-        {exam.scrapeJob?.scrapeSource?.label ?? '—'} · {exam.scrapedAt ? new Date(exam.scrapedAt).toLocaleDateString('en-IN') : '—'}
+        Via {exam.scrapeJob?.scrapeSource?.label ?? 'Manual Import'} · {exam.scrapedAt ? new Date(exam.scrapedAt).toLocaleDateString('en-IN') : 'Just now'}
       </Text>
 
-      {/* Actions */}
       {isPending && (
         <View style={styles.actionRow}>
           <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={onApprove}>
-            <Ionicons name="checkmark" size={14} color="#FFF" />
+            <Ionicons name="checkmark-circle" size={16} color="#FFF" />
             <Text style={styles.actionBtnText}>Approve</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, styles.flagBtn]} onPress={onFlag}>
-            <Ionicons name="flag" size={14} color="#FFF" />
+            <Ionicons name="flag" size={16} color="#FFF" />
             <Text style={styles.actionBtnText}>Fix</Text>
           </TouchableOpacity>
           <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]} onPress={onReject}>
-            <Ionicons name="close" size={14} color="#FFF" />
+            <Ionicons name="close-circle" size={16} color="#FFF" />
             <Text style={styles.actionBtnText}>Reject</Text>
           </TouchableOpacity>
         </View>
@@ -206,17 +208,21 @@ const ReviewModal = ({
     NEEDS_CORRECTION: '#F59E0B',
   };
 
+  const decisionLabels: Record<string, string> = {
+    APPROVED: 'Confirm Approval',
+    REJECTED: 'Confirm Rejection',
+    NEEDS_CORRECTION: 'Request Corrections',
+  };
+
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <SafeAreaView style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={onClose}>
+          <TouchableOpacity onPress={onClose} style={styles.modalCloseBtn}>
             <Ionicons name="close" size={24} color="#374151" />
           </TouchableOpacity>
-          <Text style={styles.modalTitle}>
-            {decision === 'APPROVED' ? '✅ Approve' : decision === 'REJECTED' ? '❌ Reject' : '🚩 Flag for Fix'}
-          </Text>
-          <TouchableOpacity onPress={handleSubmit} disabled={submitting}>
+          <Text style={styles.modalTitle}>{decisionLabels[decision]}</Text>
+          <TouchableOpacity onPress={handleSubmit} disabled={submitting} style={styles.modalSaveBtn}>
             {submitting
               ? <ActivityIndicator size="small" color={decisionColors[decision]} />
               : <Text style={[styles.modalSave, { color: decisionColors[decision] }]}>Submit</Text>
@@ -233,25 +239,25 @@ const ReviewModal = ({
 
           {decision === 'APPROVED' && (
             <>
-              <Text style={styles.fieldLabel}>Correct Title (optional)</Text>
+              <Text style={styles.fieldLabel}>Verify Final Title</Text>
               <TextInput
                 style={styles.textInput}
                 value={corrTitle}
                 onChangeText={setCorrTitle}
-                placeholder="Title correction…"
+                placeholder="Final title for live system…"
               />
-              <Text style={styles.fieldLabel}>Correct Conducting Body (optional)</Text>
+              <Text style={styles.fieldLabel}>Verify Conducting Body</Text>
               <TextInput
                 style={styles.textInput}
                 value={corrConductingBody}
                 onChangeText={setCorrConductingBody}
-                placeholder="Conducting body correction…"
+                placeholder="Verify organization name…"
               />
             </>
           )}
 
           <Text style={styles.fieldLabel}>
-            {decision === 'APPROVED' ? 'Admin Note (optional)' : 'Reason *'}
+            {decision === 'APPROVED' ? 'Admin Note (Optional)' : 'Review Feedback / Reason *'}
           </Text>
           <TextInput
             style={[styles.textInput, styles.textArea]}
@@ -259,10 +265,10 @@ const ReviewModal = ({
             onChangeText={setNote}
             placeholder={
               decision === 'REJECTED'
-                ? 'Why is this being rejected?'
+                ? 'State why this entry is being rejected…'
                 : decision === 'NEEDS_CORRECTION'
-                ? 'What needs to be fixed?'
-                : 'Any notes for this approval…'
+                  ? 'Detail the missing or incorrect info…'
+                  : 'Any internal notes for this promotes…'
             }
             multiline
             numberOfLines={4}
@@ -271,10 +277,13 @@ const ReviewModal = ({
 
           {decision === 'APPROVED' && (
             <View style={styles.approvalInfo}>
-              <Ionicons name="information-circle" size={18} color="#6366F1" />
-              <Text style={styles.approvalInfoText}>
-                Approving will promote this staged exam to the live Exam table{exam.existingExamId ? ' as an update to existing exam' : ' as a new exam'}.
-              </Text>
+              <Ionicons name="rocket-outline" size={20} color="#4338CA" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.approvalInfoTitle}>Ready for Launch</Text>
+                <Text style={styles.approvalInfoText}>
+                  Promoting this will make it LIVE on the platform. {exam.existingExamId ? 'This will update the existing exam record.' : 'A new exam entry will be created.'}
+                </Text>
+              </View>
             </View>
           )}
         </ScrollView>
@@ -366,45 +375,53 @@ export default function ReviewScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <StatusBar barStyle="light-content" />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Review Queue</Text>
-          <Text style={styles.headerSub}>{stats.pending} pending · {stats.duplicates} duplicates</Text>
-        </View>
-        <TouchableOpacity style={styles.refreshBtn} onPress={onRefresh}>
-          <Ionicons name="refresh" size={20} color="#6B7280" />
-        </TouchableOpacity>
-      </View>
-
-      {/* Filter bar */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.filterBar}
-        contentContainerStyle={styles.filterContent}
+      <LinearGradient
+        colors={['#4F46E5', '#3730A3']}
+        style={styles.header}
       >
-        {FILTERS.map((f) => (
-          <TouchableOpacity
-            key={f}
-            style={[styles.filterChip, filter === f && styles.filterChipActive]}
-            onPress={() => handleFilterChange(f)}
-          >
-            <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
-              {FILTER_LABELS[f]}
-              {filterCounts[f] !== undefined ? ` (${filterCounts[f]})` : ''}
-            </Text>
+        <View style={styles.headerTop}>
+          <View>
+            <Text style={styles.headerTitle}>Review Queue</Text>
+            <Text style={styles.headerSub}>{stats.pending} pending for review · {stats.duplicates} duplicates deleted</Text>
+          </View>
+          <TouchableOpacity style={styles.refreshBtn} onPress={onRefresh}>
+            <Ionicons name="refresh" size={20} color="#FFF" />
           </TouchableOpacity>
-        ))}
-      </ScrollView>
+        </View>
+
+        <View style={styles.filterContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.filterContent}
+          >
+            {FILTERS.map((f) => (
+              <TouchableOpacity
+                key={f}
+                style={[styles.filterChip, filter === f && styles.filterChipActive]}
+                onPress={() => handleFilterChange(f)}
+              >
+                <Text style={[styles.filterText, filter === f && styles.filterTextActive]}>
+                  {FILTER_LABELS[f]}
+                </Text>
+                {filterCounts[f] !== undefined && (
+                  <View style={[styles.countBadge, filter === f && styles.countBadgeActive]}>
+                    <Text style={[styles.countText, filter === f && styles.countTextActive]}>{filterCounts[f]}</Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      </LinearGradient>
 
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" color="#6366F1" />
-          <Text style={styles.loadingText}>Loading staged exams…</Text>
+          <ActivityIndicator size="large" color="#4F46E5" />
+          <Text style={styles.loadingText}>Fetching staged exams…</Text>
         </View>
       ) : (
         <FlatList
@@ -420,15 +437,15 @@ export default function ReviewScreen() {
             />
           )}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#4F46E5" />}
           ListEmptyComponent={
             <View style={styles.empty}>
-              <Ionicons name="checkmark-done-circle-outline" size={64} color="#D1D5DB" />
+              <Ionicons name="checkmark-done-circle-outline" size={80} color="#D1D5DB" />
               <Text style={styles.emptyTitle}>
-                {filter === 'PENDING' ? 'Queue is Clear! 🎉' : 'Nothing Here'}
+                {filter === 'PENDING' ? 'Queue is Clear! 🎉' : 'No Items Found'}
               </Text>
               <Text style={styles.emptyMsg}>
-                {filter === 'PENDING' ? 'All staged exams have been reviewed.' : `No ${FILTER_LABELS[filter].toLowerCase()} items.`}
+                {filter === 'PENDING' ? 'All ingested exams have been processed.' : `There are no ${FILTER_LABELS[filter].toLowerCase()} staged exams at the moment.`}
               </Text>
             </View>
           }
@@ -447,71 +464,80 @@ export default function ReviewScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F9FAFB' },
+  container: { flex: 1, backgroundColor: '#F3F4F6' },
   header: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingVertical: 16, backgroundColor: '#FFF',
-    borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
+    paddingTop: 20,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+    shadowColor: '#4F46E5',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  headerTitle: { fontSize: 22, fontWeight: '800', color: '#111827' },
-  headerSub: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
-  refreshBtn: {
-    width: 40, height: 40, borderRadius: 12, backgroundColor: '#F3F4F6',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  filterBar: { backgroundColor: '#FFF', maxHeight: 56, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  filterContent: { paddingHorizontal: 16, paddingVertical: 10, gap: 8, flexDirection: 'row' },
-  filterChip: {
-    paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20,
-    backgroundColor: '#F3F4F6',
-  },
-  filterChipActive: { backgroundColor: '#6366F1' },
-  filterText: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
-  filterTextActive: { color: '#FFF' },
-  list: { padding: 16, paddingBottom: 100 },
+  headerTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  headerTitle: { fontSize: 26, fontWeight: '900', color: '#FFF' },
+  headerSub: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2, fontWeight: '600' },
+  refreshBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
+
+  filterContainer: { marginTop: 4 },
+  filterContent: { gap: 10, paddingRight: 24 },
+  filterChip: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.1)' },
+  filterChipActive: { backgroundColor: '#FFF' },
+  filterText: { fontSize: 13, fontWeight: '700', color: 'rgba(255,255,255,0.7)' },
+  filterTextActive: { color: '#4F46E5' },
+  countBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  countBadgeActive: { backgroundColor: '#EEF2FF' },
+  countText: { fontSize: 10, fontWeight: '800', color: '#FFF' },
+  countTextActive: { color: '#4F46E5' },
+  list: { padding: 20, paddingBottom: 100 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 12, color: '#6B7280' },
+  loadingText: { marginTop: 16, color: '#4F46E5', fontWeight: '700' },
   empty: { alignItems: 'center', paddingTop: 80, paddingHorizontal: 40 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#374151', marginTop: 16 },
-  emptyMsg: { fontSize: 14, color: '#9CA3AF', marginTop: 8, textAlign: 'center' },
+  emptyTitle: { fontSize: 22, fontWeight: '900', color: '#1F2937', marginTop: 16 },
+  emptyMsg: { fontSize: 15, color: '#6B7280', marginTop: 8, textAlign: 'center', lineHeight: 20 },
   // Card
   card: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 14,
-    borderLeftWidth: 4,
+    backgroundColor: '#FFF', borderRadius: 24, padding: 20, marginBottom: 16,
+    borderLeftWidth: 6,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06, shadowRadius: 10, elevation: 2,
+    shadowOpacity: 0.05, shadowRadius: 15, elevation: 3,
   },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
-  statusBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  statusText: { fontSize: 11, fontWeight: '700' },
-  dupBadge: { backgroundColor: '#F3F4F6', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  dupText: { fontSize: 11, fontWeight: '700', color: '#6B7280' },
-  updateBadge: { backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  updateText: { fontSize: 11, fontWeight: '700', color: '#6366F1' },
-  confidence: { fontSize: 12, fontWeight: '700', marginLeft: 'auto' },
-  cardTitle: { fontSize: 16, fontWeight: '700', color: '#111827', lineHeight: 22, marginBottom: 4 },
-  cardBody: { fontSize: 13, color: '#6B7280', marginBottom: 10 },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
-  catBadge: { backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6 },
-  catBadgeText: { fontSize: 11, fontWeight: '600', color: '#6366F1' },
-  metaItem: { fontSize: 12, color: '#6B7280', fontWeight: '500' },
+  cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  statusBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  statusText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
+  dupBadge: { backgroundColor: '#F3F4F6', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  dupText: { fontSize: 10, fontWeight: '900', color: '#6B7280' },
+  updateBadge: { backgroundColor: '#EEF2FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  updateText: { fontSize: 10, fontWeight: '900', color: '#6366F1' },
+  confidenceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginLeft: 'auto' },
+  aiDot: { width: 6, height: 6, borderRadius: 3 },
+  confidence: { fontSize: 12, fontWeight: '800' },
+  cardTitle: { fontSize: 18, fontWeight: '800', color: '#111827', lineHeight: 24, marginBottom: 6 },
+  cardBody: { fontSize: 14, color: '#6B7280', fontWeight: '500', marginBottom: 12 },
+  metaRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
+  catBadge: { backgroundColor: '#F3F4F6', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  catBadgeText: { fontSize: 11, fontWeight: '700', color: '#4B5563', textTransform: 'uppercase' },
+  metaChip: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#F9FAFB', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
+  metaItem: { fontSize: 12, color: '#4B5563', fontWeight: '700' },
   eventsPreview: {
-    backgroundColor: '#F9FAFB', borderRadius: 10, padding: 10, marginBottom: 10,
+    backgroundColor: '#F9FAFB', borderRadius: 16, padding: 16, marginBottom: 16,
   },
-  eventRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  eventRowImportant: { backgroundColor: '#FFFBEB', borderRadius: 6, paddingHorizontal: 6 },
+  previewTitle: { fontSize: 10, fontWeight: '800', color: '#9CA3AF', marginBottom: 10, letterSpacing: 1 },
+  eventRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
+  eventRowImportant: { backgroundColor: '#FEF3C7', borderRadius: 10, paddingHorizontal: 8, marginHorizontal: -4 },
   eventLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
-  eventStage: { fontSize: 10, color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase' },
-  eventTitle: { fontSize: 13, color: '#374151', fontWeight: '600' },
-  eventDate: { fontSize: 12, color: '#6B7280', marginLeft: 8 },
-  moreEvents: { fontSize: 12, color: '#6366F1', fontWeight: '600', marginTop: 4 },
-  sourceMeta: { fontSize: 11, color: '#9CA3AF', marginBottom: 12 },
-  actionRow: { flexDirection: 'row', gap: 8 },
+  eventStage: { fontSize: 10, color: '#9CA3AF', fontWeight: '800', textTransform: 'uppercase' },
+  eventTitle: { fontSize: 13, color: '#1F2937', fontWeight: '700' },
+  eventDate: { fontSize: 12, color: '#4B5563', fontWeight: '600', marginLeft: 8 },
+  moreEvents: { fontSize: 12, color: '#6366F1', fontWeight: '800', marginTop: 10 },
+  sourceMeta: { fontSize: 11, color: '#9CA3AF', fontWeight: '500', marginBottom: 16 },
+  actionRow: { flexDirection: 'row', gap: 10 },
   actionBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    gap: 4, paddingVertical: 9, borderRadius: 10,
+    gap: 6, paddingVertical: 12, borderRadius: 14,
   },
-  actionBtnText: { color: '#FFF', fontWeight: '700', fontSize: 13 },
+  actionBtnText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
   approveBtn: { backgroundColor: '#10B981' },
   flagBtn: { backgroundColor: '#F59E0B' },
   rejectBtn: { backgroundColor: '#EF4444' },
@@ -522,24 +548,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20, paddingVertical: 16,
     borderBottomWidth: 1, borderBottomColor: '#F3F4F6',
   },
-  modalTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
-  modalSave: { fontSize: 16, fontWeight: '700' },
-  modalBody: { flex: 1, padding: 20 },
+  modalCloseBtn: { padding: 8 },
+  modalSaveBtn: { paddingHorizontal: 16 },
+  modalTitle: { fontSize: 18, fontWeight: '800', color: '#111827' },
+  modalSave: { fontSize: 16, fontWeight: '800' },
+  modalBody: { flex: 1, padding: 24 },
   reviewTarget: {
-    backgroundColor: '#F9FAFB', borderRadius: 14, padding: 16, marginBottom: 8,
+    backgroundColor: '#F9FAFB', borderRadius: 20, padding: 20, marginBottom: 12,
   },
-  reviewTargetTitle: { fontSize: 16, fontWeight: '700', color: '#111827', lineHeight: 22 },
-  reviewTargetSub: { fontSize: 13, color: '#6B7280', marginTop: 4 },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: 6, marginTop: 16 },
+  reviewTargetTitle: { fontSize: 17, fontWeight: '800', color: '#111827', lineHeight: 24 },
+  reviewTargetSub: { fontSize: 14, color: '#6B7280', marginTop: 6, fontWeight: '500' },
+  fieldLabel: { fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 8, marginTop: 20 },
   textInput: {
-    borderWidth: 1.5, borderColor: '#E5E7EB', borderRadius: 12,
-    paddingHorizontal: 14, paddingVertical: 12, fontSize: 15, color: '#111827',
-    backgroundColor: '#FAFAFA',
+    borderWidth: 1.5, borderColor: '#F3F4F6', borderRadius: 16,
+    paddingHorizontal: 16, paddingVertical: 14, fontSize: 15, color: '#111827',
+    backgroundColor: '#F9FAFB',
   },
-  textArea: { minHeight: 100, paddingTop: 12 },
+  textArea: { minHeight: 120, paddingTop: 14 },
   approvalInfo: {
-    flexDirection: 'row', gap: 10, backgroundColor: '#EEF2FF',
-    borderRadius: 12, padding: 14, marginTop: 20, alignItems: 'flex-start',
+    flexDirection: 'row', gap: 14, backgroundColor: '#EEF2FF',
+    borderRadius: 20, padding: 20, marginTop: 24, alignItems: 'flex-start',
   },
-  approvalInfoText: { flex: 1, fontSize: 13, color: '#4338CA', lineHeight: 18 },
+  approvalInfoTitle: { fontSize: 15, fontWeight: '800', color: '#312E81', marginBottom: 2 },
+  approvalInfoText: { fontSize: 13, color: '#4338CA', lineHeight: 18, fontWeight: '500' },
 });

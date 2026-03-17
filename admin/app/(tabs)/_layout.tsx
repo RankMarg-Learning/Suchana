@@ -1,47 +1,80 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-
+import { Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { HapticTab } from '@/components/haptic-tab';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
+  const TAB_BAR_HEIGHT = 64;
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
+        tabBarActiveTintColor: '#4a10e8ff',
+        tabBarInactiveTintColor: '#94A3B8',
+        tabBarStyle: {
+          position: 'relative',
+          bottom: insets.bottom,
+          height: TAB_BAR_HEIGHT,
+          paddingBottom: 0,
+          paddingTop: 0,
+          backgroundColor: '#ffffffff',
+          borderTopWidth: 0,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '700',
+          marginBottom: 8,
+          letterSpacing: 0.1,
+        },
+        tabBarIconStyle: {
+          marginBottom: 0,
+        },
+        tabBarItemStyle: {
+          height: TAB_BAR_HEIGHT,
+        },
+        tabBarHideOnKeyboard: true,
+        tabBarShowLabel: true,
       }}>
       <Tabs.Screen
         name="index"
         options={{
           title: 'Exams',
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="list" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons size={22} name={focused ? 'list' : 'list-outline'} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="scraper"
         options={{
           title: 'Scraper',
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="cloud-download" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons size={22} name={focused ? 'cloud-download' : 'cloud-download-outline'} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="review"
         options={{
           title: 'Review',
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="checkmark-circle" color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons size={24} name={focused ? 'shield-checkmark' : 'shield-checkmark-outline'} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Dashboard',
-          tabBarIcon: ({ color }) => <Ionicons size={24} name="stats-chart" color={color} />,
+          title: 'Analytics',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons size={22} name={focused ? 'stats-chart' : 'stats-chart-outline'} color={color} />
+          ),
         }}
       />
     </Tabs>

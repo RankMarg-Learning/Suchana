@@ -1,21 +1,42 @@
 import { Worker, Job } from 'bullmq';
 import { bullRedisConnection } from '../config/redis';
-import { NOTIFICATION_QUEUE_NAME, NotificationJobData } from '../queues/notification.queue';
+import { NOTIFICATION_QUEUE_NAME, NotificationJobData, NotificationJobType } from '../queues/notification.queue';
 import { NotificationService } from '../services/notification.service';
 import { logger } from '../utils/logger';
 
-
 async function processNotificationJob(job: Job<NotificationJobData>): Promise<void> {
-    const { lifecycleEventId } = job.data;
+    const { type, lifecycleEventId, examId, title, body } = job.data;
 
     try {
-        await NotificationService.handleLifecycleEventNotification(lifecycleEventId);
+        switch (type) {
+            case NotificationJobType.LIFECYCLE_EVENT:
+                if (lifecycleEventId) {
+                    await NotificationService.handleLifecycleEventNotification(lifecycleEventId);
+                }
+                break;
+            case NotificationJobType.NEW_EXAM:
+                if (examId) {
+                    await NotificationService.handleNewExamNotification(examId);
+                }
+                break;
+            case NotificationJobType.MANUAL:
+                if (examId && title && body) {
+                    await NotificationService.sendManualExamNotification(
+                        examId, 
+                        title, 
+                        body, 
+                        job.data.targetAudience
+                    );
+                }
+                break;
+            default:
+                logger.warn(`Unknown notification job type: ${type}`);
+        }
     } catch (error) {
-        logger.error(`Error processing notification job ${job.id}:`, error);
+        logger.error(`Error processing notification job ${job.id} (type: ${type}):`, error);
         throw error;
     }
 }
-
 
 export function startNotificationWorker(): Worker<NotificationJobData> {
     const worker = new Worker<NotificationJobData>(

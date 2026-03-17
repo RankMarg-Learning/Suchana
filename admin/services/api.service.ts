@@ -168,6 +168,10 @@ export const examService = {
         const response = await apiClient.delete(`/exams/${id}`);
         return response.data;
     },
+    notifyBookmarkedUsers: async (id: string, title?: string, body?: string, targetAudience: 'BOOKMARKED' | 'INTERESTED' = 'BOOKMARKED') => {
+        const response = await apiClient.post(`/exams/${id}/notify-manual`, { title, body, targetAudience });
+        return response.data;
+    },
 };
 
 export const lifecycleService = {
