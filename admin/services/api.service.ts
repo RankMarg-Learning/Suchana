@@ -275,5 +275,58 @@ export const scraperService = {
     },
 };
 
+export interface HomeBanner {
+    id: string;
+    imageUrl: string;
+    actionUrl?: string;
+    title?: string;
+    description?: string;
+    priority: number;
+    isActive: boolean;
+    expiresAt?: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface AppConfig {
+    id: string;
+    key: string;
+    value: any;
+    description?: string;
+    updatedAt: string;
+}
+
+export const configService = {
+    // Banners
+    getBanners: async (): Promise<HomeBanner[]> => {
+        const response = await apiClient.get('/config/banners');
+        return response.data?.data ?? response.data;
+    },
+    createBanner: async (data: Partial<HomeBanner>): Promise<HomeBanner> => {
+        const response = await apiClient.post('/config/banners', data);
+        return response.data?.data ?? response.data;
+    },
+    updateBanner: async (id: string, data: Partial<HomeBanner>): Promise<HomeBanner> => {
+        const response = await apiClient.patch(`/config/banners/${id}`, data);
+        return response.data?.data ?? response.data;
+    },
+    deleteBanner: async (id: string): Promise<void> => {
+        await apiClient.delete(`/config/banners/${id}`);
+    },
+
+    // App Config
+    getAllConfigs: async (): Promise<AppConfig[]> => {
+        const response = await apiClient.get('/config/settings');
+        return response.data?.data ?? response.data;
+    },
+    setConfig: async (key: string, value: any, description?: string): Promise<AppConfig> => {
+        const response = await apiClient.post('/config', { key, value, description });
+        return response.data?.data ?? response.data;
+    },
+    deleteConfig: async (id: string): Promise<void> => {
+        await apiClient.delete(`/config/settings/${id}`);
+    },
+};
+
 export default apiClient;
 

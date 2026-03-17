@@ -77,6 +77,15 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="content"
+        options={{
+          title: 'Content',
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons size={22} name={focused ? 'layers' : 'layers-outline'} color={color} />
+          ),
+        }}
+      />
     </Tabs>
   );
 }
