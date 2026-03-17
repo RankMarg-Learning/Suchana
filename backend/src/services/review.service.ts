@@ -6,7 +6,7 @@ import prisma from '../config/database';
 import { AppError } from '../middleware/errorHandler';
 import { ReviewStatus } from '../constants/enums';
 import { logger } from '../utils/logger';
-import { promoteStagedExam } from './scraper.service';
+import { slugify } from '../utils/slugify';
 import type {
     ListStagedExamQuery,
     ReviewDecisionDto,
@@ -187,4 +187,133 @@ export async function getReviewStats() {
         totalJobs,
         recentJobs,
     };
+}
+// ─── Promote staged exam to production ───────────────────────────
+export async function promoteStagedExam(stagedExamId: string, adminId: string): Promise<{ examId: string }> {
+    const staged = await prisma.stagedExam.findUnique({
+        where: { id: stagedExamId },
+        include: { stagedEvents: { orderBy: { stageOrder: 'asc' } } },
+    });
+
+    if (!staged) throw new AppError(404, 'NOT_FOUND', `StagedExam ${stagedExamId} not found`);
+    if (staged.reviewStatus !== 'APPROVED') throw new AppError(400, 'BAD_REQUEST', `StagedExam ${stagedExamId} is not APPROVED`);
+
+    async function buildUniqueSlug(base: string): Promise<string> {
+        const baseSlug = slugify(base).slice(0, 100);
+
+        let candidate = baseSlug;
+        let counter = 1;
+        while (await prisma.exam.findUnique({ where: { slug: candidate } })) {
+            candidate = `${baseSlug}-${counter++}`;
+        }
+        return candidate;
+    }
+
+    const totalVacanciesJson = staged.totalVacancies ?? undefined;
+
+    let deduplicationKey: string | undefined = staged.deduplicationKey ?? undefined;
+    if (deduplicationKey) {
+        const clash = await prisma.exam.findUnique({ where: { deduplicationKey } });
+        if (clash && clash.id !== staged.existingExamId) {
+            deduplicationKey = `${deduplicationKey}-${stagedExamId.slice(-6)}`;
+        }
+    }
+
+    const eventRows = staged.stagedEvents.map((ev) => ({
+        stage: ev.stage,
+        eventType: ev.eventType,
+        stageOrder: ev.stageOrder,
+        title: ev.title,
+        description: ev.description ?? undefined,
+        startsAt: ev.startsAt ?? undefined,
+        endsAt: ev.endsAt ?? undefined,
+        isTBD: ev.isTBD,
+        isImportant: ev.isImportant,
+        actionUrl: ev.actionUrl ?? undefined,
+        actionLabel: ev.actionLabel ?? undefined,
+        sourceStagedEventId: ev.id,
+        createdBy: adminId,
+    }));
+
+    if (staged.existingExamId) {
+        const existing = await prisma.exam.findUnique({ where: { id: staged.existingExamId } });
+        if (!existing) throw new AppError(404, 'NOT_FOUND', `Linked exam ${staged.existingExamId} no longer exists`);
+
+        await prisma.$transaction(async (tx) => {
+            await tx.exam.update({
+                where: { id: staged.existingExamId! },
+                data: {
+                    title: staged.title,
+                    shortTitle: staged.shortTitle ?? staged.title,
+                    description: staged.description ?? existing.description,
+                    conductingBody: staged.conductingBody ?? existing.conductingBody,
+                    category: staged.category ?? existing.category,
+                    examLevel: staged.examLevel ?? existing.examLevel,
+                    state: staged.state ?? existing.state,
+                    minAge: staged.minAge ?? existing.minAge,
+                    maxAge: staged.maxAge ?? existing.maxAge,
+                    qualificationCriteria: (staged.qualificationCriteria ?? existing.qualificationCriteria) as never,
+                    totalVacancies: (totalVacanciesJson ?? existing.totalVacancies) as never,
+                    applicationFee: (staged.applicationFee ?? existing.applicationFee) as never,
+                    officialWebsite: staged.officialWebsite ?? existing.officialWebsite,
+                    notificationUrl: staged.notificationUrl ?? existing.notificationUrl,
+                    sourceStagedExamId: staged.id,
+                    status: 'ACTIVE',
+                    isPublished: true,
+                    publishedAt: existing.publishedAt ?? new Date(),
+                    updatedAt: new Date(),
+                },
+            });
+
+            await tx.lifecycleEvent.deleteMany({ where: { examId: staged.existingExamId! } });
+
+            if (eventRows.length > 0) {
+                await tx.lifecycleEvent.createMany({ data: eventRows.map(r => ({ ...r, examId: staged.existingExamId! })) });
+            }
+
+            await tx.stagedExam.update({
+                where: { id: stagedExamId },
+                data: { existingExamId: staged.existingExamId },
+            });
+        });
+
+        logger.info(`[Promote] Updated existing Exam ${staged.existingExamId} from StagedExam ${stagedExamId}`);
+        return { examId: staged.existingExamId };
+    }
+
+    const baseSlug = staged.slug ?? staged.title;
+    const finalSlug = await buildUniqueSlug(baseSlug);
+
+    const { examId } = await prisma.$transaction(async (tx) => {
+        const exam = await tx.exam.create({
+            data: {
+                title: staged.title,
+                shortTitle: staged.shortTitle ?? staged.title,
+                slug: finalSlug,
+                description: staged.description ?? undefined,
+                conductingBody: staged.conductingBody ?? 'Unknown',
+                category: staged.category ?? 'OTHER',
+                examLevel: staged.examLevel ?? 'NATIONAL',
+                state: staged.state ?? undefined,
+                minAge: staged.minAge ?? undefined,
+                maxAge: staged.maxAge ?? undefined,
+                qualificationCriteria: staged.qualificationCriteria as never ?? undefined,
+                totalVacancies: totalVacanciesJson as never ?? undefined,
+                applicationFee: staged.applicationFee as never ?? undefined,
+                officialWebsite: staged.officialWebsite ?? undefined,
+                notificationUrl: staged.notificationUrl ?? undefined,
+                deduplicationKey: deduplicationKey ?? undefined,
+                sourceStagedExamId: staged.id,
+                createdBy: adminId,
+                status: 'ACTIVE',
+                isPublished: true,
+                publishedAt: new Date(),
+                lifecycleEvents: eventRows.length > 0 ? { create: eventRows } : undefined,
+            },
+        });
+        return { examId: exam.id };
+    });
+
+    logger.info(`[Promote] Created new Exam ${examId} from StagedExam ${stagedExamId} · slug="${finalSlug}" · events=${eventRows.length}`);
+    return { examId };
 }

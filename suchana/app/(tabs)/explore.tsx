@@ -12,11 +12,14 @@ import { toggleSavedExam as toggleSavedService } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
 import { ExamCard } from '@/components/ExamCard';
 import { AdBanner } from '@/components/AdBanner';
+import { NativeAdCard } from '@/components/NativeAdCard';
+import { useAds } from '@/context/AdsContext';
 
 export default function SavedExamsTab() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { userId, refreshUser } = useUser();
+  const { showRewarded } = useAds();
 
   // Fetch saved exams, limit to 10
   const { data: exams = [], isLoading, refetch, isRefetching } = useQuery({
@@ -29,7 +32,11 @@ export default function SavedExamsTab() {
   });
 
   const saveMutation = useMutation({
-    mutationFn: (examId: string) => toggleSavedService(userId!, examId),
+    mutationFn: async (examId: string) => {
+      // Show rewarded video ad
+      await showRewarded();
+      return toggleSavedService(userId!, examId);
+    },
     onSuccess: () => {
       refreshUser();
       queryClient.invalidateQueries({ queryKey: ['savedExams'] });
@@ -101,13 +108,23 @@ export default function SavedExamsTab() {
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
           exams.length > 0 ? (
-            <View style={styles.nudgeBox}>
-              <Text style={styles.nudgeText}>You'll get notifications for these exams.</Text>
-            </View>
+            <>
+              {/* Native Ad at top of list */}
+              <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 20 }} />
+
+              <View style={styles.nudgeBox}>
+                <Text style={styles.nudgeText}>You'll get notifications for these exams.</Text>
+              </View>
+            </>
           ) : null
         }
         ListEmptyComponent={isLoading ? null : renderEmpty}
-        ListFooterComponent={exams.length > 0 ? <AdBanner style={{ margin: 16 }} /> : null}
+        ListFooterComponent={exams.length > 0 ? (
+          <View>
+            <AdBanner style={{ margin: 16 }} />
+            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 24 }} />
+          </View>
+        ) : null}
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}

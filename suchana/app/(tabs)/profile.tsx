@@ -17,6 +17,8 @@ import {
 import { useUser } from '@/context/UserContext';
 import { updateUser } from '@/services/userService';
 import { useRouter } from 'expo-router';
+import { NativeAdCard } from '@/components/NativeAdCard';
+import { AdBanner } from '@/components/AdBanner';
 
 export default function ProfileScreen() {
   const { user, userId, refreshUser, logout } = useUser();
@@ -137,6 +139,9 @@ export default function ProfileScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Native Ad in Profile */}
+        <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 20 }} />
+
         {/* Notifications toggle */}
         <View style={styles.section}>
           <View style={styles.toggleRow}>
@@ -170,6 +175,8 @@ export default function ProfileScreen() {
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
           <Text style={styles.logoutTxt}>Sign Out</Text>
         </TouchableOpacity>
+
+        <AdBanner style={{ margin: 16 }} />
       </ScrollView>
     </SafeAreaView>
   );

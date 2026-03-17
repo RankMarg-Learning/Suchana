@@ -113,7 +113,7 @@ export async function deleteLifecycleEvent(examId: string, eventId: string, _adm
         notificationQueue.removeJob(eventId),
         cacheService.del(key(examId))
     ]);
-    
+
     logger.info(`Event ${eventId} purged`);
 }
 

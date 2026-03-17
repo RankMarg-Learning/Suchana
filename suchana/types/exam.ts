@@ -4,14 +4,15 @@ import { ExamCategory as Cat, ExamLevel as Lvl, ExamStatus as Status } from '@/c
 export interface LifecycleEvent {
     id: string;
     examId: string;
-    stage: string | null;
+    stage: string;
     eventType: string;
+    stageOrder: number;
     title: string;
     description: string | null;
     startsAt: string | null;
     endsAt: string | null;
     isTBD: boolean;
-    isConfirmed: boolean;
+    isImportant: boolean;
     actionUrl: string | null;
     actionLabel: string | null;
     notificationSent: boolean;
@@ -51,7 +52,6 @@ export type ExamCategory = Cat;
 export type ExamLevel = Lvl;
 export type ExamStatus = Status;
 
-// ─── User types ───────────────────────────────────────────────
 export interface User {
     id: string;
     name: string;

@@ -304,3 +304,26 @@ model User {
   @@index([specialization])
   @@index([employmentStatus])
 }
+
+model AppConfig {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  value        Json
+  description  String?
+  updatedAt    DateTime @updatedAt
+}
+
+model HomeBanner {
+  id          String   @id @default(cuid())
+  imageUrl    String
+  actionUrl   String?
+  title       String?
+  description String?
+  priority    Int      @default(0)
+  isActive    Boolean  @default(true)
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive, priority])
+}

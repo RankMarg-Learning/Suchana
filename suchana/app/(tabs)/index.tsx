@@ -12,13 +12,17 @@ import { useUser } from '@/context/UserContext';
 import { toggleSavedExam as toggleSavedService } from '@/services/userService';
 import { fetchExams } from '@/services/examService';
 import { AdBanner } from '@/components/AdBanner';
+import { useAds } from '@/context/AdsContext';
 import { NativeAdCard } from '@/components/NativeAdCard';
 import { ExamListRow } from '@/components/ExamListRow';
+import { HomeCarousel } from '@/components/HomeCarousel';
+import { fetchHomeBanners } from '@/services/configService';
 
 export default function UpdatesScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, userId, refreshUser } = useUser();
+  const { showRewarded } = useAds();
 
   const {
     data: examPages,
@@ -48,8 +52,17 @@ export default function UpdatesScreen() {
     },
   });
 
+  const { data: banners = [], isLoading: loadingBanners, refetch: refetchBanners } = useQuery({
+    queryKey: ['home-banners'],
+    queryFn: fetchHomeBanners,
+  });
+
   const saveMutation = useMutation({
-    mutationFn: (examId: string) => toggleSavedService(userId!, examId),
+    mutationFn: async (examId: string) => {
+      // Show video ad before saving
+      await showRewarded(); // Added this line
+      return toggleSavedService(userId!, examId);
+    },
     onSuccess: () => {
       refreshUser();
       queryClient.invalidateQueries({ queryKey: ['updated-exams-infinite'] });
@@ -58,11 +71,11 @@ export default function UpdatesScreen() {
   });
 
   const onRefresh = async () => {
-    await Promise.all([refetchExams(), refetchRegs()]);
+    await Promise.all([refetchExams(), refetchRegs(), refetchBanners()]);
   };
 
   const isRefreshing = refetchingExams || refetchingRegs;
-  const isLoading = loadingExams || loadingRegs;
+  const isLoading = loadingExams || loadingRegs || loadingBanners;
 
   const renderRegistration = (exam: any) => (
     <TouchableOpacity
@@ -88,6 +101,14 @@ export default function UpdatesScreen() {
     if (h < 17) return 'Good Afternoon';
     return 'Good Evening';
   };
+
+  const renderEmpty = () => (
+    <View style={styles.empty}>
+      <Calendar size={48} color="#3F3F46" style={{ marginBottom: 16 }} />
+      <Text style={styles.emptyTitle}>No newly updated exams</Text>
+      <Text style={styles.emptySub}>Check back later for recent exam updates</Text>
+    </View>
+  );
 
   if (isLoading && !isRefreshing) {
     return (
@@ -151,7 +172,12 @@ export default function UpdatesScreen() {
               )}
             </LinearGradient>
 
-            {/* Registrations Horizontal Scroll */}
+            <HomeCarousel banners={banners} />
+
+            {/* Native Ad in Updates */}
+            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 20 }} />
+
+            {/* Notifications toggle */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Active Registrations</Text>
@@ -174,22 +200,18 @@ export default function UpdatesScreen() {
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Recently Updated</Text>
             </View>
+            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 16 }} />
           </View>
         }
         contentContainerStyle={{ paddingBottom: 40 }}
-        ListEmptyComponent={
-          <View style={styles.empty}>
-            <Calendar size={48} color="#3F3F46" style={{ marginBottom: 16 }} />
-            <Text style={styles.emptyTitle}>No newly updated exams</Text>
-            <Text style={styles.emptySub}>Check back later for recent exam updates</Text>
-          </View>
-        }
-        ListFooterComponent={() => (
-          <View style={{ padding: 16 }}>
+        ListEmptyComponent={isLoading ? null : renderEmpty}
+        ListFooterComponent={updatedExams.length > 0 ? (
+          <View>
             {isFetchingNextPage && <ActivityIndicator color="#7C3AED" style={{ marginBottom: 16 }} />}
-            <NativeAdCard />
+            <AdBanner style={{ margin: 16 }} />
+            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 24 }} />
           </View>
-        )}
+        ) : null}
       />
     </SafeAreaView>
   );

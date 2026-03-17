@@ -15,7 +15,7 @@ export function cleanLabel(str: string | null | undefined): string {
       const upperWord = word.toUpperCase();
       if (acronyms.includes(upperWord)) return upperWord;
       if (word.length === 0) return '';
-      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+      return word.charAt(0).toUpperCase() + word.slice(1).toUpperCase();
     })
     .join(' ');
 }

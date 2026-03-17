@@ -57,6 +57,7 @@ function getStatus(event: LifecycleEvent): { label: string; color: string } {
 }
 
 export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast: boolean }) {
+  console.log("event", event)
   const [isExpanded, setIsExpanded] = useState(false);
   const stage = event.stage || '';
   const eventType = event.eventType || '';
@@ -98,7 +99,7 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
                 {event.description.replace(/[#*`\n]/g, ' ')}
               </Text>
             )}
-            
+
             {event.description.length > 50 && (
               <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                 <Text style={styles.moreBtn}>{isExpanded ? 'Show less' : 'more'}</Text>

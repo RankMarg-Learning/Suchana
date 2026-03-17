@@ -1,15 +1,9 @@
 import * as cheerio from 'cheerio';
-import { createHash } from 'crypto';
 import OpenAI from 'openai';
-import slugifyPkg from 'slugify';
 import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import { checkAndStage, AiStructuredExam } from './deduplication.service';
 import {
-    ExamCategory,
-    ExamLevel,
-    LifecycleStage,
-    LifecycleEventType,
     ScrapeJobStatus,
     EXAM_CATEGORIES,
     EXAM_LEVELS,
@@ -17,7 +11,9 @@ import {
     LIFECYCLE_EVENT_TYPES,
 } from '../constants/enums';
 import { env } from '../config/env';
+import { getSiteConfig, SiteConfig } from '../config/scraperConfig';
 
+// ─── Interfaces ──────────────────────────────────────────────
 
 export interface ScrapeSourceConfig {
     id: string;
@@ -45,524 +41,286 @@ export interface DeduplicationSummary {
     reason?: string;
 }
 
-// ─────────────────────────────────────────────────────────────
-// OpenAI client (lazy – only instantiated when needed)
-// ─────────────────────────────────────────────────────────────
-let _openai: OpenAI | null = null;
-function getOpenAI(): OpenAI {
-    if (!_openai) {
-        const apiKey = (env as unknown as Record<string, string>)['OPENAI_API_KEY'];
-        if (!apiKey) throw new Error('OPENAI_API_KEY is not set in environment');
-        _openai = new OpenAI({ apiKey });
+// ─── AI Provider ─────────────────────────────────────────────
+
+class AIProvider {
+    private static instance: OpenAI | null = null;
+    private static readonly CURRENT_YEAR = new Date().getFullYear();
+
+    private static getClient(): OpenAI {
+        if (!this.instance) {
+            const apiKey = (env as unknown as Record<string, string>)['OPENAI_API_KEY'];
+            if (!apiKey) throw new Error('OPENAI_API_KEY is not set in environment');
+            this.instance = new OpenAI({ apiKey });
+        }
+        return this.instance;
     }
-    return _openai;
-}
 
+    static async extractExamData(plaintext: string, url: string, hintCategory?: string): Promise<AiStructuredExam | null> {
+        const prompt = this.buildPrompt(plaintext, url, hintCategory);
+        const openai = this.getClient();
 
-interface SiteConfig {
-    noiseSelectors: string[];
-    contentSelectors: string[];
-    listingLinkSelector: string;
-    listingLinkFilter: (href: string) => boolean;
-}
+        try {
+            const completion = await openai.chat.completions.create({
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0,
+                max_tokens: 2000,
+                response_format: { type: 'json_object' },
+            });
 
-const SITE_CONFIGS: Record<string, SiteConfig> = {
-    'freejobalert.com': {
-        noiseSelectors: [
-            'header', 'footer', 'nav', '.widget', '.sidebar', '#sidebar',
-            '.advertisement', '.ad', '#ad', 'script', 'style', 'noscript',
-            '.comment', '#comments', '.social-share', '.related-posts',
-        ],
-        contentSelectors: ['article', '.entry-content', 'main', 'table', '.post-content'],
-        listingLinkSelector: 'h2 a, .entry-title a, h3 a',
-        listingLinkFilter: (href) => href.includes('freejobalert.com/') && !href.endsWith('freejobalert.com/'),
-    },
-    'sarkariresult.com': {
-        noiseSelectors: [
-            'header', 'footer', 'nav', '.widget', '.sidebar', 'script', 'style',
-            'noscript', '#comments', '.social', '.ad', '.advertisement',
-        ],
-        contentSelectors: ['.content', '#content', 'main', 'article', 'table', '.post-content'],
-        listingLinkSelector: 'table a, .content a, h2 a',
-        listingLinkFilter: (href) => href.includes('sarkariresult.com/') && href.length > 30,
-    },
-    'sarkarinaukri.com': {
-        noiseSelectors: [
-            'header', 'footer', 'nav', '.sidebar', '.widget', 'script', 'style',
-            'noscript', '.advertisement', '.ad', '#comments',
-        ],
-        contentSelectors: ['main', 'article', '.entry-content', '#content', 'table'],
-        listingLinkSelector: 'h2 a, h3 a, .post-title a, article a',
-        listingLinkFilter: (href) => href.includes('sarkarinaukri.com/') && href.length > 30,
-    },
-};
+            const content = completion.choices[0]?.message?.content;
+            if (!content) return null;
 
-function getSiteConfig(url: string): SiteConfig {
-    try {
-        const hostname = new URL(url).hostname.replace(/^www\./, '');
-        if (SITE_CONFIGS[hostname]) return SITE_CONFIGS[hostname];
-    } catch { }
-    return {
-        noiseSelectors: ['header', 'footer', 'nav', '.sidebar', 'script', 'style', 'noscript', '.ad'],
-        contentSelectors: ['main', 'article', '.content', '#content', '.post-content', 'table'],
-        listingLinkSelector: 'h2 a, h3 a, article a',
-        listingLinkFilter: (_href) => true,
-    };
-}
-
-async function fetchHtml(url: string): Promise<string> {
-    const res = await fetch(url, {
-        headers: {
-            'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36',
-            Accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Cache-Control': 'no-cache',
-        },
-        signal: AbortSignal.timeout(15_000),
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-    return res.text();
-}
-
-function decodeEntities(text: string): string {
-    return text
-        .replace(/&amp;/g, '&')
-        .replace(/&nbsp;/g, ' ')
-        .replace(/&lt;/g, '<')
-        .replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"')
-        .replace(/&#39;/g, "'")
-        .replace(/&ndash;/g, '–')
-        .replace(/&mdash;/g, '—')
-        .replace(/&rsquo;/g, "'")
-        .replace(/&lsquo;/g, "'")
-        .replace(/&rdquo;/g, '"')
-        .replace(/&ldquo;/g, '"');
-}
-
-export function cleanHtml(html: string, url: string): { text: string; rawCharCount: number } {
-    const siteConfig = getSiteConfig(url);
-    const $ = cheerio.load(html);
-
-    siteConfig.noiseSelectors.forEach((sel) => $(sel).remove());
-
-    let contentText = '';
-    for (const selector of siteConfig.contentSelectors) {
-        const el = $(selector);
-        if (el.length) {
-            contentText = el.map((_, e) => $(e).text()).get().join('\n');
-            if (contentText.trim().length > 200) break;
+            return JSON.parse(content) as AiStructuredExam;
+        } catch (err) {
+            logger.error('[AI] Extraction failed', { url, err });
+            return null;
         }
     }
 
-    if (!contentText.trim()) {
-        contentText = $('body').text();
-    }
-
-    contentText = decodeEntities(contentText);
-
-    contentText = contentText
-        .replace(/\t/g, ' ')
-        .replace(/ {2,}/g, ' ')
-        .replace(/\n{3,}/g, '\n\n')
-        .trim();
-
-    const rawCharCount = contentText.length;
-    logger.info(`[Scraper] Cleaned text length before truncation: ${rawCharCount} chars for URL: ${url}`);
-
-    const truncated = contentText.slice(0, 3000);
-
-    return { text: truncated, rawCharCount };
-}
-
-export function extractListingLinks(html: string, baseUrl: string): string[] {
-    const siteConfig = getSiteConfig(baseUrl);
-    const $ = cheerio.load(html);
-    const links: string[] = [];
-    const seen = new Set<string>();
-
-    $(siteConfig.listingLinkSelector).each((_, el) => {
-        const href = $(el).attr('href') ?? '';
-        const abs = href.startsWith('http') ? href : new URL(href, baseUrl).toString();
-        if (!seen.has(abs) && siteConfig.listingLinkFilter(abs)) {
-            seen.add(abs);
-            links.push(abs);
-        }
-    });
-
-    return links;
-}
-
-const CURRENT_YEAR = new Date().getFullYear();
-
-function buildExtractionPrompt(cleanedText: string, sourceUrl: string, hintCategory?: string): string {
-    return `You are an expert Indian government exam data extractor. Extract structured exam data from the text below.
+    private static buildPrompt(text: string, sourceUrl: string, hintCategory?: string): string {
+        return `You are an expert Indian government exam data extractor. 
+Extract structured exam data from the text below.
 
 SOURCE URL: ${sourceUrl}
 HINT CATEGORY: ${hintCategory ?? 'auto-detect'}
-CURRENT YEAR: ${CURRENT_YEAR}
+CURRENT YEAR: ${this.CURRENT_YEAR}
 
 RULES:
-- All dates MUST be ISO8601 format (YYYY-MM-DDTHH:mm:ss.000Z). If year is missing, infer from context using ${CURRENT_YEAR}.
-- isTBD: true ONLY when date is explicitly "To be announced" or similar. Default false.
-- isImportant: true ONLY for APPLICATION_START, APPLICATION_END, EXAM_DATE, RESULT events.
-- category MUST be one of: ${EXAM_CATEGORIES.join(', ')}
-- examLevel MUST be one of: ${EXAM_LEVELS.join(', ')}
-- stage MUST be one of: ${LIFECYCLE_STAGES.join(', ')}
-- eventType MUST be one of: ${LIFECYCLE_EVENT_TYPES.join(', ')}
-- aiConfidence: float 0.0–1.0 indicating your confidence in the extracted data.
-- description fields can use markdown for structure (bullet points, bold for key dates, etc.)
-- If totalVacancies is unknown, omit it (don't set to null).
-- conductingBody: the official org. name (e.g., "UPSC", "SSC").
-- For applicationFee, use JSON: {"general": 500, "obc": 300, "sc_st": 0, "female": 0, "currency": "INR"}
-- For qualificationCriteria, use JSON: {"minQualification": "GRADUATE", "degree": "B.Tech", "specialization": "Any", "notes": "..."}
-- only offical links use. no third party links.
+1. Dates: ISO8601 format (YYYY-MM-DDTHH:mm:ss.000Z). Infer year from context using ${this.CURRENT_YEAR}.
+2. isTBD: true ONLY if date is explicitly "To be announced".
+3. isImportant: true for APPLICATION_START, APPLICATION_END, EXAM_DATE, RESULT.
+4. Allowed Enum Values:
+   - category: ${EXAM_CATEGORIES.join(', ')}
+   - examLevel: ${EXAM_LEVELS.join(', ')}
+   - stage: ${LIFECYCLE_STAGES.join(', ')}
+   - eventType: ${LIFECYCLE_EVENT_TYPES.join(', ')}
+5. Data types:
+   - aiConfidence: float 0.0–1.0.
+   - applicationFee: JSON map of categories to amounts (e.g. {"general": 500}).
+   - qualificationCriteria: JSON map (e.g. {"minQualification": "GRADUATE"}).
+   - totalVacancies: JSON map of posts to counts (e.g. {"Assistant": 100}).
+6. Official links only. No third-party ads/spam links.
 
-STAGE ORDER MAP (use these stageOrder values):
-NOTIFICATION=10, REGISTRATION=20, ADMIT_CARD=30, EXAM=40, ANSWER_KEY=50, RESULT=60, DOCUMENT_VERIFICATION=70, JOINING=80
+STAGE ORDER GUIDELINE:
+NOTIFICATION=10, REGISTRATION=20, ADMIT_CARD=30, EXAM=40, ANSWER_KEY=50, RESULT=60, DV=70, JOINING=80
 
-TEXT TO EXTRACT FROM:
+TEXT:
 ---
-${cleanedText}
+${text}
 ---
 
-Return ONLY valid JSON matching this schema (no markdown, no extra text):
+Return JSON:
 {
-  "title": "Full exam title",
-  "shortTitle": "Short name",
-  "description": "Markdown description with remaining important info which is not stored in other fields",
-  "conductingBody": "Organization name",
-  "category": "ENUM_VALUE",
+  "title": "string",
+  "shortTitle": "string",
+  "description": "markdown",
+  "conductingBody": "string",
+  "category": "ENUM",
   "examLevel": "NATIONAL|STATE|DISTRICT",
-  "state": "State name if STATE level, else null",
-  "examYear": ${CURRENT_YEAR},
-  "minAge": 18,
-  "maxAge": 30,
-  "totalVacancies": { "Senior Assistant": 200, "Junior Assistant": 300},
-  "applicationFee": {"general": 500, "sc_st": 0, "currency": "INR"},
-  "qualificationCriteria": {"minQualification": "GRADUATE"},
-  "officialWebsite": "https://...",
-  "notificationUrl": "https://...",
-  "aiConfidence": 0.85,
-  "aiNotes": "Any caveats or missing info",
+  "state": "string|null",
+  "examYear": number,
+  "minAge": number,
+  "maxAge": number,
+  "totalVacancies": {},
+  "applicationFee": {},
+  "qualificationCriteria": {},
+  "officialWebsite": "url",
+  "notificationUrl": "url",
+  "aiConfidence": number,
+  "aiNotes": "string",
   "events": [
     {
-      "stage": "REGISTRATION",
-      "eventType": "START",
-      "stageOrder": 20,
-      "title": "Registration",
-      "description": "IMP Detail of Stage show in markdown",
-      "startsAt": "2026-03-01T00:00:00.000Z",
-      "endsAt": "2026-03-31T23:59:59.000Z",
-      "isTBD": false,
-      "isImportant": true,
-      "actionUrl": "https://...",
-      "actionLabel": "Apply Now"
+      "stage": "ENUM",
+      "eventType": "ENUM",
+      "stageOrder": number,
+      "title": "string",
+      "description": "markdown",
+      "startsAt": "ISO",
+      "endsAt": "ISO",
+      "isTBD": boolean,
+      "isImportant": boolean,
+      "actionUrl": "url",
+      "actionLabel": "string"
     }
   ]
 }`;
-}
-
-
-async function callAI(prompt: string): Promise<AiStructuredExam | null> {
-    const openai = getOpenAI();
-
-    const completion = await openai.chat.completions.create({
-        model: 'gpt-5-mini',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0,
-        max_tokens: 1500,
-        response_format: { type: 'json_object' },
-    });
-
-    const content = completion.choices[0]?.message?.content;
-    if (!content) return null;
-
-    try {
-        const parsed = JSON.parse(content);
-        return parsed as AiStructuredExam;
-    } catch (err) {
-        logger.error('[Scraper] Failed to parse AI JSON response', { err, content });
-        return null;
     }
 }
 
-function contentHash(title: string, conductingBody: string, totalVacancies?: any): string {
-    const raw = `${title}|${conductingBody}|${totalVacancies ?? ''}`;
-    return createHash('sha256').update(raw).digest('hex');
-}
+// ─── Scraper Utilities ───────────────────────────────────────
 
-function buildDeduplicationKey(conductingBody: string, category: string, year: number): string {
-    const raw = `${conductingBody}-${category}-${year}`;
-    return (slugifyPkg as unknown as (text: string, opts?: unknown) => string)(raw, {
-        lower: true,
-        strict: true,
-        replacement: '-',
-    });
-}
+class ScraperUtils {
+    static async fetchHtml(url: string): Promise<string> {
+        const res = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            },
+            signal: AbortSignal.timeout(20000),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        return res.text();
+    }
 
+    static cleanHtml(html: string, url: string): { text: string; charCount: number } {
+        const config = getSiteConfig(url);
+        const $ = cheerio.load(html);
 
-async function scrapeDetailPage(
-    jobId: string,
-    url: string,
-    hintCategory?: string,
-): Promise<DeduplicationSummary> {
-    try {
-        const html = await fetchHtml(url);
-        const { text: cleanedText, rawCharCount } = cleanHtml(html, url);
+        // Remove noise
+        config.noiseSelectors.forEach(sel => $(sel).remove());
+        $('script, style, noscript, iframe, .ad, .advertisement').remove();
 
-        const prompt = buildExtractionPrompt(cleanedText, url, hintCategory);
-        const extracted = await callAI(prompt);
-
-        if (!extracted) {
-            return { sourceUrl: url, outcome: 'AI_FAILED', reason: 'AI returned no parseable JSON' };
+        let contentText = '';
+        for (const selector of config.contentSelectors) {
+            const el = $(selector);
+            if (el.length) {
+                contentText = el.map((_, e) => $(e).text()).get().join('\n');
+                if (contentText.trim().length > 300) break;
+            }
         }
 
-        extracted.sourceUrl = url;
-        extracted.scrapedAt = new Date();
+        if (!contentText.trim()) contentText = $('body').text();
 
-        logger.info(`[Scraper] AI extracted: "${extracted.title}" confidence=${extracted.aiConfidence} charsBefore=${rawCharCount}`);
+        const cleaned = this.decodeEntities(contentText)
+            .replace(/\t/g, ' ')
+            .replace(/ {2,}/g, ' ')
+            .replace(/\n{3,}/g, '\n\n')
+            .trim();
 
-        const dedupResult = await checkAndStage(jobId, extracted);
-
-        const summary: DeduplicationSummary = {
-            sourceUrl: url,
-            outcome: dedupResult.outcome,
+        return {
+            text: cleaned.slice(0, 5000), // Increased limit slightly for better AI context
+            charCount: cleaned.length
         };
+    }
 
-        if (dedupResult.outcome === 'NEW_STAGED') {
-            summary.stagedExamId = dedupResult.stagedExamId;
-        } else if (dedupResult.outcome === 'LINKED_AS_UPDATE') {
-            summary.stagedExamId = dedupResult.stagedExamId;
-            summary.existingExamId = dedupResult.existingExamId;
-        } else if (dedupResult.outcome === 'MERGED_INTO_CANONICAL') {
-            summary.canonicalStagedExamId = dedupResult.canonicalStagedExamId;
-        } else if (dedupResult.outcome === 'EXACT_DUPLICATE') {
-            summary.reason = dedupResult.reason;
-        }
+    static extractLinks(html: string, baseUrl: string): string[] {
+        const config = getSiteConfig(baseUrl);
+        const $ = cheerio.load(html);
+        const links = new Set<string>();
 
-        return summary;
-    } catch (err: any) {
-        logger.error(`[Scraper] Error scraping ${url}: ${err.message}`);
-        return { sourceUrl: url, outcome: 'ERROR', reason: err.message };
+        $(config.listingLinkSelector).each((_, el) => {
+            const href = $(el).attr('href');
+            if (!href) return;
+            try {
+                const absolute = new URL(href, baseUrl).toString();
+                if (config.listingLinkFilter(absolute)) {
+                    links.add(absolute);
+                }
+            } catch { }
+        });
+
+        return Array.from(links);
+    }
+
+    private static decodeEntities(text: string): string {
+        const entities: Record<string, string> = {
+            '&amp;': '&', '&nbsp;': ' ', '&lt;': '<', '&gt;': '>',
+            '&quot;': '"', '&#39;': "'", '&ndash;': '–', '&mdash;': '—',
+            '&rsquo;': "'", '&lsquo;': "'", '&rdquo;': '"', '&ldquo;': '"'
+        };
+        return text.replace(/&[a-z0-9#]+;/gi, (match) => entities[match] || match);
     }
 }
 
+// ─── Scraper Service ─────────────────────────────────────────
 
-export async function runScrapeJob(source: ScrapeSourceConfig): Promise<ScrapeResult> {
-    const job = await prisma.scrapeJob.create({
-        data: {
-            scrapeSourceId: source.id,
-            status: ScrapeJobStatus.RUNNING,
-        },
-    });
+export class ScraperService {
+    /**
+     * Scrapes a single detail page and processes deduplication/staging
+     */
+    static async scrapePage(jobId: string, url: string, hintCategory?: string): Promise<DeduplicationSummary> {
+        try {
+            logger.info(`[Scraper] Processing: ${url}`);
+            const html = await ScraperUtils.fetchHtml(url);
+            const { text, charCount } = ScraperUtils.cleanHtml(html, url);
 
-    const jobId = job.id;
-    const results: DeduplicationSummary[] = [];
-    const errors: string[] = [];
-    const rawPayloadLog: Record<string, unknown> = {};
-
-    try {
-        let detailUrls: string[] = [];
-
-        if (source.sourceType === 'LISTING') {
-            logger.info(`[Scraper] LISTING mode: fetching ${source.url}`);
-            const listHtml = await fetchHtml(source.url);
-            detailUrls = extractListingLinks(listHtml, source.url);
-            logger.info(`[Scraper] Found ${detailUrls.length} detail URLs from listing`);
-            rawPayloadLog['listingUrl'] = source.url;
-            rawPayloadLog['detailUrlsFound'] = detailUrls.length;
-            rawPayloadLog['detailUrls'] = detailUrls.slice(0, 20);
-        } else {
-            detailUrls = [source.url];
-        }
-
-        for (const url of detailUrls) {
-            const summary = await scrapeDetailPage(jobId, url, source.hintCategory ?? undefined);
-            results.push(summary);
-
-            if (summary.outcome === 'ERROR') {
-                errors.push(`${url}: ${summary.reason}`);
+            const extracted = await AIProvider.extractExamData(text, url, hintCategory);
+            if (!extracted) {
+                return { sourceUrl: url, outcome: 'AI_FAILED', reason: 'AI failed to parse content' };
             }
 
-            await new Promise((r) => setTimeout(r, 800));
+            // Enrich with metadata
+            extracted.sourceUrl = url;
+            extracted.scrapedAt = new Date();
+
+            const dedup = await checkAndStage(jobId, extracted);
+
+            return {
+                sourceUrl: url,
+                outcome: dedup.outcome,
+                stagedExamId: 'stagedExamId' in dedup ? dedup.stagedExamId : undefined,
+                existingExamId: 'existingExamId' in dedup ? dedup.existingExamId : undefined,
+                canonicalStagedExamId: 'canonicalStagedExamId' in dedup ? dedup.canonicalStagedExamId : undefined,
+                reason: 'reason' in dedup ? dedup.reason : undefined,
+            };
+        } catch (err: any) {
+            logger.error(`[Scraper] Failed ${url}: ${err.message}`);
+            return { sourceUrl: url, outcome: 'ERROR', reason: err.message };
         }
+    }
 
-        const candidatesFound = results.filter(
-            (r) => r.outcome === 'NEW_STAGED' || r.outcome === 'LINKED_AS_UPDATE',
-        ).length;
+    /**
+     * Primary entry point for a scraping job
+     */
+    static async runJob(source: ScrapeSourceConfig): Promise<ScrapeResult> {
+        const job = await prisma.scrapeJob.create({
+            data: { scrapeSourceId: source.id, status: ScrapeJobStatus.RUNNING }
+        });
 
-        rawPayloadLog['resultsBreakdown'] = results.reduce<Record<string, number>>((acc, r) => {
-            acc[r.outcome] = (acc[r.outcome] ?? 0) + 1;
-            return acc;
-        }, {});
+        const results: DeduplicationSummary[] = [];
+        const errors: string[] = [];
+        const logData: any = { sourceUrl: source.url, mode: source.sourceType };
 
-        const finalStatus =
-            errors.length === 0
+        try {
+            let targets: string[] = [];
+
+            if (source.sourceType === 'LISTING') {
+                const listHtml = await ScraperUtils.fetchHtml(source.url);
+                targets = ScraperUtils.extractLinks(listHtml, source.url);
+                logData.linksFound = targets.length;
+                logger.info(`[Scraper] Found ${targets.length} links on listing page`);
+            } else {
+                targets = [source.url];
+            }
+
+            for (const url of targets) {
+                const summary = await this.scrapePage(job.id, url, source.hintCategory ?? undefined);
+                results.push(summary);
+                if (summary.outcome === 'ERROR') errors.push(`${url}: ${summary.reason}`);
+
+                // Throttle to be polite and avoid rate limits
+                await new Promise(r => setTimeout(r, 1000));
+            }
+
+            const candidatesFound = results.filter(r => ['NEW_STAGED', 'LINKED_AS_UPDATE'].includes(r.outcome)).length;
+
+            const finalStatus = errors.length === 0
                 ? ScrapeJobStatus.COMPLETED
-                : errors.length < results.length
-                    ? ScrapeJobStatus.PARTIAL
-                    : ScrapeJobStatus.FAILED;
+                : errors.length < targets.length ? ScrapeJobStatus.PARTIAL : ScrapeJobStatus.FAILED;
 
-        await prisma.scrapeJob.update({
-            where: { id: jobId },
-            data: {
-                status: finalStatus,
-                candidatesFound,
-                completedAt: new Date(),
-                rawPayload: rawPayloadLog as never,
-            },
-        });
-
-        logger.info(`[Scraper] Job ${jobId} completed. Status=${finalStatus} candidates=${candidatesFound}`);
-
-        return { jobId, status: finalStatus, candidatesFound, results, errors };
-    } catch (err: any) {
-        logger.error(`[Scraper] Job ${jobId} FAILED: ${err.message}`);
-        await prisma.scrapeJob.update({
-            where: { id: jobId },
-            data: {
-                status: ScrapeJobStatus.FAILED,
-                completedAt: new Date(),
-                errorMessage: err.message,
-            },
-        });
-        return { jobId, status: ScrapeJobStatus.FAILED, candidatesFound: 0, results, errors: [err.message] };
-    }
-}
-
-export async function promoteStagedExam(stagedExamId: string, adminId: string): Promise<{ examId: string }> {
-    const staged = await prisma.stagedExam.findUnique({
-        where: { id: stagedExamId },
-        include: { stagedEvents: { orderBy: { stageOrder: 'asc' } } },
-    });
-
-    if (!staged) throw new Error(`StagedExam ${stagedExamId} not found`);
-    if (staged.reviewStatus !== 'APPROVED') throw new Error(`StagedExam ${stagedExamId} is not APPROVED`);
-
-    async function buildUniqueSlug(base: string): Promise<string> {
-        const slug = base
-            .toLowerCase()
-            .replace(/[^a-z0-9\s-]/g, '')
-            .replace(/\s+/g, '-')
-            .replace(/-+/g, '-')
-            .slice(0, 100);
-
-        let candidate = slug;
-        let counter = 1;
-        while (await prisma.exam.findUnique({ where: { slug: candidate } })) {
-            candidate = `${slug}-${counter++}`;
-        }
-        return candidate;
-    }
-
-    const totalVacanciesJson = staged.totalVacancies ?? undefined;
-
-    let deduplicationKey: string | undefined = staged.deduplicationKey ?? undefined;
-    if (deduplicationKey) {
-        const clash = await prisma.exam.findUnique({ where: { deduplicationKey } });
-        if (clash && clash.id !== staged.existingExamId) {
-            deduplicationKey = `${deduplicationKey}-${stagedExamId.slice(-6)}`;
-        }
-    }
-
-    const eventRows = staged.stagedEvents.map((ev) => ({
-        stage: ev.stage,
-        eventType: ev.eventType,
-        stageOrder: ev.stageOrder,
-        title: ev.title,
-        description: ev.description ?? undefined,
-        startsAt: ev.startsAt ?? undefined,
-        endsAt: ev.endsAt ?? undefined,
-        isTBD: ev.isTBD,
-        isImportant: ev.isImportant,
-        actionUrl: ev.actionUrl ?? undefined,
-        actionLabel: ev.actionLabel ?? undefined,
-        sourceStagedEventId: ev.id,
-        createdBy: adminId,
-    }));
-
-    if (staged.existingExamId) {
-        const existing = await prisma.exam.findUnique({ where: { id: staged.existingExamId } });
-        if (!existing) throw new Error(`Linked exam ${staged.existingExamId} no longer exists`);
-
-        await prisma.$transaction(async (tx) => {
-            await tx.exam.update({
-                where: { id: staged.existingExamId! },
+            await prisma.scrapeJob.update({
+                where: { id: job.id },
                 data: {
-                    title: staged.title,
-                    shortTitle: staged.shortTitle ?? staged.title,
-                    description: staged.description ?? existing.description,
-                    conductingBody: staged.conductingBody ?? existing.conductingBody,
-                    category: staged.category ?? existing.category,
-                    examLevel: staged.examLevel ?? existing.examLevel,
-                    state: staged.state ?? existing.state,
-                    minAge: staged.minAge ?? existing.minAge,
-                    maxAge: staged.maxAge ?? existing.maxAge,
-                    qualificationCriteria: (staged.qualificationCriteria ?? existing.qualificationCriteria) as never,
-                    totalVacancies: (totalVacanciesJson ?? existing.totalVacancies) as never,
-                    applicationFee: (staged.applicationFee ?? existing.applicationFee) as never,
-                    officialWebsite: staged.officialWebsite ?? existing.officialWebsite,
-                    notificationUrl: staged.notificationUrl ?? existing.notificationUrl,
-                    sourceStagedExamId: staged.id,
-                    status: 'ACTIVE',
-                    isPublished: true,
-                    publishedAt: existing.publishedAt ?? new Date(),
-                    updatedAt: new Date(),
-                },
+                    status: finalStatus,
+                    candidatesFound,
+                    completedAt: new Date(),
+                    rawPayload: { ...logData, results: results.slice(0, 50) } as any
+                }
             });
 
-            await tx.lifecycleEvent.deleteMany({ where: { examId: staged.existingExamId! } });
-
-            if (eventRows.length > 0) {
-                await tx.lifecycleEvent.createMany({ data: eventRows.map(r => ({ ...r, examId: staged.existingExamId! })) });
-            }
-
-            await tx.stagedExam.update({
-                where: { id: stagedExamId },
-                data: { existingExamId: staged.existingExamId },
+            return { jobId: job.id, status: finalStatus, candidatesFound, results, errors };
+        } catch (err: any) {
+            await prisma.scrapeJob.update({
+                where: { id: job.id },
+                data: { status: ScrapeJobStatus.FAILED, errorMessage: err.message, completedAt: new Date() }
             });
-        });
-
-        logger.info(`[Promote] Updated existing Exam ${staged.existingExamId} from StagedExam ${stagedExamId}`);
-        return { examId: staged.existingExamId };
+            return { jobId: job.id, status: ScrapeJobStatus.FAILED, candidatesFound: 0, results, errors: [err.message] };
+        }
     }
-
-    const baseSlug = staged.slug ?? staged.title;
-    const finalSlug = await buildUniqueSlug(baseSlug);
-
-    const { examId } = await prisma.$transaction(async (tx) => {
-        const exam = await tx.exam.create({
-            data: {
-                title: staged.title,
-                shortTitle: staged.shortTitle ?? staged.title,
-                slug: finalSlug,
-                description: staged.description ?? undefined,
-                conductingBody: staged.conductingBody ?? 'Unknown',
-                category: staged.category ?? 'OTHER',
-                examLevel: staged.examLevel ?? 'NATIONAL',
-                state: staged.state ?? undefined,
-                minAge: staged.minAge ?? undefined,
-                maxAge: staged.maxAge ?? undefined,
-                qualificationCriteria: staged.qualificationCriteria as never ?? undefined,
-                totalVacancies: totalVacanciesJson as never ?? undefined,
-                applicationFee: staged.applicationFee as never ?? undefined,
-                officialWebsite: staged.officialWebsite ?? undefined,
-                notificationUrl: staged.notificationUrl ?? undefined,
-                deduplicationKey: deduplicationKey ?? undefined,
-                sourceStagedExamId: staged.id,
-                createdBy: adminId,
-                status: 'ACTIVE',
-                isPublished: true,
-                publishedAt: new Date(),
-                lifecycleEvents: eventRows.length > 0 ? { create: eventRows } : undefined,
-            },
-        });
-        return { examId: exam.id };
-    });
-
-    logger.info(`[Promote] Created new Exam ${examId} from StagedExam ${stagedExamId} · slug="${finalSlug}" · events=${eventRows.length}`);
-    return { examId };
 }
 
+// ─── Legacy Exports for Backward Compatibility ───────────────
+
+export const runScrapeJob = ScraperService.runJob;

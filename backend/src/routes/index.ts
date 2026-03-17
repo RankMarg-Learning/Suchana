@@ -7,6 +7,7 @@ import { pushTokenRouter } from './pushToken.routes';
 import { healthRouter } from './health.routes';
 import { userRouter } from './user.routes';
 import { scraperRouter } from './scraper.routes';
+import { configRouter } from './config.routes';
 import { env } from '../config/env';
 
 const router = Router();
@@ -17,5 +18,6 @@ router.use(`/api/${v}/exams`, examRouter);
 router.use(`/api/${v}/push-tokens`, pushTokenRouter);
 router.use(`/api/${v}/users`, userRouter);
 router.use(`/api/${v}/scraper`, scraperRouter);
+router.use(`/api/${v}/config`, configRouter);
 
 export { router };

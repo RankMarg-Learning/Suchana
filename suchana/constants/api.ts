@@ -12,4 +12,5 @@ export const API = {
     EXAMS: `${BASE_URL}/exams`,
     USERS: `${BASE_URL}/users`,
     PUSH_TOKENS: `${BASE_URL}/push-tokens`,
+    CONFIG: `${BASE_URL}/config`,
 } as const;

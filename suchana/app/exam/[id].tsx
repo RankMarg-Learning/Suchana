@@ -5,7 +5,7 @@ import {
   TouchableOpacity, ActivityIndicator, Linking,
   Dimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useNavigation, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
@@ -32,9 +32,7 @@ import { NativeAdCard } from '@/components/NativeAdCard';
 import { AdBanner } from '@/components/AdBanner';
 import { useAds } from '@/context/AdsContext';
 import { cleanLabel } from '@/utils/format';
-import type { Exam, LifecycleEvent } from '@/types/exam';
 
-const { width } = Dimensions.get('window');
 
 function formatCountdown(endsAt: string): string {
   const diff = new Date(endsAt).getTime() - Date.now();
@@ -63,7 +61,8 @@ export default function ExamDetailScreen() {
   const navigation = useNavigation();
   const queryClient = useQueryClient();
   const { user, userId, refreshUser } = useUser();
-  const { showInterstitial } = useAds();
+  const { showInterstitial, showRewarded } = useAds();
+  const insets = useSafeAreaInsets();
   const [countdown, setCountdown] = useState('');
   const [isDescExpanded, setIsDescExpanded] = useState(false);
 
@@ -81,6 +80,7 @@ export default function ExamDetailScreen() {
     queryKey: ['timeline', id],
     queryFn: () => fetchTimeline(id),
   });
+
 
   const saveMutation = useMutation({
     mutationFn: () => toggleSavedExam(userId!, id),
@@ -108,16 +108,57 @@ export default function ExamDetailScreen() {
 
   const isSaved = user?.savedExamIds?.includes(id);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!userId) return;
+    // Show rewarded video ad before saving
+    await showRewarded();
     saveMutation.mutate();
   };
 
   const handleShare = async () => {
     if (!exam) return;
-    await Share.share({
-      message: `📋 ${exam.title}\n${exam.conductingBody}\nVacancies: ${exam.totalVacancies ?? 'N/A'}\n\nTrack exam deadlines on Suchana App!`,
-    });
+
+    const regEvent = exam.lifecycleEvents?.find((e) => e.stage === 'REGISTRATION');
+    const deadline = regEvent?.endsAt
+      ? `\n⏰ Deadline: ${new Date(regEvent.endsAt).toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })}`
+      : '';
+
+    let vacancies = 'Check Details';
+    if (typeof exam.totalVacancies === 'number') {
+      vacancies = exam.totalVacancies.toLocaleString('en-IN');
+    } else if (exam.totalVacancies && typeof exam.totalVacancies === 'object') {
+      const total = Object.values(exam.totalVacancies).reduce(
+        (acc: number, val: any) => acc + (Number(val) || 0),
+        0
+      );
+      if (total > 0) vacancies = total.toLocaleString('en-IN');
+    }
+
+    const message =
+      `🏛️ *${exam.title}*\n` +
+      `🏢 Board: ${exam.conductingBody}\n` +
+      `👥 Vacancies: ${vacancies}` +
+      `${deadline}\n\n` +
+      `Stay updated with government exam timelines on Suchana App! 🚀\n` +
+      `Download: https://suchana.app/get`;
+
+    try {
+      await Share.share(
+        {
+          title: exam.shortTitle || 'Exam Update',
+          message,
+        },
+        {
+          dialogTitle: `Share ${exam.shortTitle || 'Exam'}`,
+        }
+      );
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
   };
 
   if (examLoading || timelineLoading) {
@@ -148,7 +189,7 @@ export default function ExamDetailScreen() {
   const renderJsonLines = (data: any, labelStyle?: any) => {
     if (!data) return <Text style={styles.factValue}>N/A</Text>;
 
-    if (typeof data === 'number') return <Text style={styles.hugeText}>{data.toLocaleString('en-IN')}</Text>;
+    if (typeof data === 'number') return <Text style={styles.statsValue}>{data.toLocaleString('en-IN')}</Text>;
 
     if (typeof data !== 'object') {
       const val = String(data);
@@ -177,7 +218,7 @@ export default function ExamDetailScreen() {
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
 
-        <View style={styles.customHeader}>
+        <View style={[styles.customHeader, { paddingTop: insets.top + 10 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconBtn}>
             <ChevronRight size={24} color="#FFF" style={{ transform: [{ rotate: '180deg' }] }} />
           </TouchableOpacity>
@@ -198,7 +239,7 @@ export default function ExamDetailScreen() {
         {/* Hero Section */}
         <LinearGradient
           colors={['#1e1b4b', '#0D0D0F']}
-          style={styles.heroSection}>
+          style={[styles.heroSection, { paddingTop: insets.top + 70 }]}>
 
           <View style={[styles.statusBadge, { borderColor: statusColor + '77' }]}>
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
@@ -262,53 +303,57 @@ export default function ExamDetailScreen() {
           </View>
         )}
 
-        {/* Important Quick Facts Section - "Important Once First" */}
+        {/* Important Quick Facts Section */}
         <View style={styles.importantContainer}>
-
-          {/* Vacancies Card */}
-          <View style={styles.factCard}>
-            <View style={styles.factHeader}>
-              <Briefcase size={20} color="#7C3AED" />
-              <Text style={styles.factTitle}>Total Vacancies</Text>
-            </View>
-            {typeof exam.totalVacancies === 'number' ? (
-              <Text style={styles.hugeText}>{exam.totalVacancies.toLocaleString('en-IN')}</Text>
-            ) : (
-              renderJsonLines(exam.totalVacancies)
-            )}
-          </View>
-
-          {/* Eligibility Card */}
-          <View style={styles.factCard}>
-            <View style={styles.factHeader}>
-              <UserCheck size={20} color="#7C3AED" />
-              <Text style={styles.factTitle}>Eligibility</Text>
-            </View>
-            <View style={styles.eligibilityMain}>
-              <Text style={styles.eligibilityLevel}>
-                {cleanLabel(exam.qualificationCriteria?.level) || 'Check Rules'}
-              </Text>
-              {(exam.minAge || exam.maxAge) && (
-                <Text style={styles.ageText}>
-                  Age: {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} yrs
-                </Text>
+          
+          <View style={styles.statsGrid}>
+            {/* Vacancies Card */}
+            <View style={[styles.factCard, { flex: 1 }]}>
+              <View style={styles.factHeader}>
+                <Briefcase size={16} color="#7C3AED" />
+                <Text style={styles.factTitle}>Vacancies</Text>
+              </View>
+              {typeof exam.totalVacancies === 'number' ? (
+                <Text style={styles.statsValue}>{exam.totalVacancies.toLocaleString('en-IN')}</Text>
+              ) : (
+                renderJsonLines(exam.totalVacancies, { fontSize: 13 })
               )}
             </View>
-            {exam.qualificationCriteria?.rules && (
-              <View style={styles.rulesContainer}>
-                {renderJsonLines(exam.qualificationCriteria.rules)}
+
+            {/* Fees Card */}
+            <View style={[styles.factCard, { flex: 1 }]}>
+              <View style={styles.factHeader}>
+                <IndianRupee size={16} color="#7C3AED" />
+                <Text style={styles.factTitle}>Fee</Text>
               </View>
-            )}
+              <View style={styles.feeGrid}>
+                {renderJsonLines(exam.applicationFee, { fontSize: 13 })}
+              </View>
+            </View>
           </View>
 
-          {/* Fees Card */}
+          {/* Eligibility Card - Full Width because of more text */}
           <View style={styles.factCard}>
             <View style={styles.factHeader}>
-              <IndianRupee size={20} color="#7C3AED" />
-              <Text style={styles.factTitle}>Application Fee</Text>
+              <UserCheck size={16} color="#7C3AED" />
+              <Text style={styles.factTitle}>Eligibility & Age</Text>
             </View>
-            <View style={styles.feeGrid}>
-              {renderJsonLines(exam.applicationFee)}
+            <View style={styles.eligibilityRow}>
+              <View>
+                <Text style={styles.eligibilityLevel}>
+                  {cleanLabel(exam.qualificationCriteria?.level) || 'Check Rules'}
+                </Text>
+                {(exam.minAge || exam.maxAge) && (
+                  <Text style={styles.ageText}>
+                    {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} years
+                  </Text>
+                )}
+              </View>
+              {exam.qualificationCriteria?.rules && (
+                <View style={styles.rulesMini}>
+                   {renderJsonLines(exam.qualificationCriteria.rules, { fontSize: 12 })}
+                </View>
+              )}
             </View>
           </View>
 
@@ -325,9 +370,15 @@ export default function ExamDetailScreen() {
               <Text style={styles.emptyTimelineText}>No events announced yet.</Text>
             </View>
           ) : (
-            timeline.map((event, index) => (
-              <TimelineItem key={event.id} event={event} isLast={index === timeline.length - 1} />
-            ))
+            [...timeline]
+              .sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0))
+              .map((event, index) => (
+                <TimelineItem
+                  key={event.id}
+                  event={event}
+                  isLast={index === timeline.length - 1}
+                />
+              ))
           )}
         </View>
 
@@ -351,7 +402,7 @@ export default function ExamDetailScreen() {
                   {exam.description.replace(/[#*`\n]/g, ' ')}
                 </Text>
               )}
-              
+
               {exam.description.length > 100 && (
                 <TouchableOpacity onPress={() => setIsDescExpanded(!isDescExpanded)} style={{ marginTop: 8 }}>
                   <Text style={styles.moreBtn}>{isDescExpanded ? 'Show less' : 'Read more...'}</Text>
@@ -401,7 +452,6 @@ const styles = StyleSheet.create({
   loader: { flex: 1, backgroundColor: '#09090b', justifyContent: 'center', alignItems: 'center' },
   errorTxt: { color: '#94a3b8', fontSize: 16 },
 
-  // Custom Header
   customHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -536,34 +586,35 @@ const styles = StyleSheet.create({
 
   // Important Info Cards
   importantContainer: {
-    paddingHorizontal: 20,
-    gap: 16,
-    marginBottom: 40,
+    paddingHorizontal: 16,
+    gap: 12,
+    marginBottom: 32,
   },
+  statsGrid: { flexDirection: 'row', gap: 12 },
   factCard: {
     backgroundColor: '#18181b',
-    borderRadius: 24,
-    padding: 20,
+    borderRadius: 20,
+    padding: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.05)',
   },
-  factHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
-  factTitle: { color: '#a1a1aa', fontSize: 14, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
-  hugeText: { color: '#FFF', fontSize: 36, fontWeight: '900' },
-  factValue: { color: '#e4e4e7', fontSize: 16, fontWeight: '700', lineHeight: 22, flex: 1 },
-  kvLine: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  kvLabel: { color: '#71717a', fontWeight: '600', minWidth: 80 },
-  feeGrid: { gap: 10 },
+  factHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
+  factTitle: { color: '#71717a', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
+  statsValue: { color: '#FFF', fontSize: 24, fontWeight: '900' },
+  factValue: { color: '#e4e4e7', fontSize: 14, fontWeight: '700', lineHeight: 18 },
+  kvLine: { flexDirection: 'row', gap: 4, alignItems: 'center' },
+  kvLabel: { color: '#71717a', fontWeight: '600', minWidth: 60, fontSize: 13 },
+  feeGrid: { gap: 6 },
 
   // Eligibility specific
-  eligibilityMain: { marginBottom: 12 },
-  eligibilityLevel: { color: '#FFF', fontSize: 24, fontWeight: '900', marginBottom: 4 },
-  ageText: { color: '#7C3AED', fontSize: 15, fontWeight: '800' },
-  rulesContainer: {
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
+  eligibilityRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  eligibilityLevel: { color: '#FFF', fontSize: 18, fontWeight: '900', marginBottom: 2 },
+  ageText: { color: '#7C3AED', fontSize: 13, fontWeight: '800' },
+  rulesMini: {
+    maxWidth: '50%',
+    paddingLeft: 12,
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(255,255,255,0.05)',
   },
 
   // Timeline
