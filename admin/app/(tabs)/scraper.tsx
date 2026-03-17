@@ -181,11 +181,11 @@ export default function ScraperScreen() {
         onSave={handleSaveSource}
       />
 
-      <TouchableOpacity 
+      <TouchableOpacity
         style={[
-          styles.fab, 
-          { bottom: (Platform.OS === 'ios' ? 88 : 64) + 12 }
-        ]} 
+          styles.fab,
+          { bottom: (Platform.OS === 'ios' ? 0 : 0) + 12 }
+        ]}
         onPress={() => { setEditingSource(undefined); setModalVisible(true); }}
       >
         <LinearGradient
@@ -213,7 +213,7 @@ function SourceCard({ source, onEdit, onDelete, onTrigger }: { source: ScrapeSou
       </View>
       <Text style={styles.sourceLabel}>{source.label}</Text>
       <Text style={styles.sourceUrl} numberOfLines={1}>{source.url}</Text>
-      
+
       {source.sourceType === 'DETAIL' && (
         <View style={styles.hintBadge}>
           <Ionicons name="bulb-outline" size={12} color="#92400E" />
@@ -249,7 +249,7 @@ function SourceCard({ source, onEdit, onDelete, onTrigger }: { source: ScrapeSou
 function JobCard({ job }: { job: ScrapeJob }) {
   const isSuccess = job.status === 'COMPLETED';
   const isRunning = job.status === 'RUNNING';
-  
+
   return (
     <View style={styles.jobCard}>
       <View style={styles.jobRow}>
@@ -279,7 +279,7 @@ function SourceModal({ visible, initial, onClose, onSave }: { visible: boolean, 
   const [label, setLabel] = useState(initial?.label || '');
   const [url, setUrl] = useState(initial?.url || '');
   const [sourceType, setSourceType] = useState<ScrapeSource['sourceType']>(initial?.sourceType || 'LISTING');
-  const [hintCategory, setHintCategory] = useState(initial?.hintCategory || 'GOVERNMENT');
+  const [hintCategory, setHintCategory] = useState(initial?.hintCategory || '');
   const [isActive, setIsActive] = useState(initial ? initial.isActive : true);
 
   useEffect(() => {
@@ -287,7 +287,7 @@ function SourceModal({ visible, initial, onClose, onSave }: { visible: boolean, 
       setLabel(initial?.label || '');
       setUrl(initial?.url || '');
       setSourceType(initial?.sourceType || 'LISTING');
-      setHintCategory(initial?.hintCategory || 'GOVERNMENT');
+      setHintCategory(initial?.hintCategory || '');
       setIsActive(initial ? initial.isActive : true);
     }
   }, [visible, initial]);
@@ -300,27 +300,27 @@ function SourceModal({ visible, initial, onClose, onSave }: { visible: boolean, 
             <Ionicons name="close" size={24} color="#1F2937" />
           </TouchableOpacity>
           <Text style={styles.modalTitle}>{initial ? 'Edit Source' : 'New Source'}</Text>
-          <TouchableOpacity onPress={() => onSave({ label, url, sourceType, hintCategory, isActive })} style={styles.modalSaveBtn}>
+          <TouchableOpacity onPress={() => onSave({ label, url, sourceType, hintCategory: hintCategory || undefined, isActive })} style={styles.modalSaveBtn}>
             <Text style={styles.modalSave}>Save</Text>
           </TouchableOpacity>
         </View>
         <ScrollView style={styles.modalBody}>
           <Text style={styles.fieldLabel}>Label</Text>
           <TextInput style={styles.textInput} value={label} onChangeText={setLabel} placeholder="e.g. UPSC Official Notifications" />
-          
+
           <Text style={styles.fieldLabel}>Source URL</Text>
           <TextInput style={styles.textInput} value={url} onChangeText={setUrl} placeholder="https://..." autoCapitalize="none" />
-          
+
           <Text style={styles.fieldLabel}>Page Type</Text>
           <View style={styles.typeToggle}>
-            <TouchableOpacity 
-              style={[styles.typeBtn, sourceType === 'LISTING' && styles.typeBtnActive]} 
+            <TouchableOpacity
+              style={[styles.typeBtn, sourceType === 'LISTING' && styles.typeBtnActive]}
               onPress={() => setSourceType('LISTING')}
             >
               <Text style={[styles.typeBtnText, sourceType === 'LISTING' && styles.typeBtnTextActive]}>List Page</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.typeBtn, sourceType === 'DETAIL' && styles.typeBtnActive]} 
+            <TouchableOpacity
+              style={[styles.typeBtn, sourceType === 'DETAIL' && styles.typeBtnActive]}
               onPress={() => setSourceType('DETAIL')}
             >
               <Text style={[styles.typeBtnText, sourceType === 'DETAIL' && styles.typeBtnTextActive]}>Single Exam</Text>
@@ -329,13 +329,27 @@ function SourceModal({ visible, initial, onClose, onSave }: { visible: boolean, 
 
           <Text style={styles.fieldLabel}>Category Hint</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
-            {['GOVERNMENT', 'DEFENCE', 'RAILWAY', 'BANKING', 'TEACHING'].map(c => (
-              <TouchableOpacity 
-                key={c} 
-                style={[styles.catChip, hintCategory === c && styles.catChipActive]}
-                onPress={() => setHintCategory(c as any)}
+            {[
+              { id: '', label: 'None' },
+              { id: 'GOVERNMENT_JOBS', label: 'Gov. Jobs' },
+              { id: 'BANKING_JOBS', label: 'Banking' },
+              { id: 'RAILWAY_JOBS', label: 'Railway' },
+              { id: 'DEFENCE_JOBS', label: 'Defence' },
+              { id: 'POLICE_JOBS', label: 'Police' },
+              { id: 'UPSC', label: 'UPSC' },
+              { id: 'SSC', label: 'SSC' },
+              { id: 'STATE_PSC', label: 'State PSC' },
+              { id: 'TEACHING_ELIGIBILITY', label: 'Teaching' },
+              { id: 'ENGINEERING_ENTRANCE', label: 'Engineering' },
+              { id: 'MEDICAL_ENTRANCE', label: 'Medical' },
+              { id: 'OTHER', label: 'Other' },
+            ].map(c => (
+              <TouchableOpacity
+                key={c.id}
+                style={[styles.catChip, hintCategory === c.id && styles.catChipActive]}
+                onPress={() => setHintCategory(c.id)}
               >
-                <Text style={[styles.catChipText, hintCategory === c && styles.catChipTextActive]}>{c}</Text>
+                <Text style={[styles.catChipText, hintCategory === c.id && styles.catChipTextActive]}>{c.label}</Text>
               </TouchableOpacity>
             ))}
           </ScrollView>
@@ -378,7 +392,7 @@ const styles = StyleSheet.create({
   empty: { alignItems: 'center', paddingTop: 80 },
   emptyTitle: { fontSize: 20, fontWeight: '800', color: '#1F2937', marginTop: 16 },
   emptyMsg: { fontSize: 14, color: '#6B7280', marginTop: 8, textAlign: 'center' },
-  
+
   // Source Card
   sourceCard: {
     backgroundColor: '#FFF', borderRadius: 24, padding: 20, marginBottom: 16,
@@ -414,7 +428,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center', alignItems: 'center',
   },
   iconActionDanger: { backgroundColor: '#FEF2F2' },
-  
+
   // Job card
   jobCard: {
     backgroundColor: '#FFF', borderRadius: 24, padding: 20, marginBottom: 12,
@@ -431,11 +445,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   jobMetaText: { fontSize: 12, color: '#4B5563', fontWeight: '700' },
-  
+
   // Badge
   badge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   badgeText: { fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
-  
+
   // Modal
   modalContainer: { flex: 1, backgroundColor: '#FFF' },
   modalHeader: {

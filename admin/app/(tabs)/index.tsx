@@ -298,7 +298,7 @@ export default function ExamsScreen() {
       <TouchableOpacity
         style={[
           styles.fab,
-          { bottom: (Platform.OS === 'ios' ? 88 : 64) + 12 }
+          { bottom: (Platform.OS === 'ios' ? 0 : 0) + 12 }
         ]}
         onPress={handleCreateExam}
       >
