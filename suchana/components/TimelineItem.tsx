@@ -57,7 +57,6 @@ function getStatus(event: LifecycleEvent): { label: string; color: string } {
 }
 
 export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast: boolean }) {
-  console.log("event", event)
   const [isExpanded, setIsExpanded] = useState(false);
   const stage = event.stage || '';
   const eventType = event.eventType || '';
