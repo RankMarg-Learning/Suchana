@@ -186,6 +186,26 @@ export default function ExamDetailScreen() {
   const score = (exam as any).matchScore ?? 0;
   const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#6B7280';
 
+  // ── Vacancy helpers ──────────────────────────────────────
+  const vacancyEntries: [string, number][] = (() => {
+    const v = exam.totalVacancies;
+    if (!v || typeof v === 'number') return [];
+    if (typeof v !== 'object') return [];
+    return Object.entries(v)
+      .map(([k, val]) => [k, Number(val) || 0] as [string, number])
+      .filter(([, n]) => n > 0);
+  })();
+
+  const totalVacancyCount: number = (() => {
+    const v = exam.totalVacancies;
+    if (typeof v === 'number') return v;
+    if (vacancyEntries.length > 0) return vacancyEntries.reduce((s, [, n]) => s + n, 0);
+    return 0;
+  })();
+
+  const [showAllVac, setShowAllVac] = useState(false);
+  const MAX_VAC_VISIBLE = 4;
+
   const renderJsonLines = (data: any, labelStyle?: any) => {
     if (!data) return <Text style={styles.factValue}>N/A</Text>;
 
@@ -305,22 +325,52 @@ export default function ExamDetailScreen() {
 
         {/* Important Quick Facts Section */}
         <View style={styles.importantContainer}>
-          
-          <View style={styles.statsGrid}>
-            {/* Vacancies Card */}
-            <View style={[styles.factCard, { flex: 1 }]}>
+
+          {/* Vacancies — full-width pill grid when multiple categories */}
+          {vacancyEntries.length > 1 && (
+            <View style={styles.factCard}>
               <View style={styles.factHeader}>
                 <Briefcase size={16} color="#7C3AED" />
                 <Text style={styles.factTitle}>Vacancies</Text>
+                {totalVacancyCount > 0 && (
+                  <View style={styles.totalVacBadge}>
+                    <Text style={styles.totalVacBadgeText}>{totalVacancyCount.toLocaleString('en-IN')} Total</Text>
+                  </View>
+                )}
               </View>
-              {typeof exam.totalVacancies === 'number' ? (
-                <Text style={styles.statsValue}>{exam.totalVacancies.toLocaleString('en-IN')}</Text>
-              ) : (
-                renderJsonLines(exam.totalVacancies, { fontSize: 13 })
+              <View style={styles.vacPillGrid}>
+                {(showAllVac ? vacancyEntries : vacancyEntries.slice(0, MAX_VAC_VISIBLE)).map(([key, val]) => (
+                  <View key={key} style={styles.vacPill}>
+                    <Text style={styles.vacPillLabel} numberOfLines={1}>{cleanLabel(key)}</Text>
+                    <Text style={styles.vacPillCount}>{val.toLocaleString('en-IN')}</Text>
+                  </View>
+                ))}
+              </View>
+              {vacancyEntries.length > MAX_VAC_VISIBLE && (
+                <TouchableOpacity onPress={() => setShowAllVac(v => !v)} style={styles.showMoreBtn}>
+                  <Text style={styles.showMoreText}>
+                    {showAllVac ? '▲ Show less' : `▼ +${vacancyEntries.length - MAX_VAC_VISIBLE} more posts`}
+                  </Text>
+                </TouchableOpacity>
               )}
             </View>
+          )}
 
-            {/* Fees Card */}
+          <View style={styles.statsGrid}>
+            {vacancyEntries.length <= 1 && (
+              <View style={[styles.factCard, { flex: 1 }]}>
+                <View style={styles.factHeader}>
+                  <Briefcase size={16} color="#7C3AED" />
+                  <Text style={styles.factTitle}>Vacancies</Text>
+                </View>
+                <Text style={styles.statsValue}>
+                  {totalVacancyCount > 0 ? totalVacancyCount.toLocaleString('en-IN') : 'TBA'}
+                </Text>
+                {vacancyEntries.length === 1 && (
+                  <Text style={styles.vacSingleLabel}>{cleanLabel(vacancyEntries[0][0])}</Text>
+                )}
+              </View>
+            )}
             <View style={[styles.factCard, { flex: 1 }]}>
               <View style={styles.factHeader}>
                 <IndianRupee size={16} color="#7C3AED" />
@@ -332,7 +382,6 @@ export default function ExamDetailScreen() {
             </View>
           </View>
 
-          {/* Eligibility Card - Full Width because of more text */}
           <View style={styles.factCard}>
             <View style={styles.factHeader}>
               <UserCheck size={16} color="#7C3AED" />
@@ -351,7 +400,7 @@ export default function ExamDetailScreen() {
               </View>
               {exam.qualificationCriteria?.rules && (
                 <View style={styles.rulesMini}>
-                   {renderJsonLines(exam.qualificationCriteria.rules, { fontSize: 12 })}
+                  {renderJsonLines(exam.qualificationCriteria.rules, { fontSize: 12 })}
                 </View>
               )}
             </View>
@@ -616,6 +665,34 @@ const styles = StyleSheet.create({
     borderLeftWidth: 1,
     borderLeftColor: 'rgba(255,255,255,0.05)',
   },
+
+  // Vacancy pills
+  totalVacBadge: {
+    marginLeft: 'auto',
+    backgroundColor: 'rgba(124,58,237,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(124,58,237,0.3)',
+  },
+  totalVacBadgeText: { color: '#7C3AED', fontSize: 11, fontWeight: '800' },
+  vacPillGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
+  vacPill: {
+    backgroundColor: '#27272a',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.07)',
+    minWidth: 100,
+    flex: 0,
+  },
+  vacPillLabel: { color: '#a1a1aa', fontSize: 11, fontWeight: '600', marginBottom: 2 },
+  vacPillCount: { color: '#FFF', fontSize: 16, fontWeight: '900' },
+  vacSingleLabel: { color: '#71717a', fontSize: 11, fontWeight: '600', marginTop: 4 },
+  showMoreBtn: { marginTop: 12, alignSelf: 'flex-start' },
+  showMoreText: { color: '#7C3AED', fontSize: 13, fontWeight: '700' },
 
   // Timeline
   section: { paddingHorizontal: 20, marginBottom: 40 },

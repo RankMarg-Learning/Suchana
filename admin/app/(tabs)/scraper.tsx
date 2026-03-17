@@ -8,9 +8,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { scraperService, ScrapeSource, ScrapeJob } from '@/services/api.service';
-import { format } from 'date-fns';
+
 
 type Tab = 'sources' | 'jobs';
+
+const fmtDate = (d: string | Date) => {
+  const dt = new Date(d);
+  return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })
+    + ', ' + dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false });
+};
 
 export default function ScraperScreen() {
   const [tab, setTab] = useState<Tab>('sources');
@@ -26,13 +32,17 @@ export default function ScraperScreen() {
     try {
       setLoading(true);
       const [sRes, jRes] = await Promise.all([
-        scraperService.listSources(),
-        scraperService.listJobs()
+        scraperService.listSources().catch(() => null),
+        scraperService.listJobs().catch(() => null),
       ]);
-      setSources(sRes.data || []);
-      setJobs(jRes.data || []);
+      const sourcesArr = Array.isArray(sRes) ? sRes
+        : Array.isArray(sRes?.data) ? sRes.data : [];
+      const jobsArr = Array.isArray(jRes) ? jRes
+        : Array.isArray(jRes?.data) ? jRes.data : [];
+      setSources(sourcesArr);
+      setJobs(jobsArr);
     } catch (e) {
-      console.error(e);
+      console.error('[fetchAll]', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -224,7 +234,7 @@ function SourceCard({ source, onEdit, onDelete, onTrigger }: { source: ScrapeSou
       {source.createdAt && (
         <View style={styles.lastJobRow}>
           <Ionicons name="time-outline" size={14} color="#4B5563" />
-          <Text style={styles.lastJobDate}>Created: {format(new Date(source.createdAt), 'MMM d, HH:mm')}</Text>
+          <Text style={styles.lastJobDate}>Created: {fmtDate(source.createdAt)}</Text>
         </View>
       )}
 
@@ -253,7 +263,7 @@ function JobCard({ job }: { job: ScrapeJob }) {
   return (
     <View style={styles.jobCard}>
       <View style={styles.jobRow}>
-        <Text style={styles.jobDate}>{format(new Date(job.startedAt), 'MMM d, HH:mm:ss')}</Text>
+        <Text style={styles.jobDate}>{fmtDate(job.startedAt)}</Text>
         <View style={[styles.badge, { backgroundColor: isSuccess ? '#D1FAE5' : isRunning ? '#FEF3C7' : '#FEE2E2' }]}>
           <Text style={[styles.badgeText, { color: isSuccess ? '#059669' : isRunning ? '#D97706' : '#DC2626' }]}>{job.status}</Text>
         </View>

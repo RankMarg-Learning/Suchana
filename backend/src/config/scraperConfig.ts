@@ -16,14 +16,14 @@ export const SITE_CONFIGS: Record<string, SiteConfig> = {
         listingLinkSelector: 'h2 a, .entry-title a, h3 a',
         listingLinkFilter: (href) => href.includes('freejobalert.com/') && !href.endsWith('freejobalert.com/'),
     },
-    'sarkariresult.com': {
+    'sarkariresult.com.cm': {
         noiseSelectors: [
             'header', 'footer', 'nav', '.widget', '.sidebar', 'script', 'style',
             'noscript', '#comments', '.social', '.ad', '.advertisement',
         ],
         contentSelectors: ['.content', '#content', 'main', 'article', 'table', '.post-content'],
         listingLinkSelector: 'table a, .content a, h2 a',
-        listingLinkFilter: (href) => href.includes('sarkariresult.com/') && href.length > 30,
+        listingLinkFilter: (href) => href.includes('sarkariresult.com.cm/') && href.length > 30,
     },
     'sarkarinaukri.com': {
         noiseSelectors: [

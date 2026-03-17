@@ -286,7 +286,7 @@ export class ScraperService {
             }
 
             for (const url of targets) {
-                const summary = await this.scrapePage(job.id, url, source.hintCategory ?? undefined);
+                const summary = await ScraperService.scrapePage(job.id, url, source.hintCategory ?? undefined);
                 results.push(summary);
                 if (summary.outcome === 'ERROR') errors.push(`${url}: ${summary.reason}`);
 
@@ -323,4 +323,4 @@ export class ScraperService {
 
 // ─── Legacy Exports for Backward Compatibility ───────────────
 
-export const runScrapeJob = ScraperService.runJob;
+export const runScrapeJob = ScraperService.runJob.bind(ScraperService);
