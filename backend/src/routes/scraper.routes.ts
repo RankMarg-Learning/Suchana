@@ -1,8 +1,3 @@
-// ============================================================
-// src/routes/scraper.routes.ts
-// Admin scraper + review pipeline routes
-// All routes require admin API key
-// ============================================================
 import { Router } from 'express';
 import { requireAdmin } from '../middleware/auth';
 import { validate } from '../middleware/validate';
@@ -19,7 +14,6 @@ import {
 
 const router = Router();
 
-// All scraper routes are admin-only
 router.use(requireAdmin);
 
 // ─── Stats dashboard ────────────────────────────────────────────

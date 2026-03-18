@@ -34,6 +34,16 @@ export const SITE_CONFIGS: Record<string, SiteConfig> = {
         listingLinkSelector: 'h2 a, h3 a, .post-title a, article a',
         listingLinkFilter: (href) => href.includes('sarkarinaukri.com/') && href.length > 30,
     },
+    'textbook.com': {
+        noiseSelectors: [
+            'header', 'footer', 'nav', '.widget', '.sidebar', '#sidebar',
+            '.advertisement', '.ad', '#ad', 'script', 'style', 'noscript',
+            '.comment', '#comments', '.social-share', '.related-posts',
+        ],
+        contentSelectors: ['article', '.entry-content', 'main', 'table', '.post-content'],
+        listingLinkSelector: 'h2 a, .entry-title a, h3 a',
+        listingLinkFilter: (href) => href.includes('textbook.com/') && !href.endsWith('textbook.com/'),
+    }
 };
 
 export function getSiteConfig(url: string): SiteConfig {
