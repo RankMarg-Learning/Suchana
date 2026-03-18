@@ -83,7 +83,7 @@ export default function SearchScreen() {
     setSelectedCats(p => p.includes(cat) ? p.filter(x => x !== cat) : [...p, cat]);
 
   const handleSave = async (examId: string) => {
-    if (!userId) return;
+    if (!userId) return router.push('/onboarding');
     await toggleSavedExam(userId, examId);
     await refreshUser();
   };
@@ -157,7 +157,7 @@ export default function SearchScreen() {
                 exam={item}
                 isSaved={user?.savedExamIds?.includes(item.id)}
                 onSaveToggle={() => handleSave(item.id)}
-                onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.id } })}
+                onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.slug } })}
             />
           </View>
         )}

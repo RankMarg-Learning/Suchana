@@ -6,7 +6,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useNavigation, Stack } from 'expo-router';
+import { useLocalSearchParams, useNavigation, Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Bookmark,
@@ -59,12 +59,14 @@ const STATUS_COLOR: Record<string, string> = {
 export default function ExamDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { user, userId, refreshUser } = useUser();
   const { showInterstitial, showRewarded } = useAds();
   const insets = useSafeAreaInsets();
   const [countdown, setCountdown] = useState('');
   const [isDescExpanded, setIsDescExpanded] = useState(false);
+  const [showAllVac, setShowAllVac] = useState(false);
 
   const handleExternalLink = async (url: string) => {
     await showInterstitial();
@@ -83,7 +85,7 @@ export default function ExamDetailScreen() {
 
 
   const saveMutation = useMutation({
-    mutationFn: () => toggleSavedExam(userId!, id),
+    mutationFn: () => toggleSavedExam(userId!, exam!.id),
     onSuccess: () => {
       refreshUser();
       queryClient.invalidateQueries({ queryKey: ['exam', id] });
@@ -106,10 +108,10 @@ export default function ExamDetailScreen() {
     return () => clearInterval(interval);
   }, [exam]);
 
-  const isSaved = user?.savedExamIds?.includes(id);
+  const isSaved = exam ? user?.savedExamIds?.includes(exam.id) : false;
 
   const handleSave = async () => {
-    if (!userId) return;
+    if (!userId) return router.push('/onboarding');
     // Show rewarded video ad before saving
     await showRewarded();
     saveMutation.mutate();
@@ -203,7 +205,6 @@ export default function ExamDetailScreen() {
     return 0;
   })();
 
-  const [showAllVac, setShowAllVac] = useState(false);
   const MAX_VAC_VISIBLE = 4;
 
   const renderJsonLines = (data: any, labelStyle?: any) => {

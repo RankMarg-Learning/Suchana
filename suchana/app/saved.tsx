@@ -79,7 +79,7 @@ export default function SavedExamsScreen() {
               exam={item}
               isSaved={true}
               onSaveToggle={() => saveMutation.mutate(item.id)}
-              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.id } })}
+              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.slug } })}
             />
           )}
           contentContainerStyle={styles.listContent}

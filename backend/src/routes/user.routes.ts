@@ -15,6 +15,9 @@ const router = Router();
 // POST /api/v1/users — register / upsert user (no OTP, phone = identity)
 router.post('/', validate(registerUserSchema), userController.registerUser);
 
+// GET /api/v1/users/phone/:phone — check if a user is already registered with this phone number
+router.get('/phone/:phone', userController.getUserByPhoneHandler);
+
 // GET /api/v1/users/:id — get full user profile
 router.get('/:id', validate(userIdParamSchema, 'params'), userController.getUser);
 

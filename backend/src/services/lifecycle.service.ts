@@ -16,16 +16,21 @@ const key = (id: string) => `timeline:${id}`;
 /**
  * Optimized Timeline Retrieval
  */
-export async function getExamTimeline(examId: string) {
-    const exam = await prisma.exam.findUnique({
-        where: { id: examId },
+export async function getExamTimeline(examIdOrSlug: string) {
+    const exam = await prisma.exam.findFirst({
+        where: {
+            OR: [
+                { id: examIdOrSlug },
+                { slug: examIdOrSlug }
+            ]
+        },
         select: { id: true, title: true, shortTitle: true, slug: true, status: true },
     });
-    if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam ${examId} not found`);
+    if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam ${examIdOrSlug} not found`);
 
-    return cacheService.getOrSet(key(examId), TTL, async () => {
+    return cacheService.getOrSet(key(exam.id), TTL, async () => {
         const events = await prisma.lifecycleEvent.findMany({
-            where: { examId },
+            where: { examId: exam.id },
             orderBy: { startsAt: 'asc' },
         });
         return { exam, events };

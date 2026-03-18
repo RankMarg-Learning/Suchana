@@ -94,10 +94,15 @@ export async function listExams(query: ListExamQuery) {
 }
 
 // ─── Get By ID ───────────────────────────────────────────────
-export async function getExamById(id: string) {
-    return cacheService.getOrSet(EXAM_DETAIL_CACHE_KEY(id), env.CACHE_TTL_EXAM_DETAIL, async () => {
-        const exam = await prisma.exam.findUnique({
-            where: { id },
+export async function getExamById(idOrSlug: string) {
+    return cacheService.getOrSet(EXAM_DETAIL_CACHE_KEY(idOrSlug), env.CACHE_TTL_EXAM_DETAIL, async () => {
+        const exam = await prisma.exam.findFirst({
+            where: {
+                OR: [
+                    { id: idOrSlug },
+                    { slug: idOrSlug }
+                ]
+            },
             include: {
                 lifecycleEvents: {
                     orderBy: { startsAt: 'asc' },
@@ -105,7 +110,7 @@ export async function getExamById(id: string) {
             },
         });
 
-        if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam with ID "${id}" not found`);
+        if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam with ID/Slug "${idOrSlug}" not found`);
         return exam;
     });
 }

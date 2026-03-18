@@ -81,7 +81,7 @@ export default function UpdatesScreen() {
     <TouchableOpacity
       key={exam.id}
       style={styles.regCard}
-      onPress={() => router.push({ pathname: '/exam/[id]', params: { id: exam.id } })}
+      onPress={() => router.push({ pathname: '/exam/[id]', params: { id: exam.slug } })}
     >
       <View style={styles.regBadge}>
         <Text style={styles.regBadgeText}>LIVE</Text>
@@ -128,8 +128,11 @@ export default function UpdatesScreen() {
             <ExamListRow
               exam={item}
               isSaved={user?.savedExamIds?.includes(item.id)}
-              onSaveToggle={() => saveMutation.mutate(item.id)}
-              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.id } })}
+              onSaveToggle={() => {
+                if (!userId) return router.push('/onboarding');
+                saveMutation.mutate(item.id);
+              }}
+              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.slug } })}
             />
           </View>
         )}

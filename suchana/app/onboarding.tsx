@@ -15,7 +15,7 @@ import {
   ChevronLeft,
   ChevronRight
 } from 'lucide-react-native';
-import { registerUser } from '@/services/userService';
+import { registerUser, checkUserByPhone } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
 import { CategoryChip } from '@/components/CategoryChip';
 import { ExamCategory, QualificationLevel } from '@/constants/enums';
@@ -117,6 +117,26 @@ export default function OnboardingScreen() {
   const canProceed = () => {
     if (step === 0) return name.trim().length > 0 && /^\d{10}$/.test(phone);
     return true;
+  };
+
+  const handleNext = async () => {
+    if (!canProceed()) return;
+    
+    if (step === 0) {
+      setLoading(true);
+      try {
+        const res = await checkUserByPhone(phone.trim());
+        if (res.isRegistered && res.data) {
+          setUser(res.data);
+          return router.replace('/(tabs)');
+        }
+      } catch (e) {
+        // proceed if check fails
+      } finally {
+        setLoading(false);
+      }
+    }
+    setStep(s => s + 1);
   };
 
   return (
@@ -335,12 +355,17 @@ export default function OnboardingScreen() {
         )}
         {step < STEPS.length - 1 ? (
           <TouchableOpacity
-            style={[styles.nextBtn, !canProceed() && styles.nextBtnDisabled]}
-            onPress={() => canProceed() && setStep(s => s + 1)}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.nextTxt}>Next</Text>
-              <ChevronRight size={20} color="#fff" style={{ marginLeft: 4 }} />
-            </View>
+            style={[styles.nextBtn, (!canProceed() || loading) && styles.nextBtnDisabled]}
+            onPress={handleNext}
+            disabled={!canProceed() || loading}>
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Text style={styles.nextTxt}>Next</Text>
+                <ChevronRight size={20} color="#fff" style={{ marginLeft: 4 }} />
+              </View>
+            )}
           </TouchableOpacity>
         ) : (
           <TouchableOpacity

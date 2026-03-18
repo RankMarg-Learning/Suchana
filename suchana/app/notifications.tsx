@@ -45,7 +45,7 @@ export default function NotificationsScreen() {
     return (
       <TouchableOpacity
         style={[styles.notificationCard, isImportant && styles.importantCard]}
-        onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.exam.id } })}
+        onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.exam.slug } })}
         activeOpacity={0.7}
       >
         <View style={styles.cardHeader}>

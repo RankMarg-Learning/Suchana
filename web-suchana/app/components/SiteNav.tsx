@@ -1,47 +1,64 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Layers, Bell } from "lucide-react";
+import { Bell, Layers, Search, User, Bookmark } from "lucide-react";
 
 export default function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
+    
+    if (typeof window !== "undefined") {
+      setUserId(localStorage.getItem("@suchana_userId"));
+    }
+    
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   return (
-    <nav
-      className="navbar"
-      style={scrolled ? { boxShadow: "0 4px 30px rgba(0,0,0,0.5)" } : {}}
-    >
-      <div className="container navbar-inner">
-        <a href="/" className="logo">
-          <div className="logo-icon">
-            <Layers size={18} color="#fff" />
-          </div>
-          <span className="logo-text">
-            Exam <span>Suchana</span>
-          </span>
-        </a>
-
-        <ul className="nav-links">
-          <li><a href="/#exams">Exams</a></li>
-          <li><a href="/#features">Features</a></li>
-          <li><a href="/#notify">Notifications</a></li>
-          <li><a href="/about">About</a></li>
-          <li><a href="/contact">Contact</a></li>
-        </ul>
-
-        <div className="nav-cta">
-          <a href="/#notify" className="btn btn-primary">
-            <Bell size={15} />
-            Get Notified
+    <>
+      <nav
+        className="navbar"
+        style={scrolled ? { boxShadow: "0 4px 30px rgba(0,0,0,0.5)" } : {}}
+      >
+        <div className="container navbar-inner">
+          <a href="/" className="logo">
+            <div className="logo-icon">
+              <Layers size={18} color="#fff" />
+            </div>
+            <span className="logo-text">
+              Exam <span>Suchana</span>
+            </span>
           </a>
+
+          <ul className="nav-links">
+            <li><a href="/#exams">Exams</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/contact">Contact</a></li>
+            <li><a href="/privacy">Privacy</a></li>
+          </ul>
+
+          <div className="nav-cta">
+            <a href="/#exams" className="btn btn-ghost nav-action-btn">
+              <Search size={14} /> <span>Search Exams</span>
+            </a>
+            {userId ? (
+              <a href="/saved" className="btn btn-primary nav-action-btn saved-nav-btn">
+                <Bookmark size={14} /> <span>My Saved</span>
+              </a>
+            ) : (
+              <a href="/onboarding" className="btn btn-primary nav-action-btn">
+                <Bell size={14} /> <span>Get Notified</span>
+              </a>
+            )}
+          </div>
         </div>
-      </div>
-    </nav>
+      </nav>
+      {/* Spacer to prevent layout overlap since nav is position: fixed */}
+      <div className="nav-spacer" style={{ height: "70px", flexShrink: 0, width: "100%" }} aria-hidden="true" />
+    </>
   );
 }
