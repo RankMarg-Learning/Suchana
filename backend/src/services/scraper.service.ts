@@ -62,7 +62,7 @@ class AIProvider {
 
         try {
             const completion = await openai.chat.completions.create({
-                model: '',
+                model: 'gp-4o-mini',
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0,
                 max_tokens: 2000,
