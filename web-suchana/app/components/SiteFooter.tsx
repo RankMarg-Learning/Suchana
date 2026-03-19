@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Layers } from "lucide-react";
+import Image from "next/image";
 
 export default function SiteFooter() {
   const [currentYear, setCurrentYear] = useState(2026);
@@ -15,8 +16,8 @@ export default function SiteFooter() {
         <div className="footer-grid">
           <div className="footer-brand">
             <a href="/" className="logo">
-              <div className="logo-icon">
-                <Layers size={18} color="#fff" />
+              <div className="">
+                <Image src={'/examsuchana-logoT.png'} height={40} width={40} alt="Exam Suchana" />
               </div>
               <span className="logo-text">
                 Exam <span>Suchana</span>

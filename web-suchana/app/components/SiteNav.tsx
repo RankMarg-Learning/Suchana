@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { Bell, Layers, Search, User, Bookmark } from "lucide-react";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
@@ -10,11 +12,11 @@ export default function SiteNav() {
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
-    
+
     if (typeof window !== "undefined") {
       setUserId(localStorage.getItem("@suchana_userId"));
     }
-    
+
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -26,8 +28,8 @@ export default function SiteNav() {
       >
         <div className="container navbar-inner">
           <a href="/" className="logo">
-            <div className="logo-icon">
-              <Layers size={18} color="#fff" />
+            <div className="">
+              <Image src={'/examsuchana-logoT.png'} height={40} width={40} alt="Exam Suchana" />
             </div>
             <span className="logo-text">
               Exam <span>Suchana</span>

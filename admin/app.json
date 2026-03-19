@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "admin",
-    "slug": "admin",
+    "name": "Suchana Admin",
+    "slug": "suchana-admin",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "scheme": "admin",
+    "icon": "./assets/app-icon.png",
+    "scheme": "suchana-admin",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
@@ -13,10 +13,8 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#060608",
+        "foregroundImage": "./assets/app-icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
@@ -30,12 +28,12 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-icon.png",
+          "image": "./assets/examsuchana-logoT.png",
           "imageWidth": 200,
           "resizeMode": "contain",
-          "backgroundColor": "#ffffff",
+          "backgroundColor": "#060608",
           "dark": {
-            "backgroundColor": "#000000"
+            "backgroundColor": "#060608"
           }
         }
       ],
