@@ -11,12 +11,14 @@ export const createExamSchema = z.object({
     conductingBody: z.string().min(2).max(100),
     minAge: z.number().int().positive().optional().nullable(),
     maxAge: z.number().int().positive().optional().nullable(),
-    qualificationCriteria: z.any().optional().nullable(),
-    totalVacancies: z.any().optional().nullable(),
-    applicationFee: z.any().optional().nullable(),
+    qualificationCriteria: z.string().optional().nullable(),
+    totalVacancies: z.string().optional().nullable(),
+    applicationFee: z.string().optional().nullable(),
+    salary: z.string().optional().nullable(),
+    additionalDetails: z.string().optional().nullable(),
     officialWebsite: z.string().url().or(z.literal('')).optional().nullable(),
     notificationUrl: z.string().url().or(z.literal('')).optional().nullable(),
-    status: z.nativeEnum(ExamStatus).default(ExamStatus.UPCOMING),
+    status: z.nativeEnum(ExamStatus).default(ExamStatus.NOTIFICATION),
     isPublished: z.boolean().default(false),
 });
 

@@ -24,9 +24,11 @@ export interface Exam {
     conductingBody: string;
     minAge?: number;
     maxAge?: number;
-    totalVacancies?: number;
-    qualificationCriteria?: any;
-    applicationFee?: any;
+    totalVacancies?: string;
+    qualificationCriteria?: string;
+    applicationFee?: string;
+    salary?: string;
+    additionalDetails?: string;
     officialWebsite?: string;
     notificationUrl?: string;
     isPublished: boolean;
@@ -109,8 +111,11 @@ export interface StagedExam {
     state?: string;
     minAge?: number;
     maxAge?: number;
-    totalVacancies?: number;
-    applicationFee?: any;
+    totalVacancies?: string;
+    applicationFee?: string;
+    qualificationCriteria?: string;
+    salary?: string;
+    additionalDetails?: string;
     officialWebsite?: string;
     notificationUrl?: string;
     aiConfidence?: number;
@@ -271,6 +276,10 @@ export const scraperService = {
     },
     deleteStagedEvent: async (stagedExamId: string, eventId: string): Promise<any> => {
         const response = await apiClient.delete(`/scraper/staged/${stagedExamId}/events/${eventId}`);
+        return response.data;
+    },
+    addStagedEvent: async (stagedExamId: string, data: any): Promise<any> => {
+        const response = await apiClient.post(`/scraper/staged/${stagedExamId}/events`, data);
         return response.data;
     },
 };

@@ -21,8 +21,11 @@ export interface Exam {
   category: string;
   examLevel: string;
   state?: string;
-  totalVacancies?: number | Record<string, number>;
-  applicationFee?: Record<string, number>;
+  totalVacancies?: string;
+  applicationFee?: string;
+  qualificationCriteria?: string;
+  salary?: string;
+  additionalDetails?: string;
   minAge?: number;
   maxAge?: number;
   officialWebsite?: string;
@@ -32,7 +35,7 @@ export interface Exam {
 }
 
 export const STATUS_LABELS: Record<string, string> = {
-  UPCOMING: "Upcoming",
+  NOTIFICATION: "Notification",
   REGISTRATION_OPEN: "Registration Open",
   REGISTRATION_CLOSED: "Registration Closed",
   ADMIT_CARD_OUT: "Admit Card Out",
@@ -68,7 +71,7 @@ export const CATEGORIES = [
 export const STATUSES = [
   { value: "ALL", label: "All Status" },
   { value: "REGISTRATION_OPEN", label: "Registration Open" },
-  { value: "UPCOMING", label: "Upcoming" },
+  { value: "NOTIFICATION", label: "Notification" },
   { value: "ADMIT_CARD_OUT", label: "Admit Card Out" },
   { value: "EXAM_ONGOING", label: "Ongoing" },
   { value: "RESULT_DECLARED", label: "Result Declared" },
@@ -83,11 +86,9 @@ export function formatDate(dateStr?: string): string {
   return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
 
-export function getTotalVacancies(v?: number | Record<string, number>): string {
+export function getTotalVacancies(v?: string): string {
   if (!v) return "TBA";
-  if (typeof v === "number") return v.toLocaleString("en-IN");
-  const total = Object.values(v).reduce((a, b) => a + (Number(b) || 0), 0);
-  return total > 0 ? total.toLocaleString("en-IN") : "TBA";
+  return v;
 }
 
 export function cleanLabel(s: string): string {

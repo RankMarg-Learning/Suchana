@@ -253,6 +253,10 @@ export default function StagedDetailScreen() {
   const [category, setCategory] = useState('');
   const [examLevel, setExamLevel] = useState('');
   const [totalVacancies, setTotalVacancies] = useState('');
+  const [qualificationCriteria, setQualificationCriteria] = useState('');
+  const [applicationFee, setApplicationFee] = useState('');
+  const [salary, setSalary] = useState('');
+  const [additionalDetails, setAdditionalDetails] = useState('');
   const [officialWebsite, setOfficialWebsite] = useState('');
   const [notificationUrl, setNotificationUrl] = useState('');
   const [description, setDescription] = useState('');
@@ -276,7 +280,11 @@ export default function StagedDetailScreen() {
       setConductingBody(e.conductingBody ?? '');
       setCategory(e.category ?? '');
       setExamLevel(e.examLevel ?? '');
-      setTotalVacancies(e.totalVacancies?.toString() ?? '');
+      setTotalVacancies(e.totalVacancies ?? '');
+      setQualificationCriteria(e.qualificationCriteria ?? '');
+      setApplicationFee(e.applicationFee ?? '');
+      setSalary(e.salary ?? '');
+      setAdditionalDetails(e.additionalDetails ?? '');
       setOfficialWebsite(e.officialWebsite ?? '');
       setNotificationUrl(e.notificationUrl ?? '');
       setDescription(e.description ?? '');
@@ -289,6 +297,17 @@ export default function StagedDetailScreen() {
   }, [id]);
 
   useEffect(() => { fetchExam(); }, [fetchExam]);
+
+  const handleAddEvent = () => {
+    router.push({
+      pathname: '/add-event',
+      params: { 
+        examId: id, 
+        examTitle: exam?.shortTitle || exam?.title,
+        isStaged: 'true'
+      }
+    });
+  };
 
   const handleEventUpdate = async (eventId: string, data: any) => {
     try {
@@ -317,8 +336,11 @@ export default function StagedDetailScreen() {
       if (conductingBody !== (exam?.conductingBody ?? '')) corrections.conductingBody = conductingBody;
       if (category !== (exam?.category ?? '')) corrections.category = category;
       if (examLevel !== (exam?.examLevel ?? '')) corrections.examLevel = examLevel;
-      const vac = parseInt(totalVacancies, 10);
-      if (!isNaN(vac) && vac !== exam?.totalVacancies) corrections.totalVacancies = vac;
+      if (totalVacancies !== (exam?.totalVacancies ?? '')) corrections.totalVacancies = totalVacancies;
+      if (qualificationCriteria !== (exam?.qualificationCriteria ?? '')) corrections.qualificationCriteria = qualificationCriteria;
+      if (applicationFee !== (exam?.applicationFee ?? '')) corrections.applicationFee = applicationFee;
+      if (salary !== (exam?.salary ?? '')) corrections.salary = salary;
+      if (additionalDetails !== (exam?.additionalDetails ?? '')) corrections.additionalDetails = additionalDetails;
       if (officialWebsite !== (exam?.officialWebsite ?? '')) corrections.officialWebsite = officialWebsite;
       if (notificationUrl !== (exam?.notificationUrl ?? '')) corrections.notificationUrl = notificationUrl;
       if (description !== (exam?.description ?? '')) corrections.description = description;
@@ -434,7 +456,11 @@ export default function StagedDetailScreen() {
               </View>
               <View style={styles.editIconBadge}><Ionicons name="chevron-down" size={14} color="#6366F1" /></View>
             </TouchableOpacity>
-            <Field label="Vacancies" value={totalVacancies} onEdit={() => setEditField({ key: 'totalVacancies', title: 'Total Vacancies', value: totalVacancies, numeric: true })} />
+            <Field label="Vacancies" value={totalVacancies} multiline onEdit={() => setEditField({ key: 'totalVacancies', title: 'Total Vacancies', value: totalVacancies, multiline: true })} />
+            <Field label="Qualification Details" value={qualificationCriteria} multiline onEdit={() => setEditField({ key: 'qualificationCriteria', title: 'Qualification Details', value: qualificationCriteria, multiline: true })} />
+            <Field label="Salary" value={salary} multiline onEdit={() => setEditField({ key: 'salary', title: 'Salary', value: salary, multiline: true })} />
+            <Field label="Application Fee" value={applicationFee} multiline onEdit={() => setEditField({ key: 'applicationFee', title: 'Application Fee', value: applicationFee, multiline: true })} />
+            <Field label="Additional Details" value={additionalDetails} multiline onEdit={() => setEditField({ key: 'additionalDetails', title: 'Additional Details', value: additionalDetails, multiline: true })} />
             <Field label="Description" value={description} multiline isLast onEdit={() => setEditField({ key: 'description', title: 'Description', value: description, multiline: true })} />
           </Section>
 
@@ -447,8 +473,13 @@ export default function StagedDetailScreen() {
           {/* Timeline */}
           <View style={styles.section}>
             <View style={styles.sectionHeaderInner}>
-              <Ionicons name="time-outline" size={20} color="#4F46E5" />
-              <Text style={styles.sectionTitle}>Extracted Lifecycle ({events.length})</Text>
+              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Ionicons name="time-outline" size={20} color="#4F46E5" />
+                <Text style={styles.sectionTitle}>Extracted Lifecycle ({events.length})</Text>
+              </View>
+              <TouchableOpacity style={styles.miniAddBtn} onPress={handleAddEvent}>
+                <Ionicons name="add" size={18} color="#4F46E5" />
+              </TouchableOpacity>
             </View>
             {events.length === 0 ? (
               <View style={styles.emptyEvents}>
@@ -550,6 +581,10 @@ export default function StagedDetailScreen() {
             if (k === 'title') setTitle(v);
             else if (k === 'conductingBody') setConductingBody(v);
             else if (k === 'totalVacancies') setTotalVacancies(v);
+            else if (k === 'qualificationCriteria') setQualificationCriteria(v);
+            else if (k === 'applicationFee') setApplicationFee(v);
+            else if (k === 'salary') setSalary(v);
+            else if (k === 'additionalDetails') setAdditionalDetails(v);
             else if (k === 'officialWebsite') setOfficialWebsite(v);
             else if (k === 'notificationUrl') setNotificationUrl(v);
             else if (k === 'description') setDescription(v);
@@ -663,4 +698,5 @@ const styles = StyleSheet.create({
   promoteAlert: { flexDirection: 'row', gap: 12, backgroundColor: '#ECFDF5', padding: 16, borderRadius: 16, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#10B981' },
   promoteAlertText: { flex: 1, fontSize: 13, color: '#065F46', fontWeight: '600', lineHeight: 18 },
   noteInputLabel: { fontSize: 14, fontWeight: '800', color: '#1F2937', marginBottom: 10 },
+  miniAddBtn: { padding: 4, backgroundColor: '#F5F3FF', borderRadius: 8 },
 });

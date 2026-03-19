@@ -3,7 +3,7 @@ import { cacheService } from '../utils/cache';
 import { AppError } from '../middleware/errorHandler';
 import { env } from '../config/env';
 import { notificationQueue } from '../queues/notification.queue';
-import { LifecycleEventType } from '../constants/enums';
+import { LifecycleEventType, getStatusFromStage } from '../constants/enums';
 import type {
     CreateLifecycleEventDto,
     UpdateLifecycleEventDto,
@@ -72,6 +72,16 @@ export async function addLifecycleEvent(examId: string, dto: CreateLifecycleEven
         });
     }
 
+    // Auto-update Exam status if stage matches
+    const newStatus = getStatusFromStage(event.stage, event.eventType);
+    if (newStatus && exam.status !== newStatus) {
+        await prisma.exam.update({
+            where: { id: examId },
+            data: { status: newStatus },
+        });
+        logger.info(`Exam ${examId} status auto-updated to ${newStatus} due to event ${event.id}`);
+    }
+
     logger.info(`Event ${event.id} registered for exam ${examId}`);
     return event;
 }
@@ -104,6 +114,16 @@ export async function updateLifecycleEvent(examId: string, eventId: string, dto:
                 startsAt: updated.startsAt,
             });
         }
+    }
+
+    // Auto-update Exam status if stage/type changed
+    const newStatus = getStatusFromStage(updated.stage, updated.eventType);
+    if (newStatus) {
+        await prisma.exam.update({
+            where: { id: examId },
+            data: { status: newStatus },
+        });
+        logger.info(`Exam ${examId} status auto-updated to ${newStatus} due to updated event ${eventId}`);
     }
 
     return updated;

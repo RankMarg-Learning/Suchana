@@ -25,7 +25,7 @@ const { width } = Dimensions.get('window');
 const getStatusStyle = (status: string) => {
   switch (status) {
     case 'REGISTRATION_OPEN': return { bg: '#ECFDF5', text: '#10B981', icon: 'flash' as any };
-    case 'UPCOMING': return { bg: '#EFF6FF', text: '#3B82F6', icon: 'calendar' as any };
+    case 'NOTIFICATION': return { bg: '#EFF6FF', text: '#3B82F6', icon: 'calendar' as any };
     case 'RESULT_DECLARED': return { bg: '#FAF5FF', text: '#A855F7', icon: 'trophy' as any };
     case 'ADMIT_CARD_OUT': return { bg: '#FFF7ED', text: '#F97316', icon: 'card' as any };
     default: return { bg: '#F9FAFB', text: '#6B7280', icon: 'list' as any };
@@ -47,49 +47,52 @@ const ExamListRow = ({
   const eventCount = exam._count?.lifecycleEvents || 0;
 
   return (
-    <TouchableOpacity style={styles.listItem} onPress={onPress} activeOpacity={0.7}>
-      <View style={[styles.listIconBox, { backgroundColor: ss.bg }]}>
-        <Ionicons name={ss.icon} size={20} color={ss.text} />
-      </View>
-
-      <View style={styles.listMain}>
-        <View style={styles.listHeaderRow}>
-          <Text style={styles.listTitle} numberOfLines={1}>{exam.shortTitle || exam.title}</Text>
-          {!exam.isPublished && (
-            <View style={styles.draftPill}><Text style={styles.draftPillText}>Draft</Text></View>
-          )}
-        </View>
-
-        <Text style={styles.listSub} numberOfLines={1}>
-          {exam.conductingBody} • {exam.category.replace(/_/g, ' ')}
-        </Text>
-
-        <View style={styles.listMetaRow}>
-          <View style={styles.miniChip}>
-            <Ionicons name="people-outline" size={12} color="#9CA3AF" />
-            <Text style={styles.miniChipText}>
-              {typeof exam.totalVacancies === 'object' && exam.totalVacancies !== null
-                ? (exam.totalVacancies as any).count || Object.values(exam.totalVacancies)[0] || '0'
-                : exam.totalVacancies || '0'}
+    <TouchableOpacity style={styles.cardItem} onPress={onPress} activeOpacity={0.8}>
+      <View style={styles.cardHeader}>
+        <View style={styles.cardHeaderLeft}>
+          <View style={[styles.cardIconBox, { backgroundColor: ss.bg }]}>
+            <Ionicons name={ss.icon} size={20} color={ss.text} />
+          </View>
+          <View>
+            <View style={styles.statusBadgeRow}>
+              <Text style={[styles.cardStatusText, { color: ss.text }]}>
+                {exam.status.replace(/_/g, ' ')}
+              </Text>
+              {!exam.isPublished && (
+                <View style={styles.draftPill}><Text style={styles.draftPillText}>DRAFT</Text></View>
+              )}
+            </View>
+            <Text style={styles.cardSub} numberOfLines={1}>
+              {exam.conductingBody} • {exam.category.replace(/_/g, ' ')}
             </Text>
           </View>
-          <View style={styles.miniChip}>
-            <Ionicons name="time-outline" size={12} color="#9CA3AF" />
-            <Text style={styles.miniChipText}>{eventCount} events</Text>
-          </View>
-          <Text style={[styles.statusMini, { color: ss.text }]}>
-            {exam.status.replace(/_/g, ' ')}
-          </Text>
+        </View>
+        <View style={styles.listActions}>
+          <TouchableOpacity style={styles.miniAction} onPress={(e) => { e.stopPropagation(); onEdit(); }}>
+            <Ionicons name="create" size={16} color="#6366F1" />
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.miniAction} onPress={(e) => { e.stopPropagation(); onDelete(); }}>
+            <Ionicons name="trash" size={16} color="#EF4444" />
+          </TouchableOpacity>
         </View>
       </View>
 
-      <View style={styles.listActions}>
-        <TouchableOpacity style={styles.miniAction} onPress={(e) => { e.stopPropagation(); onEdit(); }}>
-          <Ionicons name="create-outline" size={18} color="#6366F1" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.miniAction} onPress={(e) => { e.stopPropagation(); onDelete(); }}>
-          <Ionicons name="trash-outline" size={18} color="#EF4444" />
-        </TouchableOpacity>
+      <Text style={styles.cardTitle} numberOfLines={2}>
+        {exam.shortTitle || exam.title}
+      </Text>
+
+      <View style={styles.cardFooter}>
+        <View style={styles.miniChip}>
+          <Ionicons name="people" size={14} color="#6B7280" />
+          <Text style={styles.miniChipText} numberOfLines={1} ellipsizeMode="tail">
+            {exam.totalVacancies ? (exam.totalVacancies.length > 20 ? exam.totalVacancies.substring(0, 20) + '...' : exam.totalVacancies) : '0'} Vacancies
+          </Text>
+        </View>
+        <View style={styles.cardDivider} />
+        <View style={styles.miniChip}>
+          <Ionicons name="calendar-outline" size={14} color="#6B7280" />
+          <Text style={styles.miniChipText}>{eventCount} Events</Text>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -507,89 +510,107 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     fontSize: 15,
   },
-  // List Item Styles
-  listItem: {
+  // Card Styles
+  cardItem: {
+    backgroundColor: '#FFF',
+    borderRadius: 24,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  cardHeaderLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FFF',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    gap: 12,
+    flex: 1,
   },
-  listIconBox: {
-    width: 48,
-    height: 48,
+  cardIconBox: {
+    width: 44,
+    height: 44,
     borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
   },
-  listMain: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  listHeaderRow: {
+  statusBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginBottom: 2,
   },
-  listTitle: {
-    fontSize: 16,
+  cardStatusText: {
+    fontSize: 11,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  cardTitle: {
+    fontSize: 18,
     fontWeight: '800',
     color: '#111827',
-    maxWidth: '80%',
+    marginBottom: 16,
+    lineHeight: 24,
   },
-  listSub: {
-    fontSize: 13,
+  cardSub: {
+    fontSize: 12,
     color: '#6B7280',
-    fontWeight: '500',
-    marginBottom: 6,
+    fontWeight: '600',
   },
-  listMetaRow: {
+  cardFooter: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 16,
     gap: 12,
+  },
+  cardDivider: {
+    width: 1,
+    height: 16,
+    backgroundColor: '#E5E7EB',
   },
   miniChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
+    flexShrink: 1,
   },
   miniChipText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '700',
-    color: '#9CA3AF',
-  },
-  statusMini: {
-    fontSize: 10,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    marginLeft: 'auto',
+    color: '#4B5563',
   },
   draftPill: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: '#FEE2E2',
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
   },
   draftPillText: {
     fontSize: 9,
-    fontWeight: '800',
-    color: '#9CA3AF',
-    textTransform: 'uppercase',
+    fontWeight: '900',
+    color: '#991B1B',
   },
   listActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginLeft: 12,
+    gap: 8,
   },
   miniAction: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: 10,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
   },

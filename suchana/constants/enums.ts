@@ -37,13 +37,14 @@ export const EXAM_LEVELS = Object.values(ExamLevel);
 
 
 export const ExamStatus = {
-    UPCOMING: 'UPCOMING',
+    NOTIFICATION: 'NOTIFICATION',
     REGISTRATION_OPEN: 'REGISTRATION_OPEN',
     REGISTRATION_CLOSED: 'REGISTRATION_CLOSED',
     ADMIT_CARD_OUT: 'ADMIT_CARD_OUT',
     EXAM_ONGOING: 'EXAM_ONGOING',
     RESULT_DECLARED: 'RESULT_DECLARED',
     ARCHIVED: 'ARCHIVED',
+    ACTIVE: 'ACTIVE',
 } as const;
 export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
 export const EXAM_STATUSES = Object.values(ExamStatus);

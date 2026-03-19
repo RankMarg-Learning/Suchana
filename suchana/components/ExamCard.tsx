@@ -32,7 +32,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  UPCOMING: { label: 'Upcoming', color: '#FCD34D', bg: '#4B3800' },
+  NOTIFICATION: { label: 'Notification', color: '#818CF8', bg: '#1E1B4B' },
   ACTIVE: { label: 'Active', color: '#6EE7B7', bg: '#064E3B' },
   COMPLETED: { label: 'Closed', color: '#9CA3AF', bg: '#1F2937' },
   CANCELLED: { label: 'Cancelled', color: '#FCA5A5', bg: '#450A0A' },
@@ -63,7 +63,7 @@ export function ExamCard({ exam, isSaved, onSaveToggle, onPress }: Props) {
     }
   };
   const catColor = CATEGORY_COLORS[exam.category] ?? '#6B7280';
-  const status = STATUS_CONFIG[exam.status] ?? STATUS_CONFIG.UPCOMING;
+  const status = STATUS_CONFIG[exam.status] ?? STATUS_CONFIG.NOTIFICATION;
   const isNew = isNewExam(exam);
 
   const nextReg = exam.lifecycleEvents?.find(e => e.stage === 'REGISTRATION');
@@ -111,7 +111,7 @@ export function ExamCard({ exam, isSaved, onSaveToggle, onPress }: Props) {
             <View style={styles.statItem}>
               <Target size={14} color="#7C3AED" />
               <Text style={styles.statText}>
-                <Text style={styles.statHighlight}>{typeof exam.totalVacancies === 'number' ? exam.totalVacancies.toLocaleString('en-IN') : 'Check'}</Text> Vacancies
+                <Text style={styles.statHighlight}>{exam.totalVacancies ? (exam.totalVacancies.length > 8 ? exam.totalVacancies.substring(0, 8) + '...' : exam.totalVacancies) : 'Check'}</Text> Vacancies
               </Text>
             </View>
           )}

@@ -94,12 +94,7 @@ function ExamListRow({ exam, now }: { exam: Exam; now: number }) {
             <span>Exam: {formatDate(examEvent.startsAt)}</span>
           </div>
         )}
-        {getTotalVacancies(exam.totalVacancies) !== "TBA" && (
-          <div className="date-chip vacancy">
-            <Briefcase size={11} />
-            <span>{getTotalVacancies(exam.totalVacancies)} vacancies</span>
-          </div>
-        )}
+
       </div>
 
       {/* Right: Status + arrow */}
@@ -228,8 +223,6 @@ export default function HomePage() {
         <LeftSidebar
           categoryFilter={categoryFilter}
           setCategoryFilter={(v) => { setCategoryFilter(v); setPage(1); }}
-          statusFilter={statusFilter}
-          setStatusFilter={(v) => { setStatusFilter(v); setPage(1); }}
         />
 
         {/* ─── Center Feed ─── */}
@@ -245,7 +238,7 @@ export default function HomePage() {
                 <h1 className="feed-title">
                   {categoryFilter !== "ALL"
                     ? `${CATEGORIES.find((c) => c.value === categoryFilter)?.label ?? ""} Exam Notifications`
-                    : "Government Exam Notifications 2025"}
+                    : "Sarkari Naukri Notifications "}
                 </h1>
               </div>
               <div className="feed-count">
@@ -312,7 +305,7 @@ export default function HomePage() {
           )}
         </main>
 
-        <RightSidebar />
+        <RightSidebar statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
       </div>
 
       {/* Leaderboard Ad (Bottom) */}

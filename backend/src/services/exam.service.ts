@@ -140,9 +140,11 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
     const exam = await prisma.exam.create({
         data: {
             ...dto,
-            qualificationCriteria: dto.qualificationCriteria as Prisma.InputJsonValue,
-            applicationFee: dto.applicationFee as Prisma.InputJsonValue,
-            totalVacancies: dto.totalVacancies as Prisma.InputJsonValue,
+            qualificationCriteria: dto.qualificationCriteria,
+            applicationFee: dto.applicationFee,
+            totalVacancies: dto.totalVacancies,
+            salary: dto.salary,
+            additionalDetails: dto.additionalDetails,
             slug,
             createdBy: adminId,
             publishedAt: dto.isPublished ? new Date() : null,
@@ -163,19 +165,20 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
 
     const data: Prisma.ExamUpdateInput = {
         ...dto,
-        qualificationCriteria: dto.qualificationCriteria as Prisma.InputJsonValue,
-        applicationFee: dto.applicationFee as Prisma.InputJsonValue,
-        totalVacancies: dto.totalVacancies as Prisma.InputJsonValue,
+        qualificationCriteria: dto.qualificationCriteria,
+        applicationFee: dto.applicationFee,
+        totalVacancies: dto.totalVacancies,
+        salary: dto.salary,
+        additionalDetails: dto.additionalDetails,
         // Auto-set publishedAt when first publish
         ...(dto.isPublished && !existing.isPublished && { publishedAt: new Date() }),
     };
 
     const updated = await prisma.exam.update({ where: { id }, data });
 
-
     await Promise.all([
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),
-        cacheService.del(`exams: slug:${existing.slug} `),
+        cacheService.del(`exams:slug:${existing.slug}`),
         cacheService.delPattern('exams:list:*'),
     ]);
 
@@ -189,13 +192,12 @@ export async function deleteExam(id: string, adminId: string) {
 
     await prisma.exam.delete({ where: { id } });
 
-
     await Promise.all([
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),
-        cacheService.del(`exams: slug:${existing.slug} `),
+        cacheService.del(`exams:slug:${existing.slug}`),
         cacheService.delPattern('exams:list:*'),
     ]);
-    logger.info(`Exam deleted: ${id} by admin ${adminId} `);
+    logger.info(`Exam deleted: ${id} by admin ${adminId}`);
 }
 
 // ─── Get Saved Exams ─────────────────────────────────────────

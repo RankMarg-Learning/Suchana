@@ -12,6 +12,7 @@ import type {
     ListStagedExamQuery,
     ReviewDecisionDto,
     UpdateStagedEventDto,
+    CreateStagedEventDto,
 } from '../schemas/scraper.schema';
 
 
@@ -190,6 +191,18 @@ export async function updateStagedEvent(req: Request, res: Response, next: NextF
             req.body as UpdateStagedEventDto,
         );
         sendSuccess(res, updated);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function addStagedEvent(req: Request, res: Response, next: NextFunction) {
+    try {
+        const event = await reviewService.addStagedEvent(
+            req.params.stagedExamId!,
+            req.body as CreateStagedEventDto,
+        );
+        sendSuccess(res, event, 201);
     } catch (err) {
         next(err);
     }

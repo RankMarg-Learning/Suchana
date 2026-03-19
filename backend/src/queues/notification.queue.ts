@@ -61,7 +61,7 @@ class NotificationQueueService {
             { ...data, type: NotificationJobType.LIFECYCLE_EVENT },
             {
                 delay,
-                jobId: `lifecycle:${lifecycleEventId}`,
+                jobId: `lifecycle-${lifecycleEventId}`,
             }
         );
 
@@ -76,7 +76,7 @@ class NotificationQueueService {
         await notificationBullQueue.add(
             `new-exam:${examId}`,
             { type: NotificationJobType.NEW_EXAM, examId },
-            { jobId: `new-exam:${examId}` }
+            { jobId: `new-exam-${examId}` }
         );
         logger.info(`Notification queued for NEW EXAM ${examId}`);
     }
@@ -88,13 +88,13 @@ class NotificationQueueService {
         targetAudience: 'BOOKMARKED' | 'INTERESTED' = 'BOOKMARKED'
     ): Promise<void> {
         await notificationBullQueue.add(
-            `manual:${examId}:${Date.now()}`,
+            `manual-${examId}-${Date.now()}`,
             { type: NotificationJobType.MANUAL, examId, title, body, targetAudience }
         );
     }
 
     async removeJob(lifecycleEventId: string): Promise<void> {
-        const job = await notificationBullQueue.getJob(`lifecycle:${lifecycleEventId}`);
+        const job = await notificationBullQueue.getJob(`lifecycle-${lifecycleEventId}`);
         if (job) {
             await job.remove();
             logger.debug(`Notification job removed: ${lifecycleEventId}`);

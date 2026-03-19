@@ -8,11 +8,11 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { examService } from '@/services/api.service';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { 
-  ExamCategory, EXAM_CATEGORIES, 
-  ExamLevel, EXAM_LEVELS, 
-  ExamStatus, EXAM_STATUSES, 
-  QualificationLevel 
+import {
+  ExamCategory, EXAM_CATEGORIES,
+  ExamLevel, EXAM_LEVELS,
+  ExamStatus, EXAM_STATUSES,
+  QualificationLevel
 } from '@/constants/enums';
 
 const { width } = Dimensions.get('window');
@@ -30,14 +30,15 @@ type ExamFormValues = {
   minAge: string;
   maxAge: string;
   qualificationLevel: QualificationLevel;
-  qualificationRules: KeyValueItem[];
+  qualificationCriteria: string;
   totalVacancies: string;
-  totalVacanciesBreakdown: KeyValueItem[];
+  salary: string;
   officialWebsite: string;
   notificationUrl: string;
   isPublished: boolean;
   status: ExamStatus;
-  applicationFee: KeyValueItem[];
+  additionalDetails: string;
+  applicationFee: string;
 };
 
 const QUALIFICATIONS = [
@@ -112,7 +113,7 @@ export default function CreateExamScreen() {
     defaultValues: {
       category: ExamCategory.OTHER,
       examLevel: ExamLevel.NATIONAL,
-      status: ExamStatus.UPCOMING,
+      status: ExamStatus.NOTIFICATION,
       state: '',
       isPublished: true,
       title: '',
@@ -122,15 +123,13 @@ export default function CreateExamScreen() {
       minAge: '',
       maxAge: '',
       qualificationLevel: QualificationLevel.GRADUATE,
-      qualificationRules: [],
+      qualificationCriteria: '',
       totalVacancies: '',
-      totalVacanciesBreakdown: [],
+      salary: '',
       officialWebsite: '',
       notificationUrl: '',
-      applicationFee: [
-        { key: 'General', value: '100' },
-        { key: 'SC/ST', value: '0' }
-      ],
+      applicationFee: '',
+      additionalDetails: '',
     }
   });
 
@@ -146,26 +145,30 @@ export default function CreateExamScreen() {
       const response = await examService.getExamById(id as string);
       const data = response.data || response;
 
-      const transformToKV = (obj: any): KeyValueItem[] => {
-        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return [];
-        return Object.entries(obj).map(([key, value]) => ({ key: key.toString(), value: String(value) }));
+      // Helper to handle legacy data formats (objects/numbers) that are now strings
+      const safeString = (v: any) => {
+        if (!v) return '';
+        if (typeof v === 'string') return v;
+        if (typeof v === 'object') return JSON.stringify(v);
+        return String(v);
       };
 
       reset({
         ...data,
         examLevel: data.examLevel || ExamLevel.NATIONAL,
         category: data.category || ExamCategory.OTHER,
-        status: data.status || ExamStatus.UPCOMING,
+        status: data.status || ExamStatus.NOTIFICATION,
         state: data.state || '',
         minAge: data.minAge?.toString() || '',
         maxAge: data.maxAge?.toString() || '',
-        totalVacancies: typeof data.totalVacancies === 'number' ? data.totalVacancies.toString() : '',
-        totalVacanciesBreakdown: (data.totalVacancies && typeof data.totalVacancies === 'object') ? transformToKV(data.totalVacancies) : [],
+        totalVacancies: safeString(data.totalVacancies),
+        salary: safeString(data.salary),
+        additionalDetails: safeString(data.additionalDetails),
         officialWebsite: data.officialWebsite || '',
         notificationUrl: data.notificationUrl || '',
-        qualificationLevel: data.qualificationCriteria?.level || QualificationLevel.GRADUATE,
-        qualificationRules: transformToKV(data.qualificationCriteria?.rules || {}),
-        applicationFee: transformToKV(data.applicationFee || {}),
+        qualificationLevel: data.qualificationLevel || QualificationLevel.GRADUATE,
+        qualificationCriteria: safeString(data.qualificationCriteria),
+        applicationFee: safeString(data.applicationFee),
       });
     } catch (err) {
       Alert.alert('Error', 'Failed to fetch exam details');
@@ -177,16 +180,6 @@ export default function CreateExamScreen() {
   const onSubmit = async (data: ExamFormValues) => {
     try {
       setLoading(true);
-      const transformFromKV = (items: KeyValueItem[]) => {
-        if (!items || items.length === 0) return null;
-        return items.reduce((acc, item) => {
-          if (item.key.trim()) {
-            acc[item.key.trim()] = isNaN(Number(item.value)) ? item.value.trim() : Number(item.value);
-          }
-          return acc;
-        }, {} as Record<string, any>);
-      };
-
       const payload = {
         title: data.title?.trim(),
         shortTitle: data.shortTitle?.trim(),
@@ -195,25 +188,22 @@ export default function CreateExamScreen() {
         examLevel: data.examLevel,
         status: data.status,
         state: data.examLevel === ExamLevel.STATE ? data.state?.trim() : null,
-        minAge: data.minAge ? parseInt(data.minAge, 10) : null,
-        maxAge: data.maxAge ? parseInt(data.maxAge, 10) : null,
-        qualificationCriteria: {
-          level: data.qualificationLevel,
-          rules: transformFromKV(data.qualificationRules)
-        },
-        totalVacancies: data.totalVacanciesBreakdown.length > 0
-          ? transformFromKV(data.totalVacanciesBreakdown)
-          : (data.totalVacancies ? parseInt(data.totalVacancies, 10) : null),
+        minAge: (data.minAge && data.minAge.trim()) ? parseInt(data.minAge, 10) : null,
+        maxAge: (data.maxAge && data.maxAge.trim()) ? parseInt(data.maxAge, 10) : null,
+        qualificationCriteria: data.qualificationCriteria?.trim() || null,
+        totalVacancies: data.totalVacancies?.trim() || null,
+        salary: data.salary?.trim() || null,
+        additionalDetails: data.additionalDetails?.trim() || null,
         officialWebsite: data.officialWebsite?.trim() || null,
         notificationUrl: data.notificationUrl?.trim() || null,
         description: data.description?.trim() || null,
         isPublished: data.isPublished,
-        applicationFee: transformFromKV(data.applicationFee),
+        applicationFee: data.applicationFee?.trim() || null,
       };
 
       if (isEdit) {
         await examService.updateExam(id as string, payload);
-        Alert.alert('Success', 'Exam updated updated successfully');
+        Alert.alert('Success', 'Exam updated successfully');
       } else {
         await examService.createExam(payload);
         Alert.alert('Success', 'Exam listing created successfully');
@@ -396,6 +386,29 @@ export default function CreateExamScreen() {
                 />
               )}
             />
+
+            <Text style={styles.label}>Status *</Text>
+            <Controller
+              control={control}
+              name="status"
+              render={({ field: { onChange, value } }) => (
+                <View style={styles.statusChipContainer}>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.statusScroll}>
+                    {EXAM_STATUSES.map(stat => (
+                      <TouchableOpacity
+                        key={stat}
+                        style={[styles.statusChip, value === stat && styles.statusChipActive]}
+                        onPress={() => onChange(stat)}
+                      >
+                        <Text style={[styles.statusChipText, value === stat && styles.statusChipTextActive]}>
+                          {stat.replace(/_/g, ' ')}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+            />
           </View>
 
           <View style={styles.card}>
@@ -457,36 +470,58 @@ export default function CreateExamScreen() {
               )}
             />
 
-            <DynamicListSection
-              label="Qualification Details"
+            <Text style={styles.label}>Qualification Details</Text>
+            <Controller
               control={control}
-              name="qualificationRules"
-              placeholderKey="Subject/Skill"
-              placeholderValue="Requirement"
+              name="qualificationCriteria"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Detail exact qualification requirements..."
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={4}
+                  onChangeText={onChange}
+                  value={value}
+                  textAlignVertical="top"
+                />
+              )}
             />
 
-            <Text style={styles.label}>Total Vacancy Count</Text>
+            <Text style={styles.label}>Total Vacancy Distribution</Text>
             <Controller
               control={control}
               name="totalVacancies"
               render={({ field: { onChange, value } }) => (
                 <TextInput
-                  style={styles.input}
-                  keyboardType="numeric"
-                  placeholder="Enter number"
+                  style={[styles.input, styles.textArea]}
+                  placeholder="e.g. 500 (UR: 300, SC: 100, ST: 100)"
                   placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={4}
                   onChangeText={onChange}
                   value={value}
+                  textAlignVertical="top"
                 />
               )}
             />
 
-            <DynamicListSection
-              label="Post-wise Breakdown"
+            <Text style={styles.label}>Salary</Text>
+            <Controller
               control={control}
-              name="totalVacanciesBreakdown"
-              placeholderKey="Post Name"
-              placeholderValue="Count"
+              name="salary"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="e.g. Level 7 (₹44,900 - ₹1,42,400) plus allowances"
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={2}
+                  onChangeText={onChange}
+                  value={value}
+                  textAlignVertical="top"
+                />
+              )}
             />
           </View>
 
@@ -526,12 +561,40 @@ export default function CreateExamScreen() {
               )}
             />
 
-            <DynamicListSection
-              label="Application Fees"
+            <Text style={styles.label}>Additional Details</Text>
+            <Controller
+              control={control}
+              name="additionalDetails"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="Any other crucial instructions or notes..."
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={3}
+                  onChangeText={onChange}
+                  value={value}
+                  textAlignVertical="top"
+                />
+              )}
+            />
+
+            <Text style={styles.label}>Application Fees</Text>
+            <Controller
               control={control}
               name="applicationFee"
-              placeholderKey="Category"
-              placeholderValue="₹ Fee"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  placeholder="General: ₹100, SC/ST: ₹0"
+                  placeholderTextColor="#9CA3AF"
+                  multiline
+                  numberOfLines={2}
+                  onChangeText={onChange}
+                  value={value}
+                  textAlignVertical="top"
+                />
+              )}
             />
           </View>
 
@@ -577,7 +640,7 @@ const styles = StyleSheet.create({
   content: { padding: 20, paddingBottom: 60 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
   loadingText: { marginTop: 12, color: '#4F46E5', fontWeight: '700' },
-  
+
   header: { paddingTop: 60, paddingHorizontal: 24, paddingBottom: 24, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
   headerRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   headerTitle: { fontSize: 24, fontWeight: '900', color: '#FFF' },
@@ -620,4 +683,10 @@ const styles = StyleSheet.create({
   submitButtonWrapper: { marginTop: 10, borderRadius: 20, overflow: 'hidden', shadowColor: '#4F46E5', shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 },
   submitGradient: { padding: 20, alignItems: 'center', justifyContent: 'center' },
   submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
+  statusChipContainer: { marginTop: 4 },
+  statusScroll: { gap: 8 },
+  statusChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#F3F4F6' },
+  statusChipActive: { backgroundColor: '#4F46E5', borderColor: '#4F46E5' },
+  statusChipText: { fontSize: 12, color: '#4B5563', fontWeight: '700' },
+  statusChipTextActive: { color: '#FFF' },
 });

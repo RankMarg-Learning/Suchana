@@ -14,6 +14,7 @@ import {
   Dimensions
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import Markdown from 'react-native-markdown-display';
 import { useFocusEffect } from '@react-navigation/native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +22,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { examService, lifecycleService, Exam, LifecycleEvent } from '@/services/api.service';
 import { TimelineItem } from '@/components/TimelineItem';
 import { EXAM_LEVELS, EXAM_CATEGORIES } from '@/constants/enums';
+
+const markdownRules = {
+  table: (node: any, children: any, parent: any, styles: any) => (
+    <ScrollView horizontal key={node.key} showsHorizontalScrollIndicator={false}>
+      {children}
+    </ScrollView>
+  ),
+};
 
 const { width } = Dimensions.get('window');
 
@@ -290,7 +299,13 @@ export default function ExamDetailScreen() {
             {exam.description && (
               <View style={styles.descriptionContainer}>
                 <Text style={styles.infoLabel}>Description</Text>
-                <Text style={styles.descriptionText}>{exam.description}</Text>
+                <Markdown style={markdownStyles} rules={markdownRules}>{exam.description}</Markdown>
+              </View>
+            )}
+            {exam.additionalDetails && (
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.infoLabel}>Additional Details</Text>
+                <Markdown style={markdownStyles} rules={markdownRules}>{exam.additionalDetails}</Markdown>
               </View>
             )}
           </View>
@@ -303,9 +318,31 @@ export default function ExamDetailScreen() {
             <View style={styles.infoGrid}>
               <InfoItem label="Min Age" value={exam.minAge?.toString() || 'N/A'} />
               <InfoItem label="Max Age" value={exam.maxAge?.toString() || 'N/A'} />
-              <InfoItem label="Qualification" value={(exam.qualificationCriteria as any)?.level || 'N/A'} />
-              <InfoItem label="Vacancies" value={exam.totalVacancies?.toString() || 'N/A'} />
             </View>
+            {exam.qualificationCriteria && (
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.infoLabel}>Qualification</Text>
+                <Markdown style={markdownStyles} rules={markdownRules}>{exam.qualificationCriteria}</Markdown>
+              </View>
+            )}
+            {exam.totalVacancies && (
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.infoLabel}>Vacancies</Text>
+                <Markdown style={markdownStyles} rules={markdownRules}>{exam.totalVacancies}</Markdown>
+              </View>
+            )}
+            {exam.salary && (
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.infoLabel}>Salary</Text>
+                <Markdown style={markdownStyles} rules={markdownRules}>{exam.salary}</Markdown>
+              </View>
+            )}
+            {exam.applicationFee && (
+              <View style={styles.descriptionContainer}>
+                <Text style={styles.infoLabel}>Application Fee</Text>
+                <Markdown style={markdownStyles} rules={markdownRules}>{exam.applicationFee}</Markdown>
+              </View>
+            )}
           </View>
 
           <View style={styles.card}>
@@ -480,6 +517,35 @@ export default function ExamDetailScreen() {
     </SafeAreaView>
   );
 }
+
+const markdownStyles = {
+  body: {
+    color: '#4B5563',
+    fontSize: 14,
+    lineHeight: 22,
+  },
+  table: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  th: {
+    backgroundColor: '#F9FAFB',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+    padding: 10,
+    fontWeight: 'bold' as const,
+  },
+  td: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F3F4F6',
+  },
+  thead: {
+    backgroundColor: '#F9FAFB',
+  },
+};
 
 const InfoItem = ({ label, value, fullWidth }: { label: string; value: string; fullWidth?: boolean }) => (
   <View style={[styles.infoItem, fullWidth && { width: '100%' }]}>

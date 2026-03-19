@@ -9,7 +9,7 @@ import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { useForm, Controller } from 'react-hook-form';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { lifecycleService } from '@/services/api.service';
+import { lifecycleService, scraperService } from '@/services/api.service';
 import { 
   LifecycleEventType, 
   LIFECYCLE_EVENT_TYPES, 
@@ -37,11 +37,14 @@ const STAGES = LIFECYCLE_STAGES;
 
 export default function AddEventScreen() {
   const router = useRouter();
-  const { examId, examTitle, eventId } = useLocalSearchParams<{
+  const { examId, examTitle, eventId, isStaged } = useLocalSearchParams<{
     examId: string;
     examTitle: string;
     eventId?: string;
+    isStaged?: string;
   }>();
+
+  const isStagedExam = isStaged === 'true';
 
   const isEdit = !!eventId;
   const [loading, setLoading] = useState(false);
@@ -76,10 +79,17 @@ export default function AddEventScreen() {
     if (!isEdit || !examId || !eventId) return;
     try {
       setFetching(true);
-      const res = await lifecycleService.getEventsByExamId(examId);
-      const data = res.data;
-      const events = data?.events || (Array.isArray(data) ? data : []);
-      const event = events.find((e: any) => e.id === eventId);
+      let event;
+      if (isStagedExam) {
+        const res = await scraperService.getStagedExam(examId);
+        const stagedExam = res.data;
+        event = stagedExam.stagedEvents?.find((e: any) => e.id === eventId);
+      } else {
+        const res = await lifecycleService.getEventsByExamId(examId);
+        const data = res.data;
+        const events = data?.events || (Array.isArray(data) ? data : []);
+        event = events.find((e: any) => e.id === eventId);
+      }
 
       if (event) {
         reset({
@@ -124,10 +134,18 @@ export default function AddEventScreen() {
       };
 
       if (isEdit) {
-        await lifecycleService.updateEvent(examId, eventId as string, payload);
+        if (isStagedExam) {
+          await scraperService.updateStagedEvent(examId, eventId as string, payload);
+        } else {
+          await lifecycleService.updateEvent(examId, eventId as string, payload);
+        }
         Alert.alert('Success', 'Event updated successfully');
       } else {
-        await lifecycleService.addEvent(examId, payload);
+        if (isStagedExam) {
+          await scraperService.addStagedEvent(examId, payload);
+        } else {
+          await lifecycleService.addEvent(examId, payload);
+        }
         Alert.alert('Success', 'Event scheduled successfully');
       }
       router.back();

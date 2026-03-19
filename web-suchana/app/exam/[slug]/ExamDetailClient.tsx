@@ -27,7 +27,10 @@ import {
   Info,
   Zap,
   TrendingUp,
+  Smartphone,
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   Exam,
   LifecycleEvent,
@@ -155,7 +158,7 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
     if (userId) {
       fetchSavedExams(userId).then(exams => {
         setSaved(exams.some(e => e.id === exam.id));
-      }).catch(() => {});
+      }).catch(() => { });
     }
 
     return () => clearInterval(interval);
@@ -179,9 +182,6 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
   const sorted = (exam.lifecycleEvents ?? []).sort((a, b) => (a.stageOrder ?? 0) - (b.stageOrder ?? 0));
   const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
   const regEvent = sorted.find((e) => e.stage === "REGISTRATION");
-  const admitEvent = sorted.find((e) => e.stage === "ADMIT_CARD");
-  const examEvent = sorted.find((e) => e.stage === "EXAM_DATE" || e.stage === "EXAM");
-  const resultEvent = sorted.find((e) => e.stage === "RESULT" || e.stage === "FINAL_RESULT");
 
   const handleShare = async () => {
     if (navigator.share) {
@@ -218,8 +218,6 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
               <ChevronLeft size={16} /> All Exams
             </Link>
           </div>
-
-
 
           <SidebarAd id="detail-left-ad-1" />
           <SidebarAd id="detail-left-ad-2" tall />
@@ -278,117 +276,8 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
               </button>
             </div>
 
-            {/* Quick Stats Horizontal Row */}
-            <div className="quick-stats-row" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '24px' }}>
-              <div className="stat-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '100px', fontSize: '13px' }}>
-                <Briefcase size={14} color="var(--accent-light)" /> <strong style={{color:"var(--text-primary)"}}>{getTotalVacancies(exam.totalVacancies)}</strong> <span style={{color:"var(--text-dim)"}}>Vacancies</span>
-              </div>
-              {exam.minAge && exam.maxAge && (
-                <div className="stat-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '100px', fontSize: '13px' }}>
-                  <UserCheck size={14} color="var(--accent-light)" /> <strong style={{color:"var(--text-primary)"}}>{exam.minAge}–{exam.maxAge} yrs</strong> <span style={{color:"var(--text-dim)"}}>Age Limit</span>
-                </div>
-              )}
-              {regEvent?.endsAt && (
-                <div className="stat-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '100px', fontSize: '13px' }}>
-                  <Calendar size={14} color="var(--accent-light)" /> <strong style={{color:"var(--text-primary)"}}>{formatDate(regEvent.endsAt)}</strong> <span style={{color:"var(--text-dim)"}}>Reg. Deadline</span>
-                </div>
-              )}
-              {examEvent?.startsAt && (
-                <div className="stat-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '100px', fontSize: '13px' }}>
-                  <Target size={14} color="var(--accent-light)" /> <strong style={{color:"var(--text-primary)"}}>{formatDate(examEvent.startsAt)}</strong> <span style={{color:"var(--text-dim)"}}>Exam Date</span>
-                </div>
-              )}
-              {exam.applicationFee && (
-                <div className="stat-pill" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '6px 14px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', borderRadius: '100px', fontSize: '13px' }}>
-                  <IndianRupee size={14} color="var(--accent-light)" /> <strong style={{color:"var(--text-primary)"}}>₹{exam.applicationFee["General"] ?? Object.values(exam.applicationFee)[0]}</strong> <span style={{color:"var(--text-dim)"}}>Fee</span>
-                </div>
-              )}
-            </div>
+
           </header>
-
-          {/* Description */}
-          {exam.description && (
-            <section className="exam-detail-section" aria-labelledby="desc-heading">
-              <h2 id="desc-heading" className="exam-detail-section-title">About this Exam</h2>
-              <p className="exam-detail-desc" itemProp="description">{exam.description}</p>
-            </section>
-          )}
-
-          {/* Key Dates quick-view */}
-          <section className="exam-detail-section" aria-labelledby="dates-heading">
-            <h2 id="dates-heading" className="exam-detail-section-title">Key Dates</h2>
-            <div className="key-dates-grid">
-              {regEvent && (
-                <div className="key-date-card">
-                  <div className="key-date-icon" style={{ background: "rgba(16,185,129,0.12)", color: "#10b981" }}>
-                    <FileText size={18} />
-                  </div>
-                  <div>
-                    <div className="key-date-label">Registration</div>
-                    <div className="key-date-value">
-                      {regEvent.startsAt && regEvent.endsAt
-                        ? `${formatDate(regEvent.startsAt)} — ${formatDate(regEvent.endsAt)}`
-                        : regEvent.startsAt
-                          ? formatDate(regEvent.startsAt)
-                          : "TBA"}
-                    </div>
-                    {regEvent.actionUrl && (
-                      <a href={regEvent.actionUrl} target="_blank" rel="noopener noreferrer" className="key-date-link">
-                        Apply Now →
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-              {admitEvent && (
-                <div className="key-date-card">
-                  <div className="key-date-icon" style={{ background: "rgba(139,92,246,0.12)", color: "#a78bfa" }}>
-                    <FileText size={18} />
-                  </div>
-                  <div>
-                    <div className="key-date-label">Admit Card</div>
-                    <div className="key-date-value">{admitEvent.startsAt ? formatDate(admitEvent.startsAt) : "TBA"}</div>
-                    {admitEvent.actionUrl && (
-                      <a href={admitEvent.actionUrl} target="_blank" rel="noopener noreferrer" className="key-date-link">
-                        Download →
-                      </a>
-                    )}
-                  </div>
-                </div>
-              )}
-              {examEvent && (
-                <div className="key-date-card">
-                  <div className="key-date-icon" style={{ background: "rgba(239,68,68,0.12)", color: "#f87171" }}>
-                    <Target size={18} />
-                  </div>
-                  <div>
-                    <div className="key-date-label">Exam Date</div>
-                    <div className="key-date-value">
-                      {examEvent.startsAt && examEvent.endsAt && examEvent.startsAt !== examEvent.endsAt
-                        ? `${formatDate(examEvent.startsAt)} — ${formatDate(examEvent.endsAt)}`
-                        : examEvent.startsAt
-                          ? formatDate(examEvent.startsAt)
-                          : "TBA"}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {resultEvent && (
-                <div className="key-date-card">
-                  <div className="key-date-icon" style={{ background: "rgba(59,130,246,0.12)", color: "#60a5fa" }}>
-                    <CheckCircle2 size={18} />
-                  </div>
-                  <div>
-                    <div className="key-date-label">Result</div>
-                    <div className="key-date-value">{resultEvent.startsAt ? formatDate(resultEvent.startsAt) : "TBA"}</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-
-          {/* In-content Ad */}
-          <div style={{ marginBottom: 24 }}><InFeedAd id="detail-inline-ad-1" index={0} /></div>
 
           {/* Full Timeline */}
           {sorted.length > 0 && (
@@ -410,50 +299,57 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
             </section>
           )}
 
-          {/* In-content Ad */}
-          <div style={{ marginBottom: 24 }}><InFeedAd id="detail-inline-ad-2" index={1} /></div>
+          {/* Vacancies Section */}
+          <section className="exam-detail-section" aria-labelledby="vac-heading">
+            <h2 id="vac-heading" className="exam-detail-section-title">Vacancies</h2>
+            <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.totalVacancies || "TBA"}</ReactMarkdown></div>
+          </section>
 
-          {/* Fee & Eligibility */}
-          {(exam.applicationFee || exam.minAge || exam.maxAge) && (
-            <section className="exam-detail-section" aria-labelledby="elig-heading">
-              <h2 id="elig-heading" className="exam-detail-section-title">Fee & Eligibility</h2>
-              <div className="fee-grid">
-                {exam.applicationFee && (
-                  <div className="fee-card">
-                    <div className="fee-card-title">Application Fee</div>
-                    {Object.entries(exam.applicationFee).map(([cat, fee]) => (
-                      <div key={cat} className="fee-row">
-                        <span className="fee-cat">{cat}</span>
-                        <span className="fee-val">₹{fee === 0 ? "Exempt" : fee}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {(exam.totalVacancies || exam.minAge || exam.maxAge) && (
-                  <div className="fee-card">
-                    <div className="fee-card-title">Eligibility</div>
-                    {exam.minAge && exam.maxAge && (
-                      <div className="fee-row">
-                        <span className="fee-cat">Age Limit</span>
-                        <span className="fee-val">{exam.minAge}–{exam.maxAge} years</span>
-                      </div>
-                    )}
-                    {exam.totalVacancies && (
-                      <div className="fee-row">
-                        <span className="fee-cat">Total Vacancies</span>
-                        <span className="fee-val">{getTotalVacancies(exam.totalVacancies)}</span>
-                      </div>
-                    )}
-                    {typeof exam.totalVacancies === "object" && exam.totalVacancies && (
-                      Object.entries(exam.totalVacancies).map(([cat, count]) => (
-                        <div key={cat} className="fee-row">
-                          <span className="fee-cat">{cat}</span>
-                          <span className="fee-val">{Number(count).toLocaleString("en-IN")}</span>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
+          {/* Salary Section */}
+          {exam.salary && (
+            <section className="exam-detail-section" aria-labelledby="salary-heading">
+              <h2 id="salary-heading" className="exam-detail-section-title">Salary</h2>
+              <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.salary}</ReactMarkdown></div>
+            </section>
+          )}
+
+          {/* Eligibility Section */}
+          <section className="exam-detail-section" aria-labelledby="elig-heading">
+            <h2 id="elig-heading" className="exam-detail-section-title">Eligibility</h2>
+            <div className="fee-grid">
+              <div className="fee-card">
+                <div className="fee-card-title">Qualification</div>
+                <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanLabel(exam.qualificationCriteria || "Check notification")}</ReactMarkdown></div>
+              </div>
+              {(exam.minAge || exam.maxAge) && (
+                <div className="fee-card">
+                  <div className="fee-card-title">Age Limit</div>
+                  <div className="fact-content">{exam.minAge}–{exam.maxAge} years</div>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Fee Section */}
+          <section className="exam-detail-section" aria-labelledby="fee-heading">
+            <h2 id="fee-heading" className="exam-detail-section-title">Application Fee</h2>
+            <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.applicationFee || "N/A"}</ReactMarkdown></div>
+          </section>
+
+          {/* Additional Details */}
+          {exam.additionalDetails && (
+            <section className="exam-detail-section" aria-labelledby="add-heading">
+              <h2 id="add-heading" className="exam-detail-section-title">Additional Details</h2>
+              <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.additionalDetails}</ReactMarkdown></div>
+            </section>
+          )}
+
+          {/* Description */}
+          {exam.description && (
+            <section className="exam-detail-section" aria-labelledby="desc-heading" style={{ marginTop: 40, borderTop: '1px solid var(--border)', paddingTop: 40 }}>
+              <h2 id="desc-heading" className="exam-detail-section-title">About this Exam</h2>
+              <div className="exam-detail-desc" itemProp="description">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.description}</ReactMarkdown>
               </div>
             </section>
           )}
@@ -496,28 +392,15 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
           <NotifyWidget examName={exam.shortTitle ?? exam.title} />
           <SidebarAd id="detail-right-ad-1" />
 
-          {/* Vacancies breakdown */}
-          {typeof exam.totalVacancies === "object" && exam.totalVacancies && (
-            <div className="sidebar-widget">
-              <div className="sidebar-widget-title"><Briefcase size={14} /> Vacancy Breakdown</div>
-              {Object.entries(exam.totalVacancies).map(([cat, count]) => (
-                <div key={cat} className="trending-item">
-                  <div className="trending-info">
-                    <div className="trending-name">{cat}</div>
-                    <div className="trending-tag" style={{ color: "var(--accent-light)" }}>
-                      {Number(count).toLocaleString("en-IN")} posts
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+
 
           <SidebarAd id="detail-right-ad-2" />
 
           {/* App Download */}
           <div className="app-download-widget">
-            <div className="app-widget-icon">📱</div>
+            <div className="app-widget-icon">
+              <Smartphone size={18} color="var(--accent-light)" />
+            </div>
             <div className="app-widget-title">Get the App</div>
             <div className="app-widget-sub">Push notifications for every exam update. Never miss a deadline.</div>
             <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer" className="app-widget-btn" id="detail-app-download">

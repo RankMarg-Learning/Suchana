@@ -50,7 +50,7 @@ export const ExamCard: React.FC<ExamCardProps> = ({
     switch (status) {
       case ExamStatus.REGISTRATION_OPEN:
         return { bg: '#E8F5E9', text: '#2E7D32', icon: 'flash' };
-      case ExamStatus.UPCOMING:
+      case ExamStatus.NOTIFICATION:
         return { bg: '#E3F2FD', text: '#1565C0', icon: 'calendar-outline' };
       case ExamStatus.RESULT_DECLARED:
         return { bg: '#F3E5F5', text: '#7B1FA2', icon: 'trophy' };

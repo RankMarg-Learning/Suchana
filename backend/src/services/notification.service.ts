@@ -162,7 +162,7 @@ export class NotificationService {
             examId: event.examId,
             category: event.exam.category,
             examLevel: event.exam.examLevel,
-            qualification: (event.exam.qualificationCriteria as any)?.level
+            qualification: event.exam.qualificationCriteria ?? undefined
         });
         
         const tokens = await this.getTokensForUsers(targetUsers.map(u => u.id));
@@ -230,9 +230,7 @@ export class NotificationService {
 
         logger.info(`Orchestrating NEW EXAM notification: ${exam.shortTitle}`);
 
-        const vacancies = typeof exam.totalVacancies === 'number' 
-            ? exam.totalVacancies 
-            : (typeof exam.totalVacancies === 'object' ? Object.values(exam.totalVacancies as object).reduce((a, b) => a + (Number(b) || 0), 0) : undefined);
+        const vacancies = exam.totalVacancies ? parseInt(exam.totalVacancies, 10) || undefined : undefined;
 
         const { title, body } = NotificationTemplates.getNewExamTemplate(
             exam.shortTitle,
@@ -290,7 +288,7 @@ export class NotificationService {
                 examId: exam.id,
                 category: exam.category,
                 examLevel: exam.examLevel,
-                qualification: (exam.qualificationCriteria as any)?.level
+                qualification: exam.qualificationCriteria ?? undefined
             });
         } else {
             targetUsers = await prisma.user.findMany({

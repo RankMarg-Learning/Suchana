@@ -4,7 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import {
   Bell, BellRing, CheckCircle2, RefreshCw, Layers, Filter, BookOpen,
-  ArrowRight, TrendingUp
+  ArrowRight, TrendingUp,
+  Smartphone
 } from "lucide-react";
 import { SidebarAd } from "./AdUnits";
 import { Exam, CATEGORIES, STATUSES, STAGE_LABELS, cleanLabel } from "../lib/types";
@@ -64,10 +65,8 @@ export function NotifyWidget() {
 
 export function LeftSidebar({
   categoryFilter, setCategoryFilter,
-  statusFilter, setStatusFilter,
 }: {
   categoryFilter: string; setCategoryFilter: (v: string) => void;
-  statusFilter: string; setStatusFilter: (v: string) => void;
 }) {
   return (
     <aside className="sidebar-left" aria-label="Exam filters">
@@ -88,22 +87,7 @@ export function LeftSidebar({
         </div>
       </div>
 
-      <div className="sidebar-widget">
-        <div className="sidebar-widget-title"><Filter size={14} /> Status</div>
-        <div className="status-list">
-          {STATUSES.map(({ value, label }) => (
-            <button
-              key={value}
-              className={`status-filter-btn ${statusFilter === value ? "active" : ""}`}
-              onClick={() => setStatusFilter(value)}
-              id={`status-btn-${value.toLowerCase()}`}
-              aria-pressed={statusFilter === value}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
+
 
       <SidebarAd id="sidebar-ad-left-1" />
 
@@ -134,13 +118,17 @@ export function LeftSidebar({
 
 // ─── Right Sidebar ─────────────────────────────────────────────────────────────
 
-export function RightSidebar() {
+export function RightSidebar({
+  statusFilter, setStatusFilter,
+}: {
+  statusFilter: string; setStatusFilter: (v: string) => void;
+}) {
   return (
     <aside className="sidebar-right" aria-label="Exam alerts and trending">
       <NotifyWidget />
       <SidebarAd id="sidebar-ad-right-1" />
 
-      <div className="sidebar-widget">
+      {/* <div className="sidebar-widget">
         <div className="sidebar-widget-title"><TrendingUp size={14} /> Trending Now</div>
         <div className="trending-list">
           {[
@@ -159,18 +147,35 @@ export function RightSidebar() {
             </Link>
           ))}
         </div>
-      </div>
+      </div> */}
 
       <SidebarAd id="sidebar-ad-right-2" />
 
-      <div className="app-download-widget">
-        <div className="app-widget-icon">📱</div>
+      <div className="sidebar-widget">
+        <div className="sidebar-widget-title"><Filter size={14} /> Status</div>
+        <div className="status-list">
+          {STATUSES.map(({ value, label }) => (
+            <button
+              key={value}
+              className={`status-filter-btn ${statusFilter === value ? "active" : ""}`}
+              onClick={() => setStatusFilter(value)}
+              id={`status-btn-${value.toLowerCase()}`}
+              aria-pressed={statusFilter === value}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* <div className="app-download-widget">
+        <div className="app-widget-icon"> <Smartphone size={20} /></div>
         <div className="app-widget-title">Get the App</div>
         <div className="app-widget-sub">Real-time push notifications for every exam event</div>
         <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer" className="app-widget-btn" id="sidebar-app-download">
           <ArrowRight size={14} /> Download Free
         </a>
-      </div>
+      </div> */}
 
       <SidebarAd id="sidebar-ad-right-3" tall />
     </aside>

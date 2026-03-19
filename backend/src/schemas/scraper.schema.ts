@@ -62,7 +62,9 @@ const correctionsSchema = z.object({
     conductingBody: z.string().optional(),
     category: z.enum(EXAM_CATEGORIES as unknown as [string, ...string[]]).optional(),
     examLevel: z.enum(EXAM_LEVELS as unknown as [string, ...string[]]).optional(),
-    totalVacancies: z.number().int().optional(),
+    totalVacancies: z.string().optional(),
+    salary: z.string().optional(),
+    additionalDetails: z.string().optional(),
     description: z.string().optional(),
     officialWebsite: z.string().url().optional(),
     notificationUrl: z.string().url().optional(),
@@ -92,3 +94,10 @@ export const updateStagedEventSchema = z.object({
     actionLabel: z.string().optional().nullable(),
 });
 export type UpdateStagedEventDto = z.infer<typeof updateStagedEventSchema>;
+
+export const createStagedEventSchema = updateStagedEventSchema.extend({
+    stage: z.enum(LIFECYCLE_STAGES as unknown as [string, ...string[]]),
+    eventType: z.enum(LIFECYCLE_EVENT_TYPES as unknown as [string, ...string[]]),
+    title: z.string().min(2),
+});
+export type CreateStagedEventDto = z.infer<typeof createStagedEventSchema>;

@@ -2953,3 +2953,43 @@ body::before {
   .exam-detail-actions { flex-wrap: wrap; }
   .official-links { flex-direction: column; }
 }
+
+/* ─── Markdown Tables ─── */
+.fact-content table, .exam-detail-desc table, .trending-name table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 16px 0;
+  font-size: 14px;
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.fact-content th, .exam-detail-desc th, .trending-name th {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  font-weight: 700;
+  text-align: left;
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--border-strong);
+}
+
+.fact-content td, .exam-detail-desc td, .trending-name td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.fact-content tr:last-child td, .exam-detail-desc tr:last-child td {
+  border-bottom: none;
+}
+
+.fact-content tr:hover td, .exam-detail-desc tr:hover td {
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-primary);
+}
+
+/* Scrollable container for tables on mobile */
+.fact-content, .exam-detail-desc {
+  overflow-x: auto;
+}

@@ -28,6 +28,22 @@ import { fetchExamById, fetchTimeline } from '@/services/examService';
 import { toggleSavedExam } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
 import { TimelineItem } from '@/components/TimelineItem';
+
+const markdownRules = {
+  table: (node: any, children: any, parent: any, styles: any) => (
+    <ScrollView horizontal key={node.key} showsHorizontalScrollIndicator={false}>
+      <View style={styles.table}>
+        {children}
+      </View>
+    </ScrollView>
+  ),
+  thead: (node: any, children: any, parent: any, styles: any) => (
+    <View key={node.key} style={styles.thead}>{children}</View>
+  ),
+  tbody: (node: any, children: any, parent: any, styles: any) => (
+    <View key={node.key} style={styles.tbody}>{children}</View>
+  ),
+};
 import { NativeAdCard } from '@/components/NativeAdCard';
 import { AdBanner } from '@/components/AdBanner';
 import { useAds } from '@/context/AdsContext';
@@ -46,7 +62,7 @@ function formatCountdown(endsAt: string): string {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  [ExamStatus.UPCOMING]: '#FBBF24',
+  [ExamStatus.NOTIFICATION]: '#FBBF24',
   [ExamStatus.REGISTRATION_OPEN]: '#10B981',
   [ExamStatus.REGISTRATION_CLOSED]: '#F59E0B',
   [ExamStatus.ADMIT_CARD_OUT]: '#8B5CF6',
@@ -123,27 +139,17 @@ export default function ExamDetailScreen() {
     const regEvent = exam.lifecycleEvents?.find((e) => e.stage === 'REGISTRATION');
     const deadline = regEvent?.endsAt
       ? `\n⏰ Deadline: ${new Date(regEvent.endsAt).toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-        })}`
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })}`
       : '';
 
-    let vacancies = 'Check Details';
-    if (typeof exam.totalVacancies === 'number') {
-      vacancies = exam.totalVacancies.toLocaleString('en-IN');
-    } else if (exam.totalVacancies && typeof exam.totalVacancies === 'object') {
-      const total = Object.values(exam.totalVacancies).reduce(
-        (acc: number, val: any) => acc + (Number(val) || 0),
-        0
-      );
-      if (total > 0) vacancies = total.toLocaleString('en-IN');
-    }
+    const vacancies = exam.totalVacancies || 'Check Details';
 
     const message =
       `🏛️ *${exam.title}*\n` +
       `🏢 Board: ${exam.conductingBody}\n` +
-      `👥 Vacancies: ${vacancies}` +
       `${deadline}\n\n` +
       `Stay updated with government exam timelines on Suchana App! 🚀\n` +
       `Download: https://suchana.app/get`;
@@ -188,50 +194,7 @@ export default function ExamDetailScreen() {
   const score = (exam as any).matchScore ?? 0;
   const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#6B7280';
 
-  // ── Vacancy helpers ──────────────────────────────────────
-  const vacancyEntries: [string, number][] = (() => {
-    const v = exam.totalVacancies;
-    if (!v || typeof v === 'number') return [];
-    if (typeof v !== 'object') return [];
-    return Object.entries(v)
-      .map(([k, val]) => [k, Number(val) || 0] as [string, number])
-      .filter(([, n]) => n > 0);
-  })();
-
-  const totalVacancyCount: number = (() => {
-    const v = exam.totalVacancies;
-    if (typeof v === 'number') return v;
-    if (vacancyEntries.length > 0) return vacancyEntries.reduce((s, [, n]) => s + n, 0);
-    return 0;
-  })();
-
-  const MAX_VAC_VISIBLE = 4;
-
-  const renderJsonLines = (data: any, labelStyle?: any) => {
-    if (!data) return <Text style={styles.factValue}>N/A</Text>;
-
-    if (typeof data === 'number') return <Text style={styles.statsValue}>{data.toLocaleString('en-IN')}</Text>;
-
-    if (typeof data !== 'object') {
-      const val = String(data);
-      return <Text style={styles.factValue}>{val.length < 20 ? cleanLabel(val) : val}</Text>;
-    }
-
-    const entries = Object.entries(data).filter(([key]) => key !== 'level' && key !== 'id');
-
-    if (entries.length === 0) return <Text style={styles.factValue}>N/A</Text>;
-
-    return (
-      <View style={{ gap: 10 }}>
-        {entries.map(([key, value]) => (
-          <View key={key} style={styles.kvLine}>
-            <Text style={[styles.kvLabel, labelStyle]}>{cleanLabel(key)}:</Text>
-            <Text style={styles.factValue}>{typeof value === 'string' && value.length < 30 ? cleanLabel(value) : String(value)}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
+  // Fields are now strings, so no parsing helpers are needed.
 
   return (
     <SafeAreaView style={styles.root} edges={['bottom']}>
@@ -324,91 +287,6 @@ export default function ExamDetailScreen() {
           </View>
         )}
 
-        {/* Important Quick Facts Section */}
-        <View style={styles.importantContainer}>
-
-          {/* Vacancies — full-width pill grid when multiple categories */}
-          {vacancyEntries.length > 1 && (
-            <View style={styles.factCard}>
-              <View style={styles.factHeader}>
-                <Briefcase size={16} color="#7C3AED" />
-                <Text style={styles.factTitle}>Vacancies</Text>
-                {totalVacancyCount > 0 && (
-                  <View style={styles.totalVacBadge}>
-                    <Text style={styles.totalVacBadgeText}>{totalVacancyCount.toLocaleString('en-IN')} Total</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.vacPillGrid}>
-                {(showAllVac ? vacancyEntries : vacancyEntries.slice(0, MAX_VAC_VISIBLE)).map(([key, val]) => (
-                  <View key={key} style={styles.vacPill}>
-                    <Text style={styles.vacPillLabel} numberOfLines={1}>{cleanLabel(key)}</Text>
-                    <Text style={styles.vacPillCount}>{val.toLocaleString('en-IN')}</Text>
-                  </View>
-                ))}
-              </View>
-              {vacancyEntries.length > MAX_VAC_VISIBLE && (
-                <TouchableOpacity onPress={() => setShowAllVac(v => !v)} style={styles.showMoreBtn}>
-                  <Text style={styles.showMoreText}>
-                    {showAllVac ? '▲ Show less' : `▼ +${vacancyEntries.length - MAX_VAC_VISIBLE} more posts`}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-
-          <View style={styles.statsGrid}>
-            {vacancyEntries.length <= 1 && (
-              <View style={[styles.factCard, { flex: 1 }]}>
-                <View style={styles.factHeader}>
-                  <Briefcase size={16} color="#7C3AED" />
-                  <Text style={styles.factTitle}>Vacancies</Text>
-                </View>
-                <Text style={styles.statsValue}>
-                  {totalVacancyCount > 0 ? totalVacancyCount.toLocaleString('en-IN') : 'TBA'}
-                </Text>
-                {vacancyEntries.length === 1 && (
-                  <Text style={styles.vacSingleLabel}>{cleanLabel(vacancyEntries[0][0])}</Text>
-                )}
-              </View>
-            )}
-            <View style={[styles.factCard, { flex: 1 }]}>
-              <View style={styles.factHeader}>
-                <IndianRupee size={16} color="#7C3AED" />
-                <Text style={styles.factTitle}>Fee</Text>
-              </View>
-              <View style={styles.feeGrid}>
-                {renderJsonLines(exam.applicationFee, { fontSize: 13 })}
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.factCard}>
-            <View style={styles.factHeader}>
-              <UserCheck size={16} color="#7C3AED" />
-              <Text style={styles.factTitle}>Eligibility & Age</Text>
-            </View>
-            <View style={styles.eligibilityRow}>
-              <View>
-                <Text style={styles.eligibilityLevel}>
-                  {cleanLabel(exam.qualificationCriteria?.level) || 'Check Rules'}
-                </Text>
-                {(exam.minAge || exam.maxAge) && (
-                  <Text style={styles.ageText}>
-                    {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} years
-                  </Text>
-                )}
-              </View>
-              {exam.qualificationCriteria?.rules && (
-                <View style={styles.rulesMini}>
-                  {renderJsonLines(exam.qualificationCriteria.rules, { fontSize: 12 })}
-                </View>
-              )}
-            </View>
-          </View>
-
-        </View>
-
         {/* Timeline Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -432,6 +310,66 @@ export default function ExamDetailScreen() {
           )}
         </View>
 
+        {/* Important Quick Facts Section */}
+        <View style={styles.importantContainer}>
+          <View style={styles.factCard}>
+            <View style={styles.factHeader}>
+              <Briefcase size={16} color="#7C3AED" />
+              <Text style={styles.factTitle}>Vacancies</Text>
+            </View>
+            <Markdown style={factMarkdownStyles} rules={markdownRules}>
+              {exam.totalVacancies || 'TBA'}
+            </Markdown>
+          </View>
+
+          {exam.salary && (
+            <View style={styles.factCard}>
+              <View style={styles.factHeader}>
+                <Briefcase size={16} color="#7C3AED" />
+                <Text style={styles.factTitle}>Salary</Text>
+              </View>
+              <Markdown style={factMarkdownStyles} rules={markdownRules}>{exam.salary}</Markdown>
+            </View>
+          )}
+
+          <View style={styles.factCard}>
+            <View style={styles.factHeader}>
+              <UserCheck size={16} color="#7C3AED" />
+              <Text style={styles.factTitle}>Eligibility & Age</Text>
+            </View>
+            <View style={styles.eligibilityRow}>
+              <View style={{ flex: 1 }}>
+                <Markdown style={factMarkdownStyles} rules={markdownRules}>
+                  {cleanLabel(exam.qualificationCriteria) || 'Check Notification'}
+                </Markdown>
+                {(exam.minAge || exam.maxAge) && (
+                  <Text style={styles.ageText}>
+                    Age Limit: {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} years
+                  </Text>
+                )}
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.factCard}>
+            <View style={styles.factHeader}>
+              <IndianRupee size={16} color="#7C3AED" />
+              <Text style={styles.factTitle}>Application Fee</Text>
+            </View>
+            <Markdown style={factMarkdownStyles} rules={markdownRules}>{exam.applicationFee || 'N/A'}</Markdown>
+          </View>
+
+          {exam.additionalDetails && (
+            <View style={styles.factCard}>
+              <View style={styles.factHeader}>
+                <FileText size={16} color="#7C3AED" />
+                <Text style={styles.factTitle}>Additional Details</Text>
+              </View>
+              <Markdown style={factMarkdownStyles} rules={markdownRules}>{exam.additionalDetails}</Markdown>
+            </View>
+          )}
+        </View>
+
         {/* Ad Placement */}
         <NativeAdCard style={{ marginHorizontal: 20, marginBottom: 30 }} />
 
@@ -444,7 +382,7 @@ export default function ExamDetailScreen() {
             </View>
             <View>
               {isDescExpanded ? (
-                <Markdown style={markdownStyles}>
+                <Markdown style={markdownStyles} rules={markdownRules}>
                   {exam.description}
                 </Markdown>
               ) : (
@@ -758,4 +696,88 @@ const markdownStyles = StyleSheet.create({
   ordered_list: {
     marginBottom: 8,
   },
+  table: {
+    borderWidth: 1,
+    borderColor: '#3f3f46',
+    borderRadius: 8,
+    marginVertical: 10,
+    overflow: 'hidden',
+    backgroundColor: '#18181b',
+  },
+  thead: {
+    backgroundColor: '#27272a',
+    borderBottomWidth: 1,
+    borderBottomColor: '#3f3f46',
+  },
+  tbody: {
+  },
+  th: {
+    padding: 12,
+    fontWeight: 'bold',
+    color: '#FFF',
+    borderRightWidth: 1,
+    borderRightColor: '#3f3f46',
+    width: 140,
+    fontSize: 13,
+  },
+  td: {
+    padding: 12,
+    color: '#a1a1aa',
+    borderRightWidth: 1,
+    borderRightColor: '#3f3f46',
+    borderBottomWidth: 1,
+    borderBottomColor: '#3f3f46',
+    width: 140,
+    fontSize: 13,
+  },
+  tr: {
+    flexDirection: 'row',
+  },
 });
+
+const factMarkdownStyles: any = {
+  body: {
+    color: '#e4e4e7',
+    fontSize: 14,
+    fontWeight: 'bold',
+    lineHeight: 18,
+  },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 0,
+  },
+  strong: {
+    fontWeight: 'bold',
+    color: '#FFF',
+  },
+  table: {
+    borderWidth: 1,
+    borderColor: '#27272a',
+    borderRadius: 4,
+    marginVertical: 4,
+  },
+  thead: {
+    backgroundColor: '#27272a',
+  },
+  tbody: {
+  },
+  tr: {
+    flexDirection: 'row',
+  },
+  th: {
+    color: '#FFF',
+    padding: 8,
+    fontWeight: 'bold',
+    width: 100,
+    borderRightWidth: 1,
+    borderColor: '#3f3f46',
+  },
+  td: {
+    padding: 8,
+    color: '#e4e4e7',
+    width: 100,
+    borderRightWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: '#27272a',
+  },
+};

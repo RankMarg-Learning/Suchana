@@ -10,6 +10,7 @@ import {
     listStagedExamQuerySchema,
     reviewDecisionSchema,
     updateStagedEventSchema,
+    createStagedEventSchema,
 } from '../schemas/scraper.schema';
 
 const router = Router();
@@ -59,6 +60,13 @@ router.get('/staged/:id', scraperController.getStagedExamById);
 
 // POST /api/v1/scraper/staged/:id/review  { decision, reviewNote, corrections? }
 router.post('/staged/:id/review', validate(reviewDecisionSchema), scraperController.reviewStagedExam);
+
+// POST /api/v1/scraper/staged/:stagedExamId/events
+router.post(
+    '/staged/:stagedExamId/events',
+    validate(createStagedEventSchema),
+    scraperController.addStagedEvent,
+);
 
 // ─── Staged lifecycle event editing ─────────────────────────────
 // PATCH /api/v1/scraper/staged/:stagedExamId/events/:eventId

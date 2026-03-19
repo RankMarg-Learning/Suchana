@@ -117,14 +117,16 @@ function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
     validThrough: regEvent?.endsAt ?? undefined,
     datePosted: regEvent?.startsAt ?? new Date().toISOString(),
     url: `${SITE_URL}/exam/${exam.slug}`,
-    ...(exam.totalVacancies && typeof exam.totalVacancies === "number"
-      ? { totalJobOpenings: exam.totalVacancies }
+    ...(exam.totalVacancies
+      ? { totalJobOpenings: parseInt(exam.totalVacancies) || undefined }
       : {}),
     ...(exam.applicationFee
       ? {
         applicationContact: {
           "@type": "ContactPoint",
           url: exam.notificationUrl ?? exam.officialWebsite,
+          name: "Application Details",
+          description: exam.applicationFee
         },
       }
       : {}),
