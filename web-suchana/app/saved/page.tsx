@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import SiteNav from "../components/SiteNav";
 import SiteFooter from "../components/SiteFooter";
 import {
-  Bookmark, BookmarkCheck, ArrowRight, MapPin, 
+  Bookmark, BookmarkCheck, ArrowRight, MapPin,
   Calendar, FileText, Target, Briefcase, ChevronLeft, Search
 } from "lucide-react";
 import {
@@ -117,6 +117,8 @@ export default function SavedExamsPage() {
     return () => clearInterval(interval);
   }, [router]);
 
+  const [statusFilter, setStatusFilter] = useState<string>("");
+
   return (
     <>
       <SiteNav />
@@ -153,8 +155,8 @@ export default function SavedExamsPage() {
             </div>
           )}
         </main>
-        
-        <RightSidebar />
+
+        <RightSidebar statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
       </div>
 
       <div className="divider" />
