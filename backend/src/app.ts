@@ -22,7 +22,7 @@ export function createApp(): Application {
                 }
             },
             methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'X-API-Key', 'X-Admin-ID'],
+            allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Admin-ID'],
             credentials: false,
         })
     );
