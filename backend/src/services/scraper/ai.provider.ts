@@ -54,67 +54,64 @@ HINT CATEGORY: ${hintCategory ?? 'auto-detect'}
 CURRENT YEAR: ${this.CURRENT_YEAR}
 
 RULES:
-1. Dates: ISO8601 format (YYYY-MM-DDTHH:mm:ss.000Z). Infer year from context using ${this.CURRENT_YEAR}.
-2. isTBD: true ONLY if date is explicitly "To be announced".
-3. isImportant: true for APPLICATION_START, APPLICATION_END, EXAM_DATE, RESULT.
-4. Allowed Enum Values:
-   - category: ${EXAM_CATEGORIES.join(', ')}
-   - examLevel: ${EXAM_LEVELS.join(', ')}
-   - stage: ${LIFECYCLE_STAGES.join(', ')}
-   - eventType: ${LIFECYCLE_EVENT_TYPES.join(', ')}
-5. Data types:
-   - aiConfidence: float 0.0–1.0.
-   - applicationFee: Descriptive string summarizing application fees (format as Markdown).
-   - qualificationCriteria: Descriptive string summarizing required qualifications (format as Markdown).
-   - totalVacancies: Descriptive string summarizing vacancy details or exact count (format as Markdown).
-   - salary: Descriptive string outlining the pay scale or salary (format as Markdown).
-   - additionalDetails: Any other extra important details (format as Markdown).
-   - description: add info which is not present in any other field but important, formatted as Markdown.
-6. Use Markdown ('**bold**', '- bullet points', '### headings') to properly structure the string values to make them readable.
-7. Official links only. No third-party ads/spam links.
+1. Dates: Use ISO8601 format (YYYY-MM-DDTHH:mm:ss.000Z). If the year is omitted in the text, logically infer it using CURRENT_YEAR (${this.CURRENT_YEAR}).
+2. Missing Data: If a field is not found or not applicable, return null (the JSON null value, NOT a string "null" or "N/A"), except for arrays which should be empty [].
+3. isTBD: Set to true ONLY if a date is explicitly mentioned as "To be announced", "Upcoming", or similar.
+4. isImportant: Set to true for START and RELEASE event types, especially for REGISTRATION, EXAM, and RESULT stages.
+5. Allowed Enum Values (Strict Validation):
+   - category: Must be one of [${EXAM_CATEGORIES.join(', ')}]
+   - examLevel: Must be one of [${EXAM_LEVELS.join(', ')}]
+   - stage: Must be one of [${LIFECYCLE_STAGES.join(', ')}]
+   - eventType: Must be one of [${LIFECYCLE_EVENT_TYPES.join(', ')}]
+6. Data formatting requirements:
+   - aiConfidence: A float between 0.0 and 1.0 indicating your confidence in the extracted data.
+   - shortTitle: Provide a recognizable acronym or short name (e.g., 'SSC CGL', 'UPSC CSE').
+   - Markdown fields (applicationFee, qualificationCriteria, totalVacancies, salary, additionalDetails, description): Extensively use Markdown (like '**bold**', '- bullet points', '### headings') to properly structure and neatly present the data.
+7. Official Links: Extract official website and notification URLs ONLY. Exclude any third-party, affiliate, or spam links.
+8. REGISTRATION Consolidation: For the REGISTRATION stage, strictly build only ONE event that contains both startsAt (opening date) and endsAt (deadline). Use eventType "START" for this consolidated event. Do not create separate "START" and "END" events.
 
 STAGE ORDER GUIDELINE:
-NOTIFICATION=10, REGISTRATION=20, ADMIT_CARD=30, EXAM=40, ANSWER_KEY=50, RESULT=60, DV=70, JOINING=80
+NOTIFICATION=10, REGISTRATION=20, ADMIT_CARD=30, EXAM=40, ANSWER_KEY=50, RESULT=60, DOCUMENT_VERIFICATION=70, JOINING=80
 
 TEXT:
 ---
 ${text}
 ---
 
-Return JSON:
+Return JSON MATCHING THIS EXACT SCHEMA:
 {
-  "title": "string",
-  "shortTitle": "string",
-  "description": "add info which is not present in any other field but important with markdown format",
-  "conductingBody": "string",
-  "category": "ENUM",
-  "examLevel": "NATIONAL|STATE|DISTRICT",
-  "state": "string|null",
-  "examYear": number,
-  "minAge": number,
-  "maxAge": number,
-  "totalVacancies": "string",
-  "applicationFee": "string",
-  "qualificationCriteria": "string",
-  "salary": "string",
-  "additionalDetails": "string",
-  "officialWebsite": "url",
-  "notificationUrl": "official website url",
-  "aiConfidence": number,
-  "aiNotes": "string",
+  "title": "string (Full official exam name)",
+  "shortTitle": "string (e.g., SSC CGL) | null",
+  "description": "string (markdown) | null",
+  "conductingBody": "string | null",
+  "category": "string (From Enum) | null",
+  "examLevel": "string (NATIONAL|STATE|DISTRICT) | null",
+  "state": "string (State name if applicable) | null",
+  "examYear": "number | null",
+  "minAge": "number | null",
+  "maxAge": "number | null",
+  "totalVacancies": "string (markdown) | null",
+  "applicationFee": "string (markdown) | null",
+  "qualificationCriteria": "string (markdown) | null",
+  "salary": "string (markdown) | null",
+  "additionalDetails": "string (markdown) | null",
+  "officialWebsite": "string (url) | null",
+  "notificationUrl": "string (url) | null",
+  "aiConfidence": "number (0.0 - 1.0)",
+  "aiNotes": "string (internal reasoning) | null",
   "events": [
     {
-      "stage": "ENUM",
-      "eventType": "ENUM",
-      "stageOrder": number,
-      "title": "string",
-      "description": "important not about event",
-      "startsAt": "ISO",
-      "endsAt": "ISO",
-      "isTBD": boolean,
-      "isImportant": boolean,
-      "actionUrl": "url",
-      "actionLabel": "string"
+      "stage": "string (From Enum)",
+      "eventType": "string (From Enum)",
+      "stageOrder": "number",
+      "title": "string (Event title)",
+      "description": "string (markdown) | null",
+      "startsAt": "string (ISO8601) | null",
+      "endsAt": "string (ISO8601) | null",
+      "isTBD": "boolean",
+      "isImportant": "boolean",
+      "actionUrl": "string (url) | null",
+      "actionLabel": "string | null"
     }
   ]
 }`;
