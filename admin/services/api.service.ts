@@ -25,6 +25,7 @@ export interface Exam {
     minAge?: number;
     maxAge?: number;
     qualificationCriteria?: string;
+    totalVacancies?: string;
     applicationFee?: string;
     salary?: string;
     additionalDetails?: string;

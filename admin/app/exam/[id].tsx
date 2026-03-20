@@ -60,7 +60,7 @@ export default function ExamDetailScreen() {
         examService.getExamById(id),
         lifecycleService.getEventsByExamId(id)
       ]);
-
+      console.log("examRes", examRes)
       setExam(examRes.data || examRes);
 
       const timelineData = timelineRes.data?.events ||
