@@ -73,7 +73,7 @@ const STATUS_COLOR: Record<string, string> = {
   [ExamStatus.REGISTRATION_CLOSED]: '#F59E0B',
   [ExamStatus.ADMIT_CARD_OUT]: '#8B5CF6',
   [ExamStatus.EXAM_ONGOING]: '#EF4444',
-  [ExamStatus.RESULT_DECLARED]: '#3B82F6',
+  [ExamStatus.RESULT_DECLARED]: '#8B5CF6',
   [ExamStatus.ARCHIVED]: '#94a3b8',
 };
 
@@ -283,8 +283,12 @@ export default function ExamDetailScreen() {
     body: {
       color: textPrimary,
       fontSize: 14,
-      fontWeight: 'bold' as 'bold',
-      lineHeight: 18,
+      fontWeight: '400' as const,
+      lineHeight: 20,
+    },
+    strong: {
+      fontWeight: '700' as const,
+      color: textPrimary,
     },
     table: {
       borderWidth: 1,
@@ -298,14 +302,14 @@ export default function ExamDetailScreen() {
     th: {
       color: textPrimary,
       padding: 8,
-      fontWeight: 'bold' as 'bold',
+      fontWeight: '600' as const,
       width: 100,
       borderRightWidth: 1,
       borderColor: border,
     },
     td: {
       padding: 8,
-      color: textPrimary,
+      color: textMuted,
       width: 100,
       borderRightWidth: 1,
       borderBottomWidth: 1,
@@ -313,7 +317,7 @@ export default function ExamDetailScreen() {
     },
   };
 
-  const heroColors = (colorScheme === 'dark' ? ['#1e1b4b', '#0D0D0F'] : ['#DBEAFE', '#FFFFFF']) as readonly [string, string];
+  const heroColors = (colorScheme === 'dark' ? ['#2E1065', '#09090B'] : ['#F5F3FF', '#FFFFFF']) as readonly [string, string];
   const matchColors = (colorScheme === 'dark' ? ['#27272a', '#18181b'] : [cardBg, cardBg]) as readonly [string, string];
 
   return (
@@ -418,15 +422,25 @@ export default function ExamDetailScreen() {
               <Text style={[styles.emptyTimelineText, { color: textMuted }]}>No events announced yet.</Text>
             </View>
           ) : (
-            [...timeline]
-              .sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0))
-              .map((event, index) => (
+            (() => {
+              const sorted = [...timeline].sort(
+                (a, b) => (a.stageOrder || 0) - (b.stageOrder || 0),
+              );
+              return sorted.map((event, index) => (
                 <TimelineItem
                   key={event.id}
                   event={event}
-                  isLast={index === timeline.length - 1}
+                  isLast={index === sorted.length - 1}
+                  // If this event has no endsAt, the next event's startsAt
+                  // acts as the effective end boundary (O(1) lookup by index)
+                  nextEventStartsAt={
+                    !event.endsAt && index < sorted.length - 1
+                      ? sorted[index + 1].startsAt
+                      : null
+                  }
                 />
-              ))
+              ));
+            })()
           )}
         </View>
 
@@ -530,10 +544,10 @@ export default function ExamDetailScreen() {
             </TouchableOpacity>
           )}
           {exam.notificationUrl && (
-            <TouchableOpacity style={[styles.linkCard, { backgroundColor: colorScheme === 'dark' ? '#312e81' : '#DBEAFE', borderColor: border }]} onPress={() => handleExternalLink(exam.notificationUrl!)}>
-              <FileText size={20} color={colorScheme === 'dark' ? '#c7d2fe' : tint} />
-              <Text style={[styles.linkCardTitle, { color: colorScheme === 'dark' ? '#c7d2fe' : tint }]}>Notification</Text>
-              <Text style={[styles.linkCardSub, { color: colorScheme === 'dark' ? '#818cf8' : tint }]}>Download PDF</Text>
+            <TouchableOpacity style={[styles.linkCard, { backgroundColor: colorScheme === 'dark' ? '#2E1065' : '#F5F3FF', borderColor: border }]} onPress={() => handleExternalLink(exam.notificationUrl!)}>
+              <FileText size={20} color={colorScheme === 'dark' ? '#DDD6FE' : tint} />
+              <Text style={[styles.linkCardTitle, { color: colorScheme === 'dark' ? '#DDD6FE' : tint }]}>Notification</Text>
+              <Text style={[styles.linkCardSub, { color: colorScheme === 'dark' ? '#A78BFA' : tint }]}>Download PDF</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -544,7 +558,7 @@ export default function ExamDetailScreen() {
       {!isRegActive && exam.notificationUrl && (
         <View style={[styles.footerSticky, { backgroundColor: background + 'E6', borderTopColor: border }]}>
           <TouchableOpacity
-            style={[styles.primaryActionBtn, { backgroundColor: colorScheme === 'dark' ? '#1e1b4b' : '#DBEAFE' }]}
+            style={[styles.primaryActionBtn, { backgroundColor: colorScheme === 'dark' ? '#2E1065' : '#F5F3FF' }]}
             onPress={() => handleExternalLink(exam.notificationUrl!)}>
             <FileText size={20} color={colorScheme === 'dark' ? '#FFF' : tint} />
             <Text style={[styles.primaryActionText, { color: colorScheme === 'dark' ? '#FFF' : tint }]}>View Full Notification</Text>

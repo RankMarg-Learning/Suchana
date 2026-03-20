@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, Calendar, ArrowRight, Sparkles, Search } from 'lucide-react-native';
+import { Calendar, ArrowRight, Sparkles, Search } from 'lucide-react-native';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@/context/UserContext';
 import { toggleSavedExam as toggleSavedService } from '@/services/userService';
@@ -19,7 +19,6 @@ import { HomeCarousel } from '@/components/HomeCarousel';
 import { fetchHomeBanners } from '@/services/configService';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-import { Colors } from '@/constants/theme';
 
 export default function UpdatesScreen() {
   const router = useRouter();
@@ -34,7 +33,6 @@ export default function UpdatesScreen() {
   const textMuted = useThemeColor({}, 'textMuted');
   const tint = useThemeColor({}, 'tint');
   const border = useThemeColor({}, 'border');
-  const accent = useThemeColor({}, 'accent');
 
   const {
     data: examPages,
@@ -71,8 +69,7 @@ export default function UpdatesScreen() {
 
   const saveMutation = useMutation({
     mutationFn: async (examId: string) => {
-      // Show video ad before saving
-      await showRewarded(); 
+      await showRewarded();
       return toggleSavedService(userId!, examId);
     },
     onSuccess: () => {
@@ -130,7 +127,7 @@ export default function UpdatesScreen() {
     );
   }
 
-  const headerColors = (colorScheme === 'dark' ? ['#1e1b4b', '#0D0D0F'] : ['#DBEAFE', '#FFFFFF']) as readonly [string, string];
+  const headerColors = (colorScheme === 'dark' ? ['#2E1065', '#09090B'] : ['#F5F3FF', '#FFFFFF']) as readonly [string, string];
 
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: background }]} edges={['top']}>
@@ -244,9 +241,9 @@ const styles = StyleSheet.create({
   profileCircle: { width: 44, height: 44, borderRadius: 22, padding: 2, borderWidth: 1 },
   avatar: { flex: 1, borderRadius: 20, backgroundColor: '#3B0764', justifyContent: 'center', alignItems: 'center' },
   avatarTxt: { color: '#C4B5FD', fontSize: 18, fontWeight: '800' },
-  nudge: { marginHorizontal: 20, backgroundColor: '#312e81', borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  nudge: { marginHorizontal: 20, backgroundColor: '#5B21B6', borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   nudgeTitle: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  nudgeSub: { color: '#a5b4fc', fontSize: 12 },
+  nudgeSub: { color: '#DDD6FE', fontSize: 12 },
   iconCircle: {
     width: 44,
     height: 44,

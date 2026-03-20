@@ -48,17 +48,37 @@ function formatDate(iso: string | null | undefined) {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
-function getStatus(event: LifecycleEvent): { label: string; color: string } {
-  if (event.isTBD) return { label: 'TBD', color: '#9CA3AF' };
+
+function getStatus(
+  event: LifecycleEvent,
+  effectiveEndsAt?: number | null,
+): { label: string; color: string } | null {
+  if (event.isTBD || !event.startsAt) return { label: 'TBD', color: '#9CA3AF' };
+
   const now = Date.now();
-  const start = event.startsAt ? new Date(event.startsAt).getTime() : null;
-  const end = event.endsAt ? new Date(event.endsAt).getTime() : null;
-  if (end && now > end) return { label: 'Closed', color: '#6B7280' };
-  if (start && now >= start && (!end || now <= end)) return { label: 'Active', color: '#34D399' };
+  const start = new Date(event.startsAt).getTime();
+
+  const end: number | null =
+    event.endsAt
+      ? new Date(event.endsAt).getTime()
+      : effectiveEndsAt ?? null;
+  if (end !== null && now > end) return null;
+
+  if (now >= start && (end === null || now <= end))
+    return { label: 'Active', color: '#34D399' };
+
   return { label: 'Upcoming', color: '#FBBF24' };
 }
 
-export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast: boolean }) {
+export function TimelineItem({
+  event,
+  isLast,
+  nextEventStartsAt,
+}: {
+  event: LifecycleEvent;
+  isLast: boolean;
+  nextEventStartsAt?: string | null;
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
   const textPrimary = useThemeColor({}, 'text');
   const textMuted = useThemeColor({}, 'textMuted');
@@ -69,7 +89,12 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
   const stage = event.stage || '';
   const eventType = event.eventType || '';
   const IconComponent = STAGE_ICONS[stage] || EVENT_ICONS[eventType] || Pin;
-  const status = getStatus(event);
+
+  const effectiveEndsAt: number | null = nextEventStartsAt
+    ? new Date(nextEventStartsAt).getTime()
+    : null;
+
+  const status = getStatus(event, effectiveEndsAt);
   const colorScheme = useColorScheme();
 
   const markdownStyles = StyleSheet.create({
@@ -97,12 +122,15 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
     },
   });
 
+  // Completed events (status === null) fall back to a muted gray dot
+  const dotColor = status?.color ?? '#6B7280';
+
   return (
     <View style={styles.row}>
       {/* Left: connector */}
       <View style={styles.connector}>
-        <View style={[styles.dot, { borderColor: status.color, backgroundColor: cardBg }]}>
-          <IconComponent size={18} color={status.color} strokeWidth={2.5} />
+        <View style={[styles.dot, { borderColor: dotColor, backgroundColor: cardBg }]}>
+          <IconComponent size={18} color={dotColor} strokeWidth={2.5} />
         </View>
         {!isLast && <View style={[styles.line, { backgroundColor: border }]} />}
       </View>
@@ -111,9 +139,12 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
       <View style={styles.content}>
         <View style={styles.headerRow}>
           <Text style={[styles.title, { color: textPrimary }]}>{event.title}</Text>
-          <View style={[styles.statusBadge, { borderColor: status.color }]}>
-            <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
-          </View>
+          {/* Only render the badge when status is non-null (i.e. not completed) */}
+          {status !== null && (
+            <View style={[styles.statusBadge, { borderColor: status.color }]}>
+              <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+            </View>
+          )}
         </View>
         {event.stage && <Text style={[styles.stage, { color: tint }]}>{cleanLabel(event.stage)}</Text>}
         <Text style={[styles.date, { color: textMuted }]}>
@@ -142,11 +173,28 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
         ) : null}
 
         {event.actionUrl ? (
-          <TouchableOpacity
-            style={[styles.actionBtn, { borderColor: tint, backgroundColor: colorScheme === 'dark' ? '#3B0764' : tint }]}
-            onPress={() => Linking.openURL(event.actionUrl!)}>
-            <Text style={[styles.actionText, { color: colorScheme === 'dark' ? '#EDE9FE' : '#FFF' }]}>{event.actionLabel ?? 'Open →'}</Text>
-          </TouchableOpacity>
+          status === null ? (
+            // Completed event – show button as disabled/closed
+            <TouchableOpacity
+              disabled
+              style={[
+                styles.actionBtn,
+                {
+                  borderColor: '#6B7280',
+                  backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                  opacity: 0.55,
+                },
+              ]}>
+              <Text style={[styles.actionText, { color: '#9CA3AF' }]}>Closed</Text>
+            </TouchableOpacity>
+          ) : (
+            // Active / Upcoming – fully interactive
+            <TouchableOpacity
+              style={[styles.actionBtn, { borderColor: tint, backgroundColor: colorScheme === 'dark' ? '#3B0764' : tint }]}
+              onPress={() => Linking.openURL(event.actionUrl!)}>
+              <Text style={[styles.actionText, { color: colorScheme === 'dark' ? '#EDE9FE' : '#FFF' }]}>{event.actionLabel ?? 'Open →'}</Text>
+            </TouchableOpacity>
+          )
         ) : null}
       </View>
     </View>

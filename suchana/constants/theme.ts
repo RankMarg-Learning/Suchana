@@ -1,8 +1,8 @@
 import { DefaultTheme as NavDefaultTheme, DarkTheme as NavDarkTheme } from '@react-navigation/native';
 import { Platform } from 'react-native';
 
-const tintColorLight = '#2563EB';
-const tintColorDark = '#3B82F6';
+const tintColorLight = '#7C3AED';
+const tintColorDark = '#A78BFA';
 
 export const Colors = {
   light: {
@@ -15,7 +15,7 @@ export const Colors = {
     icon: '#71717A',
     tabIconDefault: '#71717A',
     tabIconSelected: tintColorLight,
-    accent: '#EFF6FF',
+    accent: '#F5F3FF',
     success: '#10B981',
     warning: '#F59E0B',
     error: '#EF4444',
@@ -30,7 +30,7 @@ export const Colors = {
     icon: '#A1A1AA',
     tabIconDefault: '#A1A1AA',
     tabIconSelected: tintColorDark,
-    accent: '#172554',
+    accent: '#2E1065',
     success: '#059669',
     warning: '#D97706',
     error: '#DC2626',

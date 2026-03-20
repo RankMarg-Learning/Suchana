@@ -15,7 +15,6 @@ interface ExamListRowProps {
 export const ExamListRow = ({ exam, isSaved, onSaveToggle, onPress }: ExamListRowProps) => {
   const textPrimary = useThemeColor({}, 'text');
   const textMuted = useThemeColor({}, 'textMuted');
-  const background = useThemeColor({}, 'background');
   const cardBg = useThemeColor({}, 'card');
   const border = useThemeColor({}, 'border');
   const tint = useThemeColor({}, 'tint');
@@ -42,27 +41,27 @@ export const ExamListRow = ({ exam, isSaved, onSaveToggle, onPress }: ExamListRo
     <TouchableOpacity style={[styles.container, { backgroundColor: cardBg, borderColor: border }]} onPress={onPress}>
       <View style={styles.iconContainer}>
         <View style={[styles.iconCircle, { backgroundColor: tint + '18' }]}>
-           <Bell size={18} color={tint} />
+          <Bell size={18} color={tint} />
         </View>
       </View>
-      
+
       <View style={styles.content}>
         <View style={styles.header}>
-            <Text style={[styles.conductingBody, { color: textMuted }]} numberOfLines={1}>{exam.conductingBody}</Text>
-            <Text style={[styles.date, { color: textMuted }]}>{formatDate(exam.updatedAt)}</Text>
+          <Text style={[styles.conductingBody, { color: textMuted }]} numberOfLines={1}>{exam.conductingBody}</Text>
+          <Text style={[styles.date, { color: textMuted }]}>{formatDate(exam.updatedAt)}</Text>
         </View>
-        
+
         <Text style={[styles.title, { color: textPrimary }]} numberOfLines={2}>{exam.title}</Text>
-        
+
         <View style={styles.meta}>
-            <View style={styles.metaItem}>
-                <MapPin size={12} color={textMuted} style={{ marginRight: 4 }} />
-                <Text style={[styles.metaText, { color: textMuted }]}>{exam.state || 'National'}</Text>
-            </View>
-            <View style={styles.metaItem}>
-                <Calendar size={12} color={textMuted} style={{ marginRight: 4 }} />
-                <Text style={[styles.metaText, { color: textMuted }]}>{cleanLabel(exam.category)}</Text>
-            </View>
+          <View style={styles.metaItem}>
+            <MapPin size={12} color={textMuted} style={{ marginRight: 4 }} />
+            <Text style={[styles.metaText, { color: textMuted }]}>{exam.state || 'National'}</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <Calendar size={12} color={textMuted} style={{ marginRight: 4 }} />
+            <Text style={[styles.metaText, { color: textMuted }]}>{cleanLabel(exam.category)}</Text>
+          </View>
         </View>
       </View>
 
@@ -109,10 +108,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+    flex: 1,
   },
   date: {
     fontSize: 10,
     fontWeight: '500',
+    flexShrink: 0,
+    marginLeft: 6,
   },
   title: {
     fontSize: 14,
