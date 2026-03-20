@@ -1,10 +1,25 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  StatusBar, Alert, TextInput, ActivityIndicator, Modal, Switch, Dimensions,
+  StatusBar, Alert, TextInput, ActivityIndicator, Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
+import { 
+  ArrowLeft, 
+  Sparkles, 
+  Clock, 
+  FileText, 
+  Globe, 
+  Info, 
+  Layers, 
+  ShieldCheck, 
+  X, 
+  Flag, 
+  Rocket, 
+  Plus, 
+  Link as LinkIcon,
+  ChevronDown
+} from 'lucide-react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { scraperService, StagedExam, StagedEvent } from '@/services/api.service';
@@ -13,231 +28,17 @@ import {
   EXAM_LEVELS, 
   LIFECYCLE_STAGES, 
   LIFECYCLE_EVENT_TYPES, 
-  STAGE_ORDER_MAP 
+  STAGE_ORDER_MAP,
+  EXAM_STATUSES
 } from '@/constants/enums';
 
-const { width } = Dimensions.get('window');
+// Components
+import { StagedSection } from '@/components/staged/StagedSection';
+import { StagedField } from '@/components/staged/StagedField';
+import { StagedEventCard } from '@/components/staged/StagedEventCard';
+import { ChipModal } from '@/components/staged/ChipModal';
+import { TextEditModal } from '@/components/staged/TextEditModal';
 
-// ─── Section Header ───────────────────────────────────────────
-const Section = ({ title, icon, children }: { title: string; icon: string; children: React.ReactNode }) => (
-  <View style={styles.section}>
-    <View style={styles.sectionHeaderInner}>
-      <Ionicons name={icon as any} size={20} color="#4F46E5" />
-      <Text style={styles.sectionTitle}>{title}</Text>
-    </View>
-    <View style={styles.sectionCard}>
-      {children}
-    </View>
-  </View>
-);
-
-// ─── Field Row (editable label + value) ───────────────────────
-const Field = ({
-  label, value, onEdit, multiline = false, placeholder = '—', isLast = false
-}: {
-  label: string;
-  value?: string | number | null;
-  onEdit: () => void;
-  multiline?: boolean;
-  placeholder?: string;
-  isLast?: boolean;
-}) => (
-  <TouchableOpacity 
-    style={[styles.fieldRow, isLast && { borderBottomWidth: 0 }]} 
-    onPress={onEdit} 
-    activeOpacity={0.7}
-  >
-    <View style={styles.fieldContent}>
-      <Text style={styles.fieldLabel}>{label}</Text>
-      <Text style={[styles.fieldValue, !value && styles.fieldValueEmpty]} numberOfLines={multiline ? 4 : 2}>
-        {value != null && value !== '' ? String(value) : placeholder}
-      </Text>
-    </View>
-    <View style={styles.editIconBadge}>
-      <Ionicons name="pencil-outline" size={14} color="#6366F1" />
-    </View>
-  </TouchableOpacity>
-);
-
-// ─── Chip Selector Modal ────────────────────────────────────────
-const ChipModal = ({
-  visible, title, options, selected, onSelect, onClose,
-}: {
-  visible: boolean; title: string; options: string[];
-  selected?: string; onSelect: (v: string) => void; onClose: () => void;
-}) => (
-  <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-    <SafeAreaView style={styles.modalBg}>
-      <View style={styles.modalHeader}>
-        <Text style={styles.modalHeaderTitle}>{title}</Text>
-        <TouchableOpacity onPress={onClose} style={styles.modalCloseBtn}>
-          <Ionicons name="close" size={24} color="#374151" />
-        </TouchableOpacity>
-      </View>
-      <ScrollView contentContainerStyle={styles.chipList}>
-        {options.map((opt) => (
-          <TouchableOpacity
-            key={opt}
-            style={[styles.chipItem, selected === opt && styles.chipItemActive]}
-            onPress={() => { onSelect(opt); onClose(); }}
-          >
-            <Text style={[styles.chipItemText, selected === opt && styles.chipItemTextActive]}>
-              {opt.replace(/_/g, ' ')}
-            </Text>
-            {selected === opt && <Ionicons name="checkmark-circle" size={20} color="#6366F1" />}
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
-  </Modal>
-);
-
-// ─── Text Edit Modal ──────────────────────────────────────────
-const TextEditModal = ({
-  visible, title, value, onSave, onClose, multiline = false, keyboardType = 'default',
-}: {
-  visible: boolean; title: string; value: string;
-  onSave: (v: string) => void; onClose: () => void;
-  multiline?: boolean; keyboardType?: any;
-}) => {
-  const [text, setText] = useState(value);
-  useEffect(() => { if (visible) setText(value); }, [visible, value]);
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={styles.modalBg}>
-        <View style={styles.modalHeader}>
-          <TouchableOpacity onPress={onClose}>
-            <Text style={styles.modalCancel}>Cancel</Text>
-          </TouchableOpacity>
-          <Text style={styles.modalHeaderTitle}>{title}</Text>
-          <TouchableOpacity onPress={() => { onSave(text); onClose(); }}>
-            <Text style={styles.modalSave}>Save</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={{ padding: 24 }}>
-          <TextInput
-            style={[styles.editInput, multiline && styles.editInputMulti]}
-            value={text}
-            onChangeText={setText}
-            autoFocus
-            multiline={multiline}
-            numberOfLines={multiline ? 6 : 1}
-            textAlignVertical={multiline ? 'top' : 'center'}
-            keyboardType={keyboardType}
-            placeholder={`Enter ${title.toLowerCase()}…`}
-            placeholderTextColor="#9CA3AF"
-          />
-        </View>
-      </SafeAreaView>
-    </Modal>
-  );
-};
-
-// ─── Event Edit Card ──────────────────────────────────────────
-const EventCard = ({
-  event,
-  onUpdate,
-  onDelete,
-}: {
-  event: StagedEvent;
-  onUpdate: (id: string, data: any) => void;
-  onDelete: (id: string) => void;
-}) => {
-  const [stageModal, setStageModal] = useState(false);
-  const [typeModal, setTypeModal] = useState(false);
-  const [titleEdit, setTitleEdit] = useState(false);
-  const [startEdit, setStartEdit] = useState(false);
-  const [endEdit, setEndEdit] = useState(false);
-  const [isTBD, setIsTBD] = useState(event.isTBD);
-  const [isImportant, setIsImportant] = useState(event.isImportant);
-
-  const formatDate = (d?: string) => d ? new Date(d).toLocaleDateString('en-IN', {
-    day: '2-digit', month: 'short', year: 'numeric',
-  }) : '';
-
-  const update = (data: any) => onUpdate(event.id, data);
-
-  return (
-    <View style={styles.eventCard}>
-      <View style={styles.eventCardHeader}>
-        <View style={styles.eventBadges}>
-          <TouchableOpacity onPress={() => setStageModal(true)} style={styles.stagePill}>
-            <Text style={styles.stagePillText}>{event.stage}</Text>
-            <Ionicons name="chevron-down" size={10} color="#4F46E5" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => setTypeModal(true)} style={styles.typePill}>
-            <Text style={styles.typePillText}>{event.eventType}</Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.eventCardActions}>
-          <View style={styles.miniToggleContainer}>
-            <Text style={styles.miniToggleLabel}>★</Text>
-            <Switch
-              value={isImportant}
-              onValueChange={(v) => { setIsImportant(v); update({ isImportant: v }); }}
-              trackColor={{ true: '#F59E0B', false: '#E5E7EB' }}
-              thumbColor={isImportant ? '#FFF' : '#F3F4F6'}
-              style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
-            />
-          </View>
-          <TouchableOpacity onPress={() => {
-            Alert.alert('Delete Event', `Remove "${event.title}"?`, [
-              { text: 'Cancel', style: 'cancel' },
-              { text: 'Delete', style: 'destructive', onPress: () => onDelete(event.id) },
-            ]);
-          }} style={styles.deleteBtn}>
-            <Ionicons name="trash-outline" size={16} color="#EF4444" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <TouchableOpacity onPress={() => setTitleEdit(true)} style={styles.eventTitleRow}>
-        <Text style={styles.eventTitleText}>{event.title}</Text>
-        <Ionicons name="pencil" size={12} color="#9CA3AF" />
-      </TouchableOpacity>
-
-      <View style={styles.eventDatesGrid}>
-        <TouchableOpacity style={styles.dateChip} onPress={() => setStartEdit(true)}>
-          <Text style={styles.dateLabel}>STARTS</Text>
-          <Text style={styles.dateValue}>{event.isTBD ? 'TBD' : formatDate(event.startsAt) || '—'}</Text>
-        </TouchableOpacity>
-        <View style={styles.dateDivider} />
-        <TouchableOpacity style={styles.dateChip} onPress={() => setEndEdit(true)}>
-          <Text style={styles.dateLabel}>ENDS</Text>
-          <Text style={styles.dateValue}>{formatDate(event.endsAt) || '—'}</Text>
-        </TouchableOpacity>
-        <View style={styles.tbdControl}>
-          <Text style={styles.dateLabel}>TBD</Text>
-          <Switch
-            value={isTBD}
-            onValueChange={(v) => { setIsTBD(v); update({ isTBD: v }); }}
-            trackColor={{ true: '#6366F1', false: '#E5E7EB' }}
-            thumbColor={isTBD ? '#FFF' : '#F3F4F6'}
-            style={{ transform: [{ scaleX: 0.7 }, { scaleY: 0.7 }] }}
-          />
-        </View>
-      </View>
-
-      <ChipModal visible={stageModal} title="Stage" options={LIFECYCLE_STAGES} selected={event.stage}
-        onSelect={(v) => update({ stage: v, stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? event.stageOrder })}
-        onClose={() => setStageModal(false)} />
-      <ChipModal visible={typeModal} title="Event Type" options={LIFECYCLE_EVENT_TYPES} selected={event.eventType}
-        onSelect={(v) => update({ eventType: v })} onClose={() => setTypeModal(false)} />
-      <TextEditModal visible={titleEdit} title="Event Title" value={event.title}
-        onSave={(v) => update({ title: v })} onClose={() => setTitleEdit(false)} />
-      <TextEditModal visible={startEdit} title="Starts At (YYYY-MM-DD)"
-        value={event.startsAt ? event.startsAt.slice(0, 10) : ''}
-        onSave={(v) => { const d = new Date(v); update({ startsAt: isNaN(d.getTime()) ? null : d.toISOString() }); }}
-        onClose={() => setStartEdit(false)} />
-      <TextEditModal visible={endEdit} title="Ends At (YYYY-MM-DD)"
-        value={event.endsAt ? event.endsAt.slice(0, 10) : ''}
-        onSave={(v) => { const d = new Date(v); update({ endsAt: isNaN(d.getTime()) ? null : d.toISOString() }); }}
-        onClose={() => setEndEdit(false)} />
-    </View>
-  );
-};
-
-// ─── Main Screen ──────────────────────────────────────────────
 export default function StagedDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -247,6 +48,7 @@ export default function StagedDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // Field states
   const [title, setTitle] = useState('');
   const [shortTitle, setShortTitle] = useState('');
   const [conductingBody, setConductingBody] = useState('');
@@ -260,12 +62,28 @@ export default function StagedDetailScreen() {
   const [officialWebsite, setOfficialWebsite] = useState('');
   const [notificationUrl, setNotificationUrl] = useState('');
   const [description, setDescription] = useState('');
+  const [state, setState] = useState('');
+  const [minAge, setMinAge] = useState('');
+  const [maxAge, setMaxAge] = useState('');
+  const [examStatus, setExamStatus] = useState('');
 
+  // UI States
   const [editField, setEditField] = useState<{ key: string; title: string; value: string; multiline?: boolean; numeric?: boolean } | null>(null);
   const [catModal, setCatModal] = useState(false);
   const [levelModal, setLevelModal] = useState(false);
+  const [stateModal, setStateModal] = useState(false);
+  const [statusModal, setStatusModal] = useState(false);
   const [reviewModal, setReviewModal] = useState<'APPROVED' | 'REJECTED' | 'NEEDS_CORRECTION' | null>(null);
   const [reviewNote, setReviewNote] = useState('');
+
+  // Event Edit Helper States
+  const [activeEvent, setActiveEvent] = useState<StagedEvent | null>(null);
+  const [eventStageModal, setEventStageModal] = useState(false);
+  const [eventTypeModal, setEventTypeModal] = useState(false);
+  const [eventTitleModal, setEventTitleModal] = useState(false);
+  const [eventOrderModal, setEventOrderModal] = useState(false);
+  const [eventDescriptionModal, setEventDescriptionModal] = useState(false);
+  const [eventDateModal, setEventDateModal] = useState<{ open: boolean; type: 'start' | 'end' }>({ open: false, type: 'start' });
 
   const fetchExam = useCallback(async () => {
     if (!id) return;
@@ -288,6 +106,10 @@ export default function StagedDetailScreen() {
       setOfficialWebsite(e.officialWebsite ?? '');
       setNotificationUrl(e.notificationUrl ?? '');
       setDescription(e.description ?? '');
+      setState(e.state ?? '');
+      setMinAge(e.minAge?.toString() ?? '');
+      setMaxAge(e.maxAge?.toString() ?? '');
+      setExamStatus(e.status ?? '');
     } catch (e) {
       Alert.alert('Error', 'Failed to load staged exam');
       router.back();
@@ -344,6 +166,10 @@ export default function StagedDetailScreen() {
       if (officialWebsite !== (exam?.officialWebsite ?? '')) corrections.officialWebsite = officialWebsite;
       if (notificationUrl !== (exam?.notificationUrl ?? '')) corrections.notificationUrl = notificationUrl;
       if (description !== (exam?.description ?? '')) corrections.description = description;
+      if (state !== (exam?.state ?? '')) corrections.state = state;
+      if (minAge !== (exam?.minAge?.toString() ?? '')) corrections.minAge = parseInt(minAge);
+      if (maxAge !== (exam?.maxAge?.toString() ?? '')) corrections.maxAge = parseInt(maxAge);
+      if (examStatus !== (exam?.status ?? '')) corrections.status = examStatus;
 
       await scraperService.reviewStagedExam(
         id!,
@@ -371,7 +197,7 @@ export default function StagedDetailScreen() {
     return (
       <View style={styles.loadingCentered}>
         <ActivityIndicator size="large" color="#4F46E5" />
-        <Text style={styles.loadingText}>Loading extraction details…</Text>
+        <Text style={styles.loadingText}>Extracting Intelligence…</Text>
       </View>
     );
   }
@@ -387,180 +213,237 @@ export default function StagedDetailScreen() {
       <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        {/* Header Section */}
-        <LinearGradient colors={['#4F46E5', '#3730A3']} style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-            <Ionicons name="arrow-back" size={24} color="#FFF" />
+      {/* Glass Floating Header */}
+      <View style={styles.floatingHeader}>
+        <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.headerBackBtn}>
+            <ArrowLeft size={20} color="#cbd5e1" strokeWidth={3} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Review Extraction</Text>
-          <View style={styles.bannerRow}>
-            <View style={styles.statusGroup}>
-              <View style={styles.statusBadge}>
-                <Text style={styles.statusBadgeText}>{exam.reviewStatus}</Text>
-              </View>
-              {exam.existingExamId && <View style={styles.updatePill}><Text style={styles.updatePillText}>UPDATE</Text></View>}
-              {exam.isDuplicate && <View style={styles.dupPill}><Text style={styles.dupPillText}>DUPLICATE</Text></View>}
-            </View>
-            {CONF !== undefined && (
-              <View style={[styles.aiBadge, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-                <View style={[styles.aiDot, { backgroundColor: confColor }]} />
-                <Text style={[styles.aiConfText, { color: '#FFF' }]}>AI {Math.round(CONF * 100)}%</Text>
-              </View>
-            )}
+          <View style={styles.headerTitles}>
+             <Text style={styles.headerTitleTiny}>Review Portal</Text>
+             <Text style={styles.headerTitleMain} numberOfLines={1}>{exam.shortTitle || exam.title}</Text>
           </View>
         </LinearGradient>
+      </View>
 
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={{ height: 110 }} />
         <View style={styles.mainContent}>
-          {/* AI Notes Banner */}
+          {/* AI Insights */}
           {exam.aiNotes && (
-            <LinearGradient colors={['#EEF2FF', '#E0E7FF']} style={styles.aiNotesBanner}>
-              <Ionicons name="sparkles" size={18} color="#4F46E5" />
-              <Text style={styles.aiNotesText}>{exam.aiNotes}</Text>
-            </LinearGradient>
+            <View style={styles.aiNotesWrapper}>
+              <LinearGradient colors={['#EEF2FF', '#E0E7FF']} style={styles.aiNotesBanner}>
+                <Sparkles size={18} color="#4F46E5" strokeWidth={2.5} />
+                <Text style={styles.aiNotesText}>{exam.aiNotes}</Text>
+              </LinearGradient>
+            </View>
           )}
 
-          {/* Source Information */}
-          <Section title="Source Intelligence" icon="link">
-            <View style={styles.sourceBox}>
-              <View style={styles.sourceItem}>
-                <Ionicons name="globe-outline" size={16} color="#6B7280" />
-                <Text style={styles.sourceText}>{exam.scrapeJob?.scrapeSource?.label ?? 'Manual Import'}</Text>
-              </View>
-              <View style={styles.sourceItem}>
-                <Ionicons name="document-text-outline" size={16} color="#6B7280" />
-                <Text style={styles.sourceText} numberOfLines={1}>{exam.sourceUrl || 'No source URL'}</Text>
-              </View>
-              <View style={styles.sourceMetas}>
-                <Text style={styles.sourceMetaText}>Extracted {exam.scrapedAt ? new Date(exam.scrapedAt).toLocaleDateString() : 'now'}</Text>
-                <Text style={styles.sourceMetaText}>· {exam.sourceCount} sources merged</Text>
-              </View>
-            </View>
-          </Section>
-
-          {/* Basic Fields */}
-          <Section title="Core Details" icon="document-outline">
-            <Field label="Title" value={title} multiline onEdit={() => setEditField({ key: 'title', title: 'Exam Title', value: title, multiline: true })} />
-            <Field label="Conducting Body" value={conductingBody} onEdit={() => setEditField({ key: 'conductingBody', title: 'Conducting Body', value: conductingBody })} />
-            <TouchableOpacity style={styles.fieldRow} onPress={() => setCatModal(true)}>
-              <View style={styles.fieldContent}>
-                <Text style={styles.fieldLabel}>Category</Text>
-                <Text style={[styles.fieldValue, !category && styles.fieldValueEmpty]}>{category ? category.replace(/_/g, ' ') : 'Select Category'}</Text>
-              </View>
-              <View style={styles.editIconBadge}><Ionicons name="chevron-down" size={14} color="#6366F1" /></View>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.fieldRow} onPress={() => setLevelModal(true)}>
-              <View style={styles.fieldContent}>
-                <Text style={styles.fieldLabel}>Level</Text>
-                <Text style={[styles.fieldValue, !examLevel && styles.fieldValueEmpty]}>{examLevel || 'Select Level'}</Text>
-              </View>
-              <View style={styles.editIconBadge}><Ionicons name="chevron-down" size={14} color="#6366F1" /></View>
-            </TouchableOpacity>
-            <Field label="Vacancies" value={totalVacancies} multiline onEdit={() => setEditField({ key: 'totalVacancies', title: 'Total Vacancies', value: totalVacancies, multiline: true })} />
-            <Field label="Qualification Details" value={qualificationCriteria} multiline onEdit={() => setEditField({ key: 'qualificationCriteria', title: 'Qualification Details', value: qualificationCriteria, multiline: true })} />
-            <Field label="Salary" value={salary} multiline onEdit={() => setEditField({ key: 'salary', title: 'Salary', value: salary, multiline: true })} />
-            <Field label="Application Fee" value={applicationFee} multiline onEdit={() => setEditField({ key: 'applicationFee', title: 'Application Fee', value: applicationFee, multiline: true })} />
-            <Field label="Additional Details" value={additionalDetails} multiline onEdit={() => setEditField({ key: 'additionalDetails', title: 'Additional Details', value: additionalDetails, multiline: true })} />
-            <Field label="Description" value={description} multiline isLast onEdit={() => setEditField({ key: 'description', title: 'Description', value: description, multiline: true })} />
-          </Section>
-
-          {/* Resources */}
-          <Section title="Links & Resources" icon="at-circle-outline">
-            <Field label="Official Website" value={officialWebsite} onEdit={() => setEditField({ key: 'officialWebsite', title: 'Official Website', value: officialWebsite })} />
-            <Field label="Primary Notification" value={notificationUrl} isLast onEdit={() => setEditField({ key: 'notificationUrl', title: 'Notification URL', value: notificationUrl })} />
-          </Section>
-
-          {/* Timeline */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeaderInner}>
-              <View style={{ flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                <Ionicons name="time-outline" size={20} color="#4F46E5" />
-                <Text style={styles.sectionTitle}>Extracted Lifecycle ({events.length})</Text>
-              </View>
-              <TouchableOpacity style={styles.miniAddBtn} onPress={handleAddEvent}>
-                <Ionicons name="add" size={18} color="#4F46E5" />
+          {/* Quick Operational Sync */}
+          <View style={styles.quickOpsContainer}>
+            <View style={styles.quickOpsRow}>
+              <TouchableOpacity style={styles.opsCard} onPress={() => setStatusModal(true)}>
+                <View style={styles.opsIconBox}><ShieldCheck size={18} color="#6366F1" strokeWidth={2.5} /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.opsLabel}>Current Phase</Text>
+                  <Text style={styles.opsValue} numberOfLines={1}>{examStatus ? examStatus.replace(/_/g, ' ') : 'Not Set'}</Text>
+                </View>
+                <ChevronDown size={14} color="#94a3b8" />
               </TouchableOpacity>
+
+              <View style={[styles.opsCard, { marginLeft: 12 }]}>
+                <View style={styles.opsIconBox}><Sparkles size={18} color={confColor} strokeWidth={2.5} /></View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.opsLabel}>Confidence Score</Text>
+                  <Text style={[styles.opsValue, { color: confColor }]}>{CONF ? Math.round(CONF * 100) + '%' : 'TBD'}</Text>
+                </View>
+              </View>
             </View>
+          </View>
+
+          {/* POSITIVE CHANGE: START WITH TIMELINE AS REQUESTED */}
+          {(() => {
+            const pastCount = events.filter(ev => !ev.isTBD && (ev.endsAt ? new Date(ev.endsAt) < new Date() : ev.startsAt ? new Date(ev.startsAt) < new Date() : false)).length;
+            return (
+              <View style={styles.timelineHeader}>
+                 <View style={styles.timelineHeaderLeft}>
+                    <Clock size={20} color="#4F46E5" strokeWidth={2.5} />
+                    <Text style={styles.sectionTitle}>Timeline Flow</Text>
+                    {events.length > 0 && (
+                      <View style={styles.completionBadge}>
+                        <Text style={styles.completionBadgeText}>{pastCount}/{events.length} EXTRACTED</Text>
+                      </View>
+                    )}
+                 </View>
+                 <TouchableOpacity style={styles.addEventBtn} onPress={handleAddEvent}>
+                    <Plus size={18} color="#FFF" strokeWidth={3} />
+                    <Text style={styles.addEventBtnText}>Add Event</Text>
+                 </TouchableOpacity>
+              </View>
+            );
+          })()}
+
+          <View style={styles.timelineContainer}>
             {events.length === 0 ? (
               <View style={styles.emptyEvents}>
-                <Ionicons name="calendar-outline" size={40} color="#D1D5DB" />
-                <Text style={styles.emptyEventsText}>No timeline events extracted</Text>
+                <Clock size={48} color="#D1D5DB" strokeWidth={1} />
+                <Text style={styles.emptyEventsText}>No timeline data extracted</Text>
+                <TouchableOpacity onPress={handleAddEvent} style={styles.createFirstBtn}>
+                  <Text style={styles.createFirstText}>Create First Event</Text>
+                </TouchableOpacity>
               </View>
             ) : (
               events
                 .slice()
                 .sort((a, b) => a.stageOrder - b.stageOrder)
                 .map((ev) => (
-                  <EventCard key={ev.id} event={ev} onUpdate={handleEventUpdate} onDelete={handleEventDelete} />
+                  <StagedEventCard
+                    key={ev.id}
+                    event={ev}
+                    onUpdate={handleEventUpdate}
+                    onDelete={handleEventDelete}
+                    onOpenStageModal={(e) => { setActiveEvent(e); setEventStageModal(true); }}
+                    onOpenTypeModal={(e) => { setActiveEvent(e); setEventTypeModal(true); }}
+                    onOpenTitleModal={(e) => { setActiveEvent(e); setEventTitleModal(true); }}
+                    onOpenDateModal={(e, type) => { setActiveEvent(e); setEventDateModal({ open: true, type }); }}
+                    onOpenOrderModal={(e) => { setActiveEvent(e); setEventOrderModal(true); }}
+                    onOpenDescriptionModal={(e) => { setActiveEvent(e); setEventDescriptionModal(true); }}
+                  />
                 ))
             )}
           </View>
 
-          <View style={{ height: 140 }} />
+          {/* Exam Profile Sections */}
+          <StagedSection title="Core Information" icon={FileText}>
+            <StagedField label="Full Exam Title" value={title} multiline onEdit={() => setEditField({ key: 'title', title: 'Exam Title', value: title, multiline: true })} />
+            <StagedField label="Short Name / Code" value={shortTitle} onEdit={() => setEditField({ key: 'shortTitle', title: 'Short Title', value: shortTitle })} />
+            <StagedField label="Conducting Body" value={conductingBody} onEdit={() => setEditField({ key: 'conductingBody', title: 'Conducting Body', value: conductingBody })} />
+
+            <TouchableOpacity style={styles.customFieldRow} onPress={() => setCatModal(true)}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>Category</Text>
+                <Text style={[styles.fieldValue, !category && styles.fieldValueEmpty]}>{category ? category.replace(/_/g, ' ') : 'Not Categorized'}</Text>
+              </View>
+              <View style={styles.fieldIconBadge}><Layers size={18} color="#6366F1" strokeWidth={2.5} /></View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.customFieldRow} onPress={() => setLevelModal(true)}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>Level / Difficulty</Text>
+                <Text style={[styles.fieldValue, !examLevel && styles.fieldValueEmpty]}>{examLevel || 'Not Specified'}</Text>
+              </View>
+              <View style={styles.fieldIconBadge}><Info size={18} color="#6366F1" strokeWidth={2.5} /></View>
+            </TouchableOpacity>
+
+            <StagedField label="About the Exam" value={description} multiline onEdit={() => setEditField({ key: 'description', title: 'Exam Description', value: description, multiline: true })} />
+
+            <TouchableOpacity style={styles.customFieldRow} onPress={() => setStateModal(true)}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>State / Region</Text>
+                <Text style={[styles.fieldValue, !state && styles.fieldValueEmpty]}>{state || 'All India'}</Text>
+              </View>
+              <View style={styles.fieldIconBadge}><Globe size={18} color="#6366F1" strokeWidth={2.5} /></View>
+            </TouchableOpacity>
+          </StagedSection>
+
+          <StagedSection title="Requirement Details" icon={ShieldCheck}>
+            <View style={{ flexDirection: 'row' }}>
+              <View style={{ flex: 1 }}>
+                <StagedField label="Min Age" value={minAge} onEdit={() => setEditField({ key: 'minAge', title: 'Minimum Age', value: minAge, numeric: true })} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <StagedField label="Max Age" value={maxAge} onEdit={() => setEditField({ key: 'maxAge', title: 'Maximum Age', value: maxAge, numeric: true })} />
+              </View>
+            </View>
+            <StagedField label="Recruitment Vacancies" value={totalVacancies} multiline onEdit={() => setEditField({ key: 'totalVacancies', title: 'Total Vacancies', value: totalVacancies, multiline: true })} />
+            <StagedField label="Salary / Grade Pay" value={salary} multiline onEdit={() => setEditField({ key: 'salary', title: 'Salary Details', value: salary, multiline: true })} />
+            <StagedField label="Eligibility / Qualification" value={qualificationCriteria} multiline onEdit={() => setEditField({ key: 'qualificationCriteria', title: 'Qualification Details', value: qualificationCriteria, multiline: true })} />
+            <StagedField label="Application Fee" value={applicationFee} multiline onEdit={() => setEditField({ key: 'applicationFee', title: 'Application Fee', value: applicationFee, multiline: true })} />
+            <StagedField label="Extra Notes" value={additionalDetails} multiline isLast onEdit={() => setEditField({ key: 'additionalDetails', title: 'Additional Details', value: additionalDetails, multiline: true })} />
+          </StagedSection>
+
+          <StagedSection title="Digital Footprint" icon={LinkIcon}>
+            <StagedField label="Official Website" value={officialWebsite} onEdit={() => setEditField({ key: 'officialWebsite', title: 'Official Website', value: officialWebsite })} />
+            <StagedField label="PDF / Notification Source" value={notificationUrl} isLast onEdit={() => setEditField({ key: 'notificationUrl', title: 'Primary Source URL', value: notificationUrl })} />
+          </StagedSection>
+
+          {/* Source Intelligence */}
+          <View style={styles.footerInfo}>
+             <View style={styles.footerInfoRow}>
+                <Globe size={14} color="#9CA3AF" />
+                <Text style={styles.footerInfoText}>Extracted from {exam.scrapeJob?.scrapeSource?.label ?? 'Manual Source'}</Text>
+             </View>
+             <Text style={styles.footerDateText}>Processed on {exam.scrapedAt ? new Date(exam.scrapedAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long' }) : 'recently'}</Text>
+          </View>
+
+          <View style={{ height: 40 }} />
         </View>
       </ScrollView>
 
-      {/* Footer Action Bar */}
+      {/* Primary Action Bar */}
       {isPending && (
         <View style={styles.actionBar}>
           <TouchableOpacity
             style={[styles.actionBarBtn, styles.rejectBtn]}
             onPress={() => { setReviewNote(''); setReviewModal('REJECTED'); }}
           >
-            <Ionicons name="close" size={20} color="#FFF" />
+            <X size={20} color="#FFF" strokeWidth={3} />
             <Text style={styles.actionBarLabel}>Reject</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBarBtn, styles.flagBtn]}
             onPress={() => { setReviewNote(''); setReviewModal('NEEDS_CORRECTION'); }}
           >
-            <Ionicons name="flag" size={18} color="#FFF" />
-            <Text style={styles.actionBarLabel}>Fix</Text>
+            <Flag size={18} color="#FFF" strokeWidth={2.5} />
+            <Text style={styles.actionBarLabel}>Manual Fix</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBarBtn, styles.approveBtn]}
             onPress={() => { setReviewNote(''); setReviewModal('APPROVED'); }}
           >
             <LinearGradient colors={['#10B981', '#059669']} style={styles.approveGradient}>
-              <Ionicons name="rocket" size={20} color="#FFF" />
-              <Text style={styles.actionBarLabel}>Promote Live</Text>
+              <Rocket size={20} color="#FFF" strokeWidth={2.5} />
+              <Text style={styles.actionBarLabel}>Publish Live</Text>
             </LinearGradient>
           </TouchableOpacity>
         </View>
       )}
 
-      {/* Status Decision Modal */}
+      {/* MODALS */}
       <Modal visible={reviewModal !== null} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setReviewModal(null)}>
         <SafeAreaView style={styles.modalBg}>
-          <View style={[styles.modalHeader, { borderBottomWidth: 1, borderBottomColor: '#F3F4F6' }]}>
-            <TouchableOpacity onPress={() => setReviewModal(null)}>
-              <Text style={styles.modalCancel}>Cancel</Text>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setReviewModal(null)} style={styles.circularBtn}>
+              <X size={20} color="#6B7280" strokeWidth={2.5} />
             </TouchableOpacity>
             <Text style={styles.modalHeaderTitle}>
-              {reviewModal === 'APPROVED' ? 'Promote to Live' : reviewModal === 'REJECTED' ? 'Reject Entry' : 'Manual Fix Required'}
+              {reviewModal === 'APPROVED' ? 'Final Polish' : reviewModal === 'REJECTED' ? 'Reject Data' : 'Correction Needed'}
             </Text>
-            <TouchableOpacity onPress={() => reviewModal && handleReview(reviewModal)} disabled={submitting}>
-              {submitting ? <ActivityIndicator size="small" color="#4F46E5" /> : <Text style={styles.modalSave}>Submit</Text>}
+            <TouchableOpacity onPress={() => reviewModal && handleReview(reviewModal)} disabled={submitting} style={styles.submitBtn}>
+              {submitting ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={styles.submitBtnText}>Submit</Text>}
             </TouchableOpacity>
           </View>
           <ScrollView style={{ padding: 24 }} keyboardShouldPersistTaps="handled">
             {reviewModal === 'APPROVED' && (
               <View style={styles.promoteAlert}>
-                <Ionicons name="shield-checkmark" size={22} color="#10B981" />
-                <Text style={styles.promoteAlertText}>
-                  This record will be merged into the master database and become visible to all mobile users.
-                </Text>
+                <ShieldCheck size={24} color="#10B981" />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.promoteAlertTitle}>Ready for Launch</Text>
+                  <Text style={styles.promoteAlertText}>
+                    This data will be merged into the production database and instantly visible to all Suchana mobile users.
+                  </Text>
+                </View>
               </View>
             )}
-            <Text style={styles.noteInputLabel}>Feedback / Final Admin Notes</Text>
+            <Text style={styles.noteInputLabel}>Administrator Decision Notes</Text>
             <TextInput
-              style={[styles.editInput, styles.editInputMulti]}
+              style={styles.decisionInput}
               value={reviewNote}
               onChangeText={setReviewNote}
-              placeholder="State reason or leave final notes for this promotion…"
+              placeholder="State reason or leave final observations…"
               placeholderTextColor="#9CA3AF"
               multiline
-              numberOfLines={5}
+              numberOfLines={6}
               textAlignVertical="top"
               autoFocus
             />
@@ -568,17 +451,19 @@ export default function StagedDetailScreen() {
         </SafeAreaView>
       </Modal>
 
-      {/* Sub-modals for fields */}
+      {/* Shared Modals */}
       {editField && (
         <TextEditModal
           visible={true}
           title={editField.title}
-          value={editField.value}
-          multiline={editField.multiline}
-          keyboardType={editField.numeric ? 'numeric' : 'default'}
+          value={editField?.value ?? ''}
+          multiline={editField?.multiline}
+          keyboardType={editField?.numeric ? 'numeric' : 'default'}
           onSave={(v) => {
+            if (!editField) return;
             const k = editField.key;
             if (k === 'title') setTitle(v);
+            else if (k === 'shortTitle') setShortTitle(v);
             else if (k === 'conductingBody') setConductingBody(v);
             else if (k === 'totalVacancies') setTotalVacancies(v);
             else if (k === 'qualificationCriteria') setQualificationCriteria(v);
@@ -588,115 +473,199 @@ export default function StagedDetailScreen() {
             else if (k === 'officialWebsite') setOfficialWebsite(v);
             else if (k === 'notificationUrl') setNotificationUrl(v);
             else if (k === 'description') setDescription(v);
+            else if (k === 'minAge') setMinAge(v);
+            else if (k === 'maxAge') setMaxAge(v);
           }}
           onClose={() => setEditField(null)}
         />
       )}
-      <ChipModal visible={catModal} title="Category" options={EXAM_CATEGORIES} selected={category} onSelect={setCategory} onClose={() => setCatModal(false)} />
-      <ChipModal visible={levelModal} title="Level" options={EXAM_LEVELS} selected={examLevel} onSelect={setExamLevel} onClose={() => setLevelModal(false)} />
+
+      {/* Event Edit Modals */}
+      <ChipModal
+        visible={eventStageModal}
+        title="Event Stage"
+        options={LIFECYCLE_STAGES}
+        selected={activeEvent?.stage}
+        onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { stage: v, stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? activeEvent.stageOrder })}
+        onClose={() => setEventStageModal(false)}
+      />
+      <ChipModal
+        visible={eventTypeModal}
+        title="Event Type"
+        options={LIFECYCLE_EVENT_TYPES}
+        selected={activeEvent?.eventType}
+        onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { eventType: v })}
+        onClose={() => setEventTypeModal(false)}
+      />
+      {activeEvent && (
+        <TextEditModal
+          visible={eventTitleModal}
+          title="Event Title"
+          value={activeEvent.title}
+          onSave={(v) => handleEventUpdate(activeEvent.id, { title: v })}
+          onClose={() => setEventTitleModal(false)}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventDateModal.open}
+          title={eventDateModal.type === 'start' ? "Starts At (YYYY-MM-DD)" : "Ends At (YYYY-MM-DD)"}
+          value={eventDateModal.type === 'start'
+            ? (activeEvent?.startsAt ? activeEvent.startsAt.slice(0, 10) : '')
+            : (activeEvent?.endsAt ? activeEvent.endsAt.slice(0, 10) : '')
+          }
+          onSave={(v) => {
+            const d = new Date(v);
+            const field = eventDateModal.type === 'start' ? 'startsAt' : 'endsAt';
+            handleEventUpdate(activeEvent.id, { [field]: isNaN(d.getTime()) ? null : d.toISOString() });
+          }}
+          onClose={() => setEventDateModal({ open: false, type: 'start' })}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventOrderModal}
+          title="Display Order (priority)"
+          value={activeEvent?.stageOrder?.toString() ?? '0'}
+          keyboardType="numeric"
+          suggestions={['10', '20', '30', '40', '50', '60', '70', '80', '90', '100']}
+          onSave={(v) => activeEvent && handleEventUpdate(activeEvent.id, { stageOrder: parseInt(v) || activeEvent.stageOrder })}
+          onClose={() => setEventOrderModal(false)}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventDescriptionModal}
+          title="Event Details"
+          value={activeEvent?.description ?? ''}
+          multiline
+          onSave={(v) => handleEventUpdate(activeEvent.id, { description: v })}
+          onClose={() => setEventDescriptionModal(false)}
+        />
+      )}
+
+      <ChipModal visible={catModal} title="Exam Category" options={EXAM_CATEGORIES} selected={category} onSelect={setCategory} onClose={() => setCatModal(false)} />
+      <ChipModal visible={levelModal} title="Exam Level" options={EXAM_LEVELS} selected={examLevel} onSelect={setExamLevel} onClose={() => setLevelModal(false)} />
+      <ChipModal visible={statusModal} title="Exam Status" options={EXAM_STATUSES} selected={examStatus} onSelect={setExamStatus} onClose={() => setStatusModal(false)} />
+      <ChipModal
+        visible={stateModal}
+        title="State / Region"
+        options={[
+          'All India', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+          'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+          'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha',
+          'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
+          'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir', 'Ladakh'
+        ]}
+        selected={state}
+        onSelect={setState}
+        onClose={() => setStateModal(false)}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F3F4F6' },
-  loadingCentered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
-  loadingText: { marginTop: 12, color: '#4F46E5', fontWeight: '700' },
-  scrollContent: { paddingBottom: 40 },
-  
-  // Header
-  header: {
-    paddingTop: 60, paddingHorizontal: 24, paddingBottom: 30,
-    borderBottomLeftRadius: 32, borderBottomRightRadius: 32,
-    elevation: 10, shadowColor: '#4F46E5', shadowOpacity: 0.3, shadowRadius: 15,
+  container: { flex: 1, backgroundColor: '#f8fafc' },
+  loadingCentered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { marginTop: 16, color: '#4F46E5', fontSize: 16, fontWeight: '800', letterSpacing: 1 },
+  scrollContent: { paddingBottom: 120 },
+
+  floatingHeader: {
+    position: 'absolute',
+    top: 50, left: 16, right: 16,
+    zIndex: 100,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 15, elevation: 12,
   },
-  backButton: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
-  headerTitle: { fontSize: 26, fontWeight: '900', color: '#FFF', marginBottom: 12 },
-  bannerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  statusGroup: { flexDirection: 'row', gap: 6 },
-  statusBadge: { backgroundColor: '#FFF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  statusBadgeText: { fontSize: 10, fontWeight: '900', color: '#4F46E5', textTransform: 'uppercase' },
-  updatePill: { backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  updatePillText: { fontSize: 10, fontWeight: '800', color: '#312E81' },
-  dupPill: { backgroundColor: '#FEE2E2', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
-  dupPillText: { fontSize: 10, fontWeight: '800', color: '#991B1B' },
-  aiBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  aiDot: { width: 6, height: 6, borderRadius: 3 },
-  aiConfText: { fontSize: 12, fontWeight: '900' },
+  headerGradient: {
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerBackBtn: {
+    width: 40, height: 40, borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  headerTitles: { flex: 1 },
+  headerTitleTiny: { fontSize: 10, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 },
+  headerTitleMain: { fontSize: 16, fontWeight: '800', color: '#f8fafc' },
 
-  mainContent: { paddingHorizontal: 20, marginTop: -20 },
-  aiNotesBanner: { flexDirection: 'row', gap: 12, padding: 16, borderRadius: 20, marginBottom: 20, alignItems: 'flex-start' },
-  aiNotesText: { flex: 1, fontSize: 13, color: '#3730A3', fontWeight: '600', lineHeight: 18 },
+  mainContent: { paddingHorizontal: 16 },
+  aiNotesWrapper: { marginBottom: 12 },
+  aiNotesBanner: {
+    flexDirection: 'row',
+    gap: 12,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#dbeafe',
+    alignItems: 'center',
+  },
+  aiNotesText: { flex: 1, fontSize: 12, color: '#1e40af', fontWeight: '600', lineHeight: 18 },
 
-  // Sections
-  section: { marginBottom: 20 },
-  sectionHeaderInner: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10, paddingLeft: 6 },
-  sectionTitle: { fontSize: 13, fontWeight: '800', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 1 },
-  sectionCard: { backgroundColor: '#FFF', borderRadius: 24, padding: 4, overflow: 'hidden', shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, elevation: 2 },
+  // Timeline UI
+  timelineHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 },
+  timelineHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionTitle: { fontSize: 11, fontWeight: '900', color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5 },
+  completionBadge: { backgroundColor: '#f1f5f9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginLeft: 8 },
+  completionBadgeText: { fontSize: 8, fontWeight: '900', color: '#64748b' },
+  addEventBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#3b82f6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  addEventBtnText: { color: '#FFF', fontWeight: '800', fontSize: 11 },
+  timelineContainer: { marginBottom: 20, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: '#f1f5f9', marginLeft: 8 },
+  emptyEvents: { alignItems: 'center', padding: 32, backgroundColor: '#FFF', borderRadius: 24, borderWidth: 2, borderColor: '#F3F4F6', borderStyle: 'dashed' },
+  emptyEventsText: { marginTop: 12, color: '#9CA3AF', fontWeight: '700', fontSize: 14 },
+  createFirstBtn: { marginTop: 20, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: '#F5F7FF', borderRadius: 16 },
+  createFirstText: { color: '#4F46E5', fontWeight: '800', fontSize: 14 },
 
-  // Field Rows
-  fieldRow: { flexDirection: 'row', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
-  fieldContent: { flex: 1 },
-  fieldLabel: { fontSize: 11, fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', marginBottom: 4 },
-  fieldValue: { fontSize: 15, fontWeight: '600', color: '#1F2937' },
+  // Custom Field Style
+  customFieldRow: { flexDirection: 'row', alignItems: 'center', padding: 20, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  fieldLabel: { fontSize: 11, fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 },
+  fieldValue: { fontSize: 16, fontWeight: '600', color: '#1F2937' },
   fieldValueEmpty: { color: '#D1D5DB', fontStyle: 'italic' },
-  editIconBadge: { width: 28, height: 28, borderRadius: 10, backgroundColor: '#F5F3FF', justifyContent: 'center', alignItems: 'center' },
+  fieldIconBadge: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#F5F7FF', justifyContent: 'center', alignItems: 'center' },
 
-  // Source Box
-  sourceBox: { padding: 16, gap: 8 },
-  sourceItem: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  sourceText: { fontSize: 13, color: '#4B5563', fontWeight: '500' },
-  sourceMetas: { flexDirection: 'row', marginTop: 4 },
-  sourceMetaText: { fontSize: 11, color: '#9CA3AF', fontWeight: '500' },
+  footerInfo: { paddingVertical: 16, alignItems: 'center', gap: 4 },
+  footerInfoRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  footerInfoText: { fontSize: 12, color: '#9CA3AF', fontWeight: '600' },
+  footerDateText: { fontSize: 11, color: '#9CA3AF', fontWeight: '500' },
 
-  // Events
-  eventCard: { backgroundColor: '#FFF', borderRadius: 20, padding: 16, marginBottom: 12, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 8, elevation: 3, marginHorizontal: 2 },
-  eventCardHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
-  eventBadges: { flexDirection: 'row', gap: 6 },
-  stagePill: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F5F3FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  stagePillText: { fontSize: 11, fontWeight: '800', color: '#4F46E5' },
-  typePill: { backgroundColor: '#F9FAFB', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  typePillText: { fontSize: 10, fontWeight: '700', color: '#6B7280' },
-  eventCardActions: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  miniToggleContainer: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  miniToggleLabel: { fontSize: 12, color: '#F59E0B' },
-  deleteBtn: { padding: 6 },
-  eventTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  eventTitleText: { flex: 1, fontSize: 14, fontWeight: '700', color: '#1F2937' },
-  eventDatesGrid: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F9FAFB', borderRadius: 12, padding: 12, gap: 10 },
-  dateChip: { flex: 1 },
-  dateLabel: { fontSize: 9, fontWeight: '800', color: '#9CA3AF', marginBottom: 2 },
-  dateValue: { fontSize: 13, fontWeight: '700', color: '#374151' },
-  dateDivider: { width: 1, height: 24, backgroundColor: '#E5E7EB' },
-  tbdControl: { alignItems: 'center' },
-  emptyEvents: { alignItems: 'center', padding: 40, backgroundColor: '#F9FAFB', borderRadius: 24, marginTop: 10 },
-  emptyEventsText: { marginTop: 12, color: '#9CA3AF', fontWeight: '600' },
+  quickOpsContainer: { marginBottom: 20 },
+  quickOpsRow: { flexDirection: 'row', alignItems: 'center' },
+  opsCard: { flex: 1, backgroundColor: '#FFF', borderRadius: 20, padding: 12, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  opsIconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  opsLabel: { fontSize: 9, color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', marginBottom: 2 },
+  opsValue: { fontSize: 13, color: '#111827', fontWeight: '800' },
 
   // Action Bar
-  actionBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', gap: 8, padding: 16, borderTopLeftRadius: 32, borderTopRightRadius: 32, backgroundColor: '#FFF', shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 20, elevation: 20 },
-  actionBarBtn: { flex: 1, borderRadius: 16, overflow: 'hidden', height: 56, justifyContent: 'center', alignItems: 'center' },
-  actionBarLabel: { color: '#FFF', fontWeight: '900', fontSize: 14 },
-  rejectBtn: { backgroundColor: '#EF4444', flexDirection: 'row', gap: 8 },
-  flagBtn: { backgroundColor: '#F59E0B', flexDirection: 'row', gap: 8 },
-  approveBtn: { flex: 2 },
+  actionBar: { 
+    position: 'absolute', bottom: 24, left: 16, right: 16, 
+    flexDirection: 'row', gap: 8, padding: 12, 
+    borderRadius: 24, backgroundColor: '#1e293b', 
+    shadowColor: '#000', shadowOpacity: 0.3, shadowRadius: 20, elevation: 20,
+    alignItems: 'center',
+  },
+  actionBarBtn: { flex: 1, borderRadius: 14, overflow: 'hidden', height: 48, justifyContent: 'center', alignItems: 'center' },
+  actionBarLabel: { color: '#FFF', fontWeight: '900', fontSize: 13 },
+  rejectBtn: { backgroundColor: '#ef4444', flexDirection: 'row', gap: 6 },
+  flagBtn: { backgroundColor: '#f59e0b', flexDirection: 'row', gap: 6 },
+  approveBtn: { flex: 1.8 },
   approveGradient: { width: '100%', height: '100%', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
 
   // Modals
   modalBg: { flex: 1, backgroundColor: '#FFF' },
-  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 20 },
-  modalHeaderTitle: { fontSize: 18, fontWeight: '800', color: '#111827' },
-  modalCancel: { fontSize: 15, fontWeight: '600', color: '#6B7280' },
-  modalSave: { fontSize: 15, fontWeight: '800', color: '#4F46E5' },
-  modalCloseBtn: { padding: 4 },
-  chipList: { padding: 16 },
-  chipItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderRadius: 16, marginBottom: 8, backgroundColor: '#F9FAFB' },
-  chipItemActive: { backgroundColor: '#EEF2FF', borderLeftWidth: 4, borderLeftColor: '#4F46E5' },
-  chipItemText: { fontSize: 15, fontWeight: '600', color: '#374151' },
-  chipItemTextActive: { color: '#312E81', fontWeight: '800' },
-  editInput: { borderWidth: 2, borderColor: '#F3F4F6', borderRadius: 16, padding: 16, fontSize: 16, color: '#111827', backgroundColor: '#F9FAFB' },
-  editInputMulti: { minHeight: 140, paddingTop: 16 },
-  promoteAlert: { flexDirection: 'row', gap: 12, backgroundColor: '#ECFDF5', padding: 16, borderRadius: 16, marginBottom: 24, borderLeftWidth: 4, borderLeftColor: '#10B981' },
-  promoteAlertText: { flex: 1, fontSize: 13, color: '#065F46', fontWeight: '600', lineHeight: 18 },
-  noteInputLabel: { fontSize: 14, fontWeight: '800', color: '#1F2937', marginBottom: 10 },
-  miniAddBtn: { padding: 4, backgroundColor: '#F5F3FF', borderRadius: 8 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  modalHeaderTitle: { fontSize: 20, fontWeight: '900', color: '#111827' },
+  circularBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F9FAFB', justifyContent: 'center', alignItems: 'center' },
+  submitBtn: { backgroundColor: '#4F46E5', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 },
+  submitBtnText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
+  promoteAlert: { flexDirection: 'row', gap: 16, backgroundColor: '#ECFDF5', padding: 20, borderRadius: 24, marginBottom: 32, borderLeftWidth: 6, borderLeftColor: '#10B981' },
+  promoteAlertTitle: { fontSize: 16, fontWeight: '900', color: '#065F46', marginBottom: 4 },
+  promoteAlertText: { fontSize: 14, color: '#065F46', fontWeight: '600', lineHeight: 20 },
+  noteInputLabel: { fontSize: 13, fontWeight: '800', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16, paddingLeft: 4 },
+  decisionInput: { borderWidth: 2, borderColor: '#F3F4F6', borderRadius: 24, padding: 24, fontSize: 17, color: '#111827', backgroundColor: '#F9FAFB', minHeight: 180 },
 });

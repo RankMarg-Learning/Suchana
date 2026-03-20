@@ -115,6 +115,7 @@ export interface StagedExam {
     additionalDetails?: string;
     officialWebsite?: string;
     notificationUrl?: string;
+    status?: string;
     aiConfidence?: number;
     aiNotes?: string;
     reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_CORRECTION';

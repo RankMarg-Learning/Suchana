@@ -238,15 +238,19 @@ export default function CreateExamScreen() {
     <SafeAreaView style={styles.safe}>
       <StatusBar barStyle="light-content" />
       <Stack.Screen options={{ headerShown: false }} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <LinearGradient colors={['#4F46E5', '#3730A3']} style={styles.header}>
-          <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-              <Ionicons name="arrow-back" size={24} color="#FFF" />
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>{isEdit ? 'Edit Live Listing' : 'Create New Exam'}</Text>
+      <View style={styles.floatingHeader}>
+        <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.headerBackBtn}>
+            <Ionicons name="arrow-back" size={20} color="#cbd5e1" />
+          </TouchableOpacity>
+          <View style={styles.headerTitles}>
+             <Text style={styles.headerTitleTiny}>{isEdit ? 'Update Listing' : 'Admin Panel'}</Text>
+             <Text style={styles.headerTitleMain} numberOfLines={1}>{isEdit ? 'Edit Exam' : 'Create New Exam'}</Text>
           </View>
         </LinearGradient>
+      </View>
+
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
 
         <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
@@ -635,58 +639,76 @@ export default function CreateExamScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#FFF' },
-  container: { flex: 1, backgroundColor: '#F3F4F6' },
-  content: { padding: 20, paddingBottom: 60 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' },
-  loadingText: { marginTop: 12, color: '#4F46E5', fontWeight: '700' },
+  safe: { flex: 1, backgroundColor: '#f8fafc' },
+  container: { flex: 1 },
+  content: { padding: 16, paddingTop: 120, paddingBottom: 60 },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#f8fafc' },
+  loadingText: { marginTop: 12, color: '#3b82f6', fontWeight: '700' },
 
-  header: { paddingTop: 60, paddingHorizontal: 24, paddingBottom: 24, borderBottomLeftRadius: 32, borderBottomRightRadius: 32 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 16 },
-  headerTitle: { fontSize: 24, fontWeight: '900', color: '#FFF' },
-  backBtn: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center' },
+  floatingHeader: {
+    position: 'absolute',
+    top: 50, left: 16, right: 16,
+    zIndex: 100,
+    borderRadius: 24,
+    overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 15, elevation: 12,
+  },
+  headerGradient: {
+    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerBackBtn: {
+    width: 36, height: 36, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  headerTitles: { flex: 1 },
+  headerTitleTiny: { fontSize: 10, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 },
+  headerTitleMain: { fontSize: 16, fontWeight: '800', color: '#f8fafc' },
 
-  card: { backgroundColor: '#FFF', borderRadius: 24, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 4 },
-  sectionTitle: { fontSize: 16, fontWeight: '800', color: '#111827', marginBottom: 20, borderLeftWidth: 4, borderLeftColor: '#4F46E5', paddingLeft: 12 },
-  label: { fontSize: 13, fontWeight: '700', color: '#4B5563', marginBottom: 8, marginTop: 16 },
-  labelSmall: { fontSize: 11, fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase' },
-  input: { backgroundColor: '#F9FAFB', borderWidth: 1.5, borderColor: '#F3F4F6', borderRadius: 14, padding: 16, fontSize: 15, color: '#111827' },
-  inputError: { borderColor: '#EF4444' },
-  errorText: { color: '#EF4444', fontSize: 12, marginTop: 4, fontWeight: '600' },
-  textArea: { height: 120 },
-  row: { flexDirection: 'row' },
+  card: { backgroundColor: '#FFF', borderRadius: 24, padding: 20, marginBottom: 20, shadowColor: '#64748b', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2, borderWidth: 1, borderColor: '#f1f5f9' },
+  sectionTitle: { fontSize: 13, fontWeight: '900', color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 20, borderLeftWidth: 3, borderLeftColor: '#3b82f6', paddingLeft: 12 },
+  label: { fontSize: 12, fontWeight: '800', color: '#475569', marginBottom: 8, marginTop: 16 },
+  labelSmall: { fontSize: 10, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 },
+  input: { backgroundColor: '#f8fafc', borderWidth: 1, borderColor: '#f1f5f9', borderRadius: 12, padding: 16, fontSize: 15, color: '#1e293b', fontWeight: '600' },
+  inputError: { borderColor: '#ef4444' },
+  errorText: { color: '#ef4444', fontSize: 11, marginTop: 4, fontWeight: '600' },
+  textArea: { height: 120, textAlignVertical: 'top' },
+  row: { flexDirection: 'row', gap: 12 },
 
   chipContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-  chip: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#F3F4F6' },
-  chipActive: { backgroundColor: '#EEF2FF', borderColor: '#4F46E5' },
-  chipText: { fontSize: 12, fontWeight: '700', color: '#6B7280' },
-  chipTextActive: { color: '#4F46E5' },
+  chip: { paddingHorizontal: 14, paddingVertical: 10, borderRadius: 12, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#f1f5f9' },
+  chipActive: { backgroundColor: '#eff6ff', borderColor: '#3b82f6' },
+  chipText: { fontSize: 12, fontWeight: '700', color: '#64748b' },
+  chipTextActive: { color: '#3b82f6' },
 
   categoryContainer: { marginTop: 4 },
   categoryScroll: { gap: 8 },
-  categoryChip: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#F3F4F6' },
-  categoryChipActive: { backgroundColor: '#4F46E5', borderColor: '#4F46E5' },
-  categoryChipText: { fontSize: 13, color: '#4B5563', fontWeight: '700' },
+  categoryChip: { paddingHorizontal: 18, paddingVertical: 10, borderRadius: 20, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#f1f5f9' },
+  categoryChipActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+  categoryChipText: { fontSize: 13, color: '#64748b', fontWeight: '700' },
   categoryChipTextActive: { color: '#FFF' },
 
   dynamicHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  addBtnSmall: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#F5F3FF', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
-  addBtnTextSmall: { fontSize: 12, fontWeight: '800', color: '#4F46E5' },
+  addBtnSmall: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: '#eff6ff', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10 },
+  addBtnTextSmall: { fontSize: 11, fontWeight: '900', color: '#3b82f6', textTransform: 'uppercase' },
   kvRow: { flexDirection: 'row', gap: 8, marginBottom: 10, alignItems: 'center' },
   kvInput: { paddingVertical: 12, fontSize: 14 },
   removeBtn: { padding: 8 },
 
   switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  publishTitle: { fontSize: 16, fontWeight: '800', color: '#1F2937' },
-  publishSubtitle: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  publishTitle: { fontSize: 16, fontWeight: '800', color: '#1e293b' },
+  publishSubtitle: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
 
-  submitButtonWrapper: { marginTop: 10, borderRadius: 20, overflow: 'hidden', shadowColor: '#4F46E5', shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 },
+  submitButtonWrapper: { marginTop: 10, borderRadius: 20, overflow: 'hidden', shadowColor: '#3b82f6', shadowOpacity: 0.3, shadowRadius: 15, elevation: 10 },
   submitGradient: { padding: 20, alignItems: 'center', justifyContent: 'center' },
-  submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '900', letterSpacing: 0.5 },
+  submitButtonText: { color: '#FFF', fontSize: 16, fontWeight: '900', letterSpacing: 1 },
   statusChipContainer: { marginTop: 4 },
   statusScroll: { gap: 8 },
-  statusChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#F3F4F6' },
-  statusChipActive: { backgroundColor: '#4F46E5', borderColor: '#4F46E5' },
-  statusChipText: { fontSize: 12, color: '#4B5563', fontWeight: '700' },
+  statusChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#f1f5f9', borderWidth: 1, borderColor: '#f1f5f9' },
+  statusChipActive: { backgroundColor: '#3b82f6', borderColor: '#3b82f6' },
+  statusChipText: { fontSize: 12, color: '#64748b', fontWeight: '700' },
   statusChipTextActive: { color: '#FFF' },
 });

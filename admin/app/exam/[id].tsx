@@ -1,125 +1,195 @@
-
 import React, { useEffect, useState, useCallback } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  ActivityIndicator,
-  TouchableOpacity,
-  StatusBar,
-  Alert,
-  Modal,
-  TextInput,
-  Dimensions
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  StatusBar, Alert, TextInput, ActivityIndicator, Modal,
+  Dimensions, Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Markdown from 'react-native-markdown-display';
-import { useFocusEffect } from '@react-navigation/native';
+import {
+  ArrowLeft,
+  Clock,
+  FileText,
+  Globe,
+  Info,
+  Layers,
+  ShieldCheck,
+  X,
+  Rocket,
+  Plus,
+  Link as LinkIcon,
+  Trash2,
+  Megaphone,
+  Send,
+  ChevronRight,
+  ChevronDown,
+  Layout,
+  Star as StarIcon
+} from 'lucide-react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { examService, lifecycleService, Exam, LifecycleEvent } from '@/services/api.service';
-import { TimelineItem } from '@/components/TimelineItem';
+import {
+  EXAM_CATEGORIES,
+  EXAM_LEVELS,
+  EXAM_STATUSES,
+  LIFECYCLE_STAGES,
+  LIFECYCLE_EVENT_TYPES,
+  STAGE_ORDER_MAP
+} from '@/constants/enums';
 
-const markdownRules = {
-  table: (node: any, children: any, parent: any, styles: any) => (
-    <ScrollView horizontal key={node.key} showsHorizontalScrollIndicator={false}>
-      {children}
-    </ScrollView>
-  ),
-};
+// Components
+import { StagedSection } from '@/components/staged/StagedSection';
+import { StagedField } from '@/components/staged/StagedField';
+import { StagedEventCard } from '@/components/staged/StagedEventCard';
+import { ChipModal } from '@/components/staged/ChipModal';
+import { TextEditModal } from '@/components/staged/TextEditModal';
 
 const { width } = Dimensions.get('window');
 
-const formatMarkdown = (text: string | null | undefined): string => {
-  if (!text) return '';
-  return text.replace(/\\n/g, '\n');
-};
-
-
 export default function ExamDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
+
   const [exam, setExam] = useState<Exam | null>(null);
-  const [timeline, setTimeline] = useState<LifecycleEvent[]>([]);
+  const [events, setEvents] = useState<LifecycleEvent[]>([]);
   const [loading, setLoading] = useState(true);
-  const [notifying, setNotifying] = useState(false);
+  const [updating, setUpdating] = useState(false);
+
+  // Field states (synced with DB)
+  const [title, setTitle] = useState('');
+  const [shortTitle, setShortTitle] = useState('');
+  const [conductingBody, setConductingBody] = useState('');
+  const [category, setCategory] = useState('');
+  const [examLevel, setExamLevel] = useState('');
+  const [examStatus, setExamStatus] = useState('');
+  const [state, setState] = useState('');
+  const [minAge, setMinAge] = useState('');
+  const [maxAge, setMaxAge] = useState('');
+  const [totalVacancies, setTotalVacancies] = useState('');
+  const [qualificationCriteria, setQualificationCriteria] = useState('');
+  const [applicationFee, setApplicationFee] = useState('');
+  const [salary, setSalary] = useState('');
+  const [additionalDetails, setAdditionalDetails] = useState('');
+  const [officialWebsite, setOfficialWebsite] = useState('');
+  const [notificationUrl, setNotificationUrl] = useState('');
+  const [description, setDescription] = useState('');
+  const [isPublished, setIsPublished] = useState(true);
+
+  // UI States
+  const [editField, setEditField] = useState<{ key: string; title: string; value: string; multiline?: boolean; numeric?: boolean } | null>(null);
+  const [catModal, setCatModal] = useState(false);
+  const [levelModal, setLevelModal] = useState(false);
+  const [statusModal, setStatusModal] = useState(false);
+  const [stateModal, setStateModal] = useState(false);
+
+  // Notification Modal States
   const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [notifying, setNotifying] = useState(false);
   const [notifyType, setNotifyType] = useState<'CUSTOM' | 'RESULT' | 'ADMIT_CARD' | 'REGISTRATION' | 'EXAM_DATE'>('CUSTOM');
   const [notifyAudience, setNotifyAudience] = useState<'BOOKMARKED' | 'INTERESTED'>('BOOKMARKED');
   const [notifyTitle, setNotifyTitle] = useState('');
   const [notifyBody, setNotifyBody] = useState('');
 
-  const router = useRouter();
+  // Event Edit Helper States
+  const [activeEvent, setActiveEvent] = useState<LifecycleEvent | null>(null);
+  const [eventStageModal, setEventStageModal] = useState(false);
+  const [eventTypeModal, setEventTypeModal] = useState(false);
+  const [eventTitleModal, setEventTitleModal] = useState(false);
+  const [eventOrderModal, setEventOrderModal] = useState(false);
+  const [eventDescriptionModal, setEventDescriptionModal] = useState(false);
+  const [eventDateModal, setEventDateModal] = useState<{ open: boolean; type: 'start' | 'end' }>({ open: false, type: 'start' });
 
   const fetchData = useCallback(async () => {
     if (!id) return;
+    setLoading(true);
     try {
-      setLoading(true);
-      const [examRes, timelineRes] = await Promise.all([
+      const [res, timelineRes] = await Promise.all([
         examService.getExamById(id),
         lifecycleService.getEventsByExamId(id)
       ]);
-      console.log("examRes", examRes)
-      setExam(examRes.data || examRes);
+      const e = res.data || res;
+      setExam(e);
+      setEvents(timelineRes.data?.events || timelineRes.data || (Array.isArray(timelineRes) ? timelineRes : []));
 
-      const timelineData = timelineRes.data?.events ||
-        (Array.isArray(timelineRes.data) ? timelineRes.data :
-          (Array.isArray(timelineRes) ? timelineRes : []));
-      setTimeline(timelineData);
-    } catch (err: any) {
-      console.error(err);
-      Alert.alert('Error', 'Failed to fetch exam details');
+      setTitle(e.title ?? '');
+      setShortTitle(e.shortTitle ?? '');
+      setConductingBody(e.conductingBody ?? '');
+      setCategory(e.category ?? '');
+      setExamLevel(e.examLevel ?? '');
+      setExamStatus(e.status ?? '');
+      setState(e.state ?? '');
+      setMinAge(e.minAge?.toString() ?? '');
+      setMaxAge(e.maxAge?.toString() ?? '');
+      setTotalVacancies(e.totalVacancies ?? '');
+      setQualificationCriteria(e.qualificationCriteria ?? '');
+      setApplicationFee(e.applicationFee ?? '');
+      setSalary(e.salary ?? '');
+      setAdditionalDetails(e.additionalDetails ?? '');
+      setOfficialWebsite(e.officialWebsite ?? '');
+      setNotificationUrl(e.notificationUrl ?? '');
+      setDescription(e.description ?? '');
+      setIsPublished(e.isPublished ?? true);
+    } catch (e) {
+      Alert.alert('Error', 'Failed to load exam details');
     } finally {
       setLoading(false);
     }
   }, [id]);
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchData();
-    }, [fetchData])
-  );
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleUpdateField = async (key: string, value: any) => {
+    if (!id) return;
+    setUpdating(true);
+    try {
+      await examService.updateExam(id, { [key]: value });
+      // Update local state is handled by the calling onSave
+    } catch (e: any) {
+      Alert.alert('Update Failed', e?.response?.data?.error?.message ?? 'Unknown error');
+      fetchData(); // Rollback
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const handleAddEvent = () => {
     router.push({
       pathname: '/add-event',
-      params: { examId: id, examTitle: exam?.shortTitle }
+      params: {
+        examId: id,
+        examTitle: exam?.shortTitle || exam?.title,
+      }
     });
   };
 
-  const handleDeleteExam = () => {
-    Alert.alert(
-      'Delete Exam',
-      'Are you sure you want to delete this exam? This will remove all associated events.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await examService.deleteExam(id as string);
-              router.back();
-            } catch (err) {
-              Alert.alert('Error', 'Failed to delete exam');
-            }
-          }
-        }
-      ]
-    );
+  const handleEventUpdate = async (eventId: string, data: any) => {
+    try {
+      await lifecycleService.updateEvent(id!, eventId, data);
+      setEvents((prev) => prev.map((ev) => ev.id === eventId ? { ...ev, ...data } : ev));
+    } catch (e: any) {
+      Alert.alert('Error', e?.response?.data?.error?.message ?? 'Update failed');
+    }
   };
 
+  const handleEventDelete = async (eventId: string) => {
+    try {
+      await lifecycleService.deleteEvent(id!, eventId);
+      setEvents((prev) => prev.filter((ev) => ev.id !== eventId));
+    } catch (e: any) {
+      Alert.alert('Error', e?.response?.data?.error?.message ?? 'Delete failed');
+    }
+  };
+
+  // Notification Broadcast Logic
   const handleSendNotification = async () => {
     if (!id) return;
     try {
       setNotifying(true);
       const result = await examService.notifyBookmarkedUsers(id, notifyTitle, notifyBody, notifyAudience);
-      Alert.alert('Success', `Notification sent to ${result.targetTokens} users.`);
+      Alert.alert('Success', `Notification sent to  users.`);
       setShowNotifyModal(false);
       resetNotifyForm();
     } catch (err) {
-      console.error(err);
       Alert.alert('Error', 'Failed to send notification');
     } finally {
       setNotifying(false);
@@ -133,26 +203,26 @@ export default function ExamDetailScreen() {
     setNotifyBody('');
   };
 
-  const handleTypeSelect = (type: typeof notifyType) => {
+  const handleNotifyTypeSelect = (type: typeof notifyType) => {
     setNotifyType(type);
     if (!exam) return;
-
+    const sTitle = exam.shortTitle || exam.title;
     switch (type) {
       case 'RESULT':
-        setNotifyTitle(`🎉 Result Declared: ${exam.shortTitle}`);
-        setNotifyBody(`${exam.shortTitle} results are now available. Check your status now!`);
+        setNotifyTitle(`🎉 Result Declared: ${sTitle}`);
+        setNotifyBody(`${sTitle} results are now available. Check your status now!`);
         break;
       case 'ADMIT_CARD':
-        setNotifyTitle(`🎟️ Admit Card Out: ${exam.shortTitle}`);
-        setNotifyBody(`Download your admit card for ${exam.shortTitle}. Tap to view links.`);
+        setNotifyTitle(`🎟️ Admit Card Out: ${sTitle}`);
+        setNotifyBody(`Download your admit card for ${sTitle}. Tap to view links.`);
         break;
       case 'REGISTRATION':
-        setNotifyTitle(`📝 Apply Now: ${exam.shortTitle}`);
-        setNotifyBody(`Registration for ${exam.shortTitle} has started. Don't miss the deadline!`);
+        setNotifyTitle(`📝 Apply Now: ${sTitle}`);
+        setNotifyBody(`Registration for ${sTitle} has started. Don't miss the deadline!`);
         break;
       case 'EXAM_DATE':
-        setNotifyTitle(`📅 Exam Dates Announced: ${exam.shortTitle}`);
-        setNotifyBody(`The examination dates for ${exam.shortTitle} have been officially announced.`);
+        setNotifyTitle(`📅 Exam Dates Announced: ${sTitle}`);
+        setNotifyBody(`The examination dates for ${sTitle} have been officially announced.`);
         break;
       default:
         setNotifyTitle('');
@@ -160,852 +230,455 @@ export default function ExamDetailScreen() {
     }
   };
 
-  const handleEditEvent = (event: LifecycleEvent) => {
-    router.push({
-      pathname: '/add-event',
-      params: {
-        examId: id,
-        examTitle: exam?.shortTitle,
-        eventId: event.id
-      }
-    });
-  };
-
-  const handleDeleteEvent = (event: LifecycleEvent) => {
-    Alert.alert(
-      'Delete Event',
-      `Are you sure you want to delete "${event.title}"?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              if (!id) return;
-              await lifecycleService.deleteEvent(id, event.id);
-              fetchData();
-            } catch (err) {
-              Alert.alert('Error', 'Failed to delete event');
-            }
-          }
+  const handleDeleteExam = () => {
+    Alert.alert('Delete Exam', 'Irreversible action. All events and user bookmarks will be purged.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete Everywhere', style: 'destructive', onPress: async () => {
+          try {
+            await examService.deleteExam(id!);
+            router.back();
+          } catch (e) { Alert.alert('Error', 'Deletion failed'); }
         }
-      ]
-    );
+      }
+    ]);
   };
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6366F1" />
+      <View style={styles.loadingCentered}>
+        <ActivityIndicator size="large" color="#4F46E5" />
       </View>
     );
   }
 
-  if (!exam) {
-    return (
-      <View style={styles.centered}>
-        <Text>Exam not found</Text>
-      </View>
-    );
-  }
+  if (!exam) return null;
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      <Stack.Screen
-        options={{
-          headerShown: false,
-        }}
-      />
+      <Stack.Screen options={{ headerShown: false }} />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} bounces={false}>
-        <LinearGradient
-          colors={['#6366F1', '#4F46E5']}
-          style={styles.topHeader}
-        >
-          <View style={styles.headerRow}>
-            <TouchableOpacity onPress={() => router.back()} style={styles.iconButton}>
-              <Ionicons name="arrow-back" size={24} color="#FFF" />
-            </TouchableOpacity>
-            <View style={styles.headerActionRow}>
-              <TouchableOpacity
-                onPress={() => router.push({ pathname: '/create-exam', params: { id } })}
-                style={styles.iconButton}
-              >
-                <Ionicons name="create-outline" size={24} color="#FFF" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleDeleteExam} style={styles.iconButton}>
-                <Ionicons name="trash-outline" size={24} color="#FFF" />
-              </TouchableOpacity>
-            </View>
+      {/* Floating Midnight Header */}
+      <View style={styles.floatingHeader}>
+        <LinearGradient colors={['#0f172a', '#1e293b']} style={styles.headerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.headerBackBtn}>
+            <ArrowLeft size={18} color="#cbd5e1" strokeWidth={3} />
+          </TouchableOpacity>
+          <View style={styles.headerTitles}>
+            <Text style={styles.headerTitleTiny}>Exam Management</Text>
+            <Text style={styles.headerTitleMain} numberOfLines={1}>{exam.shortTitle || exam.title}</Text>
           </View>
-          <Text style={styles.examTitle}>{exam.title}</Text>
-          <View style={styles.badgeContainer}>
-            <View style={[styles.badge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-              <Text style={styles.badgeText}>{exam.category.replace(/_/g, ' ')}</Text>
-            </View>
-            <View style={[styles.badge, { backgroundColor: 'rgba(255,255,255,0.2)' }]}>
-              <Text style={styles.badgeText}>{exam.examLevel}</Text>
-            </View>
-            {exam.isPublished ? (
-              <View style={[styles.badge, { backgroundColor: '#10B981' }]}>
-                <Text style={styles.badgeText}>LIVE</Text>
-              </View>
-            ) : (
-              <View style={[styles.badge, { backgroundColor: '#F59E0B' }]}>
-                <Text style={styles.badgeText}>DRAFT</Text>
-              </View>
-            )}
-          </View>
+          <TouchableOpacity onPress={handleDeleteExam} style={styles.headerDeleteBtn}>
+            <Trash2 size={18} color="#ef4444" strokeWidth={2.5} />
+          </TouchableOpacity>
         </LinearGradient>
+      </View>
 
+      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <View style={{ height: 110 }} />
         <View style={styles.mainContent}>
+          {/* Broadcaster Quick Access */}
           <TouchableOpacity
             style={styles.notifyBanner}
             onPress={() => setShowNotifyModal(true)}
             activeOpacity={0.9}
           >
-            <LinearGradient
-              colors={['#8B5CF6', '#6366F1']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.notifyBannerGradient}
-            >
-              <View style={styles.notifyLeftDecoration}>
-                <Ionicons name="megaphone" size={80} color="rgba(255,255,255,0.15)" style={styles.megaphoneIcon} />
-              </View>
+            <LinearGradient colors={['#8B5CF6', '#6366F1']} style={styles.notifyBannerGradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
               <View style={styles.notifyContent}>
-                <View style={styles.notifyIconWrapper}>
-                  <Ionicons name="send" size={24} color="#FFF" />
-                </View>
+                <View style={styles.notifyIconWrapper}><Megaphone size={24} color="#FFF" /></View>
                 <View>
                   <Text style={styles.notifyTitleText}>Broadcast Update</Text>
-                  <Text style={styles.notifySubtitleText}>Notify all bookmarked users instantly</Text>
+                  <Text style={styles.notifySubtitleText}>Send push to bookmarked users</Text>
                 </View>
               </View>
-              <View style={styles.notifyRightAction}>
-                <Ionicons name="chevron-forward" size={20} color="#FFF" />
-              </View>
+              <ChevronRight size={20} color="#FFF" />
             </LinearGradient>
           </TouchableOpacity>
 
-          <View style={styles.card}>
-            <View style={styles.sectionHeaderInner}>
-              <Ionicons name="information-circle-outline" size={20} color="#4F46E5" />
-              <Text style={styles.sectionTitle}>General Information</Text>
-            </View>
-            <View style={styles.infoGrid}>
-              <InfoItem label="Admin Body" value={exam.conductingBody} />
-              <InfoItem label="Short Name" value={exam.shortTitle} />
-              <InfoItem label="Phase" value={exam.status.replace(/_/g, ' ')} />
-              <InfoItem label="Scale" value={exam.state || 'National'} />
-            </View>
-            {exam.description && (
-              <View style={styles.descriptionContainer}>
-                <Text style={styles.infoLabel}>Description</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.description)}</Markdown>
-              </View>
-            )}
-            {exam.additionalDetails && (
-              <View style={styles.descriptionContainer}>
-                <Text style={styles.infoLabel}>Additional Details</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.additionalDetails)}</Markdown>
-              </View>
-            )}
-          </View>
+          {/* Quick Operational Controls */}
+          <View style={styles.quickOpsContainer}>
+            <View style={styles.quickOpsRow}>
+              <TouchableOpacity style={styles.opsCard} onPress={() => setStatusModal(true)}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.opsLabel}>Current Phase</Text>
+                  <Text style={styles.opsValue} numberOfLines={1}>{examStatus ? examStatus.replace(/_/g, ' ') : 'Not Set'}</Text>
+                </View>
+                <ChevronDown size={14} color="#94a3b8" />
+              </TouchableOpacity>
 
-          <View style={styles.card}>
-            <View style={styles.sectionHeaderInner}>
-              <Ionicons name="school-outline" size={20} color="#4F46E5" />
-              <Text style={styles.sectionTitle}>Eligibility & Details</Text>
-            </View>
-            <View style={styles.infoGrid}>
-              <InfoItem label="Min Age" value={exam.minAge?.toString() || 'N/A'} />
-              <InfoItem label="Max Age" value={exam.maxAge?.toString() || 'N/A'} />
-            </View>
-            {exam.qualificationCriteria && (
-              <View style={styles.descriptionContainer}>
-                <Text style={styles.infoLabel}>Qualification</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.qualificationCriteria)}</Markdown>
-              </View>
-            )}
-            {exam.totalVacancies && (
-              <View style={styles.descriptionContainer}>
-                <Text style={styles.infoLabel}>Vacancies</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.totalVacancies)}</Markdown>
-              </View>
-            )}
-            {exam.salary && (
-              <View style={styles.descriptionContainer}>
-                <Text style={styles.infoLabel}>Salary</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.salary)}</Markdown>
-              </View>
-            )}
-            {exam.applicationFee && (
-              <View style={styles.descriptionContainer}>
-                <Text style={styles.infoLabel}>Application Fee</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.applicationFee)}</Markdown>
-              </View>
-            )}
-          </View>
-
-          <View style={styles.card}>
-            <View style={styles.sectionHeaderInner}>
-              <Ionicons name="link-outline" size={20} color="#4F46E5" />
-              <Text style={styles.sectionTitle}>Official Resources</Text>
-            </View>
-            <View style={styles.infoGrid}>
-              <InfoItem label="Website" value={exam.officialWebsite || 'N/A'} fullWidth />
-              <InfoItem label="Notification" value={exam.notificationUrl || 'N/A'} fullWidth />
-            </View>
-          </View>
-
-          <View style={styles.sectionHeader}>
-            <View style={styles.sectionHeaderInner}>
-              <Ionicons name="time-outline" size={22} color="#1A1A1A" />
-              <Text style={styles.sectionTitleMain}>Lifecycle Timeline</Text>
-            </View>
-            <TouchableOpacity style={styles.addEventButton} onPress={handleAddEvent}>
-              <LinearGradient
-                colors={['#6366F1', '#4F46E5']}
-                style={styles.addEventGradient}
-              >
-                <Ionicons name="add" size={18} color="#FFF" />
-                <Text style={styles.addEventText}>Event</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.timelineCard}>
-            {timeline.length > 0 ? (
-              timeline.map((event, index) => (
-                <TimelineItem
-                  key={event.id}
-                  event={event}
-                  isLast={index === timeline.length - 1}
-                  onEdit={() => handleEditEvent(event)}
-                  onDelete={() => handleDeleteEvent(event)}
+              <View style={[styles.opsCard, { marginLeft: 10 }]}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.opsLabel}>Live Visibility</Text>
+                  <Text style={[styles.opsValue, { color: isPublished ? "#10b981" : "#64748b" }]}>{isPublished ? 'Searchable' : 'Hidden'}</Text>
+                </View>
+                <Switch
+                  value={isPublished}
+                  onValueChange={(v: boolean) => { setIsPublished(v); handleUpdateField('isPublished', v); }}
+                  trackColor={{ false: '#e2e8f0', true: '#818cf8' }}
+                  thumbColor={isPublished ? '#4f46e5' : '#f8fafc'}
+                  style={{ transform: [{ scaleX: 0.8 }, { scaleY: 0.8 }] }}
                 />
-              ))
-            ) : (
-              <View style={styles.emptyTimeline}>
-                <Ionicons name="calendar-outline" size={48} color="#D1D5DB" />
-                <Text style={styles.emptyTimelineText}>No events added yet.</Text>
-                <TouchableOpacity onPress={handleAddEvent}>
-                  <Text style={styles.createFirstText}>Create your first event</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Timeline View - Admin Fast Changes */}
+          {(() => {
+            const pastCount = events.filter(ev => !ev.isTBD && (ev.endsAt ? new Date(ev.endsAt) < new Date() : ev.startsAt ? new Date(ev.startsAt) < new Date() : false)).length;
+            return (
+              <View style={styles.timelineHeader}>
+                <View style={styles.timelineHeaderLeft}>
+                  <Clock size={16} color="#3b82f6" strokeWidth={3} />
+                  <Text style={styles.sectionTitle}>Timeline Flow</Text>
+                  {events.length > 0 && (
+                    <View style={styles.completionBadge}>
+                      <Text style={styles.completionBadgeText}>{pastCount}/{events.length} COMPLETED</Text>
+                    </View>
+                  )}
+                </View>
+                <TouchableOpacity style={styles.addEventBtn} onPress={handleAddEvent}>
+                  <Plus size={14} color="#FFF" strokeWidth={3} />
+                  <Text style={styles.addEventBtnText}>Add Event</Text>
                 </TouchableOpacity>
               </View>
+            );
+          })()}
+
+          <View style={styles.timelineContainer}>
+            {events.length === 0 ? (
+              <View style={styles.emptyEvents}>
+                <Clock size={40} color="#cbd5e1" strokeWidth={1.5} />
+                <Text style={styles.emptyEventsText}>No active timeline found</Text>
+              </View>
+            ) : (
+              events
+                .slice()
+                .sort((a, b) => a.stageOrder - b.stageOrder)
+                .map((ev) => (
+                  <StagedEventCard
+                    key={ev.id}
+                    event={ev as any}
+                    onUpdate={handleEventUpdate}
+                    onDelete={handleEventDelete}
+                    onOpenStageModal={(e) => { setActiveEvent(e as any); setEventStageModal(true); }}
+                    onOpenTypeModal={(e) => { setActiveEvent(e as any); setEventTypeModal(true); }}
+                    onOpenTitleModal={(e) => { setActiveEvent(e as any); setEventTitleModal(true); }}
+                    onOpenDateModal={(e, type) => { setActiveEvent(e as any); setEventDateModal({ open: true, type }); }}
+                    onOpenOrderModal={(e) => { setActiveEvent(e as any); setEventOrderModal(true); }}
+                    onOpenDescriptionModal={(e) => { setActiveEvent(e as any); setEventDescriptionModal(true); }}
+                  />
+                ))
             )}
           </View>
+
+          {/* Core Fields */}
+          <StagedSection title="Identity & Discovery" icon={FileText}>
+            <StagedField label="Full Official Title" value={title} multiline onEdit={() => setEditField({ key: 'title', title: 'Display Title', value: title, multiline: true })} />
+            <StagedField label="Short Name (Code)" value={shortTitle} onEdit={() => setEditField({ key: 'shortTitle', title: 'Short Title', value: shortTitle })} />
+            <StagedField label="Conducting Body" value={conductingBody} onEdit={() => setEditField({ key: 'conductingBody', title: 'Board / Authority', value: conductingBody })} />
+
+            <TouchableOpacity style={styles.customFieldRow} onPress={() => setCatModal(true)}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>Discovery Category</Text>
+                <Text style={[styles.fieldValue, !category && styles.fieldValueEmpty]}>{category ? category.replace(/_/g, ' ') : 'Not Categorized'}</Text>
+              </View>
+              <View style={styles.fieldIconBadge}><Layers size={18} color="#6366F1" strokeWidth={2.5} /></View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.customFieldRow} onPress={() => setLevelModal(true)}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>Visibility Level</Text>
+                <Text style={[styles.fieldValue, !examLevel && styles.fieldValueEmpty]}>{examLevel || 'Not Specified'}</Text>
+              </View>
+              <View style={styles.fieldIconBadge}><Layout size={18} color="#6366F1" strokeWidth={2.5} /></View>
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.customFieldRow} onPress={() => setStateModal(true)}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.fieldLabel}>State / Region</Text>
+                <Text style={[styles.fieldValue, !state && styles.fieldValueEmpty]}>{state || 'All India'}</Text>
+              </View>
+              <View style={styles.fieldIconBadge}><Globe size={18} color="#6366F1" strokeWidth={2.5} /></View>
+            </TouchableOpacity>
+
+            <StagedField label="Marketing Description" value={description} multiline onEdit={() => setEditField({ key: 'description', title: 'Exam Overview', value: description, multiline: true })} />
+          </StagedSection>
+
+          <StagedSection title="Eligibility Matrix" icon={ShieldCheck}>
+            <View style={{ flexDirection: 'row' }}>
+              <View style={{ flex: 1 }}>
+                <StagedField label="Minimum Age" value={minAge} onEdit={() => setEditField({ key: 'minAge', title: 'Age Limit (Lower)', value: minAge, numeric: true })} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <StagedField label="Maximum Age" value={maxAge} onEdit={() => setEditField({ key: 'maxAge', title: 'Age Limit (Upper)', value: maxAge, numeric: true })} />
+              </View>
+            </View>
+            <StagedField label="Total Openings" value={totalVacancies} multiline onEdit={() => setEditField({ key: 'totalVacancies', title: 'Vacancy Count', value: totalVacancies, multiline: true })} />
+            <StagedField label="Educational Criteria" value={qualificationCriteria} multiline onEdit={() => setEditField({ key: 'qualificationCriteria', title: 'Eligibility Criteria', value: qualificationCriteria, multiline: true })} />
+            <StagedField label="Pay Scale / Grade" value={salary} multiline onEdit={() => setEditField({ key: 'salary', title: 'Salary Details', value: salary, multiline: true })} />
+            <StagedField label="Fee Structure" value={applicationFee} multiline onEdit={() => setEditField({ key: 'applicationFee', title: 'Application Fees', value: applicationFee, multiline: true })} />
+            <StagedField label="Additional Intelligence" value={additionalDetails} multiline isLast onEdit={() => setEditField({ key: 'additionalDetails', title: 'Public Notes', value: additionalDetails, multiline: true })} />
+          </StagedSection>
+
+          <StagedSection title="Official Assets" icon={LinkIcon}>
+            <StagedField label="Primary Website" value={officialWebsite} onEdit={() => setEditField({ key: 'officialWebsite', title: 'Official Portal', value: officialWebsite })} />
+            <StagedField label="Notification PDF" value={notificationUrl} isLast onEdit={() => setEditField({ key: 'notificationUrl', title: 'Notification URL', value: notificationUrl })} />
+          </StagedSection>
+
+          <View style={{ height: 100 }} />
         </View>
       </ScrollView>
 
-      <Modal
-        visible={showNotifyModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowNotifyModal(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalIndicator} />
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Broadcast Update</Text>
-              <TouchableOpacity onPress={() => setShowNotifyModal(false)}>
-                <Ionicons name="close" size={24} color="#6B7280" />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.modalBody}>
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Target Audience</Text>
-                <View style={styles.audienceSelector}>
-                  <TouchableOpacity
-                    style={[styles.audienceChip, notifyAudience === 'BOOKMARKED' && styles.audienceChipActive]}
-                    onPress={() => setNotifyAudience('BOOKMARKED')}
-                  >
-                    <Ionicons name="bookmark" size={16} color={notifyAudience === 'BOOKMARKED' ? '#FFF' : '#6B7280'} />
-                    <Text style={[styles.audienceText, notifyAudience === 'BOOKMARKED' && styles.audienceTextActive]}>Bookmarked</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.audienceChip, notifyAudience === 'INTERESTED' && styles.audienceChipActive]}
-                    onPress={() => setNotifyAudience('INTERESTED')}
-                  >
-                    <Ionicons name="people" size={16} color={notifyAudience === 'INTERESTED' ? '#FFF' : '#6B7280'} />
-                    <Text style={[styles.audienceText, notifyAudience === 'INTERESTED' && styles.audienceTextActive]}>Interested Users</Text>
-                  </TouchableOpacity>
-                </View>
-                <Text style={styles.audienceSubtext}>
-                  {notifyAudience === 'BOOKMARKED'
-                    ? 'Only users who saved this exam.'
-                    : 'Saved users + those with matching category/level preferences.'}
-                </Text>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Update Type</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.typeSelectorScroll}>
-                  {[
-                    { id: 'CUSTOM', label: 'Custom', icon: 'create-outline' },
-                    { id: 'RESULT', label: 'Result', icon: 'trophy-outline' },
-                    { id: 'ADMIT_CARD', label: 'Admit Card', icon: 'card-outline' },
-                    { id: 'REGISTRATION', label: 'Apply', icon: 'document-text-outline' },
-                    { id: 'EXAM_DATE', label: 'Dates', icon: 'calendar-outline' },
-                  ].map((t) => (
-                    <TouchableOpacity
-                      key={t.id}
-                      style={[styles.typeChip, notifyType === t.id && styles.typeChipActive]}
-                      onPress={() => handleTypeSelect(t.id as any)}
-                    >
-                      <Ionicons name={t.icon as any} size={16} color={notifyType === t.id ? '#FFF' : '#6B7280'} />
-                      <Text style={[styles.typeChipText, notifyType === t.id && styles.typeChipTextActive]}>{t.label}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Title</Text>
-                <TextInput
-                  style={styles.input}
-                  placeholder={`Default: Update: ${exam.shortTitle}`}
-                  value={notifyTitle}
-                  onChangeText={setNotifyTitle}
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-
-              <View style={styles.inputGroup}>
-                <Text style={styles.inputLabel}>Message Body (Optional)</Text>
-                <TextInput
-                  style={[styles.input, styles.textArea]}
-                  placeholder="Write your custom message here..."
-                  value={notifyBody}
-                  onChangeText={setNotifyBody}
-                  multiline
-                  numberOfLines={4}
-                  placeholderTextColor="#9CA3AF"
-                />
-              </View>
-
-              <View style={styles.warningBox}>
-                <Ionicons name="alert-circle" size={20} color="#D97706" />
-                <Text style={styles.warningText}>
-                  This will be sent to all users who have bookmarked this exam.
-                </Text>
-              </View>
-
-              <TouchableOpacity
-                style={styles.sendButton}
-                onPress={handleSendNotification}
-                disabled={notifying}
-              >
-                <LinearGradient
-                  colors={['#6366F1', '#4F46E5']}
-                  style={styles.sendButtonGradient}
-                >
-                  {notifying ? (
-                    <ActivityIndicator color="#FFF" />
-                  ) : (
-                    <>
-                      <Ionicons name="send" size={18} color="#FFF" />
-                      <Text style={styles.sendButtonText}>Send Notification Now</Text>
-                    </>
-                  )}
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+      {/* Broadcast Modal */}
+      <Modal visible={showNotifyModal} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setShowNotifyModal(false)}>
+        <SafeAreaView style={styles.modalBg}>
+          <View style={styles.modalHeader}>
+            <TouchableOpacity onPress={() => setShowNotifyModal(false)} style={styles.circularBtn}><X size={20} color="#6B7280" /></TouchableOpacity>
+            <Text style={styles.modalHeaderTitle}>Broadcast Update</Text>
+            <TouchableOpacity onPress={handleSendNotification} disabled={notifying} style={styles.submitBtn}>
+              {notifying ? <ActivityIndicator size="small" color="#FFF" /> : <Text style={styles.submitBtnText}>Send</Text>}
+            </TouchableOpacity>
           </View>
-        </View>
+          <ScrollView style={{ padding: 24 }} keyboardShouldPersistTaps="handled">
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Targeting Audience</Text>
+              <View style={styles.audienceSelector}>
+                <TouchableOpacity style={[styles.audienceChip, notifyAudience === 'BOOKMARKED' && styles.audienceChipActive]} onPress={() => setNotifyAudience('BOOKMARKED')}>
+                  <Text style={[styles.audienceText, notifyAudience === 'BOOKMARKED' && styles.audienceTextActive]}>Bookmarked</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.audienceChip, notifyAudience === 'INTERESTED' && styles.audienceChipActive]} onPress={() => setNotifyAudience('INTERESTED')}>
+                  <Text style={[styles.audienceText, notifyAudience === 'INTERESTED' && styles.audienceTextActive]}>Interested</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Smart Templates</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {['CUSTOM', 'RESULT', 'ADMIT_CARD', 'REGISTRATION', 'EXAM_DATE'].map((t) => (
+                  <TouchableOpacity key={t} style={[styles.typeChip, notifyType === t && styles.typeChipActive]} onPress={() => handleNotifyTypeSelect(t as any)}>
+                    <Text style={[styles.typeChipText, notifyType === t && styles.typeChipTextActive]}>{t.replace('_', ' ')}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Alert Title</Text>
+              <TextInput style={styles.input} value={notifyTitle} onChangeText={setNotifyTitle} placeholder="Notification heading..." />
+            </View>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Body Content</Text>
+              <TextInput style={[styles.input, styles.textArea]} value={notifyBody} onChangeText={setNotifyBody} placeholder="Full message context..." multiline numberOfLines={4} />
+            </View>
+          </ScrollView>
+        </SafeAreaView>
       </Modal>
+
+      {/* Editing Modals */}
+      {editField && (
+        <TextEditModal
+          visible={true}
+          title={editField?.title ?? ''}
+          value={editField?.value ?? ''}
+          multiline={editField?.multiline}
+          keyboardType={editField?.numeric ? 'numeric' : 'default'}
+          onSave={async (v) => {
+            if (!editField) return;
+            const k = editField.key;
+            await handleUpdateField(k, editField.numeric ? parseInt(v) : v);
+            if (k === 'title') setTitle(v);
+            else if (k === 'shortTitle') setShortTitle(v);
+            else if (k === 'conductingBody') setConductingBody(v);
+            else if (k === 'totalVacancies') setTotalVacancies(v);
+            else if (k === 'qualificationCriteria') setQualificationCriteria(v);
+            else if (k === 'applicationFee') setApplicationFee(v);
+            else if (k === 'salary') setSalary(v);
+            else if (k === 'additionalDetails') setAdditionalDetails(v);
+            else if (k === 'officialWebsite') setOfficialWebsite(v);
+            else if (k === 'notificationUrl') setNotificationUrl(v);
+            else if (k === 'description') setDescription(v);
+            else if (k === 'minAge') setMinAge(v);
+            else if (k === 'maxAge') setMaxAge(v);
+          }}
+          onClose={() => setEditField(null)}
+        />
+      )}
+
+      <ChipModal visible={catModal} title="Exam Category" options={EXAM_CATEGORIES} selected={category} onSelect={(v) => { setCategory(v); handleUpdateField('category', v); }} onClose={() => setCatModal(false)} />
+      <ChipModal visible={levelModal} title="Exam Level" options={EXAM_LEVELS} selected={examLevel} onSelect={(v) => { setExamLevel(v); handleUpdateField('examLevel', v); }} onClose={() => setLevelModal(false)} />
+      <ChipModal visible={statusModal} title="Exam Phase" options={EXAM_STATUSES} selected={examStatus} onSelect={(v) => { setExamStatus(v); handleUpdateField('status', v); }} onClose={() => setStatusModal(false)} />
+      <ChipModal
+        visible={stateModal}
+        title="State / Region"
+        options={[
+          'All India', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+          'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+          'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha',
+          'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana', 'Tripura', 'Uttar Pradesh',
+          'Uttarakhand', 'West Bengal', 'Delhi', 'Jammu & Kashmir', 'Ladakh'
+        ]}
+        selected={state}
+        onSelect={(v) => { setState(v); handleUpdateField('state', v); }}
+        onClose={() => setStateModal(false)}
+      />
+
+      <ChipModal
+        visible={eventStageModal}
+        title="Stage"
+        options={LIFECYCLE_STAGES}
+        selected={activeEvent?.stage}
+        onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { stage: v, stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? activeEvent.stageOrder })}
+        onClose={() => setEventStageModal(false)}
+      />
+      <ChipModal
+        visible={eventTypeModal}
+        title="Type"
+        options={LIFECYCLE_EVENT_TYPES}
+        selected={activeEvent?.eventType}
+        onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { eventType: v })}
+        onClose={() => setEventTypeModal(false)}
+      />
+      {activeEvent && (
+        <TextEditModal
+          visible={eventTitleModal}
+          title="Event Title"
+          value={activeEvent?.title ?? ''}
+          onSave={(v) => activeEvent && handleEventUpdate(activeEvent.id, { title: v })}
+          onClose={() => setEventTitleModal(false)}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventDateModal.open}
+          title={eventDateModal.type === 'start' ? "Starts At (YYYY-MM-DD)" : "Ends At (YYYY-MM-DD)"}
+          value={eventDateModal.type === 'start'
+            ? (activeEvent?.startsAt ? activeEvent.startsAt.slice(0, 10) : '')
+            : (activeEvent?.endsAt ? activeEvent.endsAt.slice(0, 10) : '')
+          }
+          onSave={(v) => {
+            if (!activeEvent) return;
+            const d = new Date(v);
+            const field = eventDateModal.type === 'start' ? 'startsAt' : 'endsAt';
+            handleEventUpdate(activeEvent.id, { [field]: isNaN(d.getTime()) ? null : d.toISOString() });
+          }}
+          onClose={() => setEventDateModal({ open: false, type: 'start' })}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventOrderModal}
+          title="Display Order (priority)"
+          value={activeEvent?.stageOrder?.toString() ?? '0'}
+          keyboardType="numeric"
+          suggestions={['10', '20', '30', '40', '50', '60', '70', '80', '90', '100']}
+          onSave={(v) => activeEvent && handleEventUpdate(activeEvent.id, { stageOrder: parseInt(v) || activeEvent.stageOrder })}
+          onClose={() => setEventOrderModal(false)}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventDescriptionModal}
+          title="Event Details"
+          value={activeEvent?.description ?? ''}
+          multiline
+          onSave={(v) => activeEvent && handleEventUpdate(activeEvent.id, { description: v })}
+          onClose={() => setEventDescriptionModal(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
 
-const markdownStyles = {
-  body: {
-    color: '#4B5563',
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  heading1: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#111827',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  heading2: {
-    fontSize: 20,
-    fontWeight: '800',
-    color: '#1F2937',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  heading3: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#374151',
-    marginTop: 12,
-    marginBottom: 6,
-  },
-  paragraph: {
-    marginTop: 0,
-    marginBottom: 12,
-  },
-  list_item: {
-    flexDirection: 'row' as const,
-    alignItems: 'flex-start' as const,
-    marginBottom: 4,
-  },
-  bullet_list: {
-    marginBottom: 12,
-  },
-  ordered_list: {
-    marginBottom: 12,
-  },
-  strong: {
-    fontWeight: '700' as const,
-    color: '#111827',
-  },
-  link: {
-    color: '#4F46E5',
-    textDecorationLine: 'underline' as const,
-  },
-  table: {
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    borderRadius: 8,
-    marginVertical: 10,
-    overflow: 'hidden' as const,
-  },
-  th: {
-    backgroundColor: '#F9FAFB',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-    padding: 10,
-    color: '#111827',
-    fontWeight: 'bold' as const,
-  },
-  td: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-    color: '#4B5563',
-  },
-  thead: {
-    backgroundColor: '#F9FAFB',
-  },
-  tr: {
-    flexDirection: 'row' as const,
-  },
-};
-
-const InfoItem = ({ label, value, fullWidth }: { label: string; value: string; fullWidth?: boolean }) => (
-  <View style={[styles.infoItem, fullWidth && { width: '100%' }]}>
-    <Text style={styles.infoLabel}>{label}</Text>
-    <Text style={styles.infoValue} numberOfLines={1}>{value}</Text>
-  </View>
-);
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F3F4F6',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  topHeader: {
-    paddingTop: 60,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  headerActionRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  iconButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  examTitle: {
-    fontSize: 28,
-    fontWeight: '900',
-    color: '#FFF',
-    marginBottom: 12,
-  },
-  badgeContainer: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 8,
-  },
-  badgeText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  mainContent: {
-    paddingHorizontal: 20,
-    marginTop: -20,
-    paddingBottom: 40,
-  },
-  notifyBanner: {
-    marginBottom: 20,
-    borderRadius: 24,
-    overflow: 'hidden',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
-  },
-  notifyBannerGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 24,
-    position: 'relative',
-  },
-  notifyLeftDecoration: {
+  container: { flex: 1, backgroundColor: '#f8fafc' },
+  loadingCentered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  scrollContent: { paddingBottom: 100 },
+
+  floatingHeader: {
     position: 'absolute',
-    left: -20,
-    top: -20,
-  },
-  megaphoneIcon: {
-    transform: [{ rotate: '-15deg' }],
-  },
-  notifyContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-    zIndex: 1,
-  },
-  notifyIconWrapper: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  notifyTitleText: {
-    color: '#FFF',
-    fontWeight: '900',
-    fontSize: 18,
-    letterSpacing: 0.5,
-  },
-  notifySubtitleText: {
-    color: 'rgba(255,255,255,0.9)',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  notifyRightAction: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 3,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 16,
-    paddingHorizontal: 4,
-  },
-  sectionHeaderInner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#1F2937',
-  },
-  sectionTitleMain: {
-    fontSize: 20,
-    fontWeight: '900',
-    color: '#111827',
-  },
-  infoGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 20,
-  },
-  infoItem: {
-    width: '46%',
-  },
-  infoLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  infoValue: {
-    fontSize: 15,
-    color: '#374151',
-    fontWeight: '600',
-  },
-  descriptionContainer: {
-    marginTop: 20,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: '#F3F4F6',
-  },
-  descriptionText: {
-    fontSize: 14,
-    color: '#4B5563',
-    lineHeight: 22,
-  },
-  addEventButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
-  addEventGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    gap: 4,
-  },
-  addEventText: {
-    color: '#FFF',
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  timelineCard: {
-    backgroundColor: '#FFF',
-    borderRadius: 24,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 15,
-    elevation: 3,
-  },
-  emptyTimeline: {
-    padding: 40,
-    alignItems: 'center',
-  },
-  emptyTimelineText: {
-    color: '#9CA3AF',
-    fontSize: 16,
-    marginTop: 12,
-    fontWeight: '500',
-  },
-  createFirstText: {
-    color: '#4F46E5',
-    fontWeight: '700',
-    marginTop: 8,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 40,
-    borderTopRightRadius: 40,
-    paddingBottom: 40,
-    maxHeight: '90%',
-  },
-  modalIndicator: {
-    width: 40,
-    height: 6,
-    backgroundColor: '#E5E7EB',
-    borderRadius: 3,
-    alignSelf: 'center',
-    marginTop: 12,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 24,
-    paddingTop: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  modalTitle: {
-    fontSize: 24,
-    fontWeight: '900',
-    color: '#111827',
-  },
-  modalBody: {
-    padding: 24,
-    gap: 8,
-  },
-  inputGroup: {
-    marginBottom: 24,
-  },
-  inputLabel: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#374151',
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: '#F9FAFB',
-    borderRadius: 20,
-    padding: 20,
-    fontSize: 16,
-    color: '#111827',
-    borderWidth: 1.5,
-    borderColor: '#F3F4F6',
-  },
-  textArea: {
-    height: 120,
-    textAlignVertical: 'top',
-  },
-  warningBox: {
-    flexDirection: 'row',
-    backgroundColor: '#FEF3C7',
-    padding: 20,
-    borderRadius: 20,
-    gap: 12,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  warningText: {
-    flex: 1,
-    color: '#92400E',
-    fontSize: 14,
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-  sendButton: {
+    top: 50, left: 16, right: 16,
+    zIndex: 100,
     borderRadius: 24,
     overflow: 'hidden',
-    shadowColor: '#4F46E5',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
-    elevation: 8,
+    shadowColor: '#000', shadowOpacity: 0.2, shadowRadius: 15, elevation: 12,
   },
-  sendButtonGradient: {
+  headerGradient: {
+    padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20,
     gap: 12,
   },
-  sendButtonText: {
-    color: '#FFF',
-    fontSize: 18,
-    fontWeight: '900',
-    letterSpacing: 0.5,
+  headerBackBtn: {
+    width: 36, height: 36, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center', alignItems: 'center',
   },
-  typeSelectorScroll: {
-    gap: 10,
-    paddingVertical: 4,
+  headerTitles: { flex: 1 },
+  headerTitleTiny: { fontSize: 10, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1 },
+  headerTitleMain: { fontSize: 16, fontWeight: '800', color: '#f8fafc' },
+  headerDeleteBtn: {
+    width: 36, height: 36, borderRadius: 12,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    justifyContent: 'center', alignItems: 'center',
   },
-  typeChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 14,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  typeChipActive: {
-    backgroundColor: '#6366F1',
-    borderColor: '#4F46E5',
-  },
-  typeChipText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#6B7280',
-  },
-  typeChipTextActive: {
-    color: '#FFF',
-  },
-  audienceSelector: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 8,
-  },
-  audienceChip: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderRadius: 16,
-    backgroundColor: '#F3F4F6',
-    borderWidth: 1.5,
-    borderColor: '#E5E7EB',
-  },
-  audienceChipActive: {
-    backgroundColor: '#6366F1',
-    borderColor: '#4F46E5',
-    shadowColor: '#6366F1',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  audienceText: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#6B7280',
-  },
-  audienceTextActive: {
-    color: '#FFF',
-  },
-  audienceSubtext: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontWeight: '500',
-    marginLeft: 4,
-  },
+
+  mainContent: { paddingHorizontal: 16 },
+
+  notifyBanner: { marginBottom: 16, borderRadius: 20, overflow: 'hidden', elevation: 12, shadowColor: '#3b82f6', shadowOpacity: 0.3, shadowRadius: 15 },
+  notifyBannerGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 14 },
+  notifyContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  notifyIconWrapper: { width: 44, height: 44, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.15)', justifyContent: 'center', alignItems: 'center' },
+  notifyTitleText: { color: '#FFF', fontWeight: '900', fontSize: 16 },
+  notifySubtitleText: { color: 'rgba(255,255,255,0.8)', fontSize: 12 },
+
+  timelineHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 4 },
+  timelineHeaderLeft: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  sectionTitle: { fontSize: 11, fontWeight: '900', color: '#64748b', textTransform: 'uppercase', letterSpacing: 1.5 },
+  completionBadge: { backgroundColor: '#f1f5f9', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, marginLeft: 8 },
+  completionBadgeText: { fontSize: 8, fontWeight: '900', color: '#64748b' },
+  addEventBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#3b82f6', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  addEventBtnText: { color: '#FFF', fontWeight: '800', fontSize: 11 },
+  timelineContainer: { marginBottom: 20, paddingLeft: 8, borderLeftWidth: 2, borderLeftColor: '#f1f5f9', marginLeft: 8 },
+  emptyEvents: { alignItems: 'center', padding: 32, backgroundColor: '#FFF', borderRadius: 24, borderStyle: 'dashed', borderWidth: 1, borderColor: '#cbd5e1' },
+  emptyEventsText: { marginTop: 12, color: '#94a3b8', fontWeight: '600' },
+
+  customFieldRow: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#f1f5f9' },
+  fieldLabel: { fontSize: 10, fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 },
+  fieldValue: { fontSize: 15, fontWeight: '700', color: '#1e293b' },
+  fieldValueEmpty: { color: '#cbd5e1', fontStyle: 'italic' },
+  fieldIconBadge: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#f1f5f9', justifyContent: 'center', alignItems: 'center' },
+
+  quickOpsContainer: { marginBottom: 20 },
+  quickOpsRow: { flexDirection: 'row', alignItems: 'center' },
+  opsCard: { flex: 1, backgroundColor: '#FFF', borderRadius: 20, padding: 12, flexDirection: 'row', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2 },
+  opsIconBox: { width: 36, height: 36, borderRadius: 10, backgroundColor: '#f8fafc', justifyContent: 'center', alignItems: 'center', marginRight: 10 },
+  opsLabel: { fontSize: 9, color: '#94a3b8', fontWeight: '800', textTransform: 'uppercase', marginBottom: 2 },
+  opsValue: { fontSize: 13, color: '#1e293b', fontWeight: '800' },
+
+  publishToggleRow: { flexDirection: 'row', alignItems: 'center', padding: 16, backgroundColor: '#f8fafc', borderRadius: 16, marginTop: 8, marginHorizontal: 8, marginBottom: 8 },
+
+  modalBg: { flex: 1, backgroundColor: '#FFF' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 24, paddingVertical: 20, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  modalHeaderTitle: { fontSize: 20, fontWeight: '900', color: '#111827' },
+  circularBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#F9FAFB', justifyContent: 'center', alignItems: 'center' },
+  submitBtn: { backgroundColor: '#4F46E5', paddingHorizontal: 20, paddingVertical: 12, borderRadius: 14 },
+  submitBtnText: { color: '#FFF', fontWeight: '800', fontSize: 14 },
+
+  inputGroup: { marginBottom: 24 },
+  inputLabel: { fontSize: 12, fontWeight: '800', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 },
+  input: { backgroundColor: '#F9FAFB', borderWidth: 1, borderColor: '#F3F4F6', borderRadius: 16, padding: 16, fontSize: 16, color: '#1F2937' },
+  textArea: { minHeight: 120, textAlignVertical: 'top' },
+
+  audienceSelector: { flexDirection: 'row', gap: 12 },
+  audienceChip: { flex: 1, padding: 14, borderRadius: 14, backgroundColor: '#F9FAFB', alignItems: 'center', borderWidth: 1, borderColor: '#F3F4F6' },
+  audienceChipActive: { backgroundColor: '#4F46E5', borderColor: '#4F46E5' },
+  audienceText: { fontWeight: '700', color: '#6B7280' },
+  audienceTextActive: { color: '#FFF' },
+
+  typeChip: { paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#F9FAFB', marginRight: 8, borderWidth: 1, borderColor: '#F3F4F6' },
+  typeChipActive: { backgroundColor: '#4F46E5', borderColor: '#4F46E5' },
+  typeChipText: { fontWeight: '700', color: '#6B7280', fontSize: 13 },
+  typeChipTextActive: { color: '#FFF' },
 });
