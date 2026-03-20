@@ -20,6 +20,7 @@ import { useUser } from '@/context/UserContext';
 import { CategoryChip } from '@/components/CategoryChip';
 import { ExamCategory, QualificationLevel } from '@/constants/enums';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 const INDIA_STATES = [
   'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat',
@@ -68,6 +69,13 @@ export default function OnboardingScreen() {
   const { setUser } = useUser();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const background = useThemeColor({}, 'background');
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const cardBg = useThemeColor({}, 'card');
+  const tint = useThemeColor({}, 'tint');
+  const border = useThemeColor({}, 'border');
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -140,31 +148,31 @@ export default function OnboardingScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={[styles.root, { backgroundColor: background }]}>
       {/* Top bar: progress + skip */}
       <View style={styles.topBar}>
         <View style={styles.progressRow}>
           {STEPS.map((_, i) => (
             <View
               key={i}
-              style={[styles.progressDot, i <= step && styles.progressActive]}
+              style={[styles.progressDot, { backgroundColor: border }, i <= step && [styles.progressActive, { backgroundColor: tint }]]}
             />
           ))}
         </View>
-        <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={styles.skipBtn}>
-          <Text style={styles.skipTxt}>Skip</Text>
+        <TouchableOpacity onPress={() => router.replace('/(tabs)')} style={[styles.skipBtn, { backgroundColor: cardBg }]}>
+          <Text style={[styles.skipTxt, { color: textMuted }]}>Skip</Text>
         </TouchableOpacity>
       </View>
       <View style={{ flexDirection: 'row', alignItems: 'center', paddingHorizontal: 24, paddingTop: 16 }}>
         {(() => {
           const StepIcon = STEPS[step].icon;
-          return <StepIcon size={24} color="#7C3AED" style={{ marginRight: 12 }} />;
+          return <StepIcon size={24} color={tint} style={{ marginRight: 12 }} />;
         })()}
-        <Text style={[styles.stepTitle, { paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }]}>
+        <Text style={[styles.stepTitle, { color: textPrimary, paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 }]}>
           {STEPS[step].label}
         </Text>
       </View>
-      <Text style={styles.optionalHint}>Optional · for personalised exam recommendations</Text>
+      <Text style={[styles.optionalHint, { color: textMuted }]}>Optional · for personalised exam recommendations</Text>
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
         <ScrollView
@@ -175,28 +183,28 @@ export default function OnboardingScreen() {
           {/* Step 0: Name + Phone */}
           {step === 0 && (
             <View>
-              <Text style={styles.label}>Your Name</Text>
+              <Text style={[styles.label, { color: textMuted }]}>Your Name</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, { backgroundColor: cardBg, borderColor: border, color: textPrimary }]}
                 placeholder="Ravi Kumar"
-                placeholderTextColor="#4B5563"
+                placeholderTextColor={textMuted}
                 value={name}
                 onChangeText={setName}
               />
-              <Text style={styles.label}>Mobile Number</Text>
+              <Text style={[styles.label, { color: textMuted }]}>Mobile Number</Text>
               <View style={styles.phoneRow}>
-                <View style={styles.phonePrefix}><Text style={styles.phonePrefixTxt}>+91</Text></View>
+                <View style={[styles.phonePrefix, { backgroundColor: cardBg, borderColor: border }]}><Text style={[styles.phonePrefixTxt, { color: textMuted }]}>+91</Text></View>
                 <TextInput
-                  style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                  style={[styles.input, { backgroundColor: cardBg, borderColor: border, color: textPrimary, flex: 1, marginBottom: 0 }]}
                   placeholder="9876543210"
-                  placeholderTextColor="#4B5563"
+                  placeholderTextColor={textMuted}
                   keyboardType="phone-pad"
                   maxLength={10}
                   value={phone}
                   onChangeText={setPhone}
                 />
               </View>
-              <Text style={styles.hint}>
+              <Text style={[styles.hint, { color: textMuted }]}>
                 Your number is your identity — no OTP needed.{'\n'}We'll use it to sync your profile.
               </Text>
             </View>
@@ -205,14 +213,14 @@ export default function OnboardingScreen() {
           {/* Step 1: State */}
           {step === 1 && (
             <View>
-              <Text style={styles.label}>Select your State / UT</Text>
+              <Text style={[styles.label, { color: textMuted }]}>Select your State / UT</Text>
               <View style={styles.stateGrid}>
                 {INDIA_STATES.map(s => (
                   <TouchableOpacity
                     key={s}
-                    style={[styles.stateBtn, state === s && styles.stateBtnActive]}
+                    style={[styles.stateBtn, { backgroundColor: cardBg, borderColor: border }, state === s && [styles.stateBtnActive, { borderColor: tint, backgroundColor: tint + '18' }]]}
                     onPress={() => setState(prev => prev === s ? '' : s)}>
-                    <Text style={[styles.stateTxt, state === s && styles.stateTxtActive]} numberOfLines={1}>
+                    <Text style={[styles.stateTxt, { color: textMuted }, state === s && [styles.stateTxtActive, { color: tint }]]} numberOfLines={1}>
                       {s}
                     </Text>
                   </TouchableOpacity>
@@ -224,8 +232,8 @@ export default function OnboardingScreen() {
           {/* Step 2: Categories */}
           {step === 2 && (
             <View>
-              <Text style={styles.label}>Which exams are you preparing for?</Text>
-              <Text style={styles.sublabel}>Select all that apply</Text>
+              <Text style={[styles.label, { color: textMuted }]}>Which exams are you preparing for?</Text>
+              <Text style={[styles.sublabel, { color: textMuted }]}>Select all that apply</Text>
               <View style={styles.chipWrap}>
                 {CATEGORIES.map(c => (
                   <CategoryChip
@@ -243,7 +251,7 @@ export default function OnboardingScreen() {
           {/* Step 3: Profile details */}
           {step === 3 && (
             <View>
-              <Text style={styles.label}>Gender</Text>
+              <Text style={[styles.label, { color: textMuted }]}>Gender</Text>
               <View style={styles.optionRow}>
                 {[
                   { v: 'MALE', l: 'Male', i: User },
@@ -252,11 +260,11 @@ export default function OnboardingScreen() {
                 ].map(g => (
                   <TouchableOpacity
                     key={g.v}
-                    style={[styles.optBtn, gender === g.v && styles.optBtnActive]}
+                    style={[styles.optBtn, { backgroundColor: cardBg, borderColor: border }, gender === g.v && [styles.optBtnActive, { borderColor: tint, backgroundColor: tint + '18' }]]}
                     onPress={() => setGender(prev => prev === g.v ? '' : g.v)}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <g.i size={14} color={gender === g.v ? '#C4B5FD' : '#9CA3AF'} style={{ marginRight: 6 }} />
-                      <Text style={[styles.optTxt, gender === g.v && styles.optTxtActive]}>
+                      <g.i size={14} color={gender === g.v ? tint : textMuted} style={{ marginRight: 6 }} />
+                      <Text style={[styles.optTxt, { color: textMuted }, gender === g.v && [styles.optTxtActive, { color: tint }]]}>
                         {g.l}
                       </Text>
                     </View>
@@ -264,7 +272,7 @@ export default function OnboardingScreen() {
                 ))}
               </View>
 
-              <Text style={styles.label}>Qualification</Text>
+              <Text style={[styles.label, { color: textMuted }]}>Qualification</Text>
               <View style={styles.optionRow}>
                 {[
                   { v: QualificationLevel.TEN_PASS, l: '10th' },
@@ -274,16 +282,16 @@ export default function OnboardingScreen() {
                 ].map(q => (
                   <TouchableOpacity
                     key={q.v}
-                    style={[styles.optBtn, qualification === q.v && styles.optBtnActive]}
+                    style={[styles.optBtn, { backgroundColor: cardBg, borderColor: border }, qualification === q.v && [styles.optBtnActive, { borderColor: tint, backgroundColor: tint + '18' }]]}
                     onPress={() => setQualification(prev => prev === q.v ? '' : q.v)}>
-                    <Text style={[styles.optTxt, qualification === q.v && styles.optTxtActive]}>
+                    <Text style={[styles.optTxt, { color: textMuted }, qualification === q.v && [styles.optTxtActive, { color: tint }]]}>
                       {q.l}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={styles.label}>Employment Status</Text>
+              <Text style={[styles.label, { color: textMuted }]}>Employment Status</Text>
               <View style={styles.optionRow}>
                 {[
                   { v: 'STUDENT', l: 'Student', i: GraduationCap },
@@ -292,11 +300,11 @@ export default function OnboardingScreen() {
                 ].map(e => (
                   <TouchableOpacity
                     key={e.v}
-                    style={[styles.optBtn, employment === e.v && styles.optBtnActive]}
+                    style={[styles.optBtn, { backgroundColor: cardBg, borderColor: border }, employment === e.v && [styles.optBtnActive, { borderColor: tint, backgroundColor: tint + '18' }]]}
                     onPress={() => setEmployment(prev => prev === e.v ? '' : e.v)}>
                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                      <e.i size={14} color={employment === e.v ? '#C4B5FD' : '#9CA3AF'} style={{ marginRight: 6 }} />
-                      <Text style={[styles.optTxt, employment === e.v && styles.optTxtActive]}>{e.l}</Text>
+                      <e.i size={14} color={employment === e.v ? tint : textMuted} style={{ marginRight: 6 }} />
+                      <Text style={[styles.optTxt, { color: textMuted }, employment === e.v && [styles.optTxtActive, { color: tint }]]}>{e.l}</Text>
                     </View>
                   </TouchableOpacity>
                 ))}
@@ -307,35 +315,35 @@ export default function OnboardingScreen() {
           {/* Step 4: Specialisation */}
           {step === 4 && (
             <View>
-              <Text style={styles.label}>Your Degree / Diploma</Text>
+              <Text style={[styles.label, { color: textMuted }]}>Your Degree / Diploma</Text>
               <View style={styles.stateGrid}>
                 {DEGREES.map(d => (
                   <TouchableOpacity
                     key={d}
-                    style={[styles.stateBtn, degree === d && styles.stateBtnActive]}
+                    style={[styles.stateBtn, { backgroundColor: cardBg, borderColor: border }, degree === d && [styles.stateBtnActive, { borderColor: tint, backgroundColor: tint + '18' }]]}
                     onPress={() => setDegree(prev => prev === d ? '' : d)}>
-                    <Text style={[styles.stateTxt, degree === d && styles.stateTxtActive]}>
+                    <Text style={[styles.stateTxt, { color: textMuted }, degree === d && [styles.stateTxtActive, { color: tint }]]}>
                       {d}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={[styles.label, { marginTop: 24 }]}>Branch / Specialisation</Text>
+              <Text style={[styles.label, { color: textMuted, marginTop: 24 }]}>Branch / Specialisation</Text>
               <View style={styles.stateGrid}>
                 {SPECIALIZATIONS.map(s => (
                   <TouchableOpacity
                     key={s}
-                    style={[styles.stateBtn, specialization === s && styles.stateBtnActive]}
+                    style={[styles.stateBtn, { backgroundColor: cardBg, borderColor: border }, specialization === s && [styles.stateBtnActive, { borderColor: tint, backgroundColor: tint + '18' }]]}
                     onPress={() => setSpecialization(prev => prev === s ? '' : s)}>
-                    <Text style={[styles.stateTxt, specialization === s && styles.stateTxtActive]}>
+                    <Text style={[styles.stateTxt, { color: textMuted }, specialization === s && [styles.stateTxtActive, { color: tint }]]}>
                       {s}
                     </Text>
                   </TouchableOpacity>
                 ))}
               </View>
 
-              <Text style={[styles.hint, { marginTop: 16 }]}>
+              <Text style={[styles.hint, { color: textMuted, marginTop: 16 }]}>
                 Help us show you exact "Job Roles" that match your {degree || 'Degree'} {specialization ? `in ${specialization}` : ''}.
               </Text>
             </View>
@@ -344,18 +352,18 @@ export default function OnboardingScreen() {
       </KeyboardAvoidingView>
 
       {/* CTA */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, { borderTopColor: border }]}>
         {step > 0 && (
-          <TouchableOpacity style={styles.backBtn} onPress={() => setStep(s => s - 1)}>
+          <TouchableOpacity style={[styles.backBtn, { backgroundColor: cardBg }]} onPress={() => setStep(s => s - 1)}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <ChevronLeft size={20} color="#9CA3AF" style={{ marginRight: 4 }} />
-              <Text style={styles.backTxt}>Back</Text>
+              <ChevronLeft size={20} color={textMuted} style={{ marginRight: 4 }} />
+              <Text style={[styles.backTxt, { color: textMuted }]}>Back</Text>
             </View>
           </TouchableOpacity>
         )}
         {step < STEPS.length - 1 ? (
           <TouchableOpacity
-            style={[styles.nextBtn, (!canProceed() || loading) && styles.nextBtnDisabled]}
+            style={[styles.nextBtn, { backgroundColor: tint }, (!canProceed() || loading) && styles.nextBtnDisabled]}
             onPress={handleNext}
             disabled={!canProceed() || loading}>
             {loading ? (
@@ -369,7 +377,7 @@ export default function OnboardingScreen() {
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            style={[styles.nextBtn, loading && styles.nextBtnDisabled]}
+            style={[styles.nextBtn, { backgroundColor: tint }, loading && styles.nextBtnDisabled]}
             onPress={handleFinish}
             disabled={loading}>
             {loading ? (
@@ -388,65 +396,56 @@ export default function OnboardingScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0D0F' },
+  root: { flex: 1 },
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
   progressRow: { flexDirection: 'row', gap: 6 },
-  progressDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#27272A' },
-  progressActive: { backgroundColor: '#7C3AED', width: 24 },
-  skipBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, backgroundColor: '#1C1C1E' },
-  skipTxt: { color: '#6B7280', fontSize: 13, fontWeight: '600' },
-  stepTitle: { color: '#F4F4F5', fontSize: 24, fontWeight: '800', paddingHorizontal: 24, paddingTop: 16, paddingBottom: 4 },
-  optionalHint: { color: '#4B5563', fontSize: 12, paddingHorizontal: 24, marginBottom: 8 },
+  progressDot: { width: 8, height: 8, borderRadius: 4 },
+  progressActive: { width: 24 },
+  skipBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
+  skipTxt: { fontSize: 13, fontWeight: '600' },
+  stepTitle: { fontSize: 24, fontWeight: '800' },
+  optionalHint: { fontSize: 12, paddingHorizontal: 24, marginBottom: 8 },
   body: { paddingHorizontal: 24, paddingBottom: 24 },
-  label: { color: '#9CA3AF', fontSize: 13, fontWeight: '600', marginBottom: 8, marginTop: 8 },
-  sublabel: { color: '#6B7280', fontSize: 12, marginBottom: 12 },
+  label: { fontSize: 13, fontWeight: '600', marginBottom: 8, marginTop: 8 },
+  sublabel: { fontSize: 12, marginBottom: 12 },
   input: {
-    backgroundColor: '#1C1C1E',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    color: '#F4F4F5',
     fontSize: 16,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#2C2C2E',
   },
   phoneRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   phonePrefix: {
-    backgroundColor: '#1C1C1E',
     borderRadius: 12,
     paddingHorizontal: 14,
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#2C2C2E',
   },
-  phonePrefixTxt: { color: '#9CA3AF', fontSize: 16 },
-  hint: { color: '#4B5563', fontSize: 12, lineHeight: 18 },
+  phonePrefixTxt: { fontSize: 16 },
+  hint: { fontSize: 12, lineHeight: 18 },
   stateGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   stateBtn: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#2C2C2E',
-    backgroundColor: '#1C1C1E',
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  stateBtnActive: { borderColor: '#7C3AED', backgroundColor: '#3B0764' },
-  stateTxt: { color: '#9CA3AF', fontSize: 13 },
-  stateTxtActive: { color: '#C4B5FD', fontWeight: '700' },
+  stateBtnActive: {  },
+  stateTxt: { fontSize: 13 },
+  stateTxtActive: { fontWeight: '700' },
   chipWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   optionRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   optBtn: {
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#2C2C2E',
-    backgroundColor: '#1C1C1E',
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  optBtnActive: { borderColor: '#7C3AED', backgroundColor: '#3B0764' },
-  optTxt: { color: '#9CA3AF', fontSize: 13 },
-  optTxtActive: { color: '#C4B5FD', fontWeight: '700' },
+  optBtnActive: {  },
+  optTxt: { fontSize: 13 },
+  optTxtActive: { fontWeight: '700' },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -455,19 +454,16 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     gap: 12,
     borderTopWidth: 1,
-    borderColor: '#1C1C1E',
   },
   backBtn: {
     flex: 1,
-    backgroundColor: '#1C1C1E',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
   },
-  backTxt: { color: '#9CA3AF', fontSize: 16, fontWeight: '600' },
+  backTxt: { fontSize: 16, fontWeight: '600' },
   nextBtn: {
     flex: 2,
-    backgroundColor: '#7C3AED',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',

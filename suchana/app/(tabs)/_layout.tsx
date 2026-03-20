@@ -2,25 +2,32 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, Bookmark, User } from 'lucide-react-native';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const TAB_BAR_HEIGHT = 64;
 
+  const backgroundColor = useThemeColor({}, 'card');
+  const activeColor = useThemeColor({}, 'tint');
+  const inactiveColor = useThemeColor({}, 'textMuted');
+  const borderTopColor = useThemeColor({}, 'border');
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#4a10e8ff',
-        tabBarInactiveTintColor: '#94A3B8',
+        tabBarActiveTintColor: activeColor,
+        tabBarInactiveTintColor: inactiveColor,
         tabBarStyle: {
           position: 'relative',
           bottom: insets.bottom,
           height: TAB_BAR_HEIGHT,
           paddingBottom: 0,
           paddingTop: 0,
-          backgroundColor: '#0e0d0dff',
-          borderTopWidth: 0,
+          backgroundColor: backgroundColor,
+          borderTopWidth: 1,
+          borderTopColor: borderTopColor,
           elevation: 0,
           shadowOpacity: 0,
         },

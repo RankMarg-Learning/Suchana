@@ -13,6 +13,7 @@ import { toggleSavedExam } from '@/services/userService';
 import { Search, X, Inbox, ChevronLeft } from 'lucide-react-native';
 import type { Exam } from '@/types/exam';
 import { ExamCategory, ExamLevel } from '@/constants/enums';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 const CATEGORIES: { label: string; value: ExamCategory }[] = [
   { label: 'UPSC', value: ExamCategory.UPSC },
@@ -36,6 +37,13 @@ const LEVELS: { label: string; value: ExamLevel | '' }[] = [
 export default function SearchScreen() {
   const router = useRouter();
   const { user, userId, refreshUser } = useUser();
+
+  const background = useThemeColor({}, 'background');
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const cardBg = useThemeColor({}, 'card');
+  const tint = useThemeColor({}, 'tint');
+  const border = useThemeColor({}, 'border');
 
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(false);
@@ -91,20 +99,20 @@ export default function SearchScreen() {
   const isInitialState = !search && selectedCats.length === 0 && !level;
 
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: background }]} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
       
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { borderBottomColor: border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <ChevronLeft size={24} color="#F4F4F5" />
+          <ChevronLeft size={24} color={textPrimary} />
         </TouchableOpacity>
-        <View style={styles.searchBox}>
-          <Search size={18} color="#4B5563" style={{ marginRight: 10 }} />
+        <View style={[styles.searchBox, { backgroundColor: cardBg, borderColor: border }]}>
+          <Search size={18} color={textMuted} style={{ marginRight: 10 }} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: textPrimary }]}
             placeholder="Search exams…"
-            placeholderTextColor="#4B5563"
+            placeholderTextColor={textMuted}
             value={search}
             onChangeText={setSearch}
             onSubmitEditing={loadExams}
@@ -112,7 +120,7 @@ export default function SearchScreen() {
           />
           {search.length > 0 && (
             <TouchableOpacity onPress={() => setSearch('')}>
-              <X size={18} color="#6B7280" />
+              <X size={18} color={textMuted} />
             </TouchableOpacity>
           )}
         </View>
@@ -122,7 +130,7 @@ export default function SearchScreen() {
         data={exams}
         keyExtractor={i => i.id}
         contentContainerStyle={{ padding: 16 }}
-        refreshControl={!isInitialState ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" /> : undefined}
+        refreshControl={!isInitialState ? <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={tint} /> : undefined}
         ListHeaderComponent={
           <View style={{ marginBottom: 16 }}>
             {/* Level filter */}
@@ -130,9 +138,9 @@ export default function SearchScreen() {
               {LEVELS.map(l => (
                 <TouchableOpacity
                   key={l.label}
-                  style={[styles.levelBtn, level === l.value && styles.levelBtnActive]}
+                  style={[styles.levelBtn, { backgroundColor: cardBg, borderColor: border }, level === l.value && { borderColor: tint, backgroundColor: tint + '18' }]}
                   onPress={() => setLevel(l.value as any)}>
-                  <Text style={[styles.levelTxt, level === l.value && styles.levelTxtActive]}>{l.label}</Text>
+                  <Text style={[styles.levelTxt, { color: textMuted }, level === l.value && { color: tint }]}>{l.label}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
@@ -166,52 +174,46 @@ export default function SearchScreen() {
             <View style={styles.empty}>
               {isInitialState ? (
                 <>
-                    <Search size={48} color="#3F3F46" style={{ marginBottom: 16 }} />
-                    <Text style={styles.emptyTxt}>Start typing to search exams</Text>
+                    <Search size={48} color={border} style={{ marginBottom: 16 }} />
+                    <Text style={[styles.emptyTxt, { color: textMuted }]}>Start typing to search exams</Text>
                 </>
               ) : (
                 <>
-                    <Inbox size={48} color="#3F3F46" style={{ marginBottom: 16 }} />
-                    <Text style={styles.emptyTxt}>No exams found matching your search.</Text>
+                    <Inbox size={48} color={border} style={{ marginBottom: 16 }} />
+                    <Text style={[styles.emptyTxt, { color: textMuted }]}>No exams found matching your search.</Text>
                 </>
               )}
             </View>
           ) : null
         }
-        ListFooterComponent={loading ? <ActivityIndicator color="#7C3AED" style={{ marginTop: 20 }} /> : null}
+        ListFooterComponent={loading ? <ActivityIndicator color={tint} style={{ marginTop: 20 }} /> : null}
       />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0D0F' },
-  header: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderBottomColor: '#1C1C1E' },
+  root: { flex: 1 },
+  header: { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1 },
   backBtn: { marginRight: 12 },
   searchBox: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#1C1C1E',
     borderRadius: 12,
     paddingHorizontal: 12,
     height: 48,
     borderWidth: 1,
-    borderColor: '#2C2C2E',
   },
-  searchInput: { flex: 1, color: '#F4F4F5', fontSize: 15 },
+  searchInput: { flex: 1, fontSize: 15 },
   levelBtn: {
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#2C2C2E',
-    backgroundColor: '#1C1C1E',
     paddingHorizontal: 14,
     paddingVertical: 7,
     marginRight: 8,
   },
-  levelBtnActive: { borderColor: '#7C3AED', backgroundColor: '#3B0764' },
-  levelTxt: { color: '#9CA3AF', fontSize: 13, fontWeight: '600' },
-  levelTxtActive: { color: '#C4B5FD' },
+  levelTxt: { fontSize: 13, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 60 },
-  emptyTxt: { color: '#6B7280', fontSize: 16 },
+  emptyTxt: { fontSize: 16 },
 });

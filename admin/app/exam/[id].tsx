@@ -21,7 +21,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { examService, lifecycleService, Exam, LifecycleEvent } from '@/services/api.service';
 import { TimelineItem } from '@/components/TimelineItem';
-import { EXAM_LEVELS, EXAM_CATEGORIES } from '@/constants/enums';
 
 const markdownRules = {
   table: (node: any, children: any, parent: any, styles: any) => (

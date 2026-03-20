@@ -19,6 +19,8 @@ import {
 } from 'lucide-react-native';
 import { cleanLabel } from '@/utils/format';
 import type { LifecycleEvent } from '@/types/exam';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const STAGE_ICONS: Record<string, any> = {
   NOTIFICATION: Bell,
@@ -58,31 +60,63 @@ function getStatus(event: LifecycleEvent): { label: string; color: string } {
 
 export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast: boolean }) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const border = useThemeColor({}, 'border');
+  const cardBg = useThemeColor({}, 'card');
+  const tint = useThemeColor({}, 'tint');
+
   const stage = event.stage || '';
   const eventType = event.eventType || '';
   const IconComponent = STAGE_ICONS[stage] || EVENT_ICONS[eventType] || Pin;
   const status = getStatus(event);
+  const colorScheme = useColorScheme();
+
+  const markdownStyles = StyleSheet.create({
+    body: {
+      color: textMuted,
+      fontSize: 12,
+      lineHeight: 18,
+    },
+    paragraph: {
+      marginTop: 0,
+      marginBottom: 8,
+    },
+    strong: {
+      fontWeight: 'bold',
+      color: textPrimary,
+    },
+    link: {
+      color: tint,
+    },
+    bullet_list: {
+      marginBottom: 8,
+    },
+    ordered_list: {
+      marginBottom: 8,
+    },
+  });
 
   return (
     <View style={styles.row}>
       {/* Left: connector */}
       <View style={styles.connector}>
-        <View style={[styles.dot, { borderColor: status.color }]}>
+        <View style={[styles.dot, { borderColor: status.color, backgroundColor: cardBg }]}>
           <IconComponent size={18} color={status.color} strokeWidth={2.5} />
         </View>
-        {!isLast && <View style={styles.line} />}
+        {!isLast && <View style={[styles.line, { backgroundColor: border }]} />}
       </View>
 
       {/* Right: content */}
       <View style={styles.content}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>{event.title}</Text>
+          <Text style={[styles.title, { color: textPrimary }]}>{event.title}</Text>
           <View style={[styles.statusBadge, { borderColor: status.color }]}>
             <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
           </View>
         </View>
-        {event.stage && <Text style={styles.stage}>{cleanLabel(event.stage)}</Text>}
-        <Text style={styles.date}>
+        {event.stage && <Text style={[styles.stage, { color: tint }]}>{cleanLabel(event.stage)}</Text>}
+        <Text style={[styles.date, { color: textMuted }]}>
           {formatDate(event.startsAt)}
           {event.endsAt ? ` – ${formatDate(event.endsAt)}` : ''}
         </Text>
@@ -94,14 +128,14 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
                 {event.description}
               </Markdown>
             ) : (
-              <Text style={styles.desc} numberOfLines={1}>
+              <Text style={[styles.desc, { color: textMuted }]} numberOfLines={1}>
                 {event.description.replace(/[#*`\n]/g, ' ')}
               </Text>
             )}
 
             {event.description.length > 50 && (
               <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Text style={styles.moreBtn}>{isExpanded ? 'Show less' : 'more'}</Text>
+                <Text style={[styles.moreBtn, { color: tint }]}>{isExpanded ? 'Show less' : 'more'}</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -109,9 +143,9 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
 
         {event.actionUrl ? (
           <TouchableOpacity
-            style={styles.actionBtn}
+            style={[styles.actionBtn, { borderColor: tint, backgroundColor: colorScheme === 'dark' ? '#3B0764' : tint }]}
             onPress={() => Linking.openURL(event.actionUrl!)}>
-            <Text style={styles.actionText}>{event.actionLabel ?? 'Open →'}</Text>
+            <Text style={[styles.actionText, { color: colorScheme === 'dark' ? '#EDE9FE' : '#FFF' }]}>{event.actionLabel ?? 'Open →'}</Text>
           </TouchableOpacity>
         ) : null}
       </View>
@@ -126,16 +160,15 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#1C1C1E',
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   icon: { fontSize: 16 },
-  line: { width: 2, flex: 1, backgroundColor: '#2C2C2E', marginTop: 4 },
+  line: { width: 2, flex: 1, marginTop: 4 },
   content: { flex: 1, paddingLeft: 12, paddingBottom: 24 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { color: '#F4F4F5', fontSize: 14, fontWeight: '700', flex: 1, marginRight: 8 },
+  title: { fontSize: 14, fontWeight: '700', flex: 1, marginRight: 8 },
   statusBadge: {
     borderRadius: 6,
     borderWidth: 1,
@@ -143,12 +176,11 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   statusText: { fontSize: 10, fontWeight: '700' },
-  stage: { color: '#A78BFA', fontSize: 12, fontWeight: '600', marginTop: 2 },
-  date: { color: '#9CA3AF', fontSize: 12, marginTop: 4 },
+  stage: { fontSize: 12, fontWeight: '600', marginTop: 2 },
+  date: { fontSize: 12, marginTop: 4 },
   descContainer: { marginTop: 4 },
-  desc: { color: '#D1D5DB', fontSize: 12, lineHeight: 18 },
+  desc: { fontSize: 12, lineHeight: 18 },
   moreBtn: {
-    color: '#A78BFA',
     fontSize: 12,
     fontWeight: '700',
     marginTop: 2,
@@ -156,38 +188,11 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     marginTop: 10,
-    backgroundColor: '#3B0764',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 8,
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: '#5B21B6',
   },
-  actionText: { color: '#EDE9FE', fontSize: 13, fontWeight: '800' },
-});
-
-const markdownStyles = StyleSheet.create({
-  body: {
-    color: '#D1D5DB',
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  paragraph: {
-    marginTop: 0,
-    marginBottom: 8,
-  },
-  strong: {
-    fontWeight: 'bold',
-    color: '#F4F4F5',
-  },
-  link: {
-    color: '#A78BFA',
-  },
-  bullet_list: {
-    marginBottom: 8,
-  },
-  ordered_list: {
-    marginBottom: 8,
-  },
+  actionText: { fontSize: 13, fontWeight: '800' },
 });

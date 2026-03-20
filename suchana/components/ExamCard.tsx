@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Target, Clock, Bookmark, BookmarkCheck } from 'lucide-react-native';
 import type { Exam } from '@/types/exam';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 const CATEGORY_COLORS: Record<string, string> = {
   ENGINEERING_ENTRANCE: '#0891B2',
@@ -31,11 +32,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   OTHER: '#6B7280',
 };
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  NOTIFICATION: { label: 'Notification', color: '#818CF8', bg: '#1E1B4B' },
-  ACTIVE: { label: 'Active', color: '#6EE7B7', bg: '#064E3B' },
-  COMPLETED: { label: 'Closed', color: '#9CA3AF', bg: '#1F2937' },
-  CANCELLED: { label: 'Cancelled', color: '#FCA5A5', bg: '#450A0A' },
+const STATUS_CONFIG: Record<string, { label: string; color: string; bgLight: string; bgDark: string }> = {
+  NOTIFICATION: { label: 'Notification', color: '#6366F1', bgLight: '#EEF2FF', bgDark: '#1E1B4B' },
+  ACTIVE: { label: 'Active', color: '#10B981', bgLight: '#ECFDF5', bgDark: '#065F46' },
+  COMPLETED: { label: 'Closed', color: '#71717A', bgLight: '#F4F4F5', bgDark: '#27272A' },
+  CANCELLED: { label: 'Cancelled', color: '#EF4444', bgLight: '#FEF2F2', bgDark: '#7F1D1D' },
 };
 
 function isNewExam(exam: Exam): boolean {
@@ -54,6 +55,13 @@ interface Props {
 
 export function ExamCard({ exam, isSaved, onSaveToggle, onPress }: Props) {
   const router = useRouter();
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const background = useThemeColor({}, 'background');
+  const cardBg = useThemeColor({}, 'card');
+  const border = useThemeColor({}, 'border');
+  const accent = useThemeColor({}, 'accent');
+  const tint = useThemeColor({}, 'tint');
 
   const handlePress = () => {
     if (onPress) {
@@ -62,8 +70,9 @@ export function ExamCard({ exam, isSaved, onSaveToggle, onPress }: Props) {
       router.push({ pathname: '/exam/[id]', params: { id: exam.id } });
     }
   };
+
   const catColor = CATEGORY_COLORS[exam.category] ?? '#6B7280';
-  const status = STATUS_CONFIG[exam.status] ?? STATUS_CONFIG.NOTIFICATION;
+  const statusConfig = STATUS_CONFIG[exam.status] ?? STATUS_CONFIG.NOTIFICATION;
   const isNew = isNewExam(exam);
 
   const nextReg = exam.lifecycleEvents?.find(e => e.stage === 'REGISTRATION');
@@ -75,43 +84,45 @@ export function ExamCard({ exam, isSaved, onSaveToggle, onPress }: Props) {
   const score = exam.matchScore ?? 0;
   const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#6B7280';
 
+  const statusBg = useThemeColor({ light: statusConfig.bgLight, dark: statusConfig.bgDark }, 'background');
+
   return (
     <TouchableOpacity
-      style={styles.container}
+      style={[styles.container, { backgroundColor: cardBg, borderColor: border }]}
       activeOpacity={0.9}
       onPress={handlePress}>
 
       <LinearGradient
-        colors={['#18181b', '#09090b']}
+        colors={[cardBg, cardBg]}
         style={[styles.card, isUrgent && styles.cardUrgent]}>
 
         {/* Top Header */}
         <View style={styles.header}>
           <View style={styles.catRow}>
             <View style={[styles.dot, { backgroundColor: catColor }]} />
-            <Text style={styles.categoryText}>{exam.category.replace('_', ' ')}</Text>
+            <Text style={[styles.categoryText, { color: textMuted }]}>{exam.category.replace('_', ' ')}</Text>
             {isNew && (
-              <View style={styles.newBadge}>
+              <View style={[styles.newBadge, { backgroundColor: '#10B981' }]}>
                 <Text style={styles.newBadgeText}>NEW</Text>
               </View>
             )}
           </View>
-          <View style={[styles.statusBadge, { borderColor: status.color + '44', backgroundColor: status.bg + '33' }]}>
-            <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+          <View style={[styles.statusBadge, { borderColor: statusConfig.color + '33', backgroundColor: statusBg }]}>
+            <Text style={[styles.statusText, { color: statusConfig.color }]}>{statusConfig.label}</Text>
           </View>
         </View>
 
         {/* Title */}
-        <Text style={styles.title} numberOfLines={2}>{exam.title}</Text>
-        <Text style={styles.conductingBody}>{exam.conductingBody}</Text>
+        <Text style={[styles.title, { color: textPrimary }]} numberOfLines={2}>{exam.title}</Text>
+        <Text style={[styles.conductingBody, { color: textMuted }]}>{exam.conductingBody}</Text>
 
         {/* Key Stats Row */}
         <View style={styles.statsRow}>
           {exam.totalVacancies != null && (
             <View style={styles.statItem}>
-              <Target size={14} color="#7C3AED" />
-              <Text style={styles.statText}>
-                <Text style={styles.statHighlight}>{exam.totalVacancies ? (exam.totalVacancies.length > 8 ? exam.totalVacancies.substring(0, 8) + '...' : exam.totalVacancies) : 'Check'}</Text> Vacancies
+              <Target size={14} color={tint} />
+              <Text style={[styles.statText, { color: textMuted }]}>
+                <Text style={[styles.statHighlight, { color: textPrimary }]}>{exam.totalVacancies ? (exam.totalVacancies.length > 8 ? exam.totalVacancies.substring(0, 8) + '...' : exam.totalVacancies) : 'Check'}</Text> Vacancies
               </Text>
             </View>
           )}
@@ -123,7 +134,7 @@ export function ExamCard({ exam, isSaved, onSaveToggle, onPress }: Props) {
         </View>
 
         {/* Footer */}
-        <View style={styles.footer}>
+        <View style={[styles.footer, { borderTopColor: border }]}>
           {isUrgent ? (
             <View style={styles.urgentRow}>
               <Clock size={12} color="#FBBF24" />
@@ -131,15 +142,15 @@ export function ExamCard({ exam, isSaved, onSaveToggle, onPress }: Props) {
             </View>
           ) : (
             <View style={styles.dateRow}>
-              <Clock size={12} color="#71717A" />
-              <Text style={styles.dateText}>Posted {new Date(exam.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
+              <Clock size={12} color={textMuted} />
+              <Text style={[styles.dateText, { color: textMuted }]}>Posted {new Date(exam.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
             </View>
           )}
 
           <TouchableOpacity
             onPress={onSaveToggle}
             style={styles.saveBtn}>
-            {isSaved ? <BookmarkCheck size={20} color="#7C3AED" fill="#7C3AED" /> : <Bookmark size={20} color="#52525B" />}
+            {isSaved ? <BookmarkCheck size={20} color={tint} fill={tint} /> : <Bookmark size={20} color={textMuted} />}
           </TouchableOpacity>
         </View>
 
@@ -152,39 +163,37 @@ const styles = StyleSheet.create({
   container: {
     marginBottom: 16,
     borderRadius: 24,
-    backgroundColor: '#18181b',
+    borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 3,
   },
   card: {
     borderRadius: 24,
     padding: 18,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
-  cardUrgent: { borderColor: 'rgba(251,191,36,0.3)' },
+  cardUrgent: { borderColor: '#FBBF24' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   catRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dot: { width: 6, height: 6, borderRadius: 3 },
-  categoryText: { color: '#71717A', fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
-  newBadge: { backgroundColor: '#10B981', paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 },
+  categoryText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
+  newBadge: { paddingHorizontal: 5, paddingVertical: 1, borderRadius: 4 },
   newBadgeText: { color: '#FFF', fontSize: 8, fontWeight: '900' },
   statusBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, borderWidth: 1 },
   statusText: { fontSize: 9, fontWeight: '900', textTransform: 'uppercase' },
-  title: { color: '#F4F4F5', fontSize: 18, fontWeight: '900', lineHeight: 24, marginBottom: 4 },
-  conductingBody: { color: '#52525B', fontSize: 13, fontWeight: '600', marginBottom: 16 },
+  title: { fontSize: 18, fontWeight: '900', lineHeight: 24, marginBottom: 4 },
+  conductingBody: { fontSize: 13, fontWeight: '600', marginBottom: 16 },
   statsRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 16, gap: 12 },
   statItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  statText: { color: '#71717A', fontSize: 13, fontWeight: '500' },
-  statHighlight: { color: '#E4E4E7', fontWeight: '800' },
+  statText: { fontSize: 13, fontWeight: '500' },
+  statHighlight: { fontWeight: '800' },
   matchScoreText: { fontSize: 11, fontWeight: '800' },
-  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.03)', paddingTop: 12 },
+  footer: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, paddingTop: 12 },
   urgentRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   urgentText: { color: '#FBBF24', fontSize: 12, fontWeight: '700' },
   dateRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dateText: { color: '#52525B', fontSize: 12, fontWeight: '500' },
+  dateText: { fontSize: 12, fontWeight: '500' },
   saveBtn: { padding: 4 },
 });

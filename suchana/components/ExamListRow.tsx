@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Bell, MapPin, Calendar, Bookmark, BookmarkCheck } from 'lucide-react-native';
 import { cleanLabel } from '@/utils/format';
 import type { Exam } from '@/types/exam';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 interface ExamListRowProps {
   exam: Exam;
@@ -12,11 +13,18 @@ interface ExamListRowProps {
 }
 
 export const ExamListRow = ({ exam, isSaved, onSaveToggle, onPress }: ExamListRowProps) => {
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const background = useThemeColor({}, 'background');
+  const cardBg = useThemeColor({}, 'card');
+  const border = useThemeColor({}, 'border');
+  const tint = useThemeColor({}, 'tint');
+
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
       const now = new Date();
-      const diffMs = now.getTime() - date.getTime();
+      const diffMs = Math.max(0, now.getTime() - date.getTime());
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
       if (diffDays === 0) return 'Updated today';
@@ -31,38 +39,38 @@ export const ExamListRow = ({ exam, isSaved, onSaveToggle, onPress }: ExamListRo
   };
 
   return (
-    <TouchableOpacity style={styles.container} onPress={onPress}>
+    <TouchableOpacity style={[styles.container, { backgroundColor: cardBg, borderColor: border }]} onPress={onPress}>
       <View style={styles.iconContainer}>
-        <View style={styles.iconCircle}>
-           <Bell size={18} color="#7C3AED" />
+        <View style={[styles.iconCircle, { backgroundColor: tint + '18' }]}>
+           <Bell size={18} color={tint} />
         </View>
       </View>
       
       <View style={styles.content}>
         <View style={styles.header}>
-            <Text style={styles.conductingBody} numberOfLines={1}>{exam.conductingBody}</Text>
-            <Text style={styles.date}>{formatDate(exam.updatedAt)}</Text>
+            <Text style={[styles.conductingBody, { color: textMuted }]} numberOfLines={1}>{exam.conductingBody}</Text>
+            <Text style={[styles.date, { color: textMuted }]}>{formatDate(exam.updatedAt)}</Text>
         </View>
         
-        <Text style={styles.title} numberOfLines={2}>{exam.title}</Text>
+        <Text style={[styles.title, { color: textPrimary }]} numberOfLines={2}>{exam.title}</Text>
         
         <View style={styles.meta}>
             <View style={styles.metaItem}>
-                <MapPin size={12} color="#6B7280" style={{ marginRight: 4 }} />
-                <Text style={styles.metaText}>{exam.state || 'National'}</Text>
+                <MapPin size={12} color={textMuted} style={{ marginRight: 4 }} />
+                <Text style={[styles.metaText, { color: textMuted }]}>{exam.state || 'National'}</Text>
             </View>
             <View style={styles.metaItem}>
-                <Calendar size={12} color="#6B7280" style={{ marginRight: 4 }} />
-                <Text style={styles.metaText}>{cleanLabel(exam.category)}</Text>
+                <Calendar size={12} color={textMuted} style={{ marginRight: 4 }} />
+                <Text style={[styles.metaText, { color: textMuted }]}>{cleanLabel(exam.category)}</Text>
             </View>
         </View>
       </View>
 
       <TouchableOpacity style={styles.saveBtn} onPress={onSaveToggle}>
         {isSaved ? (
-          <BookmarkCheck size={20} color="#7C3AED" fill="#7C3AED" />
+          <BookmarkCheck size={20} color={tint} fill={tint} />
         ) : (
-          <Bookmark size={20} color="#4B5563" />
+          <Bookmark size={20} color={textMuted} />
         )}
       </TouchableOpacity>
     </TouchableOpacity>
@@ -72,12 +80,10 @@ export const ExamListRow = ({ exam, isSaved, onSaveToggle, onPress }: ExamListRo
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    backgroundColor: '#161618',
     borderRadius: 16,
     padding: 12,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#242426',
   },
   iconContainer: {
     marginRight: 12,
@@ -86,7 +92,6 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: 'rgba(124, 58, 237, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -100,19 +105,16 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   conductingBody: {
-    color: '#9CA3AF',
     fontSize: 10,
     fontWeight: '700',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   date: {
-    color: '#4B5563',
     fontSize: 10,
     fontWeight: '500',
   },
   title: {
-    color: '#E2E8F0',
     fontSize: 14,
     fontWeight: '700',
     lineHeight: 18,
@@ -127,7 +129,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   metaText: {
-    color: '#6B7280',
     fontSize: 11,
     fontWeight: '500',
   },
