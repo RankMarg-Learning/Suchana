@@ -33,6 +33,12 @@ const markdownRules = {
 
 const { width } = Dimensions.get('window');
 
+const formatMarkdown = (text: string | null | undefined): string => {
+  if (!text) return '';
+  return text.replace(/\\n/g, '\n');
+};
+
+
 export default function ExamDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [exam, setExam] = useState<Exam | null>(null);
@@ -299,13 +305,13 @@ export default function ExamDetailScreen() {
             {exam.description && (
               <View style={styles.descriptionContainer}>
                 <Text style={styles.infoLabel}>Description</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{exam.description}</Markdown>
+                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.description)}</Markdown>
               </View>
             )}
             {exam.additionalDetails && (
               <View style={styles.descriptionContainer}>
                 <Text style={styles.infoLabel}>Additional Details</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{exam.additionalDetails}</Markdown>
+                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.additionalDetails)}</Markdown>
               </View>
             )}
           </View>
@@ -322,25 +328,25 @@ export default function ExamDetailScreen() {
             {exam.qualificationCriteria && (
               <View style={styles.descriptionContainer}>
                 <Text style={styles.infoLabel}>Qualification</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{exam.qualificationCriteria}</Markdown>
+                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.qualificationCriteria)}</Markdown>
               </View>
             )}
             {exam.totalVacancies && (
               <View style={styles.descriptionContainer}>
                 <Text style={styles.infoLabel}>Vacancies</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{exam.totalVacancies}</Markdown>
+                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.totalVacancies)}</Markdown>
               </View>
             )}
             {exam.salary && (
               <View style={styles.descriptionContainer}>
                 <Text style={styles.infoLabel}>Salary</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{exam.salary}</Markdown>
+                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.salary)}</Markdown>
               </View>
             )}
             {exam.applicationFee && (
               <View style={styles.descriptionContainer}>
                 <Text style={styles.infoLabel}>Application Fee</Text>
-                <Markdown style={markdownStyles} rules={markdownRules}>{exam.applicationFee}</Markdown>
+                <Markdown style={markdownStyles} rules={markdownRules}>{formatMarkdown(exam.applicationFee)}</Markdown>
               </View>
             )}
           </View>
@@ -524,26 +530,76 @@ const markdownStyles = {
     fontSize: 14,
     lineHeight: 22,
   },
+  heading1: {
+    fontSize: 24,
+    fontWeight: '900',
+    color: '#111827',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  heading2: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#1F2937',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  heading3: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#374151',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  paragraph: {
+    marginTop: 0,
+    marginBottom: 12,
+  },
+  list_item: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
+    marginBottom: 4,
+  },
+  bullet_list: {
+    marginBottom: 12,
+  },
+  ordered_list: {
+    marginBottom: 12,
+  },
+  strong: {
+    fontWeight: '700' as const,
+    color: '#111827',
+  },
+  link: {
+    color: '#4F46E5',
+    textDecorationLine: 'underline' as const,
+  },
   table: {
     borderWidth: 1,
     borderColor: '#E5E7EB',
     borderRadius: 8,
     marginVertical: 10,
+    overflow: 'hidden' as const,
   },
   th: {
     backgroundColor: '#F9FAFB',
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
     padding: 10,
+    color: '#111827',
     fontWeight: 'bold' as const,
   },
   td: {
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: '#F3F4F6',
+    color: '#4B5563',
   },
   thead: {
     backgroundColor: '#F9FAFB',
+  },
+  tr: {
+    flexDirection: 'row' as const,
   },
 };
 

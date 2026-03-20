@@ -49,6 +49,12 @@ import { AdBanner } from '@/components/AdBanner';
 import { useAds } from '@/context/AdsContext';
 import { cleanLabel } from '@/utils/format';
 
+const formatText = (text: string | null | undefined): string => {
+  if (!text) return '';
+  return text.replace(/\\n/g, '\n');
+};
+
+
 
 function formatCountdown(endsAt: string): string {
   const diff = new Date(endsAt).getTime() - Date.now();
@@ -318,7 +324,7 @@ export default function ExamDetailScreen() {
               <Text style={styles.factTitle}>Vacancies</Text>
             </View>
             <Markdown style={factMarkdownStyles} rules={markdownRules}>
-              {exam.totalVacancies || 'TBA'}
+              {formatText(exam.totalVacancies) || 'TBA'}
             </Markdown>
           </View>
 
@@ -328,7 +334,7 @@ export default function ExamDetailScreen() {
                 <Briefcase size={16} color="#7C3AED" />
                 <Text style={styles.factTitle}>Salary</Text>
               </View>
-              <Markdown style={factMarkdownStyles} rules={markdownRules}>{exam.salary}</Markdown>
+              <Markdown style={factMarkdownStyles} rules={markdownRules}>{formatText(exam.salary)}</Markdown>
             </View>
           )}
 
@@ -340,7 +346,7 @@ export default function ExamDetailScreen() {
             <View style={styles.eligibilityRow}>
               <View style={{ flex: 1 }}>
                 <Markdown style={factMarkdownStyles} rules={markdownRules}>
-                  {cleanLabel(exam.qualificationCriteria) || 'Check Notification'}
+                  {formatText(exam.qualificationCriteria) || 'Check Notification'}
                 </Markdown>
                 {(exam.minAge || exam.maxAge) && (
                   <Text style={styles.ageText}>
@@ -356,7 +362,7 @@ export default function ExamDetailScreen() {
               <IndianRupee size={16} color="#7C3AED" />
               <Text style={styles.factTitle}>Application Fee</Text>
             </View>
-            <Markdown style={factMarkdownStyles} rules={markdownRules}>{exam.applicationFee || 'N/A'}</Markdown>
+            <Markdown style={factMarkdownStyles} rules={markdownRules}>{formatText(exam.applicationFee) || 'N/A'}</Markdown>
           </View>
 
           {exam.additionalDetails && (
@@ -365,7 +371,7 @@ export default function ExamDetailScreen() {
                 <FileText size={16} color="#7C3AED" />
                 <Text style={styles.factTitle}>Additional Details</Text>
               </View>
-              <Markdown style={factMarkdownStyles} rules={markdownRules}>{exam.additionalDetails}</Markdown>
+              <Markdown style={factMarkdownStyles} rules={markdownRules}>{formatText(exam.additionalDetails)}</Markdown>
             </View>
           )}
         </View>
@@ -383,7 +389,7 @@ export default function ExamDetailScreen() {
             <View>
               {isDescExpanded ? (
                 <Markdown style={markdownStyles} rules={markdownRules}>
-                  {exam.description}
+                  {formatText(exam.description)}
                 </Markdown>
               ) : (
                 <Text style={styles.description} numberOfLines={3}>
@@ -679,29 +685,55 @@ const markdownStyles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 26,
   },
+  heading1: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#FFFFFF',
+    marginTop: 24,
+    marginBottom: 12,
+  },
+  heading2: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#F4F4F5',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  heading3: {
+    fontSize: 19,
+    fontWeight: '700',
+    color: '#E4E4E7',
+    marginTop: 16,
+    marginBottom: 8,
+  },
   paragraph: {
     marginTop: 0,
-    marginBottom: 8,
+    marginBottom: 16,
   },
   strong: {
     fontWeight: 'bold',
-    color: '#FFF',
+    color: '#FFFFFF',
   },
   link: {
     color: '#7C3AED',
   },
-  bullet_list: {
+  list_item: {
+    flexDirection: 'row' as const,
+    alignItems: 'flex-start' as const,
     marginBottom: 8,
   },
+  bullet_list: {
+    marginBottom: 16,
+  },
   ordered_list: {
-    marginBottom: 8,
+    marginBottom: 16,
   },
   table: {
     borderWidth: 1,
     borderColor: '#3f3f46',
     borderRadius: 8,
     marginVertical: 10,
-    overflow: 'hidden',
+    overflow: 'hidden' as const,
     backgroundColor: '#18181b',
   },
   thead: {
@@ -714,7 +746,7 @@ const markdownStyles = StyleSheet.create({
   th: {
     padding: 12,
     fontWeight: 'bold',
-    color: '#FFF',
+    color: '#FFFFFF',
     borderRightWidth: 1,
     borderRightColor: '#3f3f46',
     width: 140,
@@ -726,12 +758,12 @@ const markdownStyles = StyleSheet.create({
     borderRightWidth: 1,
     borderRightColor: '#3f3f46',
     borderBottomWidth: 1,
-    borderBottomColor: '#3f3f46',
+    borderBottomColor: '#27272a',
     width: 140,
     fontSize: 13,
   },
   tr: {
-    flexDirection: 'row',
+    flexDirection: 'row' as const,
   },
 });
 
