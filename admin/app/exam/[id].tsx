@@ -2,9 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   StatusBar, Alert, TextInput, ActivityIndicator, Modal,
-  Dimensions, Switch
+  Dimensions, Switch, Platform
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { format } from 'date-fns';
 import {
   ArrowLeft,
   Clock,
@@ -549,21 +551,22 @@ export default function ExamDetailScreen() {
           onClose={() => setEventTitleModal(false)}
         />
       )}
-      {activeEvent && (
-        <TextEditModal
-          visible={eventDateModal.open}
-          title={eventDateModal.type === 'start' ? "Starts At (YYYY-MM-DD)" : "Ends At (YYYY-MM-DD)"}
-          value={eventDateModal.type === 'start'
-            ? (activeEvent?.startsAt ? activeEvent.startsAt.slice(0, 10) : '')
-            : (activeEvent?.endsAt ? activeEvent.endsAt.slice(0, 10) : '')
+      {activeEvent && eventDateModal.open && (
+        <DateTimePicker
+          value={
+            eventDateModal.type === 'start'
+              ? (activeEvent.startsAt ? new Date(activeEvent.startsAt) : new Date())
+              : (activeEvent.endsAt ? new Date(activeEvent.endsAt) : new Date())
           }
-          onSave={(v) => {
-            if (!activeEvent) return;
-            const d = new Date(v);
-            const field = eventDateModal.type === 'start' ? 'startsAt' : 'endsAt';
-            handleEventUpdate(activeEvent.id, { [field]: isNaN(d.getTime()) ? null : d.toISOString() });
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={(e, d) => {
+            setEventDateModal({ open: false, type: 'start' });
+            if (e.type === 'set' && d) {
+              const field = eventDateModal.type === 'start' ? 'startsAt' : 'endsAt';
+              handleEventUpdate(activeEvent.id, { [field]: d.toISOString() });
+            }
           }}
-          onClose={() => setEventDateModal({ open: false, type: 'start' })}
         />
       )}
       {activeEvent && (

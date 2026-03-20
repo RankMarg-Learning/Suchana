@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  StatusBar, Alert, TextInput, ActivityIndicator, Modal,
+  StatusBar, Alert, TextInput, ActivityIndicator, Modal, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { 
@@ -22,6 +22,7 @@ import {
 } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { scraperService, StagedExam, StagedEvent } from '@/services/api.service';
 import { 
   EXAM_CATEGORIES, 
@@ -506,20 +507,22 @@ export default function StagedDetailScreen() {
           onClose={() => setEventTitleModal(false)}
         />
       )}
-      {activeEvent && (
-        <TextEditModal
-          visible={eventDateModal.open}
-          title={eventDateModal.type === 'start' ? "Starts At (YYYY-MM-DD)" : "Ends At (YYYY-MM-DD)"}
-          value={eventDateModal.type === 'start'
-            ? (activeEvent?.startsAt ? activeEvent.startsAt.slice(0, 10) : '')
-            : (activeEvent?.endsAt ? activeEvent.endsAt.slice(0, 10) : '')
+      {activeEvent && eventDateModal.open && (
+        <DateTimePicker
+          value={
+            eventDateModal.type === 'start'
+              ? (activeEvent.startsAt ? new Date(activeEvent.startsAt) : new Date())
+              : (activeEvent.endsAt ? new Date(activeEvent.endsAt) : new Date())
           }
-          onSave={(v) => {
-            const d = new Date(v);
-            const field = eventDateModal.type === 'start' ? 'startsAt' : 'endsAt';
-            handleEventUpdate(activeEvent.id, { [field]: isNaN(d.getTime()) ? null : d.toISOString() });
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={(e, d) => {
+            setEventDateModal({ open: false, type: 'start' });
+            if (e.type === 'set' && d) {
+              const field = eventDateModal.type === 'start' ? 'startsAt' : 'endsAt';
+              handleEventUpdate(activeEvent.id, { [field]: d.toISOString() });
+            }
           }}
-          onClose={() => setEventDateModal({ open: false, type: 'start' })}
         />
       )}
       {activeEvent && (
