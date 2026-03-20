@@ -31,7 +31,7 @@ export class AIProvider {
                 model: 'gpt-4o-mini',
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0,
-                max_tokens: 2000,
+                max_tokens: 4000,
                 response_format: { type: 'json_object' },
             });
 
@@ -46,39 +46,184 @@ export class AIProvider {
     }
 
     private static buildPrompt(text: string, sourceUrl: string, hintCategory?: string): string {
-        return `You are an expert Indian government exam data extractor. 
+        return `You are an expert Indian government exam data extractor.
 Extract structured exam data from the text below.
 
 SOURCE URL: ${sourceUrl}
 HINT CATEGORY: ${hintCategory ?? 'auto-detect'}
 CURRENT YEAR: ${this.CURRENT_YEAR}
 
-RULES:
-1. Dates: Use ISO8601 format (YYYY-MM-DDTHH:mm:ss.000Z). If the year is omitted in the text, logically infer it using CURRENT_YEAR (${this.CURRENT_YEAR}).
-2. Missing Data: If a field is not found or not applicable, return null (the JSON null value, NOT a string "null" or "N/A"), except for arrays which should be empty [].
-3. isTBD: Set to true ONLY if a date is explicitly mentioned as "To be announced", "Upcoming", or similar.
-4. isImportant: Set to true for START and RELEASE event types, especially for REGISTRATION, EXAM, and RESULT stages.
-5. Allowed Enum Values (Strict Validation):
-   - category: Must be one of [${EXAM_CATEGORIES.join(', ')}]
-   - examLevel: Must be one of [${EXAM_LEVELS.join(', ')}]
-   - stage: Must be one of [${LIFECYCLE_STAGES.join(', ')}]
-   - eventType: Must be one of [${LIFECYCLE_EVENT_TYPES.join(', ')}]
-6. Data formatting requirements:
-   - aiConfidence: A float between 0.0 and 1.0 indicating your confidence in the extracted data.
-   - shortTitle: Provide a recognizable acronym or short name (e.g., 'SSC CGL', 'UPSC CSE').
-   - Markdown fields (applicationFee, qualificationCriteria, totalVacancies, salary, additionalDetails, description): Extensively use Markdown (like '**bold**', '- bullet points', '### headings') to properly structure and neatly present the data.
-7. Official Links: Extract official website and notification URLs ONLY. Exclude any third-party, affiliate, or spam links.
-8. REGISTRATION Consolidation: For the REGISTRATION stage, strictly build only ONE event that contains both startsAt (opening date) and endsAt (deadline). Use eventType "START" for this consolidated event. Do not create separate "START" and "END" events.
+═══════════════════════════════════════
+CRITICAL EXTRACTION RULES
+═══════════════════════════════════════
 
-STAGE ORDER GUIDELINE:
-NOTIFICATION=10, REGISTRATION=20, ADMIT_CARD=30, EXAM=40, ANSWER_KEY=50, RESULT=60, DOCUMENT_VERIFICATION=70, JOINING=80
+──────────────────────────────────────
+RULE 1 — EXTRACT EVERY SINGLE EVENT (NO SKIPPING)
+──────────────────────────────────────
+The MANDATORY stages that MUST appear in the events array (one entry per stage per phase):
+  NOTIFICATION → REGISTRATION → ADMIT_CARD → EXAM → RESULT
 
-TEXT:
----
+The OPTIONAL stages — include ONLY when source text contains explicit data for them:
+  ANSWER_KEY  (skip entirely if no answer key date/mention exists — do NOT add a TBD placeholder)
+  DOCUMENT_VERIFICATION  (include only if mentioned)
+  JOINING  (include only if mentioned)
+
+For every MANDATORY stage that has NO date in the source text, you MUST still create a
+placeholder event with:
+  - isTBD: true
+  - startsAt: null
+  - endsAt: null
+  - title: "<Stage Name> (To Be Announced)"
+  - isImportant: true (for REGISTRATION, EXAM, RESULT) | false (for NOTIFICATION, ADMIT_CARD)
+Do NOT silently drop any mandatory stage. Do NOT add TBD placeholders for optional stages.
+
+──────────────────────────────────────
+RULE 2 — MULTI-PHASE / MULTI-TIER EXAM HANDLING
+──────────────────────────────────────
+If the exam has multiple distinct phases, tiers, or papers (e.g., Tier 1 and Tier 2,
+Prelims and Mains, Paper 1 and Paper 2), EACH phase MUST produce its OWN separate set
+of events. Never merge dates from different phases into a single event.
+
+stageOrder OFFSETS per phase:
+  - Phase 1 / Tier 1 / Prelims → base values   (ADMIT_CARD=30, EXAM=40, ANSWER_KEY=50, RESULT=60)
+  - Phase 2 / Tier 2 / Mains   → +100 offset   (ADMIT_CARD=130, EXAM=140, ANSWER_KEY=150, RESULT=160)
+  - Phase 3 / Tier 3           → +200 offset   (ADMIT_CARD=230, EXAM=240, ANSWER_KEY=250, RESULT=260)
+  - Each additional phase       → +100 more
+
+NOTIFICATION (stageOrder=10) and REGISTRATION (stageOrder=20) are shared for the whole exam.
+Create only ONE notification event and ONE registration event regardless of the number of phases.
+
+For each individual phase, create SEPARATE events for:
+  ✓ ADMIT_CARD  (one per phase, labeled "Tier 1 Admit Card", "Tier 2 Admit Card", etc.)
+  ✓ EXAM        (one per phase — NEVER merge Tier 1 and Tier 2 into one EXAM event)
+  ✓ ANSWER_KEY  (one per phase, only if answer key data is found for that phase)
+  ✓ RESULT      (one per phase, labeled "Tier 1 Result", "Tier 2 Result", etc.)
+
+Example for SSC CGL (2-tier):
+  stageOrder=10  → Notification (RELEASE)
+  stageOrder=20  → Registration (START, single event with open+close dates)
+  stageOrder=30  → Tier 1 Admit Card (RELEASE)
+  stageOrder=40  → Tier 1 Exam (START, with date range if multi-day)
+  stageOrder=50  → Tier 1 Answer Key (RELEASE) — only if data present
+  stageOrder=60  → Tier 1 Result (RELEASE)
+  stageOrder=130 → Tier 2 Admit Card (RELEASE)
+  stageOrder=140 → Tier 2 Exam (START, with date range if multi-day)
+  stageOrder=150 → Tier 2 Answer Key (RELEASE) — only if data present
+  stageOrder=160 → Tier 2 Result (RELEASE)
+
+Label each event title with the phase name to prevent ambiguity.
+
+──────────────────────────────────────
+RULE 3 — PER-STAGE EXTRACTION GUIDE
+──────────────────────────────────────
+NOTIFICATION (stageOrder=10):
+  - eventType: RELEASE
+  - isImportant: true
+  - Capture the date the official notification/advertisement was published.
+  - startsAt = notification release date, endsAt = null
+  - actionUrl = notificationUrl if available
+  - actionLabel = "View Notification"
+
+REGISTRATION (stageOrder=20):
+  - eventType: START
+  - isImportant: true
+  - Build ONE consolidated event: startsAt = registration open date, endsAt = registration close/last date.
+  - If only one date is present, put it in startsAt and set endsAt = null.
+  - NEVER create two separate START and END events for registration.
+  - actionLabel = "Apply Now" or "Register"
+
+ADMIT_CARD (stageOrder=30):
+  - eventType: RELEASE
+  - isImportant: true
+  - startsAt = admit card release date
+  - actionLabel = "Download Admit Card"
+
+EXAM (stageOrder=40):
+  - eventType: START
+  - isImportant: true
+  - If exam spans multiple days, startsAt = first day, endsAt = last day.
+  - For multi-shift exams, capture the date range.
+
+ANSWER_KEY (stageOrder=50 for Phase 1, +100 per phase):
+  - eventType: RELEASE
+  - isImportant: false
+  - startsAt = answer key release date
+  - actionLabel = "View Answer Key"
+  *** OPTIONAL — Only include this event if the source text explicitly mentions answer key
+      dates or answer key availability. If NO answer key data found, SKIP this stage entirely.
+      Do NOT create a TBD placeholder for ANSWER_KEY. ***
+
+RESULT (stageOrder=60):
+  - eventType: RELEASE
+  - isImportant: true
+  - startsAt = result declaration date
+  - actionLabel = "Check Result"
+
+DOCUMENT_VERIFICATION (stageOrder=70):
+  - eventType: START
+  - isImportant: false
+  - Capture dates if available, else TBD placeholder.
+
+JOINING (stageOrder=80):
+  - eventType: START
+  - isImportant: false
+  - Capture joining/appointment dates if available, else TBD placeholder.
+
+──────────────────────────────────────
+RULE 4 — DATES
+──────────────────────────────────────
+- Use ISO8601 format: YYYY-MM-DDTHH:mm:ss.000Z
+- If year is omitted in text, logically infer it using CURRENT_YEAR (${this.CURRENT_YEAR}).
+  If the month is earlier than the current month and the context is upcoming, use CURRENT_YEAR+1.
+- isTBD = true ONLY when text explicitly says "To be announced", "TBA", "Upcoming", "will be notified", etc.
+- isTBD = true also when you are adding a mandatory placeholder for a missing stage.
+
+──────────────────────────────────────
+RULE 5 — MISSING / NULL DATA
+──────────────────────────────────────
+- Missing scalar fields → null (NOT "null" string, NOT "N/A").
+- Missing array fields → [] (empty array).
+- Never invent data that is not present in the source text.
+
+──────────────────────────────────────
+RULE 6 — ENUM VALIDATION (STRICT)
+──────────────────────────────────────
+- category: must be one of [${EXAM_CATEGORIES.join(', ')}]
+- examLevel: must be one of [${EXAM_LEVELS.join(', ')}]
+- stage: must be one of [${LIFECYCLE_STAGES.join(', ')}]
+- eventType: must be one of [${LIFECYCLE_EVENT_TYPES.join(', ')}]
+
+──────────────────────────────────────
+RULE 7 — FORMATTING
+──────────────────────────────────────
+- aiConfidence: float 0.0–1.0 indicating extraction confidence.
+- shortTitle: recognizable acronym/short name (e.g., "SSC CGL", "UPSC CSE").
+- Markdown fields (applicationFee, qualificationCriteria, totalVacancies, salary, additionalDetails,
+  description): use **bold**, - bullet points, ### headings to structure data neatly.
+
+──────────────────────────────────────
+RULE 8 — OFFICIAL LINKS ONLY
+──────────────────────────────────────
+Extract official website and notification URLs ONLY.
+Exclude any third-party, affiliate, coaching, or news website links.
+
+──────────────────────────────────────
+STAGE ORDER REFERENCE TABLE
+──────────────────────────────────────
+Shared (all phases):  NOTIFICATION=10, REGISTRATION=20
+Phase 1 (base):       ADMIT_CARD=30, EXAM=40, ANSWER_KEY=50(*), RESULT=60
+Phase 2 (+100):       ADMIT_CARD=130, EXAM=140, ANSWER_KEY=150(*), RESULT=160
+Phase 3 (+200):       ADMIT_CARD=230, EXAM=240, ANSWER_KEY=250(*), RESULT=260
+(*) ANSWER_KEY: include only when source data is present — never insert as TBD.
+
+═══════════════════════════════════════
+SOURCE TEXT TO EXTRACT FROM:
+═══════════════════════════════════════
 ${text}
----
 
-Return JSON MATCHING THIS EXACT SCHEMA:
+═══════════════════════════════════════
+OUTPUT: Return JSON MATCHING THIS EXACT SCHEMA (no extra keys, no markdown fences):
+═══════════════════════════════════════
 {
   "title": "string (Full official exam name)",
   "shortTitle": "string (e.g., SSC CGL) | null",
@@ -98,20 +243,20 @@ Return JSON MATCHING THIS EXACT SCHEMA:
   "officialWebsite": "string (url) | null",
   "notificationUrl": "string (url) | null",
   "aiConfidence": "number (0.0 - 1.0)",
-  "aiNotes": "string (internal reasoning) | null",
+  "aiNotes": "string (your internal reasoning about completeness, multi-phase handling, TBD placeholders added) | null",
   "events": [
     {
-      "stage": "string (From Enum)",
-      "eventType": "string (From Enum)",
-      "stageOrder": "number",
-      "title": "string (Event title)",
-      "description": "string (markdown) | null",
+      "stage": "string (From Enum: NOTIFICATION|REGISTRATION|ADMIT_CARD|EXAM|ANSWER_KEY|RESULT|DOCUMENT_VERIFICATION|JOINING)",
+      "eventType": "string (From Enum: RELEASE|START|END|CORRECTION|RESCHEDULED|CANCELLED|OTHER)",
+      "stageOrder": "number (see stage order table above, apply phase offset for multi-phase exams)",
+      "title": "string (Descriptive event title, include phase/tier name for multi-phase exams)",
+      "description": "string (markdown, include any relevant details, dates, shifts, centres) | null",
       "startsAt": "string (ISO8601) | null",
       "endsAt": "string (ISO8601) | null",
-      "isTBD": "boolean",
+      "isTBD": "boolean (true if date is TBD or this is a mandatory placeholder)",
       "isImportant": "boolean",
       "actionUrl": "string (url) | null",
-      "actionLabel": "string | null"
+      "actionLabel": "string (e.g. Apply Now, Download Admit Card, Check Result) | null"
     }
   ]
 }`;

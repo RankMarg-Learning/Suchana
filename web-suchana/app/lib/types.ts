@@ -5,9 +5,14 @@ export interface LifecycleEvent {
   stage: string;
   stageOrder: number;
   label?: string;
+  title?: string;
+  eventType?: string;
   startsAt?: string;
   endsAt?: string;
+  isTBD?: boolean;
+  isImportant?: boolean;
   actionUrl?: string;
+  actionLabel?: string;
   notes?: string;
 }
 
@@ -114,4 +119,10 @@ export function countdownStr(endsAt: string, now: number): string {
   if (days > 0) return `${days}d left`;
   if (hours > 0) return `${hours}h left`;
   return "< 1h";
+}
+
+export function formatDatesInText(text: string | null | undefined, includeTime: boolean = false): string {
+  if (!text) return '';
+  const dateRegex = /\b\d{4}-\d{2}-\d{2}(T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}(:?\d{2})?))?\b/g;
+  return text.replace(dateRegex, (match) => formatDate(match));
 }

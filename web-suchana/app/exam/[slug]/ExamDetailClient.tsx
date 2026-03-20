@@ -28,9 +28,19 @@ import {
   Zap,
   TrendingUp,
   Smartphone,
+  ClipboardList,
+  Contact,
+  BookOpen,
+  Key,
+  Award,
+  FolderCheck,
+  PartyPopper,
+  XCircle,
+  AlertCircle,
+  Pin,
+  UserSquare2,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
+import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 import {
   Exam,
   LifecycleEvent,
@@ -50,42 +60,134 @@ import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
 // Ad components imported from AdUnits.tsx
 // ─── Timeline Item ────────────────────────────────────────────────────────────
 
-function TimelineItem({ event, isLast, now }: { event: LifecycleEvent; isLast: boolean; now: number }) {
-  const state = getStageState(event, now);
-  const label = event.label || STAGE_LABELS[event.stage] || cleanLabel(event.stage);
+// ─── Timeline Utilities ───────────────────────────────────────────────────────────
+const STAGE_ICONS: Record<string, any> = {
+  NOTIFICATION: Bell,
+  REGISTRATION: ClipboardList,
+  ADMIT_CARD: UserSquare2,
+  EXAM: BookOpen,
+  ANSWER_KEY: Key,
+  RESULT: Award,
+  DOCUMENT_VERIFICATION: FolderCheck,
+  JOINING: PartyPopper,
+};
 
-  const dateRange =
-    event.startsAt && event.endsAt
-      ? `${formatDate(event.startsAt)} → ${formatDate(event.endsAt)}`
-      : event.startsAt
-        ? formatDate(event.startsAt)
-        : event.endsAt
-          ? `Until ${formatDate(event.endsAt)}`
-          : "Date TBA";
+const EVENT_ICONS: Record<string, any> = {
+  RELEASE: FileText,
+  START: Clock,
+  END: XCircle,
+  CORRECTION: AlertCircle,
+  RESCHEDULED: RefreshCw,
+  CANCELLED: XCircle,
+  OTHER: Pin,
+};
 
-  const isCountdown = state === "active" && event.endsAt && new Date(event.endsAt).getTime() > now;
+function getEventStatus(
+  event: LifecycleEvent,
+  now: number,
+  nextEventStartsAt?: string | null,
+): { label: string; color: string } | null {
+  if (event.isTBD || !event.startsAt) return { label: "TBD", color: "#9CA3AF" };
+
+  const start = new Date(event.startsAt).getTime();
+  const end: number | null = event.endsAt
+    ? new Date(event.endsAt).getTime()
+    : nextEventStartsAt
+      ? new Date(nextEventStartsAt).getTime()
+      : null;
+
+  if (end !== null && now > end) return null; // Completed
+
+  if (now >= start && (end === null || now <= end)) return { label: "Active", color: "#10B981" };
+
+  return { label: "Upcoming", color: "#FBBF24" };
+}
+
+function TimelineItem({
+  event,
+  isLast,
+  now,
+  nextEventStartsAt,
+}: {
+  event: LifecycleEvent;
+  isLast: boolean;
+  now: number;
+  nextEventStartsAt?: string | null;
+}) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const status = getEventStatus(event, now, nextEventStartsAt);
+  const dotColor = status?.color ?? "#6B7280";
+
+  const IconComponent =
+    STAGE_ICONS[event.stage] ||
+    EVENT_ICONS[event.eventType || "OTHER"] ||
+    Pin;
+
+  const title = event.title || event.label || cleanLabel(event.stage);
 
   return (
     <div className="tl-item">
-      <div className="tl-left">
-        <div className={`tl-dot ${state}`} />
-        {!isLast && <div className={`tl-line ${state}`} />}
+      <div className="tl-connector">
+        <div className="tl-dot-wrap" style={{ borderColor: dotColor }}>
+          <IconComponent size={18} color={dotColor} strokeWidth={2.5} />
+        </div>
+        {!isLast && <div className="tl-line" />}
       </div>
-      <div className="tl-body">
-        <div className={`tl-stage ${state}`}>{label}</div>
-        <div className={`tl-dates ${state}`}>{dateRange}</div>
-        {isCountdown && (
-          <div className="tl-countdown">
-            <Clock size={11} />
-            {countdownStr(event.endsAt!, now)}
+
+      <div className="tl-content">
+        <div className="tl-header">
+           <div className="tl-title-group">
+            <h3 className="tl-event-title">{title}</h3>
+            {event.stage && <div className="tl-stage-label" style={{ color: dotColor }}>{cleanLabel(event.stage)}</div>}
+          </div>
+          {status && (
+            <div className="tl-status-badge" style={{ borderColor: status.color, color: status.color }}>
+              {status.label}
+            </div>
+          )}
+        </div>
+
+        <div className="tl-dates-row">
+          <Calendar size={13} />
+          {formatDate(event.startsAt)}
+          {event.endsAt ? ` – ${formatDate(event.endsAt)}` : ''}
+          {event.isTBD && " (TBA)"}
+        </div>
+
+        {event.notes && (
+          <div className="tl-notes-container">
+            {isExpanded ? (
+               <MarkdownRenderer content={event.notes} className="tl-markdown" variant="fact" />
+            ) : (
+                <div className="tl-notes-preview">
+                   {event.notes.replace(/[#*`\n]/g, ' ').substring(0, 100)}
+                   {event.notes.length > 100 && "..."}
+                </div>
+            )}
+            {event.notes.length > 100 && (
+               <button onClick={() => setIsExpanded(!isExpanded)} className="tl-more-btn">
+                  {isExpanded ? "Show less" : "Read more"}
+               </button>
+            )}
           </div>
         )}
-        {state === "active" && event.actionUrl && (
-          <a href={event.actionUrl} target="_blank" rel="noopener noreferrer" className="tl-action-btn">
-            Apply Now <ExternalLink size={12} />
-          </a>
+
+        {event.actionUrl && (
+          <div className="tl-footer">
+            {status === null ? (
+               <div className="tl-action-btn disabled">Closed</div>
+            ) : (
+              <a 
+                href={event.actionUrl} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="tl-action-btn active"
+              >
+                {event.actionLabel || "Open Links"} <ArrowRight size={14} />
+              </a>
+            )}
+          </div>
         )}
-        {event.notes && <div className="tl-notes">{event.notes}</div>}
       </div>
     </div>
   );
@@ -293,6 +395,11 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
                     event={event}
                     isLast={i === sorted.length - 1}
                     now={mounted ? now : 0}
+                    nextEventStartsAt={
+                      !event.endsAt && i < sorted.length - 1
+                        ? sorted[i + 1].startsAt
+                        : null
+                    }
                   />
                 ))}
               </div>
@@ -302,45 +409,51 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
           {/* Vacancies Section */}
           <section className="exam-detail-section" aria-labelledby="vac-heading">
             <h2 id="vac-heading" className="exam-detail-section-title">Vacancies</h2>
-            <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.totalVacancies || "TBA"}</ReactMarkdown></div>
+            <div className="fact-content"><MarkdownRenderer content={exam.totalVacancies ?? "TBA"} variant="fact" /></div>
           </section>
 
           {/* Salary Section */}
           {exam.salary && (
             <section className="exam-detail-section" aria-labelledby="salary-heading">
               <h2 id="salary-heading" className="exam-detail-section-title">Salary</h2>
-              <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.salary}</ReactMarkdown></div>
+              <div className="fact-content"><MarkdownRenderer content={exam.salary} variant="fact" /></div>
             </section>
           )}
 
           {/* Eligibility Section */}
           <section className="exam-detail-section" aria-labelledby="elig-heading">
             <h2 id="elig-heading" className="exam-detail-section-title">Eligibility</h2>
-            <div className="fee-grid">
-              <div className="fee-card">
-                <div className="fee-card-title">Qualification</div>
-                <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{cleanLabel(exam.qualificationCriteria || "Check notification")}</ReactMarkdown></div>
-              </div>
+            <div className="eligibility-container">
               {(exam.minAge || exam.maxAge) && (
-                <div className="fee-card">
-                  <div className="fee-card-title">Age Limit</div>
-                  <div className="fact-content">{exam.minAge}–{exam.maxAge} years</div>
+                <div className="age-limit-pill">
+                  <Info size={14} className="text-secondary" />
+                  <span className="age-pill-label">Age Limit:</span>
+                  <span className="age-pill-value">{exam.minAge}–{exam.maxAge} years</span>
                 </div>
               )}
+              <div className="fee-card eligibility-card">
+                <div className="fee-card-title">Qualification Criteria</div>
+                <div className="fact-content">
+                  <MarkdownRenderer 
+                    content={cleanLabel(exam.qualificationCriteria || "Please refer to the official notification for detailed qualification requirements.")} 
+                    variant="fact"
+                  />
+                </div>
+              </div>
             </div>
           </section>
 
           {/* Fee Section */}
           <section className="exam-detail-section" aria-labelledby="fee-heading">
             <h2 id="fee-heading" className="exam-detail-section-title">Application Fee</h2>
-            <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.applicationFee || "N/A"}</ReactMarkdown></div>
+            <div className="fact-content"><MarkdownRenderer content={exam.applicationFee ?? "N/A"} variant="fact" /></div>
           </section>
 
           {/* Additional Details */}
           {exam.additionalDetails && (
             <section className="exam-detail-section" aria-labelledby="add-heading">
               <h2 id="add-heading" className="exam-detail-section-title">Additional Details</h2>
-              <div className="fact-content"><ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.additionalDetails}</ReactMarkdown></div>
+              <div className="fact-content"><MarkdownRenderer content={exam.additionalDetails} variant="fact" /></div>
             </section>
           )}
 
@@ -349,7 +462,7 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
             <section className="exam-detail-section" aria-labelledby="desc-heading" style={{ marginTop: 40, borderTop: '1px solid var(--border)', paddingTop: 40 }}>
               <h2 id="desc-heading" className="exam-detail-section-title">About this Exam</h2>
               <div className="exam-detail-desc" itemProp="description">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{exam.description}</ReactMarkdown>
+                <MarkdownRenderer content={exam.description} />
               </div>
             </section>
           )}
