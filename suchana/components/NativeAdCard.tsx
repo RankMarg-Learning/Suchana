@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
 import { AD_UNIT_IDS } from '@/constants/Ads';
+import { ADS_CONFIG, GLOBAL_ADS_ENABLED, AdPlacement } from '@/constants/AdsConfig';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -34,11 +35,12 @@ if (Platform.OS !== 'web' && !IS_EXPO_GO) {
 }
 
 interface Props {
+    placement: AdPlacement;
     adUnitId?: string;
     style?: any;
 }
 
-export function NativeAdCard({ adUnitId = AD_UNIT_IDS.NATIVE, style }: Props) {
+export function NativeAdCard({ placement, adUnitId, style }: Props) {
     const nativeAdRef = useRef<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
@@ -50,17 +52,27 @@ export function NativeAdCard({ adUnitId = AD_UNIT_IDS.NATIVE, style }: Props) {
     const textMuted = useThemeColor({}, 'textMuted');
     const tint = useThemeColor({}, 'tint');
 
-    if (Platform.OS === 'web' || IS_EXPO_GO || !NativeAdView) {
+    if (Platform.OS === 'web' || !GLOBAL_ADS_ENABLED) {
+        return null;
+    }
+
+    const config = ADS_CONFIG[placement];
+    if (!config?.enabled) {
+        return null;
+    }
+
+    if (IS_EXPO_GO || !NativeAdView) {
         return <MockupNativeAd style={style} />;
     }
 
+    const activeAdUnitId = adUnitId || config.adUnitId;
     const gradientColors = (colorScheme === 'dark' ? ['#1e1b4b', '#0D0D0F'] : ['#F8FAFC', '#F1F5F9']) as readonly [string, string];
 
     return (
         <View style={[styles.container, { borderColor: border }, style]}>
             <NativeAdView
                 ref={nativeAdRef}
-                adUnitID={adUnitId}
+                adUnitID={activeAdUnitId}
                 onNativeAdLoaded={(data: any) => {
                     console.log('Native Ad Loaded');
                     setLoading(false);

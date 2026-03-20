@@ -189,7 +189,7 @@ export default function UpdatesScreen() {
             <HomeCarousel banners={banners} />
 
             {/* Native Ad in Updates */}
-            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 20 }} />
+            <NativeAdCard placement="HOME_TOP" style={{ marginHorizontal: 16, marginBottom: 20 }} />
 
             {/* Notifications toggle */}
             <View style={styles.section}>
@@ -209,12 +209,12 @@ export default function UpdatesScreen() {
               />
             </View>
 
-            <AdBanner style={{ marginHorizontal: 16, marginBottom: 16 }} />
+            <AdBanner placement="HOME_MIDDLE" style={{ marginHorizontal: 16, marginBottom: 16 }} />
 
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: textPrimary }]}>Recently Updated</Text>
             </View>
-            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 16 }} />
+            <NativeAdCard placement="HOME_RECENT_UPDATED" style={{ marginHorizontal: 16, marginBottom: 16 }} />
           </View>
         }
         contentContainerStyle={{ paddingBottom: 40 }}
@@ -222,8 +222,8 @@ export default function UpdatesScreen() {
         ListFooterComponent={updatedExams.length > 0 ? (
           <View>
             {isFetchingNextPage && <ActivityIndicator color={tint} style={{ marginBottom: 16 }} />}
-            <AdBanner style={{ margin: 16 }} />
-            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 24 }} />
+            <AdBanner placement="HOME_FOOTER" style={{ margin: 16 }} />
+            <NativeAdCard placement="HOME_FOOTER_NATIVE" style={{ marginHorizontal: 16, marginBottom: 24 }} />
           </View>
         ) : null}
       />

@@ -341,7 +341,7 @@ export default function ExamDetailScreen() {
               <Share2 size={22} color={textPrimary} />
             </TouchableOpacity>
           </View>
-          <AdBanner />
+          <AdBanner placement="EXAM_DETAILS_HEADER" />
         </View>
 
         {/* Hero Section */}
@@ -505,7 +505,7 @@ export default function ExamDetailScreen() {
         </View>
 
         {/* Ad Placement */}
-        <NativeAdCard style={{ marginHorizontal: 20, marginBottom: 30 }} />
+        <NativeAdCard placement="EXAM_DETAILS_BOTTOM" style={{ marginHorizontal: 20, marginBottom: 30 }} />
 
         {/* Secondary Info Sections */}
         {exam.description && (

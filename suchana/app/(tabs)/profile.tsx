@@ -150,7 +150,7 @@ export default function ProfileScreen() {
         </View>
 
         {/* Native Ad in Profile */}
-        <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 20 }} />
+        <NativeAdCard placement="PROFILE_MIDDLE" style={{ marginHorizontal: 16, marginBottom: 20 }} />
 
         {/* Notifications toggle */}
         <View style={styles.section}>
@@ -186,7 +186,7 @@ export default function ProfileScreen() {
           <Text style={styles.logoutTxt}>Sign Out</Text>
         </TouchableOpacity>
 
-        <AdBanner style={{ margin: 16 }} />
+        <AdBanner placement="PROFILE_BOTTOM" style={{ margin: 16 }} />
       </ScrollView>
     </SafeAreaView>
   );

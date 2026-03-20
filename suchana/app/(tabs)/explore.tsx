@@ -118,7 +118,7 @@ export default function SavedExamsTab() {
           exams.length > 0 ? (
             <>
               {/* Native Ad at top of list */}
-              <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 20 }} />
+              <NativeAdCard placement="SAVED_TOP" style={{ marginHorizontal: 16, marginBottom: 20 }} />
 
               <View style={[styles.nudgeBox, { backgroundColor: tint + '18', borderColor: tint + '33' }]}>
                 <Text style={[styles.nudgeText, { color: tint }]}>You'll get notifications for these exams.</Text>
@@ -129,8 +129,8 @@ export default function SavedExamsTab() {
         ListEmptyComponent={isLoading ? null : renderEmpty}
         ListFooterComponent={exams.length > 0 ? (
           <View>
-            <AdBanner style={{ margin: 16 }} />
-            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 24 }} />
+            <AdBanner placement="SAVED_FOOTER" style={{ margin: 16 }} />
+            <NativeAdCard placement="SAVED_FOOTER_NATIVE" style={{ marginHorizontal: 16, marginBottom: 24 }} />
           </View>
         ) : null}
         refreshControl={

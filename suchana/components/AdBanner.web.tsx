@@ -1,5 +1,10 @@
 import React from 'react';
+import { AdPlacement } from '@/constants/AdsConfig';
 
-export function AdBanner() {
+interface Props {
+    placement: AdPlacement;
+}
+
+export function AdBanner(_props: Props) {
     return null;
 }
