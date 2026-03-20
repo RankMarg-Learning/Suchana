@@ -280,6 +280,10 @@ export const scraperService = {
         const response = await apiClient.post(`/scraper/staged/${stagedExamId}/events`, data);
         return response.data;
     },
+    clearCache: async (): Promise<any> => {
+        const response = await apiClient.post('/scraper/clear-cache');
+        return response.data;
+    },
 };
 
 export interface HomeBanner {

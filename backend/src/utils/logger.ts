@@ -1,6 +1,3 @@
-// ============================================================
-// src/utils/logger.ts  — Winston structured logger
-// ============================================================
 import winston from 'winston';
 import { env } from '../config/env';
 

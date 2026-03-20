@@ -1,6 +1,8 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { requireAdmin } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { redis } from '../config/redis';
+import { sendSuccess } from '../utils/apiResponse';
 import * as scraperController from '../controllers/scraper.controller';
 import {
     createScrapeSourceSchema,
@@ -20,6 +22,12 @@ router.use(requireAdmin);
 // ─── Stats dashboard ────────────────────────────────────────────
 // GET /api/v1/scraper/stats
 router.get('/stats', scraperController.getReviewStats);
+
+// POST /api/v1/scraper/clear-cache
+router.post('/clear-cache', async (req: Request, res: Response) => {
+    await redis.flushall();
+    sendSuccess(res, { message: 'Cache cleared successfully' });
+});
 
 // ─── ScrapeSource management ────────────────────────────────────
 // GET  /api/v1/scraper/sources
