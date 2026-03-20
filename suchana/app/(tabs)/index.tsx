@@ -60,7 +60,7 @@ export default function UpdatesScreen() {
       return exams;
     },
   });
-  console.log(registrations)
+
   const { data: banners = [], isLoading: loadingBanners, refetch: refetchBanners } = useQuery({
     queryKey: ['home-banners'],
     queryFn: fetchHomeBanners,
