@@ -44,7 +44,6 @@ export interface Exam {
     updatedAt: string;
     createdAt: string;
     lifecycleEvents?: LifecycleEvent[];
-    _count?: { lifecycleEvents: number };
 }
 
 export type ExamCategory = Cat;

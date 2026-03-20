@@ -44,7 +44,6 @@ const ExamListRow = ({
   onDelete: () => void;
 }) => {
   const ss = getStatusStyle(exam.status);
-  const eventCount = exam._count?.lifecycleEvents || 0;
 
   return (
     <TouchableOpacity style={styles.cardItem} onPress={onPress} activeOpacity={0.8}>
@@ -81,19 +80,7 @@ const ExamListRow = ({
         {exam.shortTitle || exam.title}
       </Text>
 
-      <View style={styles.cardFooter}>
-        <View style={styles.miniChip}>
-          <Ionicons name="people" size={14} color="#6B7280" />
-          <Text style={styles.miniChipText} numberOfLines={1} ellipsizeMode="tail">
-            {exam.totalVacancies ? (exam.totalVacancies.length > 20 ? exam.totalVacancies.substring(0, 20) + '...' : exam.totalVacancies) : '0'} Vacancies
-          </Text>
-        </View>
-        <View style={styles.cardDivider} />
-        <View style={styles.miniChip}>
-          <Ionicons name="calendar-outline" size={14} color="#6B7280" />
-          <Text style={styles.miniChipText}>{eventCount} Events</Text>
-        </View>
-      </View>
+
     </TouchableOpacity>
   );
 };

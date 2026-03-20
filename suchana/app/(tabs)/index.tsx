@@ -53,7 +53,6 @@ export default function UpdatesScreen() {
   });
 
   const updatedExams = examPages?.pages.flatMap(p => p.exams) ?? [];
-
   const { data: registrations = [], isLoading: loadingRegs, refetch: refetchRegs, isRefetching: refetchingRegs } = useQuery({
     queryKey: ['active-registrations'],
     queryFn: async () => {
@@ -61,7 +60,7 @@ export default function UpdatesScreen() {
       return exams;
     },
   });
-
+  console.log(registrations)
   const { data: banners = [], isLoading: loadingBanners, refetch: refetchBanners } = useQuery({
     queryKey: ['home-banners'],
     queryFn: fetchHomeBanners,

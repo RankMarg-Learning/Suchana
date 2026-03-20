@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import Markdown from 'react-native-markdown-display';
 import {
   View, Text, StyleSheet, ScrollView, Share,
   TouchableOpacity, ActivityIndicator, Linking,
@@ -30,26 +29,11 @@ import { useUser } from '@/context/UserContext';
 import { TimelineItem } from '@/components/TimelineItem';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useColorScheme } from '@/hooks/use-color-scheme';
-
-const markdownRules = {
-  table: (node: any, children: any, parent: any, styles: any) => (
-    <ScrollView horizontal key={node.key} showsHorizontalScrollIndicator={false}>
-      <View style={styles.table}>
-        {children}
-      </View>
-    </ScrollView>
-  ),
-  thead: (node: any, children: any, parent: any, styles: any) => (
-    <View key={node.key} style={styles.thead}>{children}</View>
-  ),
-  tbody: (node: any, children: any, parent: any, styles: any) => (
-    <View key={node.key} style={styles.tbody}>{children}</View>
-  ),
-};
 import { NativeAdCard } from '@/components/NativeAdCard';
 import { AdBanner } from '@/components/AdBanner';
 import { useAds } from '@/context/AdsContext';
 import { cleanLabel } from '@/utils/format';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 
 const formatText = (text: string | null | undefined): string => {
   if (!text) return '';
@@ -88,7 +72,6 @@ export default function ExamDetailScreen() {
   const insets = useSafeAreaInsets();
   const [countdown, setCountdown] = useState('');
   const [isDescExpanded, setIsDescExpanded] = useState(false);
-  const [showAllVac, setShowAllVac] = useState(false);
 
   const textPrimary = useThemeColor({}, 'text');
   const textMuted = useThemeColor({}, 'textMuted');
@@ -208,115 +191,6 @@ export default function ExamDetailScreen() {
   const score = (exam as any).matchScore ?? 0;
   const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#6B7280';
 
-  const markdownStyles = StyleSheet.create({
-    body: {
-      color: textMuted,
-      fontSize: 16,
-      lineHeight: 26,
-    },
-    heading1: {
-      fontSize: 26,
-      fontWeight: '900',
-      color: textPrimary,
-      marginTop: 24,
-      marginBottom: 12,
-    },
-    heading2: {
-      fontSize: 22,
-      fontWeight: '800',
-      color: textPrimary,
-      marginTop: 20,
-      marginBottom: 10,
-    },
-    heading3: {
-      fontSize: 19,
-      fontWeight: '700',
-      color: textPrimary,
-      marginTop: 16,
-      marginBottom: 8,
-    },
-    strong: {
-      fontWeight: 'bold',
-      color: textPrimary,
-    },
-    link: {
-      color: tint,
-    },
-    table: {
-      borderWidth: 1,
-      borderColor: border,
-      borderRadius: 8,
-      marginVertical: 10,
-      backgroundColor: cardBg,
-    },
-    thead: {
-      backgroundColor: border,
-      borderBottomWidth: 1,
-      borderBottomColor: border,
-    },
-    th: {
-      padding: 12,
-      fontWeight: 'bold',
-      color: textPrimary,
-      borderRightWidth: 1,
-      borderRightColor: border,
-      width: 140,
-      fontSize: 13,
-    },
-    td: {
-      padding: 12,
-      color: textMuted,
-      borderRightWidth: 1,
-      borderRightColor: border,
-      borderBottomWidth: 1,
-      borderBottomColor: border,
-      width: 140,
-      fontSize: 13,
-    },
-    tr: {
-      flexDirection: 'row',
-    },
-  });
-
-  const factMarkdownStyles = {
-    ...markdownStyles,
-    body: {
-      color: textPrimary,
-      fontSize: 14,
-      fontWeight: '400' as const,
-      lineHeight: 20,
-    },
-    strong: {
-      fontWeight: '700' as const,
-      color: textPrimary,
-    },
-    table: {
-      borderWidth: 1,
-      borderColor: border,
-      borderRadius: 4,
-      marginVertical: 4,
-    },
-    thead: {
-      backgroundColor: border,
-    },
-    th: {
-      color: textPrimary,
-      padding: 8,
-      fontWeight: '600' as const,
-      width: 100,
-      borderRightWidth: 1,
-      borderColor: border,
-    },
-    td: {
-      padding: 8,
-      color: textMuted,
-      width: 100,
-      borderRightWidth: 1,
-      borderBottomWidth: 1,
-      borderColor: border,
-    },
-  };
-
   const heroColors = (colorScheme === 'dark' ? ['#2E1065', '#09090B'] : ['#F5F3FF', '#FFFFFF']) as readonly [string, string];
   const matchColors = (colorScheme === 'dark' ? ['#27272a', '#18181b'] : [cardBg, cardBg]) as readonly [string, string];
 
@@ -431,8 +305,6 @@ export default function ExamDetailScreen() {
                   key={event.id}
                   event={event}
                   isLast={index === sorted.length - 1}
-                  // If this event has no endsAt, the next event's startsAt
-                  // acts as the effective end boundary (O(1) lookup by index)
                   nextEventStartsAt={
                     !event.endsAt && index < sorted.length - 1
                       ? sorted[index + 1].startsAt
@@ -451,9 +323,7 @@ export default function ExamDetailScreen() {
               <Briefcase size={16} color={tint} />
               <Text style={[styles.factTitle, { color: textMuted }]}>Vacancies</Text>
             </View>
-            <Markdown style={factMarkdownStyles} rules={markdownRules}>
-              {formatText(exam.totalVacancies) || 'TBA'}
-            </Markdown>
+            <MarkdownRenderer variant="fact" content={formatText(exam.totalVacancies) || 'TBA'} />
           </View>
 
           {exam.salary && (
@@ -462,7 +332,7 @@ export default function ExamDetailScreen() {
                 <Briefcase size={16} color={tint} />
                 <Text style={[styles.factTitle, { color: textMuted }]}>Salary</Text>
               </View>
-              <Markdown style={factMarkdownStyles} rules={markdownRules}>{formatText(exam.salary)}</Markdown>
+              <MarkdownRenderer variant="fact" content={formatText(exam.salary)} />
             </View>
           )}
 
@@ -473,9 +343,7 @@ export default function ExamDetailScreen() {
             </View>
             <View style={styles.eligibilityRow}>
               <View style={{ flex: 1 }}>
-                <Markdown style={factMarkdownStyles} rules={markdownRules}>
-                  {formatText(exam.qualificationCriteria) || 'Check Notification'}
-                </Markdown>
+                <MarkdownRenderer variant="fact" content={formatText(exam.qualificationCriteria) || 'Check Notification'} />
                 {(exam.minAge || exam.maxAge) && (
                   <Text style={[styles.ageText, { color: tint }]}>
                     Age Limit: {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} years
@@ -490,7 +358,7 @@ export default function ExamDetailScreen() {
               <IndianRupee size={16} color={tint} />
               <Text style={[styles.factTitle, { color: textMuted }]}>Application Fee</Text>
             </View>
-            <Markdown style={factMarkdownStyles} rules={markdownRules}>{formatText(exam.applicationFee) || 'N/A'}</Markdown>
+            <MarkdownRenderer variant="fact" content={formatText(exam.applicationFee) || 'N/A'} />
           </View>
 
           {exam.additionalDetails && (
@@ -499,7 +367,7 @@ export default function ExamDetailScreen() {
                 <FileText size={16} color={tint} />
                 <Text style={[styles.factTitle, { color: textMuted }]}>Additional Details</Text>
               </View>
-              <Markdown style={factMarkdownStyles} rules={markdownRules}>{formatText(exam.additionalDetails)}</Markdown>
+              <MarkdownRenderer variant="fact" content={formatText(exam.additionalDetails)} />
             </View>
           )}
         </View>
@@ -516,9 +384,7 @@ export default function ExamDetailScreen() {
             </View>
             <View>
               {isDescExpanded ? (
-                <Markdown style={markdownStyles} rules={markdownRules}>
-                  {formatText(exam.description)}
-                </Markdown>
+                <MarkdownRenderer content={formatText(exam.description)} />
               ) : (
                 <Text style={[styles.description, { color: textMuted }]} numberOfLines={3}>
                   {exam.description.replace(/[#*`\n]/g, ' ')}
@@ -708,7 +574,7 @@ const styles = StyleSheet.create({
   },
   factHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
   factTitle: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
-  
+
   // Eligibility specific
   eligibilityRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   ageText: { fontSize: 13, fontWeight: '800' },

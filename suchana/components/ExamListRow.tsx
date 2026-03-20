@@ -1,7 +1,6 @@
-import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Bell, MapPin, Calendar, Bookmark, BookmarkCheck } from 'lucide-react-native';
-import { cleanLabel } from '@/utils/format';
+import { cleanLabel, formatRelativeDate } from '@/utils/format';
 import type { Exam } from '@/types/exam';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
@@ -19,24 +18,6 @@ export const ExamListRow = ({ exam, isSaved, onSaveToggle, onPress }: ExamListRo
   const border = useThemeColor({}, 'border');
   const tint = useThemeColor({}, 'tint');
 
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffMs = Math.max(0, now.getTime() - date.getTime());
-      const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-      if (diffDays === 0) return 'Updated today';
-      if (diffDays === 1) return 'Updated yesterday';
-      if (diffDays < 7) return `Updated ${diffDays}d ago`;
-
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      return `${date.getDate()} ${months[date.getMonth()]}`;
-    } catch (e) {
-      return 'Recently';
-    }
-  };
-
   return (
     <TouchableOpacity style={[styles.container, { backgroundColor: cardBg, borderColor: border }]} onPress={onPress}>
       <View style={styles.iconContainer}>
@@ -48,7 +29,7 @@ export const ExamListRow = ({ exam, isSaved, onSaveToggle, onPress }: ExamListRo
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={[styles.conductingBody, { color: textMuted }]} numberOfLines={1}>{exam.conductingBody}</Text>
-          <Text style={[styles.date, { color: textMuted }]}>{formatDate(exam.updatedAt)}</Text>
+          <Text style={[styles.date, { color: textMuted }]}>{formatRelativeDate(exam.updatedAt)}</Text>
         </View>
 
         <Text style={[styles.title, { color: textPrimary }]} numberOfLines={2}>{exam.title}</Text>

@@ -15,82 +15,84 @@ export async function listExams(query: ListExamQuery) {
     const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state, lifecycleStage } = query;
     const cacheKey = `${EXAM_LIST_CACHE_KEY}:${JSON.stringify(query)}`;
 
-    return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_LIST, async () => {
-        const where: Prisma.ExamWhereInput = {
-            ...(category && { category }),
-            ...(status && { status }),
-            ...(conductingBody && {
-                conductingBody: { contains: conductingBody, mode: 'insensitive' },
-            }),
-            ...(isPublished !== undefined && { isPublished }),
-            ...(examLevel && { examLevel }),
-            ...(state && { state: { contains: state, mode: 'insensitive' } }),
-            ...(search && {
-                OR: [
-                    { title: { contains: search, mode: 'insensitive' } },
-                    { shortTitle: { contains: search, mode: 'insensitive' } },
-                    { conductingBody: { contains: search, mode: 'insensitive' } },
-                ],
-            }),
-            ...(lifecycleStage && {
-                lifecycleEvents: {
-                    some: {
-                        stage: lifecycleStage,
-                        OR: [
-                            { endsAt: { gte: new Date() } },
-                            { endsAt: null },
-                            { startsAt: { gte: new Date() } }
-                        ]
-                    }
+    // TEMPORARY: Disabled cache for debugging
+    // return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_LIST, async () => {
+    const where: Prisma.ExamWhereInput = {
+        ...(category && { category }),
+        ...(status && { status }),
+        ...(conductingBody && {
+            conductingBody: { contains: conductingBody, mode: 'insensitive' },
+        }),
+        ...(isPublished !== undefined && { isPublished }),
+        ...(examLevel && { examLevel }),
+        ...(state && { state: { contains: state, mode: 'insensitive' } }),
+        ...(search && {
+            OR: [
+                { title: { contains: search, mode: 'insensitive' } },
+                { shortTitle: { contains: search, mode: 'insensitive' } },
+                { conductingBody: { contains: search, mode: 'insensitive' } },
+            ],
+        }),
+        ...(lifecycleStage && {
+            lifecycleEvents: {
+                some: {
+                    stage: lifecycleStage,
+                    OR: [
+                        { endsAt: { gte: new Date() } },
+                        { endsAt: null },
+                        { startsAt: { gte: new Date() } }
+                    ]
                 }
-            })
-        };
+            }
+        })
+    };
 
-        const [exams, total] = await Promise.all([
-            prisma.exam.findMany({
-                where,
-                skip: (page - 1) * limit,
-                take: limit,
-                orderBy: [
-                    { isPublished: 'desc' },
-                    { publishedAt: 'desc' },
-                    { updatedAt: 'desc' },
-                ],
-                select: {
-                    id: true,
-                    title: true,
-                    shortTitle: true,
-                    slug: true,
-                    category: true,
-                    conductingBody: true,
-                    status: true,
-                    examLevel: true,
-                    state: true,
-                    totalVacancies: true,
-                    isPublished: true,
-                    publishedAt: true,
-                    updatedAt: true,
-                    createdAt: true,
-                    _count: { select: { lifecycleEvents: true } },
-                    lifecycleEvents: {
-                        where: { eventType: 'REGISTRATION' },
-                        orderBy: { endsAt: 'asc' },
-                        take: 1,
-                        select: {
-                            id: true,
-                            title: true,
-                            eventType: true,
-                            startsAt: true,
-                            endsAt: true,
-                        }
-                    },
+
+    const [exams, total] = await Promise.all([
+        prisma.exam.findMany({
+            where,
+            skip: (page - 1) * limit,
+            take: limit,
+            orderBy: [
+                { isPublished: 'desc' },
+                { publishedAt: 'desc' },
+                { updatedAt: 'desc' },
+            ],
+            select: {
+                id: true,
+                title: true,
+                shortTitle: true,
+                slug: true,
+                category: true,
+                conductingBody: true,
+                status: true,
+                examLevel: true,
+                state: true,
+                totalVacancies: true,
+                isPublished: true,
+                publishedAt: true,
+                updatedAt: true,
+                createdAt: true,
+                lifecycleEvents: {
+                    where: { eventType: 'REGISTRATION' },
+                    orderBy: { endsAt: 'asc' },
+                    take: 1,
+                    select: {
+                        id: true,
+                        title: true,
+                        eventType: true,
+                        startsAt: true,
+                        endsAt: true,
+                    }
                 },
-            }),
-            prisma.exam.count({ where }),
-        ]);
+            },
+        }),
+        prisma.exam.count({ where }),
+    ]);
 
-        return { exams, total };
-    });
+
+    return { exams, total };
+    // });
 }
 
 // ─── Get By ID ───────────────────────────────────────────────
@@ -228,7 +230,6 @@ export async function getSavedExams(userId: string) {
             isPublished: true,
             publishedAt: true,
             createdAt: true,
-            _count: { select: { lifecycleEvents: true } },
             lifecycleEvents: {
                 where: { eventType: 'REGISTRATION' },
                 orderBy: { endsAt: 'asc' },
@@ -243,7 +244,6 @@ export async function getSavedExams(userId: string) {
             },
         }
     });
-
     return exams;
 }
 

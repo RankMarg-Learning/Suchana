@@ -24,7 +24,6 @@ export interface Exam {
     conductingBody: string;
     minAge?: number;
     maxAge?: number;
-    totalVacancies?: string;
     qualificationCriteria?: string;
     applicationFee?: string;
     salary?: string;
@@ -33,9 +32,6 @@ export interface Exam {
     notificationUrl?: string;
     isPublished: boolean;
     createdAt: string;
-    _count?: {
-        lifecycleEvents: number;
-    };
 }
 
 export interface LifecycleEvent {

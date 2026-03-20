@@ -46,6 +46,8 @@ function isNewExam(exam: Exam): boolean {
   return created > threeDaysAgo;
 }
 
+import { formatDate } from '@/utils/format';
+
 interface Props {
   exam: Exam & { matchScore?: number };
   isSaved?: boolean;
@@ -143,7 +145,7 @@ export function ExamCard({ exam, isSaved, onSaveToggle, onPress }: Props) {
           ) : (
             <View style={styles.dateRow}>
               <Clock size={12} color={textMuted} />
-              <Text style={[styles.dateText, { color: textMuted }]}>Posted {new Date(exam.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</Text>
+              <Text style={[styles.dateText, { color: textMuted }]}>Posted {formatDate(exam.createdAt)}</Text>
             </View>
           )}
 

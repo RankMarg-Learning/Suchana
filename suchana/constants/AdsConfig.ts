@@ -1,6 +1,6 @@
 import { AD_UNIT_IDS } from './Ads';
 
-export type AdPlacement = 
+export type AdPlacement =
   | 'HOME_TOP'
   | 'HOME_MIDDLE'
   | 'HOME_RECENT_UPDATED'
@@ -70,4 +70,4 @@ export const ADS_CONFIG: Record<AdPlacement, AdConfig> = {
   },
 };
 
-export const GLOBAL_ADS_ENABLED = true;
+export const GLOBAL_ADS_ENABLED = false;

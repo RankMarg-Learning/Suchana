@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
-import Markdown from 'react-native-markdown-display';
 import {
   Bell,
   ClipboardList,
@@ -17,10 +16,11 @@ import {
   RefreshCcw,
   Pin
 } from 'lucide-react-native';
-import { cleanLabel } from '@/utils/format';
+import { cleanLabel, formatDate, formatDatesInText } from '@/utils/format';
 import type { LifecycleEvent } from '@/types/exam';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 
 const STAGE_ICONS: Record<string, any> = {
   NOTIFICATION: Bell,
@@ -43,10 +43,6 @@ const EVENT_ICONS: Record<string, any> = {
   OTHER: Pin,
 };
 
-function formatDate(iso: string | null | undefined) {
-  if (!iso) return 'TBD';
-  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-}
 
 
 function getStatus(
@@ -97,30 +93,6 @@ export function TimelineItem({
   const status = getStatus(event, effectiveEndsAt);
   const colorScheme = useColorScheme();
 
-  const markdownStyles = StyleSheet.create({
-    body: {
-      color: textMuted,
-      fontSize: 12,
-      lineHeight: 18,
-    },
-    paragraph: {
-      marginTop: 0,
-      marginBottom: 8,
-    },
-    strong: {
-      fontWeight: 'bold',
-      color: textPrimary,
-    },
-    link: {
-      color: tint,
-    },
-    bullet_list: {
-      marginBottom: 8,
-    },
-    ordered_list: {
-      marginBottom: 8,
-    },
-  });
 
   // Completed events (status === null) fall back to a muted gray dot
   const dotColor = status?.color ?? '#6B7280';
@@ -155,12 +127,15 @@ export function TimelineItem({
         {event.description ? (
           <View style={styles.descContainer}>
             {isExpanded ? (
-              <Markdown style={markdownStyles}>
-                {event.description}
-              </Markdown>
+              <MarkdownRenderer
+                content={event.description}
+                variant="fact"
+                includeTime={false}
+                style={{ body: { fontSize: 12, lineHeight: 18, color: textMuted } }}
+              />
             ) : (
               <Text style={[styles.desc, { color: textMuted }]} numberOfLines={1}>
-                {event.description.replace(/[#*`\n]/g, ' ')}
+                {formatDatesInText(event.description).replace(/[#*`\n]/g, ' ')}
               </Text>
             )}
 
