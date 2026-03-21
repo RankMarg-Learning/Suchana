@@ -1,15 +1,14 @@
 import { z } from 'zod';
-import { LifecycleEventType, LifecycleStage } from '../constants/enums';
+import { LifecycleStage } from '../constants/enums';
 
 const baseLifecycleEventSchema = z.object({
     stage: z.nativeEnum(LifecycleStage),
-    eventType: z.nativeEnum(LifecycleEventType),
+    stageOrder: z.number().int().optional().default(0),
     title: z.string().min(3).max(200),
     description: z.string().optional().nullable(),
     startsAt: z.coerce.date().optional().nullable(),
     endsAt: z.coerce.date().optional().nullable(),
     isTBD: z.boolean().default(false),
-    isImportant: z.boolean().default(false),
     actionUrl: z.string().url().or(z.literal('')).optional().nullable(),
     actionLabel: z.string().max(50).optional().nullable(),
 });
@@ -36,7 +35,7 @@ export const lifecycleIdParamSchema = z.object({
 });
 
 export const lifecycleListQuerySchema = z.object({
-    type: z.nativeEnum(LifecycleEventType).optional(),
+    stage: z.nativeEnum(LifecycleStage).optional(),
     fromDate: z.coerce.date().optional(),
     toDate: z.coerce.date().optional(),
 });

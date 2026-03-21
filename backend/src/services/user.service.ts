@@ -99,12 +99,6 @@ export async function getUserExams(id: string, page: number = 1, limit: number =
             skip: (page - 1) * limit,
             take: limit,
             orderBy: { createdAt: 'desc' },
-            include: {
-                lifecycleEvents: {
-                    where: { eventType: 'REGISTRATION' },
-                    take: 1
-                }
-            }
         }),
         prisma.exam.count({ where })
     ]);

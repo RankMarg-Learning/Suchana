@@ -6,13 +6,11 @@ export async function updateStagedEvent(
     eventId: string,
     data: {
         stage?: string;
-        eventType?: string;
         title?: string;
         description?: string;
         startsAt?: Date | null;
         endsAt?: Date | null;
         isTBD?: boolean;
-        isImportant?: boolean;
         actionUrl?: string | null;
         actionLabel?: string | null;
     },
@@ -40,13 +38,11 @@ export async function addStagedEvent(
     stagedExamId: string,
     data: {
         stage: string;
-        eventType: string;
         title: string;
         description?: string;
         startsAt?: Date | null;
         endsAt?: Date | null;
         isTBD?: boolean;
-        isImportant?: boolean;
         actionUrl?: string | null;
         actionLabel?: string | null;
         stageOrder?: number;

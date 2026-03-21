@@ -120,7 +120,6 @@ function TimelineItem({
 
   const IconComponent =
     STAGE_ICONS[event.stage] ||
-    EVENT_ICONS[event.eventType || "OTHER"] ||
     Pin;
 
   const title = event.title || event.label || cleanLabel(event.stage);
@@ -136,7 +135,7 @@ function TimelineItem({
 
       <div className="tl-content">
         <div className="tl-header">
-           <div className="tl-title-group">
+          <div className="tl-title-group">
             <h3 className="tl-event-title">{title}</h3>
             {event.stage && <div className="tl-stage-label" style={{ color: dotColor }}>{cleanLabel(event.stage)}</div>}
           </div>
@@ -157,17 +156,17 @@ function TimelineItem({
         {event.notes && (
           <div className="tl-notes-container">
             {isExpanded ? (
-               <MarkdownRenderer content={event.notes} className="tl-markdown" variant="fact" />
+              <MarkdownRenderer content={event.notes} className="tl-markdown" variant="fact" />
             ) : (
-                <div className="tl-notes-preview">
-                   {event.notes.replace(/[#*`\n]/g, ' ').substring(0, 100)}
-                   {event.notes.length > 100 && "..."}
-                </div>
+              <div className="tl-notes-preview">
+                {event.notes.replace(/[#*`\n]/g, ' ').substring(0, 100)}
+                {event.notes.length > 100 && "..."}
+              </div>
             )}
             {event.notes.length > 100 && (
-               <button onClick={() => setIsExpanded(!isExpanded)} className="tl-more-btn">
-                  {isExpanded ? "Show less" : "Read more"}
-               </button>
+              <button onClick={() => setIsExpanded(!isExpanded)} className="tl-more-btn">
+                {isExpanded ? "Show less" : "Read more"}
+              </button>
             )}
           </div>
         )}
@@ -175,12 +174,12 @@ function TimelineItem({
         {event.actionUrl && (
           <div className="tl-footer">
             {status === null ? (
-               <div className="tl-action-btn disabled">Closed</div>
+              <div className="tl-action-btn disabled">Closed</div>
             ) : (
-              <a 
-                href={event.actionUrl} 
-                target="_blank" 
-                rel="noopener noreferrer" 
+              <a
+                href={event.actionUrl}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="tl-action-btn active"
               >
                 {event.actionLabel || "Open Links"} <ArrowRight size={14} />
@@ -425,17 +424,24 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
             <h2 id="elig-heading" className="exam-detail-section-title">Eligibility</h2>
             <div className="eligibility-container">
               {exam.age && (
-                <div className="age-limit-pill">
-                  <Info size={14} className="text-secondary" />
-                  <span className="age-pill-label">Age Limit:</span>
-                  <span className="age-pill-value">{exam.age}</span>
+                <div className="fee-card eligibility-card">
+                  <div className="fee-card-title">
+                    <Info size={14} className="text-secondary" style={{ marginRight: 8, verticalAlign: 'middle' }} />
+                    Age Limit
+                  </div>
+                  <div className="fact-content">
+                    <MarkdownRenderer 
+                      content={exam.age} 
+                      variant="fact"
+                    />
+                  </div>
                 </div>
               )}
               <div className="fee-card eligibility-card">
                 <div className="fee-card-title">Qualification Criteria</div>
                 <div className="fact-content">
-                  <MarkdownRenderer 
-                    content={cleanLabel(exam.qualificationCriteria || "Please refer to the official notification for detailed qualification requirements.")} 
+                  <MarkdownRenderer
+                    content={cleanLabel(exam.qualificationCriteria || "Please refer to the official notification for detailed qualification requirements.")}
                     variant="fact"
                   />
                 </div>

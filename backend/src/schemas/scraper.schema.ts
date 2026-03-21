@@ -7,7 +7,6 @@ import {
     EXAM_CATEGORIES,
     EXAM_LEVELS,
     LIFECYCLE_STAGES,
-    LIFECYCLE_EVENT_TYPES,
     REVIEW_STATUSES,
     ReviewStatus,
 } from '../constants/enums';
@@ -83,21 +82,19 @@ export type ReviewDecisionDto = z.infer<typeof reviewDecisionSchema>;
 
 export const updateStagedEventSchema = z.object({
     stage: z.enum(LIFECYCLE_STAGES as unknown as [string, ...string[]]).optional(),
-    eventType: z.enum(LIFECYCLE_EVENT_TYPES as unknown as [string, ...string[]]).optional(),
     title: z.string().min(2).optional(),
     description: z.string().optional(),
     startsAt: z.string().datetime().transform((d) => new Date(d)).optional().nullable(),
     endsAt: z.string().datetime().transform((d) => new Date(d)).optional().nullable(),
     isTBD: z.boolean().optional(),
-    isImportant: z.boolean().optional(),
     actionUrl: z.string().url().optional().nullable(),
     actionLabel: z.string().optional().nullable(),
+    stageOrder: z.number().int().optional().default(0),
 });
 export type UpdateStagedEventDto = z.infer<typeof updateStagedEventSchema>;
 
 export const createStagedEventSchema = updateStagedEventSchema.extend({
     stage: z.enum(LIFECYCLE_STAGES as unknown as [string, ...string[]]),
-    eventType: z.enum(LIFECYCLE_EVENT_TYPES as unknown as [string, ...string[]]),
     title: z.string().min(2),
 });
 export type CreateStagedEventDto = z.infer<typeof createStagedEventSchema>;

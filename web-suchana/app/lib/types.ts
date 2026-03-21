@@ -70,7 +70,7 @@ export const STAGE_LABELS: Record<string, string> = {
   EXAM_DATE: "Exam Date",
   RESULT: "Result",
   PROVISIONAL_RESULT: "Provisional Result",
-  FINAL_RESULT: "Final Result",
+  FINAL_RESULT: "Result",
   INTERVIEW: "Interview / DV",
   ANSWER_KEY: "Answer Key",
   COUNSELLING: "Counselling",

@@ -12,7 +12,7 @@ import {
 import {
   Exam,
   STATUS_LABELS, STAGE_LABELS, CATEGORIES, STATUSES,
-  cleanLabel, formatDate, getTotalVacancies, getStageState,
+  cleanLabel, formatDate, getTotalVacancies, getStageState, countdownStr,
 } from "./lib/types";
 import { MOCK_EXAMS, fetchExamsFromAPI, getPersonalizedExams } from "./lib/api";
 import { LeftSidebar, RightSidebar } from "./components/Sidebars";
@@ -33,11 +33,7 @@ function StatusBadge({ status }: { status: string }) {
 // ─── Exam List Row (clickable card linking to detail page) ────────────────────
 
 function ExamListRow({ exam, now }: { exam: Exam; now: number }) {
-  const sorted = (exam.lifecycleEvents ?? []).sort((a, b) => (a.stageOrder ?? 0) - (b.stageOrder ?? 0));
-  const regEvent = sorted.find((e) => e.stage === "REGISTRATION");
-  const examEvent = sorted.find((e) => e.stage === "EXAM_DATE" || e.stage === "EXAM");
-  const admitEvent = sorted.find((e) => e.stage === "ADMIT_CARD");
-  const activeEvents = sorted.filter((e) => getStageState(e, now) === "active");
+  const activeEvent = exam.lifecycleEvents?.[0];
 
   return (
     <Link
@@ -63,45 +59,41 @@ function ExamListRow({ exam, now }: { exam: Exam; now: number }) {
         <h2 className="exam-row-title">{exam.shortTitle ?? exam.title}</h2>
         <div className="exam-row-body">{exam.conductingBody}</div>
 
-        {/* Active stage indicator */}
-        {activeEvents.length > 0 && now > 0 && (
-          <div className="exam-row-active">
-            <div className="active-dot" />
-            <span className="active-label">
-              {activeEvents.map((e) => e.label || STAGE_LABELS[e.stage] || cleanLabel(e.stage)).join(" · ")} is open
-            </span>
+        {/* Active Stage Indicator */}
+        {activeEvent && (
+          <div className="exam-row-active-premium">
+            <div className={`active-pulse-container`}>
+              <div className="active-pulse-dot" />
+            </div>
+            <div className="active-stage-card">
+              <div className="active-stage-label">Ongoing Stage</div>
+              <div className="active-stage-value">
+                {activeEvent.title || STAGE_LABELS[activeEvent.stage] || cleanLabel(activeEvent.stage)}
+              </div>
+              {activeEvent.endsAt && (
+                <div className="active-stage-countdown">
+                  <Clock size={10} style={{ marginRight: 4 }} />
+                  {countdownStr(activeEvent.endsAt, now)}
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </div>
-
-      {/* Center: Key dates */}
-      <div className="exam-row-dates">
-        {regEvent?.endsAt && (
-          <div className="date-chip">
-            <Calendar size={11} />
-            <span>Reg. deadline: {formatDate(regEvent.endsAt)}</span>
-          </div>
-        )}
-        {admitEvent?.startsAt && (
-          <div className="date-chip">
-            <FileText size={11} />
-            <span>Admit card: {formatDate(admitEvent.startsAt)}</span>
-          </div>
-        )}
-        {examEvent?.startsAt && (
-          <div className="date-chip">
-            <Target size={11} />
-            <span>Exam: {formatDate(examEvent.startsAt)}</span>
-          </div>
-        )}
-
       </div>
 
       {/* Right: Status + arrow */}
       <div className="exam-row-right">
-        <StatusBadge status={exam.status} />
+        <div className="status-container">
+          <StatusBadge status={exam.status} />
+          {exam.totalVacancies && (
+            <div className="vacancy-badge">
+              <Briefcase size={10} style={{ marginRight: 4 }} />
+              {exam.totalVacancies} Posts
+            </div>
+          )}
+        </div>
         <div className="exam-row-arrow">
-          View Details <ArrowRight size={14} />
+          Details <ArrowRight size={14} />
         </div>
       </div>
     </Link>

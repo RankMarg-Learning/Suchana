@@ -1,4 +1,4 @@
-import { LifecycleStage, LifecycleEventType } from '../constants/enums';
+import { LifecycleStage } from '../constants/enums';
 
 export interface NotificationContent {
     title: string;
@@ -10,20 +10,22 @@ export class NotificationTemplates {
         examTitle: string,
         eventTitle: string,
         stage: LifecycleStage,
-        eventType: LifecycleEventType,
         startsAt?: Date
     ): NotificationContent {
         const dateStr = startsAt ? new Date(startsAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : '';
 
+        // Prioritize specific event title for clarity
+        const lowerTitle = eventTitle.toLowerCase();
+        
         switch (stage) {
             case LifecycleStage.REGISTRATION:
-                if (eventType === LifecycleEventType.START) {
+                if (lowerTitle.includes('start') || lowerTitle.includes('open')) {
                     return {
                         title: `📝 Apply Now: ${examTitle}`,
                         body: `Registration for ${examTitle} has started${dateStr ? ` on ${dateStr}` : ''}. Don't miss the deadline!`
                     };
                 }
-                if (eventType === LifecycleEventType.END) {
+                if (lowerTitle.includes('close') || lowerTitle.includes('end') || lowerTitle.includes('last')) {
                     return {
                         title: `⏳ Last Call: ${examTitle}`,
                         body: `Registration for ${examTitle} is closing soon${dateStr ? ` on ${dateStr}` : ''}. Apply now!`
@@ -38,13 +40,10 @@ export class NotificationTemplates {
                 };
 
             case LifecycleStage.EXAM:
-                if (eventType === LifecycleEventType.START) {
-                    return {
-                        title: `✍️ Exam Today: ${examTitle}`,
-                        body: `The ${examTitle} is scheduled for today. Good luck to all candidates!`
-                    };
-                }
-                break;
+                return {
+                    title: `✍️ Exam Update: ${examTitle}`,
+                    body: `${eventTitle} scheduled for ${dateStr || 'soon'}. Good luck!`
+                };
 
             case LifecycleStage.RESULT:
                 return {

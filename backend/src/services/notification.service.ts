@@ -1,4 +1,4 @@
-import { LifecycleStage, LifecycleEventType, NotificationStatus } from '../constants/enums';
+import { LifecycleStage, NotificationStatus } from '../constants/enums';
 import prisma from '../config/database';
 import { logger } from '../utils/logger';
 import { env } from '../config/env';
@@ -153,7 +153,6 @@ export class NotificationService {
             event.exam.shortTitle,
             event.title,
             event.stage as LifecycleStage,
-            event.eventType as LifecycleEventType,
             event.startsAt || undefined
         );
 
@@ -178,7 +177,7 @@ export class NotificationService {
         const payload = {
             examId: event.examId,
             eventId: event.id,
-            eventType: event.eventType,
+            stage: event.stage,
             click_action: 'FLUTTER_NOTIFICATION_CLICK',
         };
 

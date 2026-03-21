@@ -1,7 +1,7 @@
 import { Queue } from 'bullmq';
 import { bullRedisConnection } from '../config/redis';
 import { logger } from '../utils/logger';
-import { LifecycleEventType } from '../constants/enums';
+import { LifecycleStage } from '../constants/enums';
 
 export const NOTIFICATION_QUEUE_NAME = 'exam-notifications';
 
@@ -17,7 +17,8 @@ export interface NotificationJobData {
     examId?: string;
     examTitle?: string;
     eventTitle?: string;
-    eventType?: LifecycleEventType;
+    eventType?: string; // Backwards compatibility if needed, but we use stage now
+    stage?: string;
     startsAt?: Date | null;
     title?: string;
     body?: string;
@@ -46,7 +47,7 @@ notificationBullQueue.on('error', (err) => {
 
 class NotificationQueueService {
     async enqueueLifecycleNotification(data: Omit<NotificationJobData, 'type'>): Promise<void> {
-        const { lifecycleEventId, startsAt, eventType } = data;
+        const { lifecycleEventId, startsAt, stage } = data;
 
         if (!startsAt || !lifecycleEventId) {
             logger.info(`Notification skipping queue for invalid/TBD event ${lifecycleEventId}`);
@@ -57,7 +58,7 @@ class NotificationQueueService {
         const delay = Math.max(0, new Date(startsAt).getTime() - now.getTime());
 
         await notificationBullQueue.add(
-            `lifecycle:${eventType}:${lifecycleEventId}`,
+            `lifecycle:${stage}:${lifecycleEventId}`,
             { ...data, type: NotificationJobType.LIFECYCLE_EVENT },
             {
                 delay,
@@ -66,7 +67,7 @@ class NotificationQueueService {
         );
 
         logger.info(`Notification queued for event ${lifecycleEventId}`, {
-            eventType,
+            stage,
             startsAt: new Date(startsAt).toISOString(),
             delayMs: delay,
         });

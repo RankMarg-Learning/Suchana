@@ -74,17 +74,20 @@ export async function listExams(query: ListExamQuery) {
                 updatedAt: true,
                 createdAt: true,
                 lifecycleEvents: {
-                    where: { eventType: 'REGISTRATION' },
-                    orderBy: { endsAt: 'asc' },
+                    where: {
+                        AND: [
+                            { startsAt: { lte: new Date() } },
+                            { OR: [{ endsAt: { gte: new Date() } }, { endsAt: null }] }
+                        ]
+                    },
+                    orderBy: { stageOrder: 'desc' },
                     take: 1,
                     select: {
-                        id: true,
+                        stage: true,
                         title: true,
-                        eventType: true,
-                        startsAt: true,
-                        endsAt: true,
+                        endsAt: true
                     }
-                },
+                }
             },
         }),
         prisma.exam.count({ where }),
@@ -231,17 +234,20 @@ export async function getSavedExams(userId: string) {
             publishedAt: true,
             createdAt: true,
             lifecycleEvents: {
-                where: { eventType: 'REGISTRATION' },
-                orderBy: { endsAt: 'asc' },
+                where: {
+                    AND: [
+                        { startsAt: { lte: new Date() } },
+                        { OR: [{ endsAt: { gte: new Date() } }, { endsAt: null }] }
+                    ]
+                },
+                orderBy: { stageOrder: 'desc' },
                 take: 1,
                 select: {
-                    id: true,
+                    stage: true,
                     title: true,
-                    eventType: true,
-                    startsAt: true,
-                    endsAt: true,
+                    endsAt: true
                 }
-            },
+            }
         }
     });
     return exams;
