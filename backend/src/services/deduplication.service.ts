@@ -10,13 +10,15 @@ export interface AiStructuredExam {
     description?: string;
     conductingBody?: string;
     category?: string;
+    status?: string;
     examLevel?: string;
     state?: string;
     examYear?: number;
     age?: string;
     qualificationCriteria?: String;
     totalVacancies?: any;
-    usefulLinks?: Record<string, string>;
+    salary?: string;
+    additionalDetails?: string;
     applicationFee?: string;
     officialWebsite?: string;
     notificationUrl?: string;
@@ -75,6 +77,8 @@ export function buildContentHash(exam: AiStructuredExam): string {
         conductingBody: normalise(exam.conductingBody),
         examYear: exam.examYear ?? null,
         totalVacancies: exam.totalVacancies ?? null,
+        salary: exam.salary ?? null,
+        additionalDetails: exam.additionalDetails ?? null,
         notificationUrl: normalise(exam.notificationUrl),
     };
     return sha256(JSON.stringify(snapshot));
@@ -166,12 +170,14 @@ export async function checkAndStage(
             description: exam.description,
             conductingBody: exam.conductingBody,
             category: exam.category,
+            status: exam.status,
             examLevel: exam.examLevel,
             state: exam.state,
             age: exam.age,
             qualificationCriteria: exam.qualificationCriteria as never,
             totalVacancies: exam.totalVacancies,
-            usefulLinks: exam.usefulLinks as any,
+            salary: exam.salary,
+            additionalDetails: exam.additionalDetails,
             applicationFee: exam.applicationFee as never,
             officialWebsite: exam.officialWebsite,
             notificationUrl: exam.notificationUrl,

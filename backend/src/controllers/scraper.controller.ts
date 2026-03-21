@@ -183,7 +183,6 @@ export async function testScraperDirect(req: Request, res: Response, next: NextF
 
         extracted.sourceUrl = url;
         extracted.scrapedAt = new Date();
-        extracted.usefulLinks = extractedLinks;
         sendSuccess(res, extracted);
     } catch (err: any) {
         logger.error(`[Scraper] test-direct failed: ${err.message}`);

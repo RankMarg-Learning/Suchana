@@ -34,7 +34,7 @@ export class ScraperService {
             }
 
             const { text, charCount, extractedLinks } = ScraperUtils.cleanHtml(htmlToProcess, url);
-            
+
             const extracted = await AIProvider.extractExamData(text, url, hintCategory);
             if (!extracted) {
                 return { sourceUrl: url, outcome: 'AI_FAILED', reason: 'AI failed to parse content' };
@@ -42,7 +42,6 @@ export class ScraperService {
 
             extracted.sourceUrl = url;
             extracted.scrapedAt = new Date();
-            extracted.usefulLinks = extractedLinks;
 
             const dedup = await checkAndStage(jobId, extracted);
 

@@ -5,6 +5,7 @@ import { AiStructuredExam } from '../deduplication.service';
 import {
   EXAM_CATEGORIES,
   EXAM_LEVELS,
+  EXAM_STATUSES,
   LIFECYCLE_STAGES,
 } from '../../constants/enums';
 
@@ -112,6 +113,7 @@ RULE 6 — MISSING / NULL DATA
 
 RULE 7 — ENUM VALIDATION (STRICT)
 - category: must be one of [${EXAM_CATEGORIES.join(', ')}]
+- status: must be one of [${EXAM_STATUSES.join(', ')}]
 - examLevel: must be one of [${EXAM_LEVELS.join(', ')}]
 - stage: must be one of [${LIFECYCLE_STAGES.join(', ')}]
 
@@ -134,6 +136,7 @@ OUTPUT: Return JSON MATCHING THIS EXACT SCHEMA (no extra keys, no markdown fence
   "description": "string (markdown) | null : (NOTE: add seo friendly description)",
   "conductingBody": "string | null",
   "category": "string (From Enum) | null",
+  "status": "string (From Enum - determine based on current progress of the exam) | null",
   "examLevel": "string (NATIONAL|STATE|DISTRICT) | null",
   "state": "string (State name if applicable) | null",
   "examYear": "number | null",
@@ -142,7 +145,7 @@ OUTPUT: Return JSON MATCHING THIS EXACT SCHEMA (no extra keys, no markdown fence
   "applicationFee": "string (markdown) | null",
   "qualificationCriteria": "string (markdown) | null",
   "salary": "string (markdown) | null",
-  "additionalDetails": "string (markdown) | null",
+  "additionalDetails": "string (additional detail and faq in markdown ) | null",
   "officialWebsite": "string (url) | null",
   "notificationUrl": "string (url) | null",
   "aiConfidence": "number (0.0 - 1.0)",
