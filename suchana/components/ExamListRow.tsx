@@ -3,6 +3,18 @@ import { Bell, MapPin, Calendar, Bookmark, BookmarkCheck } from 'lucide-react-na
 import { cleanLabel, formatRelativeDate } from '@/utils/format';
 import type { Exam } from '@/types/exam';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { ExamStatus } from '@/constants/enums';
+
+const getStatusColor = (status: string): string => {
+  switch (status) {
+    case ExamStatus.REGISTRATION_OPEN: return '#10B981';
+    case ExamStatus.REGISTRATION_CLOSED: return '#F59E0B';
+    case ExamStatus.ADMIT_CARD_OUT: return '#8B5CF6';
+    case ExamStatus.EXAM_ONGOING: return '#EF4444';
+    case ExamStatus.RESULT_DECLARED: return '#8B5CF6';
+    default: return '#FBBF24';
+  }
+};
 
 interface ExamListRowProps {
   exam: Exam;
@@ -33,15 +45,18 @@ export const ExamListRow = ({ exam, isSaved, onSaveToggle, onPress }: ExamListRo
         </View>
 
         <Text style={[styles.title, { color: textPrimary }]} numberOfLines={2}>{exam.title}</Text>
-
-        <View style={styles.meta}>
-          <View style={styles.metaItem}>
-            <MapPin size={12} color={textMuted} style={{ marginRight: 4 }} />
-            <Text style={[styles.metaText, { color: textMuted }]}>{exam.state || 'National'}</Text>
+        
+        <View style={styles.statusRow}>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(exam.status) + '15', borderColor: getStatusColor(exam.status) + '30' }]}>
+            <View style={[styles.statusDot, { backgroundColor: getStatusColor(exam.status) }]} />
+            <Text style={[styles.statusText, { color: getStatusColor(exam.status) }]}>{cleanLabel(exam.status)}</Text>
           </View>
-          <View style={styles.metaItem}>
-            <Calendar size={12} color={textMuted} style={{ marginRight: 4 }} />
-            <Text style={[styles.metaText, { color: textMuted }]}>{cleanLabel(exam.category)}</Text>
+          
+          <View style={styles.meta}>
+            <View style={styles.metaItem}>
+              <MapPin size={10} color={textMuted} style={{ marginRight: 2 }} />
+              <Text style={[styles.metaText, { color: textMuted }]}>{exam.state || 'National'}</Text>
+            </View>
           </View>
         </View>
       </View>
@@ -114,6 +129,32 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 11,
     fontWeight: '500',
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    borderWidth: 0.5,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 4,
+  },
+  statusText: {
+    fontSize: 9,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   saveBtn: {
     padding: 8,

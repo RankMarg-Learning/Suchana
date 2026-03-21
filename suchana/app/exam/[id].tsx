@@ -125,7 +125,6 @@ export default function ExamDetailScreen() {
 
   const handleSave = async () => {
     if (!userId) return router.push('/onboarding');
-    // Show rewarded video ad before saving
     await showRewarded();
     saveMutation.mutate();
   };
@@ -229,15 +228,21 @@ export default function ExamDetailScreen() {
           </View>
 
           <Text style={[styles.title, { color: textPrimary }]}>{exam.title}</Text>
-          <Text style={[styles.conductingBody, { color: textMuted }]}>{exam.conductingBody}</Text>
+          {exam.conductingBody && (
+            <Text style={[styles.conductingBody, { color: textMuted }]}>{exam.conductingBody}</Text>
+          )}
 
           <View style={styles.tagsContainer}>
-            <View style={[styles.tag, { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
-              <Text style={[styles.tagText, { color: textMuted }]}>{cleanLabel(exam.category)}</Text>
-            </View>
-            <View style={[styles.tag, { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
-              <Text style={[styles.tagText, { color: textMuted }]}>{cleanLabel(exam.examLevel)}</Text>
-            </View>
+            {exam.category && (
+              <View style={[styles.tag, { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+                <Text style={[styles.tagText, { color: textMuted }]}>{cleanLabel(exam.category)}</Text>
+              </View>
+            )}
+            {exam.examLevel && (
+              <View style={[styles.tag, { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+                <Text style={[styles.tagText, { color: textMuted }]}>{cleanLabel(exam.examLevel)}</Text>
+              </View>
+            )}
             {exam.state && (
               <View style={[styles.tag, { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
                 <Text style={[styles.tagText, { color: textMuted }]}>{exam.state}</Text>
@@ -318,13 +323,15 @@ export default function ExamDetailScreen() {
 
         {/* Important Quick Facts Section */}
         <View style={styles.importantContainer}>
-          <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
-            <View style={styles.factHeader}>
-              <Briefcase size={16} color={tint} />
-              <Text style={[styles.factTitle, { color: textMuted }]}>Vacancies</Text>
+          {exam.totalVacancies && (
+            <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
+              <View style={styles.factHeader}>
+                <Briefcase size={16} color={tint} />
+                <Text style={[styles.factTitle, { color: textMuted }]}>Vacancies</Text>
+              </View>
+              <MarkdownRenderer variant="fact" content={formatText(exam.totalVacancies)} />
             </View>
-            <MarkdownRenderer variant="fact" content={formatText(exam.totalVacancies) || 'TBA'} />
-          </View>
+          )}
 
           {exam.salary && (
             <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
@@ -336,30 +343,36 @@ export default function ExamDetailScreen() {
             </View>
           )}
 
-          <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
-            <View style={styles.factHeader}>
-              <UserCheck size={16} color={tint} />
-              <Text style={[styles.factTitle, { color: textMuted }]}>Eligibility & Age</Text>
-            </View>
-            <View style={styles.eligibilityRow}>
-              <View style={{ flex: 1 }}>
-                <MarkdownRenderer variant="fact" content={formatText(exam.qualificationCriteria) || 'Check Notification'} />
-                {(exam.minAge || exam.maxAge) && (
-                  <Text style={[styles.ageText, { color: tint }]}>
-                    Age Limit: {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} years
-                  </Text>
-                )}
+          {(exam.qualificationCriteria || exam.minAge || exam.maxAge) && (
+            <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
+              <View style={styles.factHeader}>
+                <UserCheck size={16} color={tint} />
+                <Text style={[styles.factTitle, { color: textMuted }]}>Eligibility & Age</Text>
+              </View>
+              <View style={styles.eligibilityRow}>
+                <View style={{ flex: 1 }}>
+                  {exam.qualificationCriteria && (
+                    <MarkdownRenderer variant="fact" content={formatText(exam.qualificationCriteria)} />
+                  )}
+                  {(exam.minAge || exam.maxAge) && (
+                    <Text style={[styles.ageText, { color: tint }]}>
+                      Age Limit: {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} years
+                    </Text>
+                  )}
+                </View>
               </View>
             </View>
-          </View>
+          )}
 
-          <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
-            <View style={styles.factHeader}>
-              <IndianRupee size={16} color={tint} />
-              <Text style={[styles.factTitle, { color: textMuted }]}>Application Fee</Text>
+          {exam.applicationFee && (
+            <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
+              <View style={styles.factHeader}>
+                <IndianRupee size={16} color={tint} />
+                <Text style={[styles.factTitle, { color: textMuted }]}>Application Fee</Text>
+              </View>
+              <MarkdownRenderer variant="fact" content={formatText(exam.applicationFee)} />
             </View>
-            <MarkdownRenderer variant="fact" content={formatText(exam.applicationFee) || 'N/A'} />
-          </View>
+          )}
 
           {exam.additionalDetails && (
             <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
@@ -421,14 +434,26 @@ export default function ExamDetailScreen() {
       </ScrollView>
 
       {/* Primary Action Button Fixed at Bottom (If Not Active but URL exists) */}
-      {!isRegActive && exam.notificationUrl && (
+      {!isRegActive && (exam.notificationUrl || exam.officialWebsite) && (
         <View style={[styles.footerSticky, { backgroundColor: background + 'E6', borderTopColor: border }]}>
-          <TouchableOpacity
-            style={[styles.primaryActionBtn, { backgroundColor: colorScheme === 'dark' ? '#2E1065' : '#F5F3FF' }]}
-            onPress={() => handleExternalLink(exam.notificationUrl!)}>
-            <FileText size={20} color={colorScheme === 'dark' ? '#FFF' : tint} />
-            <Text style={[styles.primaryActionText, { color: colorScheme === 'dark' ? '#FFF' : tint }]}>View Full Notification</Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            {exam.officialWebsite && (
+              <TouchableOpacity
+                style={[styles.primaryActionBtn, { flex: 1, backgroundColor: colorScheme === 'dark' ? '#1E1B4B' : '#EEF2FF' }]}
+                onPress={() => handleExternalLink(exam.officialWebsite!)}>
+                <Globe size={18} color={colorScheme === 'dark' ? '#818CF8' : tint} />
+                <Text style={[styles.primaryActionText, { fontSize: 14, color: colorScheme === 'dark' ? '#818CF8' : tint }]}>Official Portal</Text>
+              </TouchableOpacity>
+            )}
+            {exam.notificationUrl && (
+              <TouchableOpacity
+                style={[styles.primaryActionBtn, { flex: 1, backgroundColor: colorScheme === 'dark' ? '#2E1065' : '#F5F3FF' }]}
+                onPress={() => handleExternalLink(exam.notificationUrl!)}>
+                <FileText size={18} color={colorScheme === 'dark' ? '#FFF' : tint} />
+                <Text style={[styles.primaryActionText, { fontSize: 14, color: colorScheme === 'dark' ? '#FFF' : tint }]}>Read Notice</Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
       )}
     </SafeAreaView>

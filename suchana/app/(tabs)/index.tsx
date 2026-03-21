@@ -19,6 +19,7 @@ import { HomeCarousel } from '@/components/HomeCarousel';
 import { fetchHomeBanners } from '@/services/configService';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { cleanLabel } from '@/utils/format';
 
 export default function UpdatesScreen() {
   const router = useRouter();
@@ -56,8 +57,10 @@ export default function UpdatesScreen() {
   const { data: registrations = [], isLoading: loadingRegs, refetch: refetchRegs, isRefetching: refetchingRegs } = useQuery({
     queryKey: ['active-registrations'],
     queryFn: async () => {
-      const { exams } = await fetchExams({ isPublished: true, limit: 10, lifecycleStage: 'REGISTRATION' });
-      return exams;
+      const { exams } = await fetchExams({ isPublished: true, limit: 15, lifecycleStage: 'REGISTRATION' });
+      return exams.filter(ex =>
+        ex.status === 'REGISTRATION_OPEN'
+      );
     },
   });
 
@@ -91,14 +94,14 @@ export default function UpdatesScreen() {
       style={[styles.regCard, { backgroundColor: cardBg, borderColor: border }]}
       onPress={() => router.push({ pathname: '/exam/[id]', params: { id: exam.slug } })}
     >
-      <View style={styles.regBadge}>
-        <Text style={styles.regBadgeText}>LIVE</Text>
+      <View style={[styles.regBadge, { backgroundColor: exam.status === 'REGISTRATION_OPEN' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' }]}>
+        <Text style={[styles.regBadgeText, { color: exam.status === 'REGISTRATION_OPEN' ? '#10B981' : '#EF4444' }]}>{exam.status === 'REGISTRATION_OPEN' ? 'LIVE' : cleanLabel(exam.status)}</Text>
       </View>
       <Text style={[styles.regTitle, { color: textPrimary }]} numberOfLines={1}>{exam.shortTitle || exam.title}</Text>
       <Text style={[styles.regBody, { color: textMuted }]}>{exam.conductingBody}</Text>
       <View style={styles.regFooter}>
         <Calendar size={12} color={tint} style={{ marginRight: 4 }} />
-        <Text style={[styles.regDate, { color: tint }]}>Apply Now</Text>
+        <Text style={[styles.regDate, { color: tint }]}>{exam.status === 'REGISTRATION_OPEN' ? 'Apply Now' : 'Check Status'}</Text>
       </View>
     </TouchableOpacity>
   );
