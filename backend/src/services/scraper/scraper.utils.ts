@@ -22,11 +22,18 @@ export class ScraperUtils {
 
         const extractedLinks = url.includes('sarkariresult.com.cm') ? this.extractUsefulLinks(html, url) : undefined;
         let contentText = '';
-        for (const selector of config.contentSelectors) {
-            const el = $(selector);
-            if (el.length) {
-                contentText = el.map((_, e) => $(e).text()).get().join('\n');
-                if (contentText.trim().length > 300) break;
+
+        if (url.includes('sarkariresult.com.cm')) {
+            contentText = this.extractSarkariResultContent($);
+        }
+
+        if (!contentText.trim()) {
+            for (const selector of config.contentSelectors) {
+                const el = $(selector);
+                if (el.length) {
+                    contentText = el.map((_, e) => $(e).text()).get().join('\n');
+                    if (contentText.trim().length > 300) break;
+                }
             }
         }
 
@@ -38,21 +45,84 @@ export class ScraperUtils {
             .replace(/\n{3,}/g, '\n\n')
             .trim();
 
-        // Append links to the end of text so AI can use them
         if (extractedLinks && Object.keys(extractedLinks).length > 0) {
-            cleaned += '\n\n═══════════════════════════════════════\n';
-            cleaned += 'SOME USEFUL IMPORTANT LINKS (Reference for AI):\n';
+            cleaned += 'SOME USEFUL IMPORTANT LINKS:\n';
             for (const [label, link] of Object.entries(extractedLinks)) {
                 cleaned += `- ${label}: ${link}\n`;
             }
-            cleaned += '═══════════════════════════════════════\n';
         }
 
         return {
-            text: cleaned.slice(0, 7000), // Increased to allow links and better context
+            text: cleaned.slice(0, 7000),
             charCount: cleaned.length,
             extractedLinks
         };
+    }
+
+    private static extractSarkariResultContent($: cheerio.CheerioAPI): string {
+        const targetKeywords = [
+            'Important Dates',
+            'Application Fee',
+            'Age Limit',
+            'Vacancy Details',
+            'Eligibility Criteria',
+            'Mode Of Selection',
+            'Total Post'
+        ];
+
+        let content = '';
+        const seenLines = new Set<string>();
+
+        $('table, .gb-container, .entry-content').each((_, container) => {
+            const $container = $(container);
+
+            if ($container.parents('table, .gb-container, .entry-content').length > 0) return;
+
+            const containerText = $container.text();
+            if (targetKeywords.some(kw => new RegExp(kw, 'i').test(containerText))) {
+
+                $container.find('h1, h2, h3, h4, h5, h6, li, p, tr').each((_, sub) => {
+                    const $sub = $(sub);
+
+                    if ($sub.find('h1, h2, h3, h4, h5, h6, li, p, tr').length > 0 &&
+                        !sub.name?.toLowerCase().match(/^h[1-6]$/)) return;
+
+                    let rowData = '';
+                    const tag = sub.name ? sub.name.toLowerCase() : '';
+
+                    if (tag === 'tr') {
+                        rowData = $sub.find('td, th').map((_, cell) => $(cell).text().replace(/\s+/g, ' ').trim())
+                            .get().filter(t => t).join(' : ');
+                    } else {
+                        rowData = $sub.text().replace(/\s+/g, ' ').trim();
+                    }
+
+                    if (!rowData) return;
+                    const normalized = rowData.toLowerCase();
+                    if (seenLines.has(normalized)) return;
+
+                    const isHeading = tag.match(/^h[1-6]$/);
+                    const hasData = rowData.includes(':') || /\d/.test(rowData);
+                    const isKeywordMatch = targetKeywords.some(kw => new RegExp(kw, 'i').test(rowData));
+
+                    const isNoise = /whatsapp|telegram|join our|follow now|click here|youtube|instagram|facebook|download app|play store|related post|latest post/i.test(rowData);
+
+                    if ((isHeading || hasData || isKeywordMatch) && !isNoise) {
+                        seenLines.add(normalized);
+                        if (tag === 'li') {
+                            content += `- ${rowData}\n`;
+                        } else if (isHeading) {
+                            content += `\n### ${rowData}\n`;
+                        } else {
+                            content += `${rowData}\n`;
+                        }
+                    }
+                });
+                content += '\n';
+            }
+        });
+
+        return content;
     }
 
     static extractUsefulLinks(html: string, baseUrl: string): Record<string, string> {
@@ -63,11 +133,9 @@ export class ScraperUtils {
         $('table').each((_, table) => {
             const $table = $(table);
             const tableText = $table.text().toLowerCase();
-            
-            // Marker 1: Text inside the table
+
             const hasKeyword = tableText.includes('important links') || tableText.includes('useful links');
-            
-            // Marker 2: A sibling header or paragraph with 'importaint_links' class (note the typo in some sites)
+
             const hasMarkerClass = $table.prevAll('.importaint_links, .important_links').length > 0;
 
             if (hasKeyword || hasMarkerClass) {
@@ -76,32 +144,27 @@ export class ScraperUtils {
                         const href = $(a).attr('href');
                         if (!href) return;
 
-                        // Try finding label in the previous column (TD)
                         const currentTd = $(a).closest('td');
                         let label = currentTd.prev().text().replace(/\s+/g, ' ').trim();
-                        
-                        // If no label in prev column, use the anchor text itself
+
                         if (!label || label.toLowerCase() === 'click here') {
                             label = $(a).text().replace(/\s+/g, ' ').trim();
                         }
 
-                        // If still no label, take first cell of the row
                         if (!label) {
                             label = $(tr).find('td').first().text().replace(/\s+/g, ' ').trim();
                         }
-                        
+
                         try {
                             const fullUrl = new URL(href, baseUrl).toString();
                             const urlObj = new URL(fullUrl);
                             const hostname = urlObj.hostname.toLowerCase();
 
-                            // Exclusions
                             if (hostname.includes(domain)) return;
                             if (hostname.includes('whatsapp.com')) return;
                             if (hostname.includes('t.me') || hostname.includes('telegram.org')) return;
                             if (hostname.includes('play.google.com')) return;
-                            
-                            // Cleanup label (e.g., "Download Admit Card Click Here" -> "Download Admit Card")
+
                             label = label
                                 .replace(/Click Here/gi, '')
                                 .replace(/<b>|<i>|<strong>|<span>/gi, '')
@@ -112,11 +175,9 @@ export class ScraperUtils {
                                 .trim();
 
                             if (label && fullUrl && label.toLowerCase() !== 'hindi' && label.toLowerCase() !== 'english') {
-                                // If label is something generic like "Hindi | English", use previous cell
                                 if (label === '|') label = currentTd.prev().text().trim();
                                 usefulLinks[label] = fullUrl;
                             } else if (label && fullUrl) {
-                                // For multiple links in one cell (like Hindi | English), we might want to qualify the label
                                 const rowLabel = currentTd.prev().text().replace(/\s+/g, ' ').trim();
                                 const finalLabel = rowLabel ? `${rowLabel} (${label})` : label;
                                 usefulLinks[finalLabel] = fullUrl;
