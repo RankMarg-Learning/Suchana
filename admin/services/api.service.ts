@@ -122,6 +122,7 @@ export interface StagedExam {
     mergedSourceUrls: string[];
     sourceUrl?: string;
     scrapedAt?: string;
+    usefulLinks?: Record<string, string>;
     createdAt: string;
     stagedEvents: StagedEvent[];
     scrapeJob?: {

@@ -97,6 +97,8 @@ export default function ExamDetailScreen() {
   const [eventOrderModal, setEventOrderModal] = useState(false);
   const [eventDescriptionModal, setEventDescriptionModal] = useState(false);
   const [eventDateModal, setEventDateModal] = useState<{ open: boolean; type: 'start' | 'end' }>({ open: false, type: 'start' });
+  const [eventActionLabelModal, setEventActionLabelModal] = useState(false);
+  const [eventActionUrlModal, setEventActionUrlModal] = useState(false);
 
   const fetchData = useCallback(async () => {
     if (!id) return;
@@ -264,8 +266,8 @@ export default function ExamDetailScreen() {
             <ArrowLeft size={18} color="#cbd5e1" strokeWidth={3} />
           </TouchableOpacity>
           <View style={styles.headerTitles}>
-            <Text style={styles.headerTitleTiny}>Exam Management</Text>
-            <Text style={styles.headerTitleMain} numberOfLines={1}>{exam.shortTitle || exam.title}</Text>
+             <Text style={styles.headerTitleTiny}>{isPublished ? 'Searchable' : 'Hidden'}</Text>
+             <Text style={styles.headerTitleMain} numberOfLines={1}>{shortTitle || title}</Text>
           </View>
           <TouchableOpacity onPress={handleDeleteExam} style={styles.headerDeleteBtn}>
             <Trash2 size={18} color="#ef4444" strokeWidth={2.5} />
@@ -364,6 +366,8 @@ export default function ExamDetailScreen() {
                     onOpenDateModal={(e, type) => { setActiveEvent(e as any); setEventDateModal({ open: true, type }); }}
                     onOpenOrderModal={(e) => { setActiveEvent(e as any); setEventOrderModal(true); }}
                     onOpenDescriptionModal={(e) => { setActiveEvent(e as any); setEventDescriptionModal(true); }}
+                    onOpenActionLabelModal={(e) => { setActiveEvent(e as any); setEventActionLabelModal(true); }}
+                    onOpenActionUrlModal={(e) => { setActiveEvent(e as any); setEventActionUrlModal(true); }}
                   />
                 ))
             )}
@@ -402,13 +406,13 @@ export default function ExamDetailScreen() {
             <StagedField label="Marketing Description" value={description} multiline onEdit={() => setEditField({ key: 'description', title: 'Exam Overview', value: description, multiline: true })} />
           </StagedSection>
 
-          <StagedSection title="Eligibility Matrix" icon={ShieldCheck}>
+          <StagedSection title="Requirement Details" icon={ShieldCheck}>
             <StagedField label="Age Limit" value={age} onEdit={() => setEditField({ key: 'age', title: 'Age Limit', value: age })} />
             <StagedField label="Total Openings" value={totalVacancies} multiline onEdit={() => setEditField({ key: 'totalVacancies', title: 'Vacancy Count', value: totalVacancies, multiline: true })} />
-            <StagedField label="Educational Criteria" value={qualificationCriteria} multiline onEdit={() => setEditField({ key: 'qualificationCriteria', title: 'Eligibility Criteria', value: qualificationCriteria, multiline: true })} />
-            <StagedField label="Pay Scale / Grade" value={salary} multiline onEdit={() => setEditField({ key: 'salary', title: 'Salary Details', value: salary, multiline: true })} />
-            <StagedField label="Fee Structure" value={applicationFee} multiline onEdit={() => setEditField({ key: 'applicationFee', title: 'Application Fees', value: applicationFee, multiline: true })} />
-            <StagedField label="Additional Intelligence" value={additionalDetails} multiline isLast onEdit={() => setEditField({ key: 'additionalDetails', title: 'Public Notes', value: additionalDetails, multiline: true })} />
+            <StagedField label="Salary / Grade Pay" value={salary} multiline onEdit={() => setEditField({ key: 'salary', title: 'Salary Details', value: salary, multiline: true })} />
+            <StagedField label="Eligibility / Qualification" value={qualificationCriteria} multiline onEdit={() => setEditField({ key: 'qualificationCriteria', title: 'Qualification Details', value: qualificationCriteria, multiline: true })} />
+            <StagedField label="Application Fee" value={applicationFee} multiline onEdit={() => setEditField({ key: 'applicationFee', title: 'Application Fee', value: applicationFee, multiline: true })} />
+            <StagedField label="Extra Notes" value={additionalDetails} multiline isLast onEdit={() => setEditField({ key: 'additionalDetails', title: 'Additional Details', value: additionalDetails, multiline: true })} />
           </StagedSection>
 
           <StagedSection title="Official Assets" icon={LinkIcon}>
@@ -518,7 +522,20 @@ export default function ExamDetailScreen() {
         title="Stage"
         options={LIFECYCLE_STAGES}
         selected={activeEvent?.stage}
-        onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { stage: v, stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? activeEvent.stageOrder })}
+        onSelect={(v) => {
+          if (activeEvent) {
+            const updates: any = {
+              stage: v,
+              stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? activeEvent.stageOrder
+            };
+            // Auto-fill button text if empty
+            if (!activeEvent.actionLabel) {
+              const { DEFAULT_ACTION_LABELS } = require('@/constants/enums');
+              updates.actionLabel = DEFAULT_ACTION_LABELS[v] || '';
+            }
+            handleEventUpdate(activeEvent.id, updates);
+          }
+        }}
         onClose={() => setEventStageModal(false)}
       />
       {activeEvent && (
@@ -567,6 +584,24 @@ export default function ExamDetailScreen() {
           multiline
           onSave={(v) => activeEvent && handleEventUpdate(activeEvent.id, { description: v })}
           onClose={() => setEventDescriptionModal(false)}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventActionLabelModal}
+          title="Action Button Text"
+          value={activeEvent?.actionLabel ?? ''}
+          onSave={(v) => activeEvent && handleEventUpdate(activeEvent.id, { actionLabel: v })}
+          onClose={() => setEventActionLabelModal(false)}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventActionUrlModal}
+          title="Action URL"
+          value={activeEvent?.actionUrl ?? ''}
+          onSave={(v) => activeEvent && handleEventUpdate(activeEvent.id, { actionUrl: v })}
+          onClose={() => setEventActionUrlModal(false)}
         />
       )}
     </SafeAreaView>

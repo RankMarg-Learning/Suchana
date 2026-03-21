@@ -72,6 +72,17 @@ export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
     DOCUMENT_VERIFICATION: 70,
     JOINING: 80,
 };
+ 
+export const DEFAULT_ACTION_LABELS: Record<string, string> = {
+    NOTIFICATION: 'View Notification',
+    REGISTRATION: 'Apply Now',
+    ADMIT_CARD: 'Download Admit Card',
+    EXAM: 'View Schedule',
+    ANSWER_KEY: 'View Answer Key',
+    RESULT: 'Check Result',
+    DOCUMENT_VERIFICATION: 'View Schedule',
+    JOINING: 'View Joining Details',
+};
 
 
 

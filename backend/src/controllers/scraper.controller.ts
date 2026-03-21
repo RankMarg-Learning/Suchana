@@ -4,6 +4,8 @@ import * as scrapeSourceService from '../services/scrapeSource.service';
 import * as reviewService from '../services/review.service';
 import { runScrapeJob } from '../services/scraper.service';
 import { logger } from '../utils/logger';
+import { ScraperUtils } from '../services/scraper/scraper.utils';
+import { AIProvider } from '../services/scraper/ai.provider';
 import type {
     CreateScrapeSourceDto,
     UpdateScrapeSourceDto,
@@ -148,6 +150,45 @@ export async function triggerScrapeSync(req: Request, res: Response, next: NextF
         sendSuccess(res, result, 200);
     } catch (err) {
         next(err);
+    }
+}
+
+export async function testScraperDirect(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { url, hintCategory } = req.body as { url: string; hintCategory?: string };
+        if (!url) {
+            sendError(res, 400, 'BAD_REQUEST', 'url is required');
+            return;
+        }
+
+        logger.info(`[Scraper] Direct Test Triggered for: ${url}`);
+        const html = await ScraperUtils.fetchHtml(url);
+
+        let htmlToProcess = html;
+        if (url.includes('testbook.com')) {
+            const extractedHtml = ScraperUtils.extractTargetSections(html, ['updates', 'overview', 'important dates'], ['.table-responsive']);
+            if (extractedHtml) htmlToProcess = `<article>${extractedHtml}</article>`;
+        } else if (url.includes('sarkariresult.com.cm')) {
+            const extractedHtml = ScraperUtils.extractTargetSections(html, [], ['.gb-container']);
+            if (extractedHtml) htmlToProcess = `<article>${extractedHtml}</article>`;
+        }
+
+        const { text, charCount, extractedLinks } = ScraperUtils.cleanHtml(htmlToProcess, url);
+        // const extracted = await AIProvider.extractExamData(text, url, hintCategory);
+
+        // if (!extracted) {
+        //     sendError(res, 500, 'AI_FAILED', 'AI failed to extract data');
+        //     return;
+        // }
+
+        // extracted.sourceUrl = url;
+        // extracted.scrapedAt = new Date();
+        // extracted.usefulLinks = extractedLinks;
+
+        sendSuccess(res, { extractedLinks });
+    } catch (err: any) {
+        logger.error(`[Scraper] test-direct failed: ${err.message}`);
+        sendError(res, 500, 'SCRAPE_TEST_FAILED', err.message);
     }
 }
 

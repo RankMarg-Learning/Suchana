@@ -13,8 +13,10 @@ interface StagedEventCardProps {
   onOpenStageModal: (event: StagedEvent) => void;
   onOpenTitleModal: (event: StagedEvent) => void;
   onOpenDateModal: (event: StagedEvent, type: 'start' | 'end') => void;
-  onOpenOrderModal: (event: StagedEvent) => void;
-  onOpenDescriptionModal: (event: StagedEvent) => void;
+  onOpenOrderModal: (event: any) => void;
+  onOpenDescriptionModal: (event: any) => void;
+  onOpenActionLabelModal: (event: any) => void;
+  onOpenActionUrlModal: (event: any) => void;
 }
 
 export const StagedEventCardBase: React.FC<StagedEventCardProps> = ({
@@ -26,6 +28,8 @@ export const StagedEventCardBase: React.FC<StagedEventCardProps> = ({
   onOpenDateModal,
   onOpenOrderModal,
   onOpenDescriptionModal,
+  onOpenActionLabelModal,
+  onOpenActionUrlModal,
 }) => {
   const [isTBD, setIsTBD] = useState(event.isTBD);
 
@@ -113,6 +117,22 @@ export const StagedEventCardBase: React.FC<StagedEventCardProps> = ({
             <Text style={styles.addDescriptionText}>Add details...</Text>
          </TouchableOpacity>
       )}
+
+      <View style={styles.actionRowGrid}>
+        <TouchableOpacity style={styles.actionField} onPress={() => onOpenActionLabelModal(event)}>
+          <Text style={styles.dateLabel}>BTN TEXT</Text>
+          <Text style={[styles.dateValue, !event.actionLabel && styles.emptyActionValue]} numberOfLines={1}>
+            {event.actionLabel || 'None'}
+          </Text>
+        </TouchableOpacity>
+        <View style={styles.divider} />
+        <TouchableOpacity style={[styles.actionField, { flex: 2 }]} onPress={() => onOpenActionUrlModal(event)}>
+          <Text style={styles.dateLabel}>ACTION URL</Text>
+          <Text style={[styles.dateValue, !event.actionUrl && styles.emptyActionValue]} numberOfLines={1}>
+            {event.actionUrl || 'No link attached'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -318,6 +338,25 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#9CA3AF',
     fontWeight: '600',
+  },
+  actionRowGrid: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.5)',
+    borderRadius: 12,
+    padding: 10,
+    marginTop: 10,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.03)',
+  },
+  actionField: {
+    flex: 1,
+  },
+  emptyActionValue: {
+    color: '#94a3b8',
+    fontWeight: '500',
+    fontSize: 11,
   },
 });
 

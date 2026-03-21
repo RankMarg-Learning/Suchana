@@ -3042,8 +3042,48 @@ body::before {
 }
 
 @media (max-width: 600px) {
-  .exam-list-row { padding: 14px 16px; }
-  .exam-row-title { font-size: 15px; }
+  .exam-list-row { 
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px; 
+    gap: 14px;
+    border-radius: 12px;
+  }
+  .exam-row-main { width: 100%; }
+  .exam-row-title { font-size: 16px; margin-bottom: 4px; }
+  .exam-row-body { font-size: 12px; margin-bottom: 0; }
+  
+  .exam-row-right { 
+    width: 100%;
+    flex-direction: row; 
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--border-strong);
+    padding-top: 12px;
+    margin-top: 4px;
+  }
+  
+  .status-container {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .vacancy-badge {
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+  
+  .exam-row-arrow { 
+    opacity: 1 !important; 
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-strong);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    color: var(--text-primary);
+  }
+  
   .key-dates-grid { grid-template-columns: 1fr; }
   .exam-detail-actions { flex-wrap: wrap; }
   .official-links { flex-direction: column; }

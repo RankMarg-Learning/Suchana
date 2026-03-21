@@ -18,7 +18,8 @@ import {
   Rocket, 
   Plus, 
   Link as LinkIcon,
-  ChevronDown
+  ChevronDown,
+  ExternalLink
 } from 'lucide-react-native';
 import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -82,6 +83,8 @@ export default function StagedDetailScreen() {
   const [eventOrderModal, setEventOrderModal] = useState(false);
   const [eventDescriptionModal, setEventDescriptionModal] = useState(false);
   const [eventDateModal, setEventDateModal] = useState<{ open: boolean; type: 'start' | 'end' }>({ open: false, type: 'start' });
+  const [eventActionLabelModal, setEventActionLabelModal] = useState(false);
+  const [eventActionUrlModal, setEventActionUrlModal] = useState(false);
 
   const fetchExam = useCallback(async () => {
     if (!id) return;
@@ -303,6 +306,8 @@ export default function StagedDetailScreen() {
                     onOpenDateModal={(e, type) => { setActiveEvent(e); setEventDateModal({ open: true, type }); }}
                     onOpenOrderModal={(e) => { setActiveEvent(e); setEventOrderModal(true); }}
                     onOpenDescriptionModal={(e) => { setActiveEvent(e); setEventDescriptionModal(true); }}
+                    onOpenActionLabelModal={(e) => { setActiveEvent(e); setEventActionLabelModal(true); }}
+                    onOpenActionUrlModal={(e) => { setActiveEvent(e); setEventActionUrlModal(true); }}
                   />
                 ))
             )}
@@ -354,6 +359,30 @@ export default function StagedDetailScreen() {
             <StagedField label="Official Website" value={officialWebsite} onEdit={() => setEditField({ key: 'officialWebsite', title: 'Official Website', value: officialWebsite })} />
             <StagedField label="PDF / Notification Source" value={notificationUrl} isLast onEdit={() => setEditField({ key: 'notificationUrl', title: 'Primary Source URL', value: notificationUrl })} />
           </StagedSection>
+
+          {exam?.usefulLinks && Object.keys(exam.usefulLinks).length > 0 && (
+            <StagedSection title="Extracted Reference Links" icon={ExternalLink}>
+              {Object.entries(exam.usefulLinks).map(([label, link], idx) => (
+                <View key={idx} style={[styles.referenceLinkRow, idx === Object.keys(exam.usefulLinks!).length - 1 && { borderBottomWidth: 0 }]}>
+                   <View style={styles.referenceLinkLeft}>
+                      <Text style={styles.referenceLinkLabel}>{label}</Text>
+                      <Text style={styles.referenceLinkUrl} numberOfLines={1}>{link}</Text>
+                   </View>
+                   <TouchableOpacity 
+                     style={styles.copyBtn}
+                     onPress={() => {
+                       const { Clipboard } = require('react-native');
+                       Clipboard.setString(link);
+                       Alert.alert('Copied', `${label} link copied to clipboard`);
+                     }}
+                   >
+                     <Layers size={14} color="#4F46E5" />
+                     <Text style={styles.copyBtnText}>Copy Link</Text>
+                   </TouchableOpacity>
+                </View>
+              ))}
+            </StagedSection>
+          )}
 
           {/* Source Intelligence */}
           <View style={styles.footerInfo}>
@@ -473,7 +502,20 @@ export default function StagedDetailScreen() {
         title="Event Stage"
         options={LIFECYCLE_STAGES}
         selected={activeEvent?.stage}
-        onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { stage: v, stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? activeEvent.stageOrder })}
+        onSelect={(v) => {
+          if (activeEvent) {
+             const updates: any = { 
+               stage: v, 
+               stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? activeEvent.stageOrder 
+             };
+             // Auto-fill button text if empty
+             if (!activeEvent.actionLabel) {
+               const { DEFAULT_ACTION_LABELS } = require('@/constants/enums');
+               updates.actionLabel = DEFAULT_ACTION_LABELS[v] || '';
+             }
+             handleEventUpdate(activeEvent.id, updates);
+          }
+        }}
         onClose={() => setEventStageModal(false)}
       />
       {activeEvent && (
@@ -522,6 +564,24 @@ export default function StagedDetailScreen() {
           multiline
           onSave={(v) => handleEventUpdate(activeEvent.id, { description: v })}
           onClose={() => setEventDescriptionModal(false)}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventActionLabelModal}
+          title="Action Button Text"
+          value={activeEvent?.actionLabel ?? ''}
+          onSave={(v) => handleEventUpdate(activeEvent.id, { actionLabel: v })}
+          onClose={() => setEventActionLabelModal(false)}
+        />
+      )}
+      {activeEvent && (
+        <TextEditModal
+          visible={eventActionUrlModal}
+          title="Action URL"
+          value={activeEvent?.actionUrl ?? ''}
+          onSave={(v) => handleEventUpdate(activeEvent.id, { actionUrl: v })}
+          onClose={() => setEventActionUrlModal(false)}
         />
       )}
 
@@ -649,4 +709,12 @@ const styles = StyleSheet.create({
   promoteAlertText: { fontSize: 14, color: '#065F46', fontWeight: '600', lineHeight: 20 },
   noteInputLabel: { fontSize: 13, fontWeight: '800', color: '#6B7280', textTransform: 'uppercase', letterSpacing: 1.5, marginBottom: 16, paddingLeft: 4 },
   decisionInput: { borderWidth: 2, borderColor: '#F3F4F6', borderRadius: 24, padding: 24, fontSize: 17, color: '#111827', backgroundColor: '#F9FAFB', minHeight: 180 },
+  
+  // Reference Links
+  referenceLinkRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#F3F4F6' },
+  referenceLinkLeft: { flex: 1, marginRight: 12 },
+  referenceLinkLabel: { fontSize: 13, fontWeight: '700', color: '#374151', marginBottom: 2 },
+  referenceLinkUrl: { fontSize: 11, color: '#9CA3AF', fontWeight: '500' },
+  copyBtn: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: '#EEF2FF', borderRadius: 8 },
+  copyBtnText: { fontSize: 10, fontWeight: '800', color: '#4F46E5', textTransform: 'uppercase' },
 });

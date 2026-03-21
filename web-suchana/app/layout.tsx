@@ -154,7 +154,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icon-192.png" />
+        <link rel="apple-touch-icon" href="/examsuchana-logoT.png" />
         <meta name="theme-color" content="#7c3aed" />
 
         {/* JSON-LD Structured Data */}

@@ -33,8 +33,8 @@ export class ScraperService {
                 }
             }
 
-            const { text, charCount } = ScraperUtils.cleanHtml(htmlToProcess, url);
-            console.log("text", text)
+            const { text, charCount, extractedLinks } = ScraperUtils.cleanHtml(htmlToProcess, url);
+            
             const extracted = await AIProvider.extractExamData(text, url, hintCategory);
             if (!extracted) {
                 return { sourceUrl: url, outcome: 'AI_FAILED', reason: 'AI failed to parse content' };
@@ -42,16 +42,17 @@ export class ScraperService {
 
             extracted.sourceUrl = url;
             extracted.scrapedAt = new Date();
+            extracted.usefulLinks = extractedLinks;
 
             const dedup = await checkAndStage(jobId, extracted);
 
             return {
                 sourceUrl: url,
                 outcome: dedup.outcome,
-                stagedExamId: 'stagedExamId' in dedup ? dedup.stagedExamId : undefined,
-                existingExamId: 'existingExamId' in dedup ? dedup.existingExamId : undefined,
-                canonicalStagedExamId: 'canonicalStagedExamId' in dedup ? dedup.canonicalStagedExamId : undefined,
-                reason: 'reason' in dedup ? dedup.reason : undefined,
+                stagedExamId: 'stagedExamId' in dedup ? (dedup as any).stagedExamId : undefined,
+                existingExamId: 'existingExamId' in dedup ? (dedup as any).existingExamId : undefined,
+                canonicalStagedExamId: 'canonicalStagedExamId' in dedup ? (dedup as any).canonicalStagedExamId : undefined,
+                reason: 'reason' in dedup ? (dedup as any).reason : undefined,
             };
         } catch (err: any) {
             logger.error(`[Scraper] Failed ${url}: ${err.message}`);

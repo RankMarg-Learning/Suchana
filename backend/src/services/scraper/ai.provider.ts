@@ -3,65 +3,57 @@ import { logger } from '../../utils/logger';
 import { env } from '../../config/env';
 import { AiStructuredExam } from '../deduplication.service';
 import {
-    EXAM_CATEGORIES,
-    EXAM_LEVELS,
-    LIFECYCLE_STAGES,
+  EXAM_CATEGORIES,
+  EXAM_LEVELS,
+  LIFECYCLE_STAGES,
 } from '../../constants/enums';
 
 export class AIProvider {
-    private static instance: OpenAI | null = null;
-    private static readonly CURRENT_YEAR = new Date().getFullYear();
+  private static instance: OpenAI | null = null;
+  private static readonly CURRENT_YEAR = new Date().getFullYear();
 
-    private static getClient(): OpenAI {
-        if (!this.instance) {
-            const apiKey = (env as unknown as Record<string, string>)['OPENAI_API_KEY'];
-            if (!apiKey) throw new Error('OPENAI_API_KEY is not set in environment');
-            this.instance = new OpenAI({ apiKey });
-        }
-        return this.instance;
+  private static getClient(): OpenAI {
+    if (!this.instance) {
+      const apiKey = (env as unknown as Record<string, string>)['OPENAI_API_KEY'];
+      if (!apiKey) throw new Error('OPENAI_API_KEY is not set in environment');
+      this.instance = new OpenAI({ apiKey });
     }
+    return this.instance;
+  }
 
-    static async extractExamData(plaintext: string, url: string, hintCategory?: string): Promise<AiStructuredExam | null> {
-        const prompt = this.buildPrompt(plaintext, url, hintCategory);
-        const openai = this.getClient();
+  static async extractExamData(plaintext: string, url: string, hintCategory?: string): Promise<AiStructuredExam | null> {
+    const prompt = this.buildPrompt(plaintext, url, hintCategory);
+    const openai = this.getClient();
 
-        try {
-            const completion = await openai.chat.completions.create({
-                model: 'gpt-4o-mini',
-                messages: [{ role: 'user', content: prompt }],
-                temperature: 0,
-                max_tokens: 4000,
-                response_format: { type: 'json_object' },
-            });
+    try {
+      const completion = await openai.chat.completions.create({
+        model: 'gpt-4o-mini0',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0,
+        max_tokens: 4000,
+        response_format: { type: 'json_object' },
+      });
 
-            const content = completion.choices[0]?.message?.content;
-            if (!content) return null;
+      const content = completion.choices[0]?.message?.content;
+      if (!content) return null;
 
-            return JSON.parse(content) as AiStructuredExam;
-        } catch (err) {
-            logger.error('[AI] Extraction failed', { url, err });
-            return null;
-        }
+      return JSON.parse(content) as AiStructuredExam;
+    } catch (err) {
+      logger.error('[AI] Extraction failed', { url, err });
+      return null;
     }
+  }
 
-    private static buildPrompt(text: string, sourceUrl: string, hintCategory?: string): string {
-        return `You are an expert Indian government exam data extractor.
+  private static buildPrompt(text: string, sourceUrl: string, hintCategory?: string): string {
+    return `You are an expert Indian government exam data extractor.
 Extract structured exam data from the text below.
 
-SOURCE URL: ${sourceUrl}
 HINT CATEGORY: ${hintCategory ?? 'auto-detect'}
 CURRENT YEAR: ${this.CURRENT_YEAR}
 
-═══════════════════════════════════════
 CRITICAL EXTRACTION RULES
-═══════════════════════════════════════
-
-──────────────────────────────────────
-RULE 1 — EXTRACT EVERY SINGLE EVENT (NO SKIPPING)
-──────────────────────────────────────
-The MANDATORY stages that MUST appear in the events array (one entry per stage per phase):
-  NOTIFICATION → REGISTRATION → ADMIT_CARD → EXAM → RESULT
-
+RULE 1 - From EXAM IDENTIFY THE TIMELINE OF THE EXAM (ONLY CENTERAL EXAM & STATE GRADE A EXAMS)
+RULE 2 — EXTRACT EVERY SINGLE EVENT (NO SKIPPING)
 The OPTIONAL stages — include ONLY when source text contains explicit data for them:
   ANSWER_KEY  (skip entirely if no answer key date/mention exists — do NOT add a TBD placeholder)
   DOCUMENT_VERIFICATION  (include only if mentioned)
@@ -238,5 +230,5 @@ OUTPUT: Return JSON MATCHING THIS EXACT SCHEMA (no extra keys, no markdown fence
     }
   ]
 }`;
-    }
+  }
 }

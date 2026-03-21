@@ -110,35 +110,8 @@ export default function AddEventScreen() {
   useEffect(() => {
     const subscription = watch((value, { name }) => {
       if (name === 'stage') {
-        const s = value.stage;
-        let suggested = '';
-        
-        switch (s) {
-          case LifecycleStage.NOTIFICATION:
-            suggested = 'View Notification';
-            break;
-          case LifecycleStage.REGISTRATION:
-            suggested = 'Apply Online';
-            break;
-          case LifecycleStage.ADMIT_CARD:
-            suggested = 'Download Admit Card';
-            break;
-          case LifecycleStage.EXAM:
-            suggested = 'Check Exam Centre';
-            break;
-          case LifecycleStage.ANSWER_KEY:
-            suggested = 'View Answer Key';
-            break;
-          case LifecycleStage.RESULT:
-            suggested = 'Check Result';
-            break;
-          case LifecycleStage.DOCUMENT_VERIFICATION:
-            suggested = 'View DV Schedule';
-            break;
-          case LifecycleStage.JOINING:
-            suggested = 'Check Appointment List';
-            break;
-        }
+        const { DEFAULT_ACTION_LABELS } = require('@/constants/enums');
+        const suggested = DEFAULT_ACTION_LABELS[value.stage as string] || '';
         
         if (suggested && !isEdit) {
           setValue('actionLabel', suggested);

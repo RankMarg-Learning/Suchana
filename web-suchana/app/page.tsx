@@ -33,8 +33,6 @@ function StatusBadge({ status }: { status: string }) {
 // ─── Exam List Row (clickable card linking to detail page) ────────────────────
 
 function ExamListRow({ exam, now }: { exam: Exam; now: number }) {
-  const activeEvent = exam.lifecycleEvents?.[0];
-
   return (
     <Link
       href={`/exam/${exam.slug}`}
@@ -58,39 +56,12 @@ function ExamListRow({ exam, now }: { exam: Exam; now: number }) {
         </div>
         <h2 className="exam-row-title">{exam.shortTitle ?? exam.title}</h2>
         <div className="exam-row-body">{exam.conductingBody}</div>
-
-        {/* Active Stage Indicator */}
-        {activeEvent && (
-          <div className="exam-row-active-premium">
-            <div className={`active-pulse-container`}>
-              <div className="active-pulse-dot" />
-            </div>
-            <div className="active-stage-card">
-              <div className="active-stage-label">Ongoing Stage</div>
-              <div className="active-stage-value">
-                {activeEvent.title || STAGE_LABELS[activeEvent.stage] || cleanLabel(activeEvent.stage)}
-              </div>
-              {activeEvent.endsAt && (
-                <div className="active-stage-countdown">
-                  <Clock size={10} style={{ marginRight: 4 }} />
-                  {countdownStr(activeEvent.endsAt, now)}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Right: Status + arrow */}
       <div className="exam-row-right">
         <div className="status-container">
           <StatusBadge status={exam.status} />
-          {exam.totalVacancies && (
-            <div className="vacancy-badge">
-              <Briefcase size={10} style={{ marginRight: 4 }} />
-              {exam.totalVacancies} Posts
-            </div>
-          )}
         </div>
         <div className="exam-row-arrow">
           Details <ArrowRight size={14} />

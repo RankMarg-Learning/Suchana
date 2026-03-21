@@ -14,9 +14,10 @@ export interface AiStructuredExam {
     state?: string;
     examYear?: number;
     age?: string;
-    qualificationCriteria?: Record<string, unknown>;
+    qualificationCriteria?: String;
     totalVacancies?: any;
-    applicationFee?: Record<string, unknown>;
+    usefulLinks?: Record<string, string>;
+    applicationFee?: string;
     officialWebsite?: string;
     notificationUrl?: string;
     aiConfidence?: number;
@@ -170,6 +171,7 @@ export async function checkAndStage(
             age: exam.age,
             qualificationCriteria: exam.qualificationCriteria as never,
             totalVacancies: exam.totalVacancies,
+            usefulLinks: exam.usefulLinks as any,
             applicationFee: exam.applicationFee as never,
             officialWebsite: exam.officialWebsite,
             notificationUrl: exam.notificationUrl,

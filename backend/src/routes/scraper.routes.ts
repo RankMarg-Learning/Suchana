@@ -59,6 +59,9 @@ router.post('/trigger', validate(triggerScrapeSchema), scraperController.trigger
 // POST /api/v1/scraper/trigger/sync   → synchronous (waits for result)
 router.post('/trigger/sync', validate(triggerScrapeSchema), scraperController.triggerScrapeSync);
 
+// POST /api/v1/scraper/test-direct    → Direct URL test (Synchronous, no DB storage)
+router.post('/test-direct', scraperController.testScraperDirect);
+
 // ─── Review pipeline ────────────────────────────────────────────
 // GET  /api/v1/scraper/staged?reviewStatus=PENDING&page=1
 router.get('/staged', validate(listStagedExamQuerySchema, 'query'), scraperController.listStagedExams);

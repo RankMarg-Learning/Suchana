@@ -6,6 +6,7 @@ import { NotificationService } from '../notification.service';
 import { notificationQueue } from '../../queues/notification.queue';
 import { getStatusFromStage } from '../../constants/enums';
 import { SeoService } from '../seo.service';
+import { cacheService } from '../../utils/cache';
 
 export async function promoteStagedExam(stagedExamId: string, adminId: string): Promise<{ examId: string }> {
     const staged = await prisma.stagedExam.findUnique({
@@ -27,7 +28,6 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         return candidate;
     }
 
-    const totalVacanciesJson = staged.totalVacancies ?? undefined;
 
     let deduplicationKey: string | undefined = staged.deduplicationKey ?? undefined;
     if (deduplicationKey) {
@@ -77,10 +77,10 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                     conductingBody: staged.conductingBody ?? existing.conductingBody,
                     category: staged.category ?? existing.category,
                     examLevel: staged.examLevel ?? existing.examLevel,
+                    totalVacancies: staged.totalVacancies ?? existing.totalVacancies,
                     state: staged.state ?? existing.state,
                     age: staged.age ?? existing.age,
                     qualificationCriteria: staged.qualificationCriteria ?? existing.qualificationCriteria,
-                    totalVacancies: totalVacanciesJson ?? existing.totalVacancies,
                     applicationFee: staged.applicationFee ?? existing.applicationFee,
                     salary: staged.salary ?? existing.salary,
                     additionalDetails: staged.additionalDetails ?? existing.additionalDetails,
@@ -88,7 +88,7 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                     notificationUrl: staged.notificationUrl ?? existing.notificationUrl,
                     sourceStagedExamId: staged.id,
                     status: derivedStatus,
-                    isPublished: true,
+                    isPublished: false,
                     publishedAt: existing.publishedAt ?? new Date(),
                     updatedAt: new Date(),
                 },
@@ -107,7 +107,7 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         });
 
         logger.info(`[Promote] Updated existing Exam ${staged.existingExamId} from StagedExam ${stagedExamId}`);
-        
+
         try {
             await SeoService.generateExamSeoPages(staged.existingExamId!);
         } catch (e) {
@@ -123,6 +123,9 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         } catch (e) {
             logger.error(`Failed to send update notification for ${staged.existingExamId}:`, e);
         }
+
+        // Invalidate cache
+        await cacheService.delPattern('exams:list*');
 
         return { examId: staged.existingExamId! };
     }
@@ -140,10 +143,10 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                 conductingBody: staged.conductingBody ?? 'Unknown',
                 category: staged.category ?? 'OTHER',
                 examLevel: staged.examLevel ?? 'NATIONAL',
+                totalVacancies: staged.totalVacancies ?? undefined,
                 state: staged.state ?? undefined,
                 age: staged.age ?? undefined,
                 qualificationCriteria: staged.qualificationCriteria ?? undefined,
-                totalVacancies: totalVacanciesJson ?? undefined,
                 applicationFee: staged.applicationFee ?? undefined,
                 salary: staged.salary ?? undefined,
                 additionalDetails: staged.additionalDetails ?? undefined,
@@ -153,7 +156,7 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                 sourceStagedExamId: staged.id,
                 createdBy: adminId,
                 status: derivedStatus,
-                isPublished: true,
+                isPublished: false,
                 publishedAt: new Date(),
                 lifecycleEvents: eventRows.length > 0 ? { create: eventRows } : undefined,
             },
@@ -172,6 +175,9 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
     } catch (e) {
         logger.error(`Failed to queue new exam notification for ${examId}:`, e);
     }
+
+    // Invalidate cache
+    await cacheService.delPattern('exams:list*');
 
     logger.info(`[Promote] Created new Exam ${examId} from StagedExam ${stagedExamId} · slug="${finalSlug}" · events=${eventRows.length}`);
     return { examId };
