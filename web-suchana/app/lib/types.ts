@@ -11,7 +11,7 @@ export interface LifecycleEvent {
   isTBD?: boolean;
   actionUrl?: string;
   actionLabel?: string;
-  notes?: string;
+  description?: string;
 }
 
 export interface Exam {

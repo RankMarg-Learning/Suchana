@@ -87,6 +87,7 @@ function getEventStatus(
   now: number,
   nextEventStartsAt?: string | null,
 ): { label: string; color: string } | null {
+  if (now === 0) return null;
   if (event.isTBD || !event.startsAt) return { label: "TBD", color: "#9CA3AF" };
 
   const start = new Date(event.startsAt).getTime();
@@ -144,6 +145,9 @@ function TimelineItem({
               {status.label}
             </div>
           )}
+          {!status && now === 0 && (
+            <div className="tl-status-badge skeleton-badge" style={{ opacity: 0.5 }}>---</div>
+          )}
         </div>
 
         <div className="tl-dates-row">
@@ -153,17 +157,17 @@ function TimelineItem({
           {event.isTBD && " (TBA)"}
         </div>
 
-        {event.notes && (
-          <div className="tl-notes-container">
+        {event.description && (
+          <div className="">
             {isExpanded ? (
-              <MarkdownRenderer content={event.notes} className="tl-markdown" variant="fact" />
+              <MarkdownRenderer content={event.description} className="tl-markdown" variant="fact" />
             ) : (
               <div className="tl-notes-preview">
-                {event.notes.replace(/[#*`\n]/g, ' ').substring(0, 100)}
-                {event.notes.length > 100 && "..."}
+                {event.description.replace(/[#*`\n]/g, ' ').substring(0, 100)}
+                {event.description.length > 100 && "..."}
               </div>
             )}
-            {event.notes.length > 100 && (
+            {event.description.length > 100 && (
               <button onClick={() => setIsExpanded(!isExpanded)} className="tl-more-btn">
                 {isExpanded ? "Show less" : "Read more"}
               </button>
@@ -173,7 +177,9 @@ function TimelineItem({
 
         {event.actionUrl && (
           <div className="tl-footer">
-            {status === null ? (
+            {now === 0 ? (
+              <div className="tl-action-btn disabled">Checking...</div>
+            ) : status === null ? (
               <div className="tl-action-btn disabled">Closed</div>
             ) : (
               <a
@@ -249,6 +255,7 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   useEffect(() => {
     setNow(Date.now());
@@ -430,8 +437,8 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
                     Age Limit
                   </div>
                   <div className="fact-content">
-                    <MarkdownRenderer 
-                      content={exam.age} 
+                    <MarkdownRenderer
+                      content={exam.age}
                       variant="fact"
                     />
                   </div>
@@ -468,7 +475,24 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
             <section className="exam-detail-section" aria-labelledby="desc-heading" style={{ marginTop: 40, borderTop: '1px solid var(--border)', paddingTop: 40 }}>
               <h2 id="desc-heading" className="exam-detail-section-title">About this Exam</h2>
               <div className="exam-detail-desc" itemProp="description">
-                <MarkdownRenderer content={exam.description} />
+                {isDescExpanded ? (
+                  <MarkdownRenderer content={exam.description} />
+                ) : (
+                  <div className="description-preview">
+                    {exam.description.replace(/[#*`\n]/g, ' ').substring(0, 300)}
+                    {exam.description.length > 300 && "..."}
+                  </div>
+                )}
+
+                {exam.description.length > 300 && (
+                  <button
+                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                    className="tl-more-btn"
+                    style={{ marginTop: 12 }}
+                  >
+                    {isDescExpanded ? "Show less" : "Read more"}
+                  </button>
+                )}
               </div>
             </section>
           )}

@@ -5,21 +5,19 @@ import Link from "next/link";
 import SiteNav from "./components/SiteNav";
 import SiteFooter from "./components/SiteFooter";
 import {
-  Bell, BellRing, Search, Calendar, Briefcase, IndianRupee, UserCheck,
-  FileText, Globe, ChevronDown, CheckCircle2, ArrowRight, Clock, Target,
-  MapPin, Info, RefreshCw, Filter, Zap, Layers, TrendingUp, BookOpen, X,
+  Search, ChevronDown, ArrowRight,
+  MapPin, Info, RefreshCw, Zap, X,
 } from "lucide-react";
 import {
   Exam,
-  STATUS_LABELS, STAGE_LABELS, CATEGORIES, STATUSES,
-  cleanLabel, formatDate, getTotalVacancies, getStageState, countdownStr,
+  STATUS_LABELS, CATEGORIES,
+  cleanLabel,
 } from "./lib/types";
 import { MOCK_EXAMS, fetchExamsFromAPI, getPersonalizedExams } from "./lib/api";
 import { LeftSidebar, RightSidebar } from "./components/Sidebars";
 import { LeaderboardAd, InFeedAd } from "./components/AdUnits";
 import { ADS_CONFIG } from "./config/ads";
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }: { status: string }) {
   return (
@@ -30,7 +28,6 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-// ─── Exam List Row (clickable card linking to detail page) ────────────────────
 
 function ExamListRow({ exam, now }: { exam: Exam; now: number }) {
   return (
@@ -71,7 +68,6 @@ function ExamListRow({ exam, now }: { exam: Exam; now: number }) {
   );
 }
 
-// ─── Skeleton ─────────────────────────────────────────────────────────────────
 
 function SkeletonRow() {
   return (
@@ -90,7 +86,6 @@ function SkeletonRow() {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
   const [now, setNow] = useState(0);
@@ -123,19 +118,13 @@ export default function HomePage() {
       const userId = typeof window !== "undefined" ? localStorage.getItem("@suchana_userId") : null;
       let result;
 
-      if (userId && categoryFilter === "ALL" && statusFilter === "ALL" && !debouncedSearch) {
-        result = await getPersonalizedExams(userId, reqPage, 10);
-        // Fallback to normal fetch if no personalized exams returned
-        if (!result.exams || result.exams.length === 0) {
-          result = await fetchExamsFromAPI(reqPage, 10);
-        }
-      } else {
-        result = await fetchExamsFromAPI(reqPage, 10,
-          categoryFilter !== "ALL" ? categoryFilter : undefined,
-          statusFilter !== "ALL" ? statusFilter : undefined,
-          debouncedSearch || undefined
-        );
-      }
+
+      result = await fetchExamsFromAPI(reqPage, 10,
+        categoryFilter !== "ALL" ? categoryFilter : undefined,
+        statusFilter !== "ALL" ? statusFilter : undefined,
+        debouncedSearch || undefined
+      );
+
 
       if (reset) { setExams(result.exams ?? []); setPage(1); }
       else { setExams((prev) => [...prev, ...(result.exams ?? [])]); }

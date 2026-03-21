@@ -8,13 +8,15 @@ import Image from "next/image";
 export default function SiteNav() {
   const [scrolled, setScrolled] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
     window.addEventListener("scroll", onScroll, { passive: true });
 
     if (typeof window !== "undefined") {
-      setUserId(localStorage.getItem("@suchana_userId"));
+      setUserId(window.localStorage.getItem("@suchana_userId"));
+      setMounted(true);
     }
 
     return () => window.removeEventListener("scroll", onScroll);
@@ -44,17 +46,17 @@ export default function SiteNav() {
           </ul>
 
           <div className="nav-cta">
-            <a href="/#exams" className="btn btn-ghost nav-action-btn">
-              <Search size={14} /> <span>Search Exams</span>
-            </a>
-            {userId ? (
-              <a href="/saved" className="btn btn-primary nav-action-btn saved-nav-btn">
-                <Bookmark size={14} /> <span>My Saved</span>
-              </a>
-            ) : (
-              <a href="/onboarding" className="btn btn-primary nav-action-btn">
-                <Bell size={14} /> <span>Get Notified</span>
-              </a>
+
+            {mounted && (
+              userId ? (
+                <a href="/saved" className="btn btn-primary nav-action-btn saved-nav-btn">
+                  <Bookmark size={14} /> <span>My Saved</span>
+                </a>
+              ) : (
+                <a href="/onboarding" className="btn btn-primary nav-action-btn">
+                  <Bell size={14} /> <span>Get Notified</span>
+                </a>
+              )
             )}
           </div>
         </div>
