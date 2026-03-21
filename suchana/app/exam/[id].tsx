@@ -433,7 +433,6 @@ export default function ExamDetailScreen() {
 
       </ScrollView>
 
-      {/* Primary Action Button Fixed at Bottom (If Not Active but URL exists) */}
       {!isRegActive && (exam.notificationUrl || exam.officialWebsite) && (
         <View style={[styles.footerSticky, { backgroundColor: background + 'E6', borderTopColor: border }]}>
           <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -445,14 +444,7 @@ export default function ExamDetailScreen() {
                 <Text style={[styles.primaryActionText, { fontSize: 14, color: colorScheme === 'dark' ? '#818CF8' : tint }]}>Official Portal</Text>
               </TouchableOpacity>
             )}
-            {exam.notificationUrl && (
-              <TouchableOpacity
-                style={[styles.primaryActionBtn, { flex: 1, backgroundColor: colorScheme === 'dark' ? '#2E1065' : '#F5F3FF' }]}
-                onPress={() => handleExternalLink(exam.notificationUrl!)}>
-                <FileText size={18} color={colorScheme === 'dark' ? '#FFF' : tint} />
-                <Text style={[styles.primaryActionText, { fontSize: 14, color: colorScheme === 'dark' ? '#FFF' : tint }]}>Read Notice</Text>
-              </TouchableOpacity>
-            )}
+
           </View>
         </View>
       )}
