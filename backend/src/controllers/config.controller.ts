@@ -5,7 +5,7 @@ import { sendSuccess } from '../utils/apiResponse';
 
 export async function getHomeBanners(req: Request, res: Response, next: NextFunction) {
     try {
-        const banners = await configService.getHomeBanners();
+        const banners = await configService.getActiveBanners();
         sendSuccess(res, banners);
     } catch (err) {
         next(err);

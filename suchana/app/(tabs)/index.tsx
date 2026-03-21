@@ -130,7 +130,6 @@ export default function UpdatesScreen() {
   }
 
   const headerColors = (colorScheme === 'dark' ? ['#2E1065', '#09090B'] : ['#F5F3FF', '#FFFFFF']) as readonly [string, string];
-
   return (
     <SafeAreaView style={[styles.root, { backgroundColor: background }]} edges={['top']}>
       <FlatList
