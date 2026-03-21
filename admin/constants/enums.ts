@@ -74,17 +74,6 @@ export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
 };
 
 
-export const LifecycleEventType = {
-    RELEASE: 'RELEASE',     // Notification out, admit card released, result out
-    START: 'START',       // Registration window opens, exam starts
-    END: 'END',         // Last date to apply, form submission closes
-    CORRECTION: 'CORRECTION',  // Form correction window
-    RESCHEDULED: 'RESCHEDULED', // Event date changed
-    CANCELLED: 'CANCELLED',   // Event cancelled
-    OTHER: 'OTHER',
-} as const;
-export type LifecycleEventType = (typeof LifecycleEventType)[keyof typeof LifecycleEventType];
-export const LIFECYCLE_EVENT_TYPES = Object.values(LifecycleEventType);
 
 // ─── Qualification Level ──────────────────────────────────────
 export const QualificationLevel = {
@@ -98,22 +87,11 @@ export const QualificationLevel = {
 } as const;
 export type QualificationLevel = (typeof QualificationLevel)[keyof typeof QualificationLevel];
 
-export const getStatusFromStage = (stage: string, eventType: string): ExamStatus | null => {
-    if (stage === LifecycleStage.REGISTRATION) {
-        if (eventType === LifecycleEventType.START) return ExamStatus.REGISTRATION_OPEN;
-        if (eventType === LifecycleEventType.END) return ExamStatus.REGISTRATION_CLOSED;
-    }
-    if (stage === LifecycleStage.ADMIT_CARD && (eventType === LifecycleEventType.START || eventType === LifecycleEventType.RELEASE)) {
-        return ExamStatus.ADMIT_CARD_OUT;
-    }
-    if (stage === LifecycleStage.EXAM && eventType === LifecycleEventType.START) {
-        return ExamStatus.EXAM_ONGOING;
-    }
-    if (stage === LifecycleStage.RESULT && (eventType === LifecycleEventType.START || eventType === LifecycleEventType.RELEASE)) {
-        return ExamStatus.RESULT_DECLARED;
-    }
-    if (stage === LifecycleStage.NOTIFICATION && eventType === LifecycleEventType.RELEASE) {
-        return ExamStatus.NOTIFICATION;
-    }
+export const getStatusFromStage = (stage: string): ExamStatus | null => {
+    if (stage === LifecycleStage.REGISTRATION) return ExamStatus.REGISTRATION_OPEN;
+    if (stage === LifecycleStage.ADMIT_CARD) return ExamStatus.ADMIT_CARD_OUT;
+    if (stage === LifecycleStage.EXAM) return ExamStatus.EXAM_ONGOING;
+    if (stage === LifecycleStage.RESULT) return ExamStatus.RESULT_DECLARED;
+    if (stage === LifecycleStage.NOTIFICATION) return ExamStatus.NOTIFICATION;
     return null;
 };

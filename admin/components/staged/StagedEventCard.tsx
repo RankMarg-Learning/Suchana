@@ -4,14 +4,13 @@ import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-n
 import { Calendar, Trash2, ChevronDown, CheckCircle2, Star, FileText } from 'lucide-react-native';
 import Markdown from 'react-native-markdown-display';
 import { StagedEvent } from '@/services/api.service';
-import { LIFECYCLE_STAGES, LIFECYCLE_EVENT_TYPES, STAGE_ORDER_MAP } from '@/constants/enums';
+import { LIFECYCLE_STAGES, STAGE_ORDER_MAP } from '@/constants/enums';
 
 interface StagedEventCardProps {
   event: StagedEvent;
   onUpdate: (id: string, data: any) => void;
   onDelete: (id: string) => void;
   onOpenStageModal: (event: StagedEvent) => void;
-  onOpenTypeModal: (event: StagedEvent) => void;
   onOpenTitleModal: (event: StagedEvent) => void;
   onOpenDateModal: (event: StagedEvent, type: 'start' | 'end') => void;
   onOpenOrderModal: (event: StagedEvent) => void;
@@ -23,13 +22,11 @@ export const StagedEventCardBase: React.FC<StagedEventCardProps> = ({
   onUpdate,
   onDelete,
   onOpenStageModal,
-  onOpenTypeModal,
   onOpenTitleModal,
   onOpenDateModal,
   onOpenOrderModal,
   onOpenDescriptionModal,
 }) => {
-  const [isImportant, setIsImportant] = useState(event.isImportant);
   const [isTBD, setIsTBD] = useState(event.isTBD);
 
   const formatDate = (d?: string) => d ? new Date(d).toLocaleDateString('en-IN', {
@@ -46,7 +43,6 @@ export const StagedEventCardBase: React.FC<StagedEventCardProps> = ({
   return (
     <View style={[
       styles.container, 
-      isImportant && styles.importantContainer,
       isPast && styles.pastContainer
     ]}>
       <View style={styles.header}>
@@ -54,9 +50,6 @@ export const StagedEventCardBase: React.FC<StagedEventCardProps> = ({
           <TouchableOpacity onPress={() => onOpenStageModal(event)} style={styles.stagePill}>
             <Text style={styles.stagePillText}>{event.stage.replace(/_/g, ' ')}</Text>
             <ChevronDown size={10} color="#4F46E5" strokeWidth={3} />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={() => onOpenTypeModal(event)} style={styles.typePill}>
-            <Text style={styles.typePillText}>{event.eventType.replace(/_/g, ' ')}</Text>
           </TouchableOpacity>
           <TouchableOpacity onPress={() => onOpenOrderModal(event)} style={styles.orderPill}>
             <Text style={styles.orderPillText}>#{event.stageOrder}</Text>
@@ -69,12 +62,6 @@ export const StagedEventCardBase: React.FC<StagedEventCardProps> = ({
           )}
         </View>
         <View style={styles.actions}>
-          <TouchableOpacity 
-            onPress={() => { setIsImportant(!isImportant); update({ isImportant: !isImportant }); }}
-            style={[styles.starredIcon, isImportant && styles.starredActive]}
-          >
-            <Star size={16} color={isImportant ? '#F59E0B' : '#D1D5DB'} fill={isImportant ? '#F59E0B' : 'transparent'} strokeWidth={isImportant ? 2 : 2.5} />
-          </TouchableOpacity>
           <TouchableOpacity onPress={() => {
             Alert.alert('Delete Event', `Remove "${event.title}"?`, [
               { text: 'Cancel', style: 'cancel' },

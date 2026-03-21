@@ -3161,3 +3161,28 @@ body::before {
   color: var(--text-primary);
   font-weight: 700;
 }
+
+/* ─── SEO Content Layer ─── */
+.seo-content-layer h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 48px 0 24px;
+    color: var(--text-primary);
+}
+.seo-content-layer h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin: 32px 0 16px;
+    color: var(--text-primary);
+}
+.seo-content-layer p {
+    margin-bottom: 24px;
+}
+.seo-content-layer ul, .seo-content-layer ol {
+    margin: 0 0 24px 24px;
+}
+.seo-content-layer li {
+    margin-bottom: 8px;
+}

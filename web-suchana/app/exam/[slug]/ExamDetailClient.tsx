@@ -424,11 +424,11 @@ export default function ExamDetailClient({ exam }: { exam: Exam }) {
           <section className="exam-detail-section" aria-labelledby="elig-heading">
             <h2 id="elig-heading" className="exam-detail-section-title">Eligibility</h2>
             <div className="eligibility-container">
-              {(exam.minAge || exam.maxAge) && (
+              {exam.age && (
                 <div className="age-limit-pill">
                   <Info size={14} className="text-secondary" />
                   <span className="age-pill-label">Age Limit:</span>
-                  <span className="age-pill-value">{exam.minAge}–{exam.maxAge} years</span>
+                  <span className="age-pill-value">{exam.age}</span>
                 </div>
               )}
               <div className="fee-card eligibility-card">

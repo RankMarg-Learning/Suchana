@@ -28,7 +28,6 @@ import {
   EXAM_CATEGORIES, 
   EXAM_LEVELS, 
   LIFECYCLE_STAGES, 
-  LIFECYCLE_EVENT_TYPES, 
   STAGE_ORDER_MAP,
   EXAM_STATUSES
 } from '@/constants/enums';
@@ -64,8 +63,7 @@ export default function StagedDetailScreen() {
   const [notificationUrl, setNotificationUrl] = useState('');
   const [description, setDescription] = useState('');
   const [state, setState] = useState('');
-  const [minAge, setMinAge] = useState('');
-  const [maxAge, setMaxAge] = useState('');
+  const [age, setAge] = useState('');
   const [examStatus, setExamStatus] = useState('');
 
   // UI States
@@ -80,7 +78,6 @@ export default function StagedDetailScreen() {
   // Event Edit Helper States
   const [activeEvent, setActiveEvent] = useState<StagedEvent | null>(null);
   const [eventStageModal, setEventStageModal] = useState(false);
-  const [eventTypeModal, setEventTypeModal] = useState(false);
   const [eventTitleModal, setEventTitleModal] = useState(false);
   const [eventOrderModal, setEventOrderModal] = useState(false);
   const [eventDescriptionModal, setEventDescriptionModal] = useState(false);
@@ -108,8 +105,7 @@ export default function StagedDetailScreen() {
       setNotificationUrl(e.notificationUrl ?? '');
       setDescription(e.description ?? '');
       setState(e.state ?? '');
-      setMinAge(e.minAge?.toString() ?? '');
-      setMaxAge(e.maxAge?.toString() ?? '');
+      setAge(e.age ?? '');
       setExamStatus(e.status ?? '');
     } catch (e) {
       Alert.alert('Error', 'Failed to load staged exam');
@@ -168,8 +164,7 @@ export default function StagedDetailScreen() {
       if (notificationUrl !== (exam?.notificationUrl ?? '')) corrections.notificationUrl = notificationUrl;
       if (description !== (exam?.description ?? '')) corrections.description = description;
       if (state !== (exam?.state ?? '')) corrections.state = state;
-      if (minAge !== (exam?.minAge?.toString() ?? '')) corrections.minAge = parseInt(minAge);
-      if (maxAge !== (exam?.maxAge?.toString() ?? '')) corrections.maxAge = parseInt(maxAge);
+      if (age !== (exam?.age ?? '')) corrections.age = age;
       if (examStatus !== (exam?.status ?? '')) corrections.status = examStatus;
 
       await scraperService.reviewStagedExam(
@@ -304,7 +299,6 @@ export default function StagedDetailScreen() {
                     onUpdate={handleEventUpdate}
                     onDelete={handleEventDelete}
                     onOpenStageModal={(e) => { setActiveEvent(e); setEventStageModal(true); }}
-                    onOpenTypeModal={(e) => { setActiveEvent(e); setEventTypeModal(true); }}
                     onOpenTitleModal={(e) => { setActiveEvent(e); setEventTitleModal(true); }}
                     onOpenDateModal={(e, type) => { setActiveEvent(e); setEventDateModal({ open: true, type }); }}
                     onOpenOrderModal={(e) => { setActiveEvent(e); setEventOrderModal(true); }}
@@ -348,14 +342,7 @@ export default function StagedDetailScreen() {
           </StagedSection>
 
           <StagedSection title="Requirement Details" icon={ShieldCheck}>
-            <View style={{ flexDirection: 'row' }}>
-              <View style={{ flex: 1 }}>
-                <StagedField label="Min Age" value={minAge} onEdit={() => setEditField({ key: 'minAge', title: 'Minimum Age', value: minAge, numeric: true })} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <StagedField label="Max Age" value={maxAge} onEdit={() => setEditField({ key: 'maxAge', title: 'Maximum Age', value: maxAge, numeric: true })} />
-              </View>
-            </View>
+            <StagedField label="Age Limit" value={age} onEdit={() => setEditField({ key: 'age', title: 'Age Limit', value: age })} />
             <StagedField label="Recruitment Vacancies" value={totalVacancies} multiline onEdit={() => setEditField({ key: 'totalVacancies', title: 'Total Vacancies', value: totalVacancies, multiline: true })} />
             <StagedField label="Salary / Grade Pay" value={salary} multiline onEdit={() => setEditField({ key: 'salary', title: 'Salary Details', value: salary, multiline: true })} />
             <StagedField label="Eligibility / Qualification" value={qualificationCriteria} multiline onEdit={() => setEditField({ key: 'qualificationCriteria', title: 'Qualification Details', value: qualificationCriteria, multiline: true })} />
@@ -474,8 +461,7 @@ export default function StagedDetailScreen() {
             else if (k === 'officialWebsite') setOfficialWebsite(v);
             else if (k === 'notificationUrl') setNotificationUrl(v);
             else if (k === 'description') setDescription(v);
-            else if (k === 'minAge') setMinAge(v);
-            else if (k === 'maxAge') setMaxAge(v);
+            else if (k === 'age') setAge(v);
           }}
           onClose={() => setEditField(null)}
         />
@@ -489,14 +475,6 @@ export default function StagedDetailScreen() {
         selected={activeEvent?.stage}
         onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { stage: v, stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? activeEvent.stageOrder })}
         onClose={() => setEventStageModal(false)}
-      />
-      <ChipModal
-        visible={eventTypeModal}
-        title="Event Type"
-        options={LIFECYCLE_EVENT_TYPES}
-        selected={activeEvent?.eventType}
-        onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { eventType: v })}
-        onClose={() => setEventTypeModal(false)}
       />
       {activeEvent && (
         <TextEditModal

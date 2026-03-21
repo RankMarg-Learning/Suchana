@@ -5,6 +5,7 @@ import { slugify } from '../../utils/slugify';
 import { NotificationService } from '../notification.service';
 import { notificationQueue } from '../../queues/notification.queue';
 import { getStatusFromStage } from '../../constants/enums';
+import { SeoService } from '../seo.service';
 
 export async function promoteStagedExam(stagedExamId: string, adminId: string): Promise<{ examId: string }> {
     const staged = await prisma.stagedExam.findUnique({
@@ -38,14 +39,12 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
 
     const eventRows = staged.stagedEvents.map((ev) => ({
         stage: ev.stage,
-        eventType: ev.eventType,
         stageOrder: ev.stageOrder,
         title: ev.title,
         description: ev.description ?? undefined,
         startsAt: ev.startsAt ?? undefined,
         endsAt: ev.endsAt ?? undefined,
         isTBD: ev.isTBD,
-        isImportant: ev.isImportant,
         actionUrl: ev.actionUrl ?? undefined,
         actionLabel: ev.actionLabel ?? undefined,
         sourceStagedEventId: ev.id,
@@ -57,7 +56,7 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
     // Sort events by stageOrder descending to get the "latest" status
     const sortedForStatus = [...staged.stagedEvents].sort((a, b) => b.stageOrder - a.stageOrder);
     for (const ev of sortedForStatus) {
-        const potential = getStatusFromStage(ev.stage, ev.eventType);
+        const potential = getStatusFromStage(ev.stage);
         if (potential) {
             derivedStatus = potential;
             break;
@@ -79,8 +78,7 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                     category: staged.category ?? existing.category,
                     examLevel: staged.examLevel ?? existing.examLevel,
                     state: staged.state ?? existing.state,
-                    minAge: staged.minAge ?? existing.minAge,
-                    maxAge: staged.maxAge ?? existing.maxAge,
+                    age: staged.age ?? existing.age,
                     qualificationCriteria: staged.qualificationCriteria ?? existing.qualificationCriteria,
                     totalVacancies: totalVacanciesJson ?? existing.totalVacancies,
                     applicationFee: staged.applicationFee ?? existing.applicationFee,
@@ -111,8 +109,14 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         logger.info(`[Promote] Updated existing Exam ${staged.existingExamId} from StagedExam ${stagedExamId}`);
         
         try {
+            await SeoService.generateExamSeoPages(staged.existingExamId!);
+        } catch (e) {
+            logger.error(`Failed to auto-generate SEO pages for ${staged.existingExamId}:`, e);
+        }
+
+        try {
             await NotificationService.sendManualExamNotification(
-                staged.existingExamId,
+                staged.existingExamId!,
                 `📢 Update: ${staged.shortTitle || staged.title}`,
                 `Important changes have been made to the ${staged.shortTitle || staged.title} timeline. Tap to view.`
             );
@@ -120,7 +124,7 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
             logger.error(`Failed to send update notification for ${staged.existingExamId}:`, e);
         }
 
-        return { examId: staged.existingExamId };
+        return { examId: staged.existingExamId! };
     }
 
     const baseSlug = staged.slug ?? staged.title;
@@ -137,8 +141,7 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                 category: staged.category ?? 'OTHER',
                 examLevel: staged.examLevel ?? 'NATIONAL',
                 state: staged.state ?? undefined,
-                minAge: staged.minAge ?? undefined,
-                maxAge: staged.maxAge ?? undefined,
+                age: staged.age ?? undefined,
                 qualificationCriteria: staged.qualificationCriteria ?? undefined,
                 totalVacancies: totalVacanciesJson ?? undefined,
                 applicationFee: staged.applicationFee ?? undefined,
@@ -157,6 +160,12 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         });
         return { examId: exam.id };
     });
+
+    try {
+        await SeoService.generateExamSeoPages(examId);
+    } catch (e) {
+        logger.error(`Failed to auto-generate SEO pages for ${examId}:`, e);
+    }
 
     try {
         await notificationQueue.enqueueNewExamNotification(examId);

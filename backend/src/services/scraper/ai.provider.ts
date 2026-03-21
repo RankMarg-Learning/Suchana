@@ -6,7 +6,6 @@ import {
     EXAM_CATEGORIES,
     EXAM_LEVELS,
     LIFECYCLE_STAGES,
-    LIFECYCLE_EVENT_TYPES,
 } from '../../constants/enums';
 
 export class AIProvider {
@@ -74,7 +73,6 @@ placeholder event with:
   - startsAt: null
   - endsAt: null
   - title: "<Stage Name> (To Be Announced)"
-  - isImportant: true (for REGISTRATION, EXAM, RESULT) | false (for NOTIFICATION, ADMIT_CARD)
 Do NOT silently drop any mandatory stage. Do NOT add TBD placeholders for optional stages.
 
 ──────────────────────────────────────
@@ -100,16 +98,16 @@ For each individual phase, create SEPARATE events for:
   ✓ RESULT      (one per phase, labeled "Tier 1 Result", "Tier 2 Result", etc.)
 
 Example for SSC CGL (2-tier):
-  stageOrder=10  → Notification (RELEASE)
-  stageOrder=20  → Registration (START, single event with open+close dates)
-  stageOrder=30  → Tier 1 Admit Card (RELEASE)
-  stageOrder=40  → Tier 1 Exam (START, with date range if multi-day)
-  stageOrder=50  → Tier 1 Answer Key (RELEASE) — only if data present
-  stageOrder=60  → Tier 1 Result (RELEASE)
-  stageOrder=130 → Tier 2 Admit Card (RELEASE)
-  stageOrder=140 → Tier 2 Exam (START, with date range if multi-day)
-  stageOrder=150 → Tier 2 Answer Key (RELEASE) — only if data present
-  stageOrder=160 → Tier 2 Result (RELEASE)
+  stageOrder=10  → Notification
+  stageOrder=20  → Registration (single event with open+close dates)
+  stageOrder=30  → Tier 1 Admit Card
+  stageOrder=40  → Tier 1 Exam (with date range if multi-day)
+  stageOrder=50  → Tier 1 Answer Key — only if data present
+  stageOrder=60  → Tier 1 Result
+  stageOrder=130 → Tier 2 Admit Card
+  stageOrder=140 → Tier 2 Exam (with date range if multi-day)
+  stageOrder=150 → Tier 2 Answer Key — only if data present
+  stageOrder=160 → Tier 2 Result
 
 Label each event title with the phase name to prevent ambiguity.
 
@@ -117,36 +115,26 @@ Label each event title with the phase name to prevent ambiguity.
 RULE 3 — PER-STAGE EXTRACTION GUIDE
 ──────────────────────────────────────
 NOTIFICATION (stageOrder=10):
-  - eventType: RELEASE
-  - isImportant: true
   - Capture the date the official notification/advertisement was published.
   - startsAt = notification release date, endsAt = null
   - actionUrl = notificationUrl if available
   - actionLabel = "View Notification"
 
 REGISTRATION (stageOrder=20):
-  - eventType: START
-  - isImportant: true
   - Build ONE consolidated event: startsAt = registration open date, endsAt = registration close/last date.
   - If only one date is present, put it in startsAt and set endsAt = null.
-  - NEVER create two separate START and END events for registration.
+  - NEVER create two separate events for registration.
   - actionLabel = "Apply Now" or "Register"
 
 ADMIT_CARD (stageOrder=30):
-  - eventType: RELEASE
-  - isImportant: true
   - startsAt = admit card release date
   - actionLabel = "Download Admit Card"
 
 EXAM (stageOrder=40):
-  - eventType: START
-  - isImportant: true
   - If exam spans multiple days, startsAt = first day, endsAt = last day.
   - For multi-shift exams, capture the date range.
 
 ANSWER_KEY (stageOrder=50 for Phase 1, +100 per phase):
-  - eventType: RELEASE
-  - isImportant: false
   - startsAt = answer key release date
   - actionLabel = "View Answer Key"
   *** OPTIONAL — Only include this event if the source text explicitly mentions answer key
@@ -154,19 +142,13 @@ ANSWER_KEY (stageOrder=50 for Phase 1, +100 per phase):
       Do NOT create a TBD placeholder for ANSWER_KEY. ***
 
 RESULT (stageOrder=60):
-  - eventType: RELEASE
-  - isImportant: true
   - startsAt = result declaration date
   - actionLabel = "Check Result"
 
 DOCUMENT_VERIFICATION (stageOrder=70):
-  - eventType: START
-  - isImportant: false
   - Capture dates if available, else TBD placeholder.
 
 JOINING (stageOrder=80):
-  - eventType: START
-  - isImportant: false
   - Capture joining/appointment dates if available, else TBD placeholder.
 
 ──────────────────────────────────────
@@ -191,7 +173,6 @@ RULE 6 — ENUM VALIDATION (STRICT)
 - category: must be one of [${EXAM_CATEGORIES.join(', ')}]
 - examLevel: must be one of [${EXAM_LEVELS.join(', ')}]
 - stage: must be one of [${LIFECYCLE_STAGES.join(', ')}]
-- eventType: must be one of [${LIFECYCLE_EVENT_TYPES.join(', ')}]
 
 ──────────────────────────────────────
 RULE 7 — FORMATTING
@@ -233,8 +214,7 @@ OUTPUT: Return JSON MATCHING THIS EXACT SCHEMA (no extra keys, no markdown fence
   "examLevel": "string (NATIONAL|STATE|DISTRICT) | null",
   "state": "string (State name if applicable) | null",
   "examYear": "number | null",
-  "minAge": "number | null",
-  "maxAge": "number | null",
+  "age": "string (markdown, e.g., **18 - 32 years** as on 01.01.2024) | null",
   "totalVacancies": "string (markdown) | null",
   "applicationFee": "string (markdown) | null",
   "qualificationCriteria": "string (markdown) | null",
@@ -247,14 +227,12 @@ OUTPUT: Return JSON MATCHING THIS EXACT SCHEMA (no extra keys, no markdown fence
   "events": [
     {
       "stage": "string (From Enum: NOTIFICATION|REGISTRATION|ADMIT_CARD|EXAM|ANSWER_KEY|RESULT|DOCUMENT_VERIFICATION|JOINING)",
-      "eventType": "string (From Enum: RELEASE|START|END|CORRECTION|RESCHEDULED|CANCELLED|OTHER)",
       "stageOrder": "number (see stage order table above, apply phase offset for multi-phase exams)",
       "title": "string (Descriptive event title, include phase/tier name for multi-phase exams)",
       "description": "string (markdown, include any relevant details, dates, shifts, centres) | null",
       "startsAt": "string (ISO8601) | null",
       "endsAt": "string (ISO8601) | null",
       "isTBD": "boolean (true if date is TBD or this is a mandatory placeholder)",
-      "isImportant": "boolean",
       "actionUrl": "string (url) | null",
       "actionLabel": "string (e.g. Apply Now, Download Admit Card, Check Result) | null"
     }

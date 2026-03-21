@@ -13,8 +13,7 @@ export interface AiStructuredExam {
     examLevel?: string;
     state?: string;
     examYear?: number;
-    minAge?: number;
-    maxAge?: number;
+    age?: string;
     qualificationCriteria?: Record<string, unknown>;
     totalVacancies?: any;
     applicationFee?: Record<string, unknown>;
@@ -29,14 +28,12 @@ export interface AiStructuredExam {
 
 export interface AiStructuredEvent {
     stage: string;
-    eventType: string;
     stageOrder?: number;
     title: string;
     description?: string;
     startsAt?: Date;
     endsAt?: Date;
     isTBD?: boolean;
-    isImportant?: boolean;
     actionUrl?: string;
     actionLabel?: string;
 }
@@ -170,8 +167,7 @@ export async function checkAndStage(
             category: exam.category,
             examLevel: exam.examLevel,
             state: exam.state,
-            minAge: exam.minAge,
-            maxAge: exam.maxAge,
+            age: exam.age,
             qualificationCriteria: exam.qualificationCriteria as never,
             totalVacancies: exam.totalVacancies,
             applicationFee: exam.applicationFee as never,
@@ -189,14 +185,12 @@ export async function checkAndStage(
             stagedEvents: {
                 create: (exam.events ?? []).map((ev, i) => ({
                     stage: ev.stage,
-                    eventType: ev.eventType,
                     stageOrder: ev.stageOrder ?? (i + 1) * 10,
                     title: ev.title,
                     description: ev.description,
                     startsAt: ev.startsAt,
                     endsAt: ev.endsAt,
                     isTBD: ev.isTBD ?? false,
-                    isImportant: ev.isImportant ?? false,
                     actionUrl: ev.actionUrl,
                     actionLabel: ev.actionLabel,
                 })),

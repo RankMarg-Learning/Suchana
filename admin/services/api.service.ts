@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 import { API_CONFIG } from '../config/api.config';
-import { ExamCategory, ExamLevel, ExamStatus, LifecycleEventType, LifecycleStage } from '../constants/enums';
+import { ExamCategory, ExamLevel, ExamStatus, LifecycleStage } from '../constants/enums';
 
 const apiClient = axios.create({
     baseURL: API_CONFIG.BASE_URL,
@@ -22,8 +22,7 @@ export interface Exam {
     examLevel: ExamLevel;
     state?: string;
     conductingBody: string;
-    minAge?: number;
-    maxAge?: number;
+    age?: string;
     qualificationCriteria?: string;
     totalVacancies?: string;
     applicationFee?: string;
@@ -38,7 +37,6 @@ export interface Exam {
 export interface LifecycleEvent {
     id: string;
     examId: string;
-    eventType: LifecycleEventType;
     stage: LifecycleStage;
     stageOrder: number;
     title: string;
@@ -46,7 +44,6 @@ export interface LifecycleEvent {
     startsAt?: string;
     endsAt?: string;
     isTBD: boolean;
-    isImportant: boolean;
     actionUrl?: string;
     actionLabel?: string;
 }
@@ -82,14 +79,12 @@ export interface StagedEvent {
     id: string;
     stagedExamId: string;
     stage: string;
-    eventType: string;
     stageOrder: number;
     title: string;
     description?: string;
     startsAt?: string;
     endsAt?: string;
     isTBD: boolean;
-    isImportant: boolean;
     actionUrl?: string;
     actionLabel?: string;
 }
@@ -106,8 +101,7 @@ export interface StagedExam {
     category?: string;
     examLevel?: string;
     state?: string;
-    minAge?: number;
-    maxAge?: number;
+    age?: string;
     totalVacancies?: string;
     applicationFee?: string;
     qualificationCriteria?: string;

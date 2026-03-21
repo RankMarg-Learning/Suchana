@@ -35,7 +35,6 @@ import {
   EXAM_LEVELS,
   EXAM_STATUSES,
   LIFECYCLE_STAGES,
-  LIFECYCLE_EVENT_TYPES,
   STAGE_ORDER_MAP
 } from '@/constants/enums';
 
@@ -65,8 +64,7 @@ export default function ExamDetailScreen() {
   const [examLevel, setExamLevel] = useState('');
   const [examStatus, setExamStatus] = useState('');
   const [state, setState] = useState('');
-  const [minAge, setMinAge] = useState('');
-  const [maxAge, setMaxAge] = useState('');
+  const [age, setAge] = useState('');
   const [totalVacancies, setTotalVacancies] = useState('');
   const [qualificationCriteria, setQualificationCriteria] = useState('');
   const [applicationFee, setApplicationFee] = useState('');
@@ -95,7 +93,6 @@ export default function ExamDetailScreen() {
   // Event Edit Helper States
   const [activeEvent, setActiveEvent] = useState<LifecycleEvent | null>(null);
   const [eventStageModal, setEventStageModal] = useState(false);
-  const [eventTypeModal, setEventTypeModal] = useState(false);
   const [eventTitleModal, setEventTitleModal] = useState(false);
   const [eventOrderModal, setEventOrderModal] = useState(false);
   const [eventDescriptionModal, setEventDescriptionModal] = useState(false);
@@ -120,8 +117,7 @@ export default function ExamDetailScreen() {
       setExamLevel(e.examLevel ?? '');
       setExamStatus(e.status ?? '');
       setState(e.state ?? '');
-      setMinAge(e.minAge?.toString() ?? '');
-      setMaxAge(e.maxAge?.toString() ?? '');
+      setAge(e.age ?? '');
       setTotalVacancies(e.totalVacancies ?? '');
       setQualificationCriteria(e.qualificationCriteria ?? '');
       setApplicationFee(e.applicationFee ?? '');
@@ -364,7 +360,6 @@ export default function ExamDetailScreen() {
                     onUpdate={handleEventUpdate}
                     onDelete={handleEventDelete}
                     onOpenStageModal={(e) => { setActiveEvent(e as any); setEventStageModal(true); }}
-                    onOpenTypeModal={(e) => { setActiveEvent(e as any); setEventTypeModal(true); }}
                     onOpenTitleModal={(e) => { setActiveEvent(e as any); setEventTitleModal(true); }}
                     onOpenDateModal={(e, type) => { setActiveEvent(e as any); setEventDateModal({ open: true, type }); }}
                     onOpenOrderModal={(e) => { setActiveEvent(e as any); setEventOrderModal(true); }}
@@ -408,14 +403,7 @@ export default function ExamDetailScreen() {
           </StagedSection>
 
           <StagedSection title="Eligibility Matrix" icon={ShieldCheck}>
-            <View style={{ flexDirection: 'row' }}>
-              <View style={{ flex: 1 }}>
-                <StagedField label="Minimum Age" value={minAge} onEdit={() => setEditField({ key: 'minAge', title: 'Age Limit (Lower)', value: minAge, numeric: true })} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <StagedField label="Maximum Age" value={maxAge} onEdit={() => setEditField({ key: 'maxAge', title: 'Age Limit (Upper)', value: maxAge, numeric: true })} />
-              </View>
-            </View>
+            <StagedField label="Age Limit" value={age} onEdit={() => setEditField({ key: 'age', title: 'Age Limit', value: age })} />
             <StagedField label="Total Openings" value={totalVacancies} multiline onEdit={() => setEditField({ key: 'totalVacancies', title: 'Vacancy Count', value: totalVacancies, multiline: true })} />
             <StagedField label="Educational Criteria" value={qualificationCriteria} multiline onEdit={() => setEditField({ key: 'qualificationCriteria', title: 'Eligibility Criteria', value: qualificationCriteria, multiline: true })} />
             <StagedField label="Pay Scale / Grade" value={salary} multiline onEdit={() => setEditField({ key: 'salary', title: 'Salary Details', value: salary, multiline: true })} />
@@ -489,7 +477,7 @@ export default function ExamDetailScreen() {
           onSave={async (v) => {
             if (!editField) return;
             const k = editField.key;
-            await handleUpdateField(k, editField.numeric ? parseInt(v) : v);
+            await handleUpdateField(k, v);
             if (k === 'title') setTitle(v);
             else if (k === 'shortTitle') setShortTitle(v);
             else if (k === 'conductingBody') setConductingBody(v);
@@ -501,8 +489,7 @@ export default function ExamDetailScreen() {
             else if (k === 'officialWebsite') setOfficialWebsite(v);
             else if (k === 'notificationUrl') setNotificationUrl(v);
             else if (k === 'description') setDescription(v);
-            else if (k === 'minAge') setMinAge(v);
-            else if (k === 'maxAge') setMaxAge(v);
+            else if (k === 'age') setAge(v);
           }}
           onClose={() => setEditField(null)}
         />
@@ -533,14 +520,6 @@ export default function ExamDetailScreen() {
         selected={activeEvent?.stage}
         onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { stage: v, stageOrder: STAGE_ORDER_MAP[v as keyof typeof STAGE_ORDER_MAP] ?? activeEvent.stageOrder })}
         onClose={() => setEventStageModal(false)}
-      />
-      <ChipModal
-        visible={eventTypeModal}
-        title="Type"
-        options={LIFECYCLE_EVENT_TYPES}
-        selected={activeEvent?.eventType}
-        onSelect={(v) => activeEvent && handleEventUpdate(activeEvent.id, { eventType: v })}
-        onClose={() => setEventTypeModal(false)}
       />
       {activeEvent && (
         <TextEditModal

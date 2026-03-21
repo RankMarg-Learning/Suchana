@@ -1,4 +1,4 @@
-import { Exam, LifecycleEvent } from "./types";
+import { Exam, LifecycleEvent, SeoPage } from "./types";
 
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
@@ -20,8 +20,7 @@ export const MOCK_EXAMS: Exam[] = [
     examLevel: "NATIONAL",
     totalVacancies: "1056",
     applicationFee: "General: ₹100, SC/ST/Female: Exempt",
-    minAge: 21,
-    maxAge: 32,
+    age: "21 - 32 years",
     officialWebsite: "https://upsc.gov.in",
     notificationUrl: "https://upsc.gov.in/notifications",
     description:
@@ -45,8 +44,7 @@ export const MOCK_EXAMS: Exam[] = [
     examLevel: "NATIONAL",
     totalVacancies: "17727",
     applicationFee: "General: ₹100, SC/ST/Female: Exempt",
-    minAge: 18,
-    maxAge: 30,
+    age: "18 - 30 years",
     officialWebsite: "https://ssc.gov.in",
     notificationUrl: "https://ssc.gov.in/notice",
     description:
@@ -70,8 +68,7 @@ export const MOCK_EXAMS: Exam[] = [
     examLevel: "NATIONAL",
     totalVacancies: "11558",
     applicationFee: "General: ₹500, SC/ST/Female/ExSM: ₹250",
-    minAge: 18,
-    maxAge: 33,
+    age: "18 - 33 years",
     officialWebsite: "https://indianrailways.gov.in",
     notificationUrl: "https://rrbcdg.gov.in/",
     description:
@@ -95,8 +92,7 @@ export const MOCK_EXAMS: Exam[] = [
     examLevel: "NATIONAL",
     totalVacancies: "4455",
     applicationFee: "General: ₹850, SC/ST: ₹175",
-    minAge: 20,
-    maxAge: 30,
+    age: "20 - 30 years",
     officialWebsite: "https://ibps.in",
     notificationUrl: "https://ibps.in/crp-po-mt-xiv/",
     description:
@@ -121,8 +117,7 @@ export const MOCK_EXAMS: Exam[] = [
     state: "Maharashtra",
     totalVacancies: "824",
     applicationFee: "General: ₹724, SC/ST: ₹324",
-    minAge: 19,
-    maxAge: 38,
+    age: "19 - 38 years",
     officialWebsite: "https://mpsc.gov.in",
     notificationUrl: "https://mpsc.gov.in/notifications",
     description:
@@ -144,8 +139,7 @@ export const MOCK_EXAMS: Exam[] = [
     examLevel: "NATIONAL",
     totalVacancies: "102",
     applicationFee: "General: ₹800, SC/ST/PWD: ₹150",
-    minAge: 21,
-    maxAge: 30,
+    age: "21 - 30 years",
     officialWebsite: "https://nabard.org",
     notificationUrl: "https://nabard.org/recruitment",
     description:
@@ -168,8 +162,7 @@ export const MOCK_EXAMS: Exam[] = [
     examLevel: "NATIONAL",
     totalVacancies: "400",
     applicationFee: "General: ₹100, SC/ST/Female: Exempt",
-    minAge: 16,
-    maxAge: 19,
+    age: "16.5 - 19.5 years",
     officialWebsite: "https://upsc.gov.in",
     notificationUrl: "https://upsc.gov.in/notifications",
     description:
@@ -191,8 +184,7 @@ export const MOCK_EXAMS: Exam[] = [
     examLevel: "NATIONAL",
     totalVacancies: "TBA",
     applicationFee: "General: ₹1000, SC/ST/PH: ₹500",
-    minAge: 21,
-    maxAge: undefined,
+    age: "Above 21 years",
     officialWebsite: "https://ctet.nic.in",
     notificationUrl: "https://ctet.nic.in",
     description:
@@ -245,6 +237,62 @@ export async function fetchExamBySlug(slug: string): Promise<Exam | null> {
     return MOCK_EXAMS.find((e) => e.slug === slug) ?? null;
   }
 }
+
+// ─── SEO Pages API ────────────────────────────────────────────────────────────
+
+export const MOCK_SEO_PAGES: SeoPage[] = [
+  {
+    id: "s1",
+    slug: "about-us",
+    title: "About Exam Suchana",
+    metaTitle: "About Us | Exam Suchana - Government Exam Tracker",
+    metaDescription: "Learn more about Exam Suchana, India's most reliable government exam tracking platform.",
+    content: "# About Exam Suchana\n\nExam Suchana is dedicated to providing real-time updates for all government exams in India.",
+    keywords: ["about exam suchana", "government exam tracker", "sarkari naukri updates"],
+    isPublished: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    id: "s2",
+    slug: "contact-us",
+    title: "Contact Us",
+    metaTitle: "Contact Us | Get in Touch with Exam Suchana",
+    metaDescription: "Have questions? Contact the Exam Suchana team for support and inquiries.",
+    content: "# Contact Us\n\nYou can reach us at contact@examsuchana.in",
+    keywords: ["contact exam suchana", "support", "help"],
+    isPublished: true,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+];
+
+export async function fetchSeoPageBySlug(slug: string): Promise<SeoPage | null> {
+  try {
+    const res = await fetch(`${API_BASE}/seo-pages/${slug}`, {
+      next: { revalidate: 3600 }, // ISR: 1 hour
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    return json.data ?? json;
+  } catch {
+    return MOCK_SEO_PAGES.find((p) => p.slug === slug) ?? null;
+  }
+}
+
+export async function fetchAllSeoPageSlugs(): Promise<string[]> {
+  try {
+    const res = await fetch(`${API_BASE}/seo-pages?limit=1000&fields=slug`, {
+      next: { revalidate: 86400 }, // Cache for 1 day
+    });
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    return ((data.data ?? data.seoPages) ?? []).map((p: SeoPage) => p.slug);
+  } catch {
+    return MOCK_SEO_PAGES.map((p) => p.slug);
+  }
+}
+
 
 export async function fetchAllExamSlugs(): Promise<string[]> {
   try {

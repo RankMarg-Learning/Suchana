@@ -11,28 +11,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { lifecycleService, scraperService } from '@/services/api.service';
 import { 
-  LifecycleEventType, 
-  LIFECYCLE_EVENT_TYPES, 
   LifecycleStage, 
   LIFECYCLE_STAGES, 
   STAGE_ORDER_MAP 
 } from '@/constants/enums';
 
 type EventFormValues = {
-  eventType: LifecycleEventType;
   stage: LifecycleStage;
   title: string;
   description: string;
   startsAt: string;
   endsAt: string;
   isTBD: boolean;
-  isImportant: boolean;
   actionUrl: string;
   actionLabel: string;
   stageOrder: string;
 };
 
-const EVENT_TYPES = LIFECYCLE_EVENT_TYPES;
 const STAGES = LIFECYCLE_STAGES;
 
 export default function AddEventScreen() {
@@ -58,9 +53,7 @@ export default function AddEventScreen() {
 
   const { control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EventFormValues>({
     defaultValues: {
-      eventType: LifecycleEventType.OTHER,
       stage: LifecycleStage.NOTIFICATION,
-      isImportant: false,
       isTBD: false,
       startsAt: new Date().toISOString().slice(0, 16),
       endsAt: '',
@@ -95,12 +88,10 @@ export default function AddEventScreen() {
         reset({
           title: event.title,
           stage: event.stage as LifecycleStage,
-          eventType: event.eventType as LifecycleEventType,
           description: event.description || '',
           startsAt: event.startsAt ? new Date(event.startsAt).toISOString().slice(0, 16) : '',
           endsAt: event.endsAt ? new Date(event.endsAt).toISOString().slice(0, 16) : '',
           isTBD: event.isTBD,
-          isImportant: event.isImportant || false,
           actionUrl: event.actionUrl || '',
           actionLabel: event.actionLabel || 'Apply Now',
           stageOrder: event.stageOrder?.toString() || '0',
@@ -118,9 +109,8 @@ export default function AddEventScreen() {
   // Auto-suggest action label based on stage & eventType
   useEffect(() => {
     const subscription = watch((value, { name }) => {
-      if (name === 'stage' || name === 'eventType') {
+      if (name === 'stage') {
         const s = value.stage;
-        const et = value.eventType;
         let suggested = '';
         
         switch (s) {
@@ -128,7 +118,7 @@ export default function AddEventScreen() {
             suggested = 'View Notification';
             break;
           case LifecycleStage.REGISTRATION:
-            suggested = et === LifecycleEventType.CORRECTION ? 'Correction Window' : 'Apply Online';
+            suggested = 'Apply Online';
             break;
           case LifecycleStage.ADMIT_CARD:
             suggested = 'Download Admit Card';
@@ -164,13 +154,11 @@ export default function AddEventScreen() {
       setLoading(true);
       const payload = {
         stage: data.stage,
-        eventType: data.eventType,
         title: data.title?.trim(),
         description: data.description?.trim() || null,
         startsAt: data.isTBD || !data.startsAt ? null : new Date(data.startsAt).toISOString(),
         endsAt: data.isTBD || !data.endsAt ? null : new Date(data.endsAt).toISOString(),
         isTBD: data.isTBD,
-        isImportant: data.isImportant,
         actionUrl: data.actionUrl?.trim() || null,
         actionLabel: data.actionLabel?.trim() || null,
         stageOrder: data.stageOrder ? parseInt(data.stageOrder, 10) : (STAGE_ORDER_MAP[data.stage] || 0),
@@ -251,26 +239,6 @@ export default function AddEventScreen() {
               )}
             />
 
-            <Text style={styles.label}>Event Type *</Text>
-            <Controller
-              control={control}
-              name="eventType"
-              render={({ field: { onChange, value } }) => (
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipScroll}>
-                  {EVENT_TYPES.map(type => (
-                    <TouchableOpacity
-                      key={type}
-                      style={[styles.chip, value === type && styles.chipActive]}
-                      onPress={() => onChange(type)}
-                    >
-                      <Text style={[styles.chipText, value === type && styles.chipTextActive]}>
-                        {type.replace(/_/g, ' ')}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              )}
-            />
 
             <Text style={styles.label}>Title *</Text>
             <Controller
@@ -306,19 +274,6 @@ export default function AddEventScreen() {
               />
             </View>
 
-            <View style={styles.switchBox}>
-              <View style={styles.switchInfo}>
-                <Text style={styles.switchTitle}>Star Mark</Text>
-                <Text style={styles.switchSubtitle}>Highlight in the timeline</Text>
-              </View>
-              <Controller
-                control={control}
-                name="isImportant"
-                render={({ field: { onChange, value } }) => (
-                  <Switch value={value} onValueChange={onChange} trackColor={{ true: '#FCD34D' }} thumbColor={value ? '#F59E0B' : '#F3F4F6'} />
-                )}
-              />
-            </View>
 
             {!isTBD && (
               <View style={styles.row}>

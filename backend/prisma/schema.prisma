@@ -69,8 +69,7 @@ model StagedExam {
   examLevel String?
   state     String?
 
-  minAge                Int?
-  maxAge                Int?
+  age                   String?
   qualificationCriteria String?
 
   totalVacancies    String?
@@ -126,7 +125,6 @@ model StagedLifecycleEvent {
   id           String @id @default(cuid())
   stagedExamId String
   stage        String
-  eventType    String
   stageOrder   Int    @default(0)
 
   title       String
@@ -134,8 +132,6 @@ model StagedLifecycleEvent {
   startsAt    DateTime?
   endsAt      DateTime?
   isTBD       Boolean   @default(false)
-
-  isImportant Boolean @default(false)
 
   actionUrl   String?
   actionLabel String?
@@ -162,8 +158,7 @@ model Exam {
   examLevel String  @default("NATIONAL")
   state     String?
 
-  minAge                Int?
-  maxAge                Int?
+  age                   String?
   qualificationCriteria String?
   totalVacancies        String?
   applicationFee        String?
@@ -185,6 +180,7 @@ model Exam {
   updatedAt DateTime @updatedAt
 
   lifecycleEvents LifecycleEvent[]
+  seoPages        SeoPage[]
 
   @@index([category])
   @@index([examLevel])
@@ -198,7 +194,6 @@ model LifecycleEvent {
   id        String @id @default(cuid())
   examId    String
   stage     String
-  eventType String
 
   stageOrder Int @default(0) // Use gaps of 10 so new events can be inserted between without renumbering.
 
@@ -209,8 +204,6 @@ model LifecycleEvent {
   endsAt   DateTime?
 
   isTBD Boolean @default(false)
-
-  isImportant Boolean @default(false)
 
   actionUrl   String?
   actionLabel String?
@@ -228,9 +221,6 @@ model LifecycleEvent {
   notifications NotificationLog[]
 
   @@index([examId, stageOrder])
-  @@index([examId, isImportant])
-  @@index([notificationSent, startsAt])
-  @@index([eventType])
 }
 
 model PushToken {
@@ -331,3 +321,27 @@ model HomeBanner {
 
   @@index([isActive, priority])
 }
+
+model SeoPage {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  metaTitle       String?
+  metaDescription String?
+  content         String   @db.Text
+  keywords        String[] @default([])
+  ogImage         String?
+  canonicalUrl    String?
+  isPublished     Boolean  @default(true)
+  category        String?
+  exam            Exam?    @relation(fields: [examId], references: [id])
+  examId          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isPublished])
+  @@index([category])
+  @@index([examId])
+}
+

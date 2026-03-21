@@ -27,8 +27,7 @@ type ExamFormValues = {
   examLevel: ExamLevel;
   state: string;
   description: string;
-  minAge: string;
-  maxAge: string;
+  age: string;
   qualificationLevel: QualificationLevel;
   qualificationCriteria: string;
   totalVacancies: string;
@@ -120,8 +119,7 @@ export default function CreateExamScreen() {
       shortTitle: '',
       conductingBody: '',
       description: '',
-      minAge: '',
-      maxAge: '',
+      age: '',
       qualificationLevel: QualificationLevel.GRADUATE,
       qualificationCriteria: '',
       totalVacancies: '',
@@ -159,8 +157,7 @@ export default function CreateExamScreen() {
         category: data.category || ExamCategory.OTHER,
         status: data.status || ExamStatus.NOTIFICATION,
         state: data.state || '',
-        minAge: data.minAge?.toString() || '',
-        maxAge: data.maxAge?.toString() || '',
+        age: data.age || '',
         totalVacancies: safeString(data.totalVacancies),
         salary: safeString(data.salary),
         additionalDetails: safeString(data.additionalDetails),
@@ -188,8 +185,7 @@ export default function CreateExamScreen() {
         examLevel: data.examLevel,
         status: data.status,
         state: data.examLevel === ExamLevel.STATE ? data.state?.trim() : null,
-        minAge: (data.minAge && data.minAge.trim()) ? parseInt(data.minAge, 10) : null,
-        maxAge: (data.maxAge && data.maxAge.trim()) ? parseInt(data.maxAge, 10) : null,
+        age: data.age?.trim() || null,
         qualificationCriteria: data.qualificationCriteria?.trim() || null,
         totalVacancies: data.totalVacancies?.trim() || null,
         salary: data.salary?.trim() || null,
@@ -418,42 +414,20 @@ export default function CreateExamScreen() {
           <View style={styles.card}>
             <Text style={styles.sectionTitle}>Eligibility & Vacancy</Text>
 
-            <View style={styles.row}>
-              <View style={{ flex: 1, marginRight: 8 }}>
-                <Text style={styles.label}>Min Age</Text>
-                <Controller
-                  control={control}
-                  name="minAge"
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      keyboardType="numeric"
-                      placeholder="18"
-                      placeholderTextColor="#9CA3AF"
-                      onChangeText={onChange}
-                      value={value}
-                    />
-                  )}
+            <Text style={styles.label}>Age Limit (e.g. 18 - 32 years)</Text>
+            <Controller
+              control={control}
+              name="age"
+              render={({ field: { onChange, value } }) => (
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. 18 - 32 years"
+                  placeholderTextColor="#9CA3AF"
+                  onChangeText={onChange}
+                  value={value}
                 />
-              </View>
-              <View style={{ flex: 1, marginLeft: 8 }}>
-                <Text style={styles.label}>Max Age</Text>
-                <Controller
-                  control={control}
-                  name="maxAge"
-                  render={({ field: { onChange, value } }) => (
-                    <TextInput
-                      style={styles.input}
-                      keyboardType="numeric"
-                      placeholder="35"
-                      placeholderTextColor="#9CA3AF"
-                      onChangeText={onChange}
-                      value={value}
-                    />
-                  )}
-                />
-              </View>
-            </View>
+              )}
+            />
 
             <Text style={styles.label}>Qualification *</Text>
             <Controller

@@ -6,11 +6,9 @@ export interface LifecycleEvent {
   stageOrder: number;
   label?: string;
   title?: string;
-  eventType?: string;
   startsAt?: string;
   endsAt?: string;
   isTBD?: boolean;
-  isImportant?: boolean;
   actionUrl?: string;
   actionLabel?: string;
   notes?: string;
@@ -31,13 +29,30 @@ export interface Exam {
   qualificationCriteria?: string;
   salary?: string;
   additionalDetails?: string;
-  minAge?: number;
-  maxAge?: number;
+  age?: string;
   officialWebsite?: string;
   notificationUrl?: string;
   description?: string;
   lifecycleEvents?: LifecycleEvent[];
 }
+
+export interface SeoPage {
+  id: string;
+  slug: string;
+  title: string;
+  metaTitle?: string;
+  metaDescription?: string;
+  content: string;
+  keywords?: string[];
+  ogImage?: string;
+  canonicalUrl?: string;
+  isPublished: boolean;
+  category?: string;
+  exam?: Exam;
+  createdAt: string;
+  updatedAt: string;
+}
+
 
 export const STATUS_LABELS: Record<string, string> = {
   NOTIFICATION: "Notification",
