@@ -141,7 +141,6 @@ export default function ExamDetailScreen() {
       })}`
       : '';
 
-    const vacancies = exam.totalVacancies || 'Check Details';
 
     const message =
       `🏛️ *${exam.title}*\n` +
