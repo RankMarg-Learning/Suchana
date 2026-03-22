@@ -1,7 +1,3 @@
-// ============================================================
-// src/scraper-test.ts  — Quick scraper test for freejobalert.com
-// Run: npx ts-node src/scraper-test.ts
-// ============================================================
 import * as cheerio from 'cheerio';
 
 const BASE_URL = 'https://www.freejobalert.com';
@@ -21,33 +17,6 @@ async function fetchHtml(url: string): Promise<string> {
     return res.text();
 }
 
-async function testLatestJobs() {
-    console.log('\n━━━ TEST 1: Latest Jobs ━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    const html = await fetchHtml(BASE_URL);
-    const $ = cheerio.load(html);
-
-    const jobs: { title: string; href: string }[] = [];
-
-    $('h2 a, .entry-title a, table a').each((_, el) => {
-        if (jobs.length >= 15) return;
-        const title = $(el).text().trim();
-        const href = $(el).attr('href') ?? '';
-        if (title && href.startsWith('http')) {
-            jobs.push({ title, href });
-        }
-    });
-
-    if (jobs.length === 0) {
-        console.log('⚠️  No jobs found — selectors may need adjustment');
-    } else {
-        console.log(`✅  Found ${jobs.length} job entries:\n`);
-        jobs.forEach((j, i) => console.log(`  ${i + 1}. ${j.title}\n     ${j.href}`));
-    }
-
-    return jobs;
-}
-
-// ─── Test 2: Scrape a single job detail page ─────────────────
 async function testJobDetail(url: string) {
     console.log(`\n━━━ TEST 2: Job Detail Page ━━━━━━━━━━━━━━━━━━━━━━━`);
     console.log(`  URL: ${url}\n`);

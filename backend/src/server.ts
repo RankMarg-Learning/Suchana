@@ -49,7 +49,6 @@ async function bootstrap(): Promise<void> {
             }
         });
 
-        // Force shutdown after 10s
         setTimeout(() => {
             logger.error('Forced shutdown (timeout)');
             process.exit(1);

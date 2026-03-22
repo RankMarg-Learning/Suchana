@@ -34,6 +34,13 @@ export async function deactivateToken(token: string) {
     });
 }
 
+export async function deactivateUserTokens(userId: string) {
+    await prisma.pushToken.updateMany({
+        where: { userId },
+        data: { isActive: false, updatedAt: new Date() },
+    });
+}
+
 export async function getActiveTokensForBroadcast(): Promise<string[]> {
     const tokens = await prisma.pushToken.findMany({
         where: { isActive: true },

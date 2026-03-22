@@ -17,7 +17,7 @@ export interface NotificationJobData {
     examId?: string;
     examTitle?: string;
     eventTitle?: string;
-    eventType?: string; // Backwards compatibility if needed, but we use stage now
+    eventType?: string;
     stage?: string;
     startsAt?: Date | null;
     title?: string;
@@ -83,9 +83,9 @@ class NotificationQueueService {
     }
 
     async enqueueManualNotification(
-        examId: string, 
-        title: string, 
-        body: string, 
+        examId: string,
+        title: string,
+        body: string,
         targetAudience: 'BOOKMARKED' | 'INTERESTED' = 'BOOKMARKED'
     ): Promise<void> {
         await notificationBullQueue.add(

@@ -8,13 +8,12 @@ export const cronQueue = new Queue(CRON_QUEUE_NAME, {
     connection: bullRedisConnection,
     defaultJobOptions: {
         removeOnComplete: true,
-        removeOnFail: { age: 24 * 3600 } // Keep failed jobs for a day
+        removeOnFail: { age: 24 * 3600 }
     }
 });
 
 export const setupRepeatableJobs = async () => {
-    // Add exam status update job (every 4 hours)
-    // 0 */4 * * * -> At minute 0 past every 4th hour
+
     await cronQueue.add(
         'update-exam-statuses',
         {},
@@ -23,6 +22,6 @@ export const setupRepeatableJobs = async () => {
             jobId: 'sync-exam-statuses-repeat'
         }
     );
-    
+
     logger.info('✅ Repeatable cron jobs scheduled (Exam Status Sync every 4h)');
 };

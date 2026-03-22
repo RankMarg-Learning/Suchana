@@ -6,7 +6,7 @@ const localhost = debuggerHost?.split(':').shift() || 'localhost';
 
 const LOCALHOST = Platform.OS === 'android' && !debuggerHost ? '10.0.2.2' : localhost;
 
-export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || `https://api.examsuchana.in/api/v1`;
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || `http://${localhost}:3001/api/v1`;
 
 export const API = {
     EXAMS: `${BASE_URL}/exams`,

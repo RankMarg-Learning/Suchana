@@ -22,6 +22,8 @@ import { AdBanner } from '@/components/AdBanner';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
+import { SafeNotifications } from '@/services/notificationService';
+
 export default function ProfileScreen() {
   const { user, userId, refreshUser, logout } = useUser();
   const router = useRouter();
@@ -43,6 +45,14 @@ export default function ProfileScreen() {
       await updateUser(userId, {
         notificationsEnabled: notifications,
       });
+
+      if (notifications) {
+        await SafeNotifications.registerPushToken(userId);
+      } else {
+        const token = await SafeNotifications.getExpoPushTokenAsync();
+        if (token) await SafeNotifications.deactivatePushToken(token);
+      }
+
       await refreshUser();
       Alert.alert('Saved ✅', 'Your preferences have been updated!');
     } catch (_) {

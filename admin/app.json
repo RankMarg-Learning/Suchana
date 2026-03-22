@@ -17,7 +17,8 @@
         "foregroundImage": "./assets/app-icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.rankmarg.suchanaadmin"
     },
     "web": {
       "output": "static",
@@ -42,6 +43,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9d42f93e-07cf-40c4-90bf-cd481b552bb3"
+      }
     }
   }
 }
