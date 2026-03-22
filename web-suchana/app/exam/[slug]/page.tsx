@@ -34,36 +34,34 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
+  const year = new Date().getFullYear();
   const title = exam.shortTitle ?? exam.title;
   const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
   const vacancies = getTotalVacancies(exam.totalVacancies);
   const regEvent = exam.lifecycleEvents?.find((e) => e.stage === "REGISTRATION");
-  const deadline = regEvent?.endsAt ? `Registration closes ${formatDate(regEvent.endsAt)}.` : "";
+  const deadline = regEvent?.endsAt ? `Registration deadline ${formatDate(regEvent.endsAt)}.` : "";
 
+  const seoTitle = `${title} Recruitment ${year}: Apply Online, Full Schedule, Vacancies & Eligibility`;
   const description =
     exam.description
-      ? `${exam.description.slice(0, 140)} Status: ${statusLabel}. Vacancies: ${vacancies}. ${deadline} Track full timeline on Exam Suchana.`
-      : `${title} by ${exam.conductingBody}. Status: ${statusLabel}. ${vacancies !== "TBA" ? `${vacancies} vacancies.` : ""} ${deadline} Get registration dates, admit card & result notifications.`;
+      ? `${exam.description.slice(0, 140)}... Status: ${statusLabel}. Vacancies: ${vacancies}. ${deadline} Get real-time updates on Exam Suchana.`
+      : `${title} official notification by ${exam.conductingBody}. Status: ${statusLabel}. ${vacancies !== "TBA" ? `${vacancies} vacancies.` : ""} ${deadline} Check syllabus, result & admit card.`;
 
   const canonicalUrl = `${SITE_URL}/exam/${slug}`;
 
   return {
-    title: `${title} — ${statusLabel} | Dates, Vacancies & Timeline`,
+    title: seoTitle,
     description,
     keywords: [
       title,
       exam.conductingBody,
-      `${title} registration`,
-      `${title} admit card`,
-      `${title} result`,
-      `${title} exam date`,
-      `${title} notification`,
-      cleanLabel(exam.category),
-      cleanLabel(exam.examLevel),
-      exam.state ?? "",
-      "government exam 2025",
-      "sarkari naukri",
-      "exam timeline",
+      `${title} ${year}`,
+      `${title} apply online`,
+      `${title} admit card download`,
+      `${title} result date`,
+      `${title} syllabus pdf`,
+      "government jobs",
+      "sarkari results",
     ].filter(Boolean),
     alternates: {
       canonical: canonicalUrl,
@@ -71,7 +69,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       type: "article",
       url: canonicalUrl,
-      title: `${title} — Registration, Dates & Result | Exam Suchana`,
+      title: `${title} Recruitment ${year} — Check Full Timeline & Details`,
       description,
       locale: "en_IN",
       siteName: "Exam Suchana",
@@ -82,7 +80,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: `${title} — ${statusLabel}`,
+      title: `${title} — ${statusLabel} Updates`,
       description: `${vacancies} vacancies. ${deadline} Full timeline on Exam Suchana.`,
     },
   };
@@ -176,7 +174,62 @@ function buildBreadcrumbJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
   };
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
+  const faqs = [];
+
+  if (exam.qualificationCriteria) {
+    faqs.push({
+      "@type": "Question",
+      name: `What is the qualification for ${exam.shortTitle || exam.title}?`,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: exam.qualificationCriteria,
+      },
+    });
+  }
+
+  if (exam.age) {
+    faqs.push({
+      "@type": "Question",
+      name: `What is the age limit for ${exam.shortTitle || exam.title}?`,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: exam.age,
+      },
+    });
+  }
+
+  if (exam.salary) {
+    faqs.push({
+      "@type": "Question",
+      name: `What is the salary for ${exam.shortTitle || exam.title}?`,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: `The salary details for ${exam.title} are: ${exam.salary}`,
+      },
+    });
+  }
+
+  if (exam.totalVacancies) {
+    faqs.push({
+      "@type": "Question",
+      name: `How many vacancies are there in ${exam.shortTitle || exam.title}?`,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: `There are a total of ${exam.totalVacancies} vacancies announced for this recruitment.`,
+      },
+    });
+  }
+
+  if (faqs.length === 0) return null;
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs,
+  };
+}
+
 
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
@@ -187,10 +240,10 @@ export default async function ExamDetailPage({ params }: Props) {
   const jobPostingJsonLd = buildJobPostingJsonLd(exam);
   const eventJsonLd = buildEventJsonLd(exam);
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(exam);
+  const faqJsonLd = buildFaqJsonLd(exam);
 
   return (
     <>
-      {/* Structured Data */}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingJsonLd) }}
@@ -205,8 +258,13 @@ export default async function ExamDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
+      {faqJsonLd && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+        />
+      )}
 
-      {/* Client Component handles interactive UI */}
       <ExamDetailClient exam={exam} />
     </>
   );
