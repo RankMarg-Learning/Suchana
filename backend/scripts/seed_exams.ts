@@ -5,7 +5,6 @@ import {
     ExamLevel, 
     ExamStatus, 
     LifecycleStage, 
-    LifecycleEventType,
     QualificationLevel 
 } from '../src/constants/enums';
 import slugify from 'slugify';
@@ -15,8 +14,8 @@ const prisma = new PrismaClient();
 async function main() {
     console.log('Cleaning up existing exams and events...');
     // Caution: This deletes ALL exams. If you only want to add, comment these lines.
-    // await prisma.lifecycleEvent.deleteMany({});
-    // await prisma.exam.deleteMany({});
+    await prisma.lifecycleEvent.deleteMany({});
+    await prisma.exam.deleteMany({});
 
     console.log('Seeding 20 exams...');
 
@@ -26,19 +25,18 @@ async function main() {
             shortTitle: 'SSC CGL',
             conductingBody: 'Staff Selection Commission',
             category: ExamCategory.SSC,
-            status: ExamStatus.UPCOMING,
+            status: ExamStatus.NOTIFICATION,
             examLevel: ExamLevel.NATIONAL,
             description: 'Recruitment for various Group B and Group C posts in different Ministries/ Departments/ Organizations of the Government of India.',
             officialWebsite: 'https://ssc.nic.in',
-            minAge: 18,
-            maxAge: 32,
-            qualificationCriteria: { level: QualificationLevel.GRADUATE },
-            totalVacancies: { count: 17727 },
+            age: '18 - 32 years',
+            qualificationCriteria: "Graduate Degree in any discipline",
+            totalVacancies: "17727",
             stages: [
-                { stage: LifecycleStage.NOTIFICATION, type: LifecycleEventType.RELEASE, date: new Date('2024-06-24'), title: 'Notification Released' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-06-24'), title: 'Application Starts' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.END, date: new Date('2024-07-24'), title: 'Application Ends' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-09-01'), title: 'Tier I Exam Starts' }
+                { stage: LifecycleStage.NOTIFICATION, date: new Date('2024-06-24'), title: 'Notification Released' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-06-24'), title: 'Application Starts' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-07-24'), title: 'Application Ends' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-09-01'), title: 'Tier I Exam Starts' }
             ]
         },
         {
@@ -50,15 +48,14 @@ async function main() {
             examLevel: ExamLevel.NATIONAL,
             description: 'Premier competitive examination in India conducted by UPSC for recruitment to various Civil Services of the Government of India, including IAS, IPS, and IFS.',
             officialWebsite: 'https://upsc.gov.in',
-            minAge: 21,
-            maxAge: 32,
-            qualificationCriteria: { level: QualificationLevel.GRADUATE },
-            totalVacancies: { count: 1056 },
+            age: '21 - 32 years',
+            qualificationCriteria: "Graduate Degree in any discipline",
+            totalVacancies: "1056",
             stages: [
-                { stage: LifecycleStage.NOTIFICATION, type: LifecycleEventType.RELEASE, date: new Date('2024-02-14'), title: 'Official Notification' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-02-14'), title: 'Registration Start' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.END, date: new Date('2024-03-05'), title: 'Registration End' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-05-26'), title: 'Prelims Exam' }
+                { stage: LifecycleStage.NOTIFICATION, date: new Date('2024-02-14'), title: 'Official Notification' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-02-14'), title: 'Registration Start' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-03-05'), title: 'Registration End' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-05-26'), title: 'Prelims Exam' }
             ]
         },
         {
@@ -70,15 +67,14 @@ async function main() {
             examLevel: ExamLevel.NATIONAL,
             description: 'Recruitment for the post of Probationary Officers in State Bank of India.',
             officialWebsite: 'https://sbi.co.in/careers',
-            minAge: 21,
-            maxAge: 30,
-            qualificationCriteria: { level: QualificationLevel.GRADUATE },
-            totalVacancies: { count: 2000 },
+            age: '21 - 30 years',
+            qualificationCriteria: "Graduate Degree in any discipline",
+            totalVacancies: "2000",
             stages: [
-                { stage: LifecycleStage.NOTIFICATION, type: LifecycleEventType.RELEASE, date: new Date('2024-09-05'), title: 'Recruitment Notification' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-09-07'), title: 'Online Form Starts' },
-                { stage: LifecycleStage.ADMIT_CARD, type: LifecycleEventType.RELEASE, date: new Date('2024-11-01'), title: 'Prelims Admit Card Out' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-11-15'), title: 'Prelims Examination' }
+                { stage: LifecycleStage.NOTIFICATION, date: new Date('2024-09-05'), title: 'Recruitment Notification' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-09-07'), title: 'Online Form Starts' },
+                { stage: LifecycleStage.ADMIT_CARD, date: new Date('2024-11-01'), title: 'Prelims Admit Card Out' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-11-15'), title: 'Prelims Examination' }
             ]
         },
         {
@@ -90,15 +86,14 @@ async function main() {
             examLevel: ExamLevel.NATIONAL,
             description: 'Railway recruitment for various posts like Station Master, Goods Guard, Commercial Apprentice, etc.',
             officialWebsite: 'https://indianrailways.gov.in',
-            minAge: 18,
-            maxAge: 33,
-            qualificationCriteria: { level: QualificationLevel.TWELVE_PASS },
-            totalVacancies: { count: 11558 },
+            age: '18 - 33 years',
+            qualificationCriteria: "12th Pass or equivalent",
+            totalVacancies: "11558",
             stages: [
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-03-01'), title: 'Form Fillup Start' },
-                { stage: LifecycleStage.ADMIT_CARD, type: LifecycleEventType.RELEASE, date: new Date('2024-05-10'), title: 'CBT 1 Admit Card' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-05-20'), title: 'Exam Commenced' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.END, date: new Date('2024-06-15'), title: 'Exam Concluding' }
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-03-01'), title: 'Form Fillup Start' },
+                { stage: LifecycleStage.ADMIT_CARD, date: new Date('2024-05-10'), title: 'CBT 1 Admit Card' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-05-20'), title: 'Exam Commenced' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-06-15'), title: 'Exam Concluding' }
             ]
         },
         {
@@ -110,14 +105,13 @@ async function main() {
             examLevel: ExamLevel.NATIONAL,
             description: 'CRP Clerical recruitment for public sector banks.',
             officialWebsite: 'https://ibps.in',
-            minAge: 20,
-            maxAge: 28,
-            qualificationCriteria: { level: QualificationLevel.GRADUATE },
-            totalVacancies: { count: 6128 },
+            age: '20 - 28 years',
+            qualificationCriteria: "Graduate Degree in any discipline",
+            totalVacancies: "6128",
             stages: [
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-07-01'), title: 'Apply Online' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-08-20'), title: 'Mains Exam' },
-                { stage: LifecycleStage.RESULT, type: LifecycleEventType.RELEASE, date: new Date('2024-10-01'), title: 'Final Result' }
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-07-01'), title: 'Apply Online' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-08-20'), title: 'Mains Exam' },
+                { stage: LifecycleStage.RESULT, date: new Date('2024-10-01'), title: 'Final Result' }
             ]
         },
         {
@@ -130,9 +124,9 @@ async function main() {
             description: 'Recruitment for Probationary Officers in Public Sector Banks.',
             officialWebsite: 'https://ibps.in',
             stages: [
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-08-01'), title: 'Window Opens' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.END, date: new Date('2024-08-21'), title: 'Window Closes' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-10-19'), title: 'Prelims Date' }
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-08-01'), title: 'Window Opens' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-08-21'), title: 'Window Closes' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-10-19'), title: 'Prelims Date' }
             ]
         },
         {
@@ -140,14 +134,14 @@ async function main() {
             shortTitle: 'UPPCS',
             conductingBody: 'Uttar Pradesh Public Service Commission',
             category: ExamCategory.STATE_PSC,
-            status: ExamStatus.UPCOMING,
+            status: ExamStatus.NOTIFICATION,
             examLevel: ExamLevel.STATE,
             state: 'Uttar Pradesh',
             description: 'Civil services exam for the state of Uttar Pradesh.',
             officialWebsite: 'https://uppsc.up.nic.in',
             stages: [
-                { stage: LifecycleStage.NOTIFICATION, type: LifecycleEventType.RELEASE, date: new Date('2024-01-01'), title: 'Advt No. A-1/E-1/2024' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-10-27'), title: 'Prelims New Date' }
+                { stage: LifecycleStage.NOTIFICATION, date: new Date('2024-01-01'), title: 'Advt No. A-1/E-1/2024' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-10-27'), title: 'Prelims New Date' }
             ]
         },
         {
@@ -159,8 +153,8 @@ async function main() {
             examLevel: ExamLevel.STATE,
             state: 'West Bengal',
             stages: [
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2023-12-16'), title: 'Prelims Exam' },
-                { stage: LifecycleStage.RESULT, type: LifecycleEventType.RELEASE, date: new Date('2024-03-10'), title: 'Prelims Result Out' }
+                { stage: LifecycleStage.EXAM, date: new Date('2023-12-16'), title: 'Prelims Exam' },
+                { stage: LifecycleStage.RESULT, date: new Date('2024-03-10'), title: 'Prelims Result Out' }
             ]
         },
         {
@@ -171,8 +165,8 @@ async function main() {
             status: ExamStatus.REGISTRATION_OPEN,
             examLevel: ExamLevel.NATIONAL,
             stages: [
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-03-28'), title: 'Application Link Active' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.END, date: new Date('2024-04-18'), title: 'Last Date to Apply' }
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-03-28'), title: 'Application Link Active' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-04-18'), title: 'Last Date to Apply' }
             ]
         },
         {
@@ -184,8 +178,8 @@ async function main() {
             examLevel: ExamLevel.STATE,
             state: 'Bihar',
             stages: [
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-08-07'), title: 'Written Exam Starts' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.END, date: new Date('2024-08-28'), title: 'Written Exam Ends' }
+                { stage: LifecycleStage.EXAM, date: new Date('2024-08-07'), title: 'Written Exam Starts' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-08-28'), title: 'Written Exam Ends' }
             ]
         },
         {
@@ -196,8 +190,8 @@ async function main() {
             status: ExamStatus.RESULT_DECLARED,
             examLevel: ExamLevel.NATIONAL,
             stages: [
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-07-07'), title: 'Exam Day' },
-                { stage: LifecycleStage.RESULT, type: LifecycleEventType.RELEASE, date: new Date('2024-07-31'), title: 'Score Card Released' }
+                { stage: LifecycleStage.EXAM, date: new Date('2024-07-07'), title: 'Exam Day' },
+                { stage: LifecycleStage.RESULT, date: new Date('2024-07-31'), title: 'Score Card Released' }
             ]
         },
         {
@@ -208,9 +202,9 @@ async function main() {
             status: ExamStatus.ADMIT_CARD_OUT,
             examLevel: ExamLevel.NATIONAL,
             stages: [
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.END, date: new Date('2024-06-04'), title: 'Registration Over' },
-                { stage: LifecycleStage.ADMIT_CARD, type: LifecycleEventType.RELEASE, date: new Date('2024-08-23'), title: 'e-Admit Card' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-09-01'), title: 'Exam Date' }
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-06-04'), title: 'Registration Over' },
+                { stage: LifecycleStage.ADMIT_CARD, date: new Date('2024-08-23'), title: 'e-Admit Card' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-09-01'), title: 'Exam Date' }
             ]
         },
         {
@@ -218,12 +212,12 @@ async function main() {
             shortTitle: 'JEECUP',
             conductingBody: 'UP Joint Entrance Examination Council',
             category: ExamCategory.OTHER,
-            status: ExamStatus.UPCOMING,
+            status: ExamStatus.NOTIFICATION,
             examLevel: ExamLevel.STATE,
             state: 'Uttar Pradesh',
             stages: [
-                { stage: LifecycleStage.NOTIFICATION, type: LifecycleEventType.RELEASE, date: new Date('2024-01-20'), title: 'Official Info' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-02-01'), title: 'Portal Open' }
+                { stage: LifecycleStage.NOTIFICATION, date: new Date('2024-01-20'), title: 'Official Info' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-02-01'), title: 'Portal Open' }
             ]
         },
         {
@@ -231,10 +225,10 @@ async function main() {
             shortTitle: 'SBI Clerk',
             conductingBody: 'SBI',
             category: ExamCategory.BANKING_JOBS,
-            status: ExamStatus.UPCOMING,
+            status: ExamStatus.NOTIFICATION,
             examLevel: ExamLevel.NATIONAL,
             stages: [
-                { stage: LifecycleStage.NOTIFICATION, type: LifecycleEventType.RELEASE, date: new Date('2024-11-15'), title: 'Expected Notification' }
+                { stage: LifecycleStage.NOTIFICATION, date: new Date('2024-11-15'), title: 'Expected Notification' }
             ]
         },
         {
@@ -246,8 +240,8 @@ async function main() {
             examLevel: ExamLevel.DISTRICT,
             state: 'Delhi',
             stages: [
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2023-11-14'), title: 'Computer Based Exam' },
-                { stage: LifecycleStage.RESULT, type: LifecycleEventType.RELEASE, date: new Date('2024-01-24'), title: 'Final Selection List' }
+                { stage: LifecycleStage.EXAM, date: new Date('2023-11-14'), title: 'Computer Based Exam' },
+                { stage: LifecycleStage.RESULT, date: new Date('2024-01-24'), title: 'Final Selection List' }
             ]
         },
         {
@@ -255,11 +249,11 @@ async function main() {
             shortTitle: 'Raj Patwari',
             conductingBody: 'RSMSSB',
             category: ExamCategory.GOVERNMENT_JOBS,
-            status: ExamStatus.UPCOMING,
+            status: ExamStatus.NOTIFICATION,
             examLevel: ExamLevel.STATE,
             state: 'Rajasthan',
             stages: [
-                { stage: LifecycleStage.NOTIFICATION, type: LifecycleEventType.RELEASE, date: new Date('2024-12-10'), title: 'Draft Notification' }
+                { stage: LifecycleStage.NOTIFICATION, date: new Date('2024-12-10'), title: 'Draft Notification' }
             ]
         },
         {
@@ -270,9 +264,9 @@ async function main() {
             status: ExamStatus.REGISTRATION_OPEN,
             examLevel: ExamLevel.NATIONAL,
             stages: [
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-08-01'), title: 'Registration Opens' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.END, date: new Date('2024-09-13'), title: 'Registration Closes' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-11-24'), title: 'CAT Exam Day' }
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-08-01'), title: 'Registration Opens' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-09-13'), title: 'Registration Closes' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-11-24'), title: 'CAT Exam Day' }
             ]
         },
         {
@@ -284,8 +278,8 @@ async function main() {
             examLevel: ExamLevel.STATE,
             state: 'Madhya Pradesh',
             stages: [
-                { stage: LifecycleStage.ADMIT_CARD, type: LifecycleEventType.RELEASE, date: new Date('2024-06-15'), title: 'Prelims Hall Ticket' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2024-06-23'), title: 'Prelims Exam Date' }
+                { stage: LifecycleStage.ADMIT_CARD, date: new Date('2024-06-15'), title: 'Prelims Hall Ticket' },
+                { stage: LifecycleStage.EXAM, date: new Date('2024-06-23'), title: 'Prelims Exam Date' }
             ]
         },
         {
@@ -296,8 +290,8 @@ async function main() {
             status: ExamStatus.REGISTRATION_CLOSED,
             examLevel: ExamLevel.NATIONAL,
             stages: [
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-02-26'), title: 'Opening' },
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.END, date: new Date('2024-03-26'), title: 'Closing' }
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-02-26'), title: 'Opening' },
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-03-26'), title: 'Closing' }
             ]
         },
         {
@@ -305,11 +299,11 @@ async function main() {
             shortTitle: 'GATE',
             conductingBody: 'IIT Roorkee',
             category: ExamCategory.ENGINEERING_ENTRANCE,
-            status: ExamStatus.UPCOMING,
+            status: ExamStatus.NOTIFICATION,
             examLevel: ExamLevel.NATIONAL,
             stages: [
-                { stage: LifecycleStage.REGISTRATION, type: LifecycleEventType.START, date: new Date('2024-08-24'), title: 'Registration Starts' },
-                { stage: LifecycleStage.EXAM, type: LifecycleEventType.START, date: new Date('2025-02-01'), title: 'Exam Begins' }
+                { stage: LifecycleStage.REGISTRATION, date: new Date('2024-08-24'), title: 'Registration Starts' },
+                { stage: LifecycleStage.EXAM, date: new Date('2025-02-01'), title: 'Exam Begins' }
             ]
         }
     ];
@@ -329,7 +323,6 @@ async function main() {
                 lifecycleEvents: {
                     create: stages.map((s, index) => ({
                         stage: s.stage,
-                        eventType: s.type,
                         title: s.title,
                         startsAt: s.date,
                         stageOrder: (index + 1) * 10,

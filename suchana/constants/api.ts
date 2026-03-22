@@ -6,7 +6,7 @@ const localhost = debuggerHost?.split(':').shift() || 'localhost';
 
 const LOCALHOST = Platform.OS === 'android' && !debuggerHost ? '10.0.2.2' : localhost;
 
-export const BASE_URL = `http://${LOCALHOST}:3001/api/v1`;
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || `http://${LOCALHOST}:3001/api/v1`;
 
 export const API = {
     EXAMS: `${BASE_URL}/exams`,

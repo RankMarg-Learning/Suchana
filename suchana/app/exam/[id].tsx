@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import Markdown from 'react-native-markdown-display';
 import {
   View, Text, StyleSheet, ScrollView, Share,
   TouchableOpacity, ActivityIndicator, Linking,
   Dimensions,
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useNavigation, Stack } from 'expo-router';
+import { useLocalSearchParams, useNavigation, Stack, useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import {
   Bookmark,
@@ -28,11 +27,18 @@ import { fetchExamById, fetchTimeline } from '@/services/examService';
 import { toggleSavedExam } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
 import { TimelineItem } from '@/components/TimelineItem';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 import { NativeAdCard } from '@/components/NativeAdCard';
 import { AdBanner } from '@/components/AdBanner';
 import { useAds } from '@/context/AdsContext';
 import { cleanLabel } from '@/utils/format';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 
+const formatText = (text: string | null | undefined): string => {
+  if (!text) return '';
+  return text.replace(/\\n/g, '\n');
+};
 
 function formatCountdown(endsAt: string): string {
   const diff = new Date(endsAt).getTime() - Date.now();
@@ -46,12 +52,12 @@ function formatCountdown(endsAt: string): string {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  [ExamStatus.UPCOMING]: '#FBBF24',
+  [ExamStatus.NOTIFICATION]: '#FBBF24',
   [ExamStatus.REGISTRATION_OPEN]: '#10B981',
   [ExamStatus.REGISTRATION_CLOSED]: '#F59E0B',
   [ExamStatus.ADMIT_CARD_OUT]: '#8B5CF6',
   [ExamStatus.EXAM_ONGOING]: '#EF4444',
-  [ExamStatus.RESULT_DECLARED]: '#3B82F6',
+  [ExamStatus.RESULT_DECLARED]: '#8B5CF6',
   [ExamStatus.ARCHIVED]: '#94a3b8',
 };
 
@@ -59,12 +65,21 @@ const STATUS_COLOR: Record<string, string> = {
 export default function ExamDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const { user, userId, refreshUser } = useUser();
   const { showInterstitial, showRewarded } = useAds();
   const insets = useSafeAreaInsets();
   const [countdown, setCountdown] = useState('');
   const [isDescExpanded, setIsDescExpanded] = useState(false);
+
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const background = useThemeColor({}, 'background');
+  const cardBg = useThemeColor({}, 'card');
+  const border = useThemeColor({}, 'border');
+  const tint = useThemeColor({}, 'tint');
+  const colorScheme = useColorScheme();
 
   const handleExternalLink = async (url: string) => {
     await showInterstitial();
@@ -83,7 +98,7 @@ export default function ExamDetailScreen() {
 
 
   const saveMutation = useMutation({
-    mutationFn: () => toggleSavedExam(userId!, id),
+    mutationFn: () => toggleSavedExam(userId!, exam!.id),
     onSuccess: () => {
       refreshUser();
       queryClient.invalidateQueries({ queryKey: ['exam', id] });
@@ -106,11 +121,10 @@ export default function ExamDetailScreen() {
     return () => clearInterval(interval);
   }, [exam]);
 
-  const isSaved = user?.savedExamIds?.includes(id);
+  const isSaved = exam ? user?.savedExamIds?.includes(exam.id) : false;
 
   const handleSave = async () => {
-    if (!userId) return;
-    // Show rewarded video ad before saving
+    if (!userId) return router.push('/onboarding');
     await showRewarded();
     saveMutation.mutate();
   };
@@ -121,27 +135,17 @@ export default function ExamDetailScreen() {
     const regEvent = exam.lifecycleEvents?.find((e) => e.stage === 'REGISTRATION');
     const deadline = regEvent?.endsAt
       ? `\n⏰ Deadline: ${new Date(regEvent.endsAt).toLocaleDateString('en-IN', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric',
-        })}`
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      })}`
       : '';
 
-    let vacancies = 'Check Details';
-    if (typeof exam.totalVacancies === 'number') {
-      vacancies = exam.totalVacancies.toLocaleString('en-IN');
-    } else if (exam.totalVacancies && typeof exam.totalVacancies === 'object') {
-      const total = Object.values(exam.totalVacancies).reduce(
-        (acc: number, val: any) => acc + (Number(val) || 0),
-        0
-      );
-      if (total > 0) vacancies = total.toLocaleString('en-IN');
-    }
+    const vacancies = exam.totalVacancies || 'Check Details';
 
     const message =
       `🏛️ *${exam.title}*\n` +
       `🏢 Board: ${exam.conductingBody}\n` +
-      `👥 Vacancies: ${vacancies}` +
       `${deadline}\n\n` +
       `Stay updated with government exam timelines on Suchana App! 🚀\n` +
       `Download: https://suchana.app/get`;
@@ -163,8 +167,8 @@ export default function ExamDetailScreen() {
 
   if (examLoading || timelineLoading) {
     return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#7C3AED" />
+      <View style={[styles.loader, { backgroundColor: background }]}>
+        <ActivityIndicator size="large" color={tint} />
       </View>
     );
   }
@@ -172,7 +176,7 @@ export default function ExamDetailScreen() {
   if (!exam) {
     return (
       <View style={styles.loader}>
-        <Text style={styles.errorTxt}>Exam not found.</Text>
+        <Text style={[styles.errorTxt, { color: textMuted }]}>Exam not found.</Text>
       </View>
     );
   }
@@ -186,99 +190,62 @@ export default function ExamDetailScreen() {
   const score = (exam as any).matchScore ?? 0;
   const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#F59E0B' : '#6B7280';
 
-  // ── Vacancy helpers ──────────────────────────────────────
-  const vacancyEntries: [string, number][] = (() => {
-    const v = exam.totalVacancies;
-    if (!v || typeof v === 'number') return [];
-    if (typeof v !== 'object') return [];
-    return Object.entries(v)
-      .map(([k, val]) => [k, Number(val) || 0] as [string, number])
-      .filter(([, n]) => n > 0);
-  })();
-
-  const totalVacancyCount: number = (() => {
-    const v = exam.totalVacancies;
-    if (typeof v === 'number') return v;
-    if (vacancyEntries.length > 0) return vacancyEntries.reduce((s, [, n]) => s + n, 0);
-    return 0;
-  })();
-
-  const [showAllVac, setShowAllVac] = useState(false);
-  const MAX_VAC_VISIBLE = 4;
-
-  const renderJsonLines = (data: any, labelStyle?: any) => {
-    if (!data) return <Text style={styles.factValue}>N/A</Text>;
-
-    if (typeof data === 'number') return <Text style={styles.statsValue}>{data.toLocaleString('en-IN')}</Text>;
-
-    if (typeof data !== 'object') {
-      const val = String(data);
-      return <Text style={styles.factValue}>{val.length < 20 ? cleanLabel(val) : val}</Text>;
-    }
-
-    const entries = Object.entries(data).filter(([key]) => key !== 'level' && key !== 'id');
-
-    if (entries.length === 0) return <Text style={styles.factValue}>N/A</Text>;
-
-    return (
-      <View style={{ gap: 10 }}>
-        {entries.map(([key, value]) => (
-          <View key={key} style={styles.kvLine}>
-            <Text style={[styles.kvLabel, labelStyle]}>{cleanLabel(key)}:</Text>
-            <Text style={styles.factValue}>{typeof value === 'string' && value.length < 30 ? cleanLabel(value) : String(value)}</Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
+  const heroColors = (colorScheme === 'dark' ? ['#2E1065', '#09090B'] : ['#F5F3FF', '#FFFFFF']) as readonly [string, string];
+  const matchColors = (colorScheme === 'dark' ? ['#27272a', '#18181b'] : [cardBg, cardBg]) as readonly [string, string];
 
   return (
-    <SafeAreaView style={styles.root} edges={['bottom']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: background }]} edges={['bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
 
         <View style={[styles.customHeader, { paddingTop: insets.top + 10 }]}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.headerIconBtn}>
-            <ChevronRight size={24} color="#FFF" style={{ transform: [{ rotate: '180deg' }] }} />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.headerIconBtn, { backgroundColor: colorScheme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)', borderColor: border }]}>
+            <ChevronRight size={24} color={textPrimary} style={{ transform: [{ rotate: '180deg' }] }} />
           </TouchableOpacity>
           <View style={styles.headerActionRow}>
             <TouchableOpacity
-              style={styles.headerIconBtn}
+              style={[styles.headerIconBtn, { backgroundColor: colorScheme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)', borderColor: border }]}
               onPress={handleSave}
               disabled={saveMutation.isPending}>
-              {isSaved ? <BookmarkCheck size={22} color="#7C3AED" fill="#7C3AED" /> : <Bookmark size={22} color="#FFF" />}
+              {isSaved ? <BookmarkCheck size={22} color={tint} fill={tint} /> : <Bookmark size={22} color={textPrimary} />}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.headerIconBtn} onPress={handleShare}>
-              <Share2 size={22} color="#FFF" />
+            <TouchableOpacity style={[styles.headerIconBtn, { backgroundColor: colorScheme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(255,255,255,0.8)', borderColor: border }]} onPress={handleShare}>
+              <Share2 size={22} color={textPrimary} />
             </TouchableOpacity>
           </View>
-          <AdBanner />
+          <AdBanner placement="EXAM_DETAILS_HEADER" />
         </View>
 
         {/* Hero Section */}
         <LinearGradient
-          colors={['#1e1b4b', '#0D0D0F']}
+          colors={heroColors}
           style={[styles.heroSection, { paddingTop: insets.top + 70 }]}>
 
-          <View style={[styles.statusBadge, { borderColor: statusColor + '77' }]}>
+          <View style={[styles.statusBadge, { borderColor: statusColor + '77', backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
             <View style={[styles.statusDot, { backgroundColor: statusColor }]} />
             <Text style={[styles.statusTxt, { color: statusColor }]}>{cleanLabel(exam.status)}</Text>
           </View>
 
-          <Text style={styles.title}>{exam.title}</Text>
-          <Text style={styles.conductingBody}>{exam.conductingBody}</Text>
+          <Text style={[styles.title, { color: textPrimary }]}>{exam.title}</Text>
+          {exam.conductingBody && (
+            <Text style={[styles.conductingBody, { color: textMuted }]}>{exam.conductingBody}</Text>
+          )}
 
           <View style={styles.tagsContainer}>
-            <View style={styles.tag}>
-              <Text style={styles.tagText}>{cleanLabel(exam.category)}</Text>
-            </View>
-            <View style={styles.tag}>
-              <Text style={styles.tagText}>{cleanLabel(exam.examLevel)}</Text>
-            </View>
+            {exam.category && (
+              <View style={[styles.tag, { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+                <Text style={[styles.tagText, { color: textMuted }]}>{cleanLabel(exam.category)}</Text>
+              </View>
+            )}
+            {exam.examLevel && (
+              <View style={[styles.tag, { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+                <Text style={[styles.tagText, { color: textMuted }]}>{cleanLabel(exam.examLevel)}</Text>
+              </View>
+            )}
             {exam.state && (
-              <View style={styles.tag}>
-                <Text style={styles.tagText}>{exam.state}</Text>
+              <View style={[styles.tag, { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)' }]}>
+                <Text style={[styles.tagText, { color: textMuted }]}>{exam.state}</Text>
               </View>
             )}
           </View>
@@ -286,18 +253,18 @@ export default function ExamDetailScreen() {
 
         {/* Match Score Display - Important One */}
         {score > 0 && (
-          <View style={styles.matchScoreCard}>
+          <View style={[styles.matchScoreCard, { shadowColor: '#000' }]}>
             <LinearGradient
-              colors={['#27272a', '#18181b']}
-              style={styles.matchGlass}>
+              colors={matchColors}
+              style={[styles.matchGlass, { borderColor: border }]}>
               <View style={styles.matchHeader}>
                 <View>
-                  <Text style={styles.matchLabel}>Eligibility Match</Text>
-                  <Text style={styles.matchHint}>Based on your profile</Text>
+                  <Text style={[styles.matchLabel, { color: tint }]}>Eligibility Match</Text>
+                  <Text style={[styles.matchHint, { color: textMuted }]}>Based on your profile</Text>
                 </View>
                 <Text style={[styles.matchValue, { color: scoreColor }]}>{score}%</Text>
               </View>
-              <View style={styles.progressBarBg}>
+              <View style={[styles.progressBarBg, { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)' }]}>
                 <View style={[styles.progressBarFill, { width: `${score}%`, backgroundColor: scoreColor }]} />
               </View>
             </LinearGradient>
@@ -308,7 +275,7 @@ export default function ExamDetailScreen() {
         {isRegActive && regEvent?.actionUrl && (
           <View style={styles.actionSection}>
             <TouchableOpacity
-              style={styles.primaryActionBtn}
+              style={[styles.primaryActionBtn, { backgroundColor: tint, shadowColor: tint }]}
               onPress={() => handleExternalLink(regEvent.actionUrl!)}
               activeOpacity={0.8}
             >
@@ -323,138 +290,123 @@ export default function ExamDetailScreen() {
           </View>
         )}
 
-        {/* Important Quick Facts Section */}
-        <View style={styles.importantContainer}>
-
-          {/* Vacancies — full-width pill grid when multiple categories */}
-          {vacancyEntries.length > 1 && (
-            <View style={styles.factCard}>
-              <View style={styles.factHeader}>
-                <Briefcase size={16} color="#7C3AED" />
-                <Text style={styles.factTitle}>Vacancies</Text>
-                {totalVacancyCount > 0 && (
-                  <View style={styles.totalVacBadge}>
-                    <Text style={styles.totalVacBadgeText}>{totalVacancyCount.toLocaleString('en-IN')} Total</Text>
-                  </View>
-                )}
-              </View>
-              <View style={styles.vacPillGrid}>
-                {(showAllVac ? vacancyEntries : vacancyEntries.slice(0, MAX_VAC_VISIBLE)).map(([key, val]) => (
-                  <View key={key} style={styles.vacPill}>
-                    <Text style={styles.vacPillLabel} numberOfLines={1}>{cleanLabel(key)}</Text>
-                    <Text style={styles.vacPillCount}>{val.toLocaleString('en-IN')}</Text>
-                  </View>
-                ))}
-              </View>
-              {vacancyEntries.length > MAX_VAC_VISIBLE && (
-                <TouchableOpacity onPress={() => setShowAllVac(v => !v)} style={styles.showMoreBtn}>
-                  <Text style={styles.showMoreText}>
-                    {showAllVac ? '▲ Show less' : `▼ +${vacancyEntries.length - MAX_VAC_VISIBLE} more posts`}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-
-          <View style={styles.statsGrid}>
-            {vacancyEntries.length <= 1 && (
-              <View style={[styles.factCard, { flex: 1 }]}>
-                <View style={styles.factHeader}>
-                  <Briefcase size={16} color="#7C3AED" />
-                  <Text style={styles.factTitle}>Vacancies</Text>
-                </View>
-                <Text style={styles.statsValue}>
-                  {totalVacancyCount > 0 ? totalVacancyCount.toLocaleString('en-IN') : 'TBA'}
-                </Text>
-                {vacancyEntries.length === 1 && (
-                  <Text style={styles.vacSingleLabel}>{cleanLabel(vacancyEntries[0][0])}</Text>
-                )}
-              </View>
-            )}
-            <View style={[styles.factCard, { flex: 1 }]}>
-              <View style={styles.factHeader}>
-                <IndianRupee size={16} color="#7C3AED" />
-                <Text style={styles.factTitle}>Fee</Text>
-              </View>
-              <View style={styles.feeGrid}>
-                {renderJsonLines(exam.applicationFee, { fontSize: 13 })}
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.factCard}>
-            <View style={styles.factHeader}>
-              <UserCheck size={16} color="#7C3AED" />
-              <Text style={styles.factTitle}>Eligibility & Age</Text>
-            </View>
-            <View style={styles.eligibilityRow}>
-              <View>
-                <Text style={styles.eligibilityLevel}>
-                  {cleanLabel(exam.qualificationCriteria?.level) || 'Check Rules'}
-                </Text>
-                {(exam.minAge || exam.maxAge) && (
-                  <Text style={styles.ageText}>
-                    {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} years
-                  </Text>
-                )}
-              </View>
-              {exam.qualificationCriteria?.rules && (
-                <View style={styles.rulesMini}>
-                  {renderJsonLines(exam.qualificationCriteria.rules, { fontSize: 12 })}
-                </View>
-              )}
-            </View>
-          </View>
-
-        </View>
-
         {/* Timeline Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Calendar size={20} color="#7C3AED" />
-            <Text style={styles.sectionTitle}>Exam Timeline</Text>
+            <Calendar size={20} color={tint} />
+            <Text style={[styles.sectionTitle, { color: textPrimary }]}>Exam Timeline</Text>
           </View>
           {!Array.isArray(timeline) || timeline.length === 0 ? (
             <View style={styles.emptyTimeline}>
-              <Text style={styles.emptyTimelineText}>No events announced yet.</Text>
+              <Text style={[styles.emptyTimelineText, { color: textMuted }]}>No events announced yet.</Text>
             </View>
           ) : (
-            [...timeline]
-              .sort((a, b) => (a.stageOrder || 0) - (b.stageOrder || 0))
-              .map((event, index) => (
+            (() => {
+              const sorted = [...timeline].sort(
+                (a, b) => (a.stageOrder || 0) - (b.stageOrder || 0),
+              );
+              return sorted.map((event, index) => (
                 <TimelineItem
                   key={event.id}
                   event={event}
-                  isLast={index === timeline.length - 1}
+                  isLast={index === sorted.length - 1}
+                  nextEventStartsAt={
+                    !event.endsAt && index < sorted.length - 1
+                      ? sorted[index + 1].startsAt
+                      : null
+                  }
                 />
-              ))
+              ));
+            })()
+          )}
+        </View>
+
+        {/* Important Quick Facts Section */}
+        <View style={styles.importantContainer}>
+          {exam.totalVacancies && (
+            <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
+              <View style={styles.factHeader}>
+                <Briefcase size={16} color={tint} />
+                <Text style={[styles.factTitle, { color: textMuted }]}>Vacancies</Text>
+              </View>
+              <MarkdownRenderer variant="fact" content={formatText(exam.totalVacancies)} />
+            </View>
+          )}
+
+          {exam.salary && (
+            <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
+              <View style={styles.factHeader}>
+                <Briefcase size={16} color={tint} />
+                <Text style={[styles.factTitle, { color: textMuted }]}>Salary</Text>
+              </View>
+              <MarkdownRenderer variant="fact" content={formatText(exam.salary)} />
+            </View>
+          )}
+
+          {(exam.qualificationCriteria || exam.minAge || exam.maxAge) && (
+            <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
+              <View style={styles.factHeader}>
+                <UserCheck size={16} color={tint} />
+                <Text style={[styles.factTitle, { color: textMuted }]}>Eligibility & Age</Text>
+              </View>
+              <View style={styles.eligibilityRow}>
+                <View style={{ flex: 1 }}>
+                  {exam.qualificationCriteria && (
+                    <MarkdownRenderer variant="fact" content={formatText(exam.qualificationCriteria)} />
+                  )}
+                  {(exam.minAge || exam.maxAge) && (
+                    <Text style={[styles.ageText, { color: tint }]}>
+                      Age Limit: {exam.minAge ?? 'N/A'} - {exam.maxAge ?? 'N/A'} years
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
+          )}
+
+          {exam.applicationFee && (
+            <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
+              <View style={styles.factHeader}>
+                <IndianRupee size={16} color={tint} />
+                <Text style={[styles.factTitle, { color: textMuted }]}>Application Fee</Text>
+              </View>
+              <MarkdownRenderer variant="fact" content={formatText(exam.applicationFee)} />
+            </View>
+          )}
+
+          {exam.additionalDetails && (
+            <View style={[styles.factCard, { backgroundColor: cardBg, borderColor: border }]}>
+              <View style={styles.factHeader}>
+                <FileText size={16} color={tint} />
+                <Text style={[styles.factTitle, { color: textMuted }]}>Additional Details</Text>
+              </View>
+              <MarkdownRenderer variant="fact" content={formatText(exam.additionalDetails)} />
+            </View>
           )}
         </View>
 
         {/* Ad Placement */}
-        <NativeAdCard style={{ marginHorizontal: 20, marginBottom: 30 }} />
+        <NativeAdCard placement="EXAM_DETAILS_BOTTOM" style={{ marginHorizontal: 20, marginBottom: 30 }} />
 
         {/* Secondary Info Sections */}
         {exam.description && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Target size={20} color="#7C3AED" />
-              <Text style={styles.sectionTitle}>About Examination</Text>
+              <Target size={20} color={tint} />
+              <Text style={[styles.sectionTitle, { color: textPrimary }]}>About Examination</Text>
             </View>
             <View>
               {isDescExpanded ? (
-                <Markdown style={markdownStyles}>
-                  {exam.description}
-                </Markdown>
+                <MarkdownRenderer content={formatText(exam.description)} />
               ) : (
-                <Text style={styles.description} numberOfLines={3}>
+                <Text style={[styles.description, { color: textMuted }]} numberOfLines={3}>
                   {exam.description.replace(/[#*`\n]/g, ' ')}
                 </Text>
               )}
 
               {exam.description.length > 100 && (
                 <TouchableOpacity onPress={() => setIsDescExpanded(!isDescExpanded)} style={{ marginTop: 8 }}>
-                  <Text style={styles.moreBtn}>{isDescExpanded ? 'Show less' : 'Read more...'}</Text>
+                  <Text style={[styles.moreBtn, { color: tint }]}>{isDescExpanded ? 'Show less' : 'Read more...'}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -464,32 +416,36 @@ export default function ExamDetailScreen() {
         {/* Official Links */}
         <View style={styles.linkGrid}>
           {exam.officialWebsite && (
-            <TouchableOpacity style={styles.linkCard} onPress={() => handleExternalLink(exam.officialWebsite!)}>
-              <Globe size={20} color="#FFF" />
-              <Text style={styles.linkCardTitle}>Official Website</Text>
-              <Text style={styles.linkCardSub}>Visit Portal</Text>
+            <TouchableOpacity style={[styles.linkCard, { backgroundColor: cardBg, borderColor: border }]} onPress={() => handleExternalLink(exam.officialWebsite!)}>
+              <Globe size={20} color={textPrimary} />
+              <Text style={[styles.linkCardTitle, { color: textPrimary }]}>Official Website</Text>
+              <Text style={[styles.linkCardSub, { color: textMuted }]}>Visit Portal</Text>
             </TouchableOpacity>
           )}
           {exam.notificationUrl && (
-            <TouchableOpacity style={[styles.linkCard, { backgroundColor: '#312e81' }]} onPress={() => handleExternalLink(exam.notificationUrl!)}>
-              <FileText size={20} color="#c7d2fe" />
-              <Text style={[styles.linkCardTitle, { color: '#c7d2fe' }]}>Notification</Text>
-              <Text style={[styles.linkCardSub, { color: '#818cf8' }]}>Download PDF</Text>
+            <TouchableOpacity style={[styles.linkCard, { backgroundColor: colorScheme === 'dark' ? '#2E1065' : '#F5F3FF', borderColor: border }]} onPress={() => handleExternalLink(exam.notificationUrl!)}>
+              <FileText size={20} color={colorScheme === 'dark' ? '#DDD6FE' : tint} />
+              <Text style={[styles.linkCardTitle, { color: colorScheme === 'dark' ? '#DDD6FE' : tint }]}>Notification</Text>
+              <Text style={[styles.linkCardSub, { color: colorScheme === 'dark' ? '#A78BFA' : tint }]}>Download PDF</Text>
             </TouchableOpacity>
           )}
         </View>
 
       </ScrollView>
 
-      {/* Primary Action Button Fixed at Bottom (If Active) */}
-      {!isRegActive && exam.notificationUrl && (
-        <View style={styles.footerSticky}>
-          <TouchableOpacity
-            style={[styles.primaryActionBtn, { backgroundColor: '#1e1b4b' }]}
-            onPress={() => handleExternalLink(exam.notificationUrl!)}>
-            <FileText size={20} color="#FFF" />
-            <Text style={styles.primaryActionText}>View Full Notification</Text>
-          </TouchableOpacity>
+      {!isRegActive && (exam.notificationUrl || exam.officialWebsite) && (
+        <View style={[styles.footerSticky, { backgroundColor: background + 'E6', borderTopColor: border }]}>
+          <View style={{ flexDirection: 'row', gap: 12 }}>
+            {exam.officialWebsite && (
+              <TouchableOpacity
+                style={[styles.primaryActionBtn, { flex: 1, backgroundColor: colorScheme === 'dark' ? '#1E1B4B' : '#EEF2FF' }]}
+                onPress={() => handleExternalLink(exam.officialWebsite!)}>
+                <Globe size={18} color={colorScheme === 'dark' ? '#818CF8' : tint} />
+                <Text style={[styles.primaryActionText, { fontSize: 14, color: colorScheme === 'dark' ? '#818CF8' : tint }]}>Official Portal</Text>
+              </TouchableOpacity>
+            )}
+
+          </View>
         </View>
       )}
     </SafeAreaView>
@@ -497,9 +453,9 @@ export default function ExamDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#09090b' },
-  loader: { flex: 1, backgroundColor: '#09090b', justifyContent: 'center', alignItems: 'center' },
-  errorTxt: { color: '#94a3b8', fontSize: 16 },
+  root: { flex: 1 },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  errorTxt: { fontSize: 16 },
 
   customHeader: {
     flexDirection: 'row',
@@ -517,11 +473,9 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(0,0,0,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   headerActionRow: { flexDirection: 'row', gap: 10 },
 
@@ -534,14 +488,12 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 40,
   },
   title: {
-    color: '#fff',
     fontSize: 28,
     fontWeight: '900',
     lineHeight: 34,
     marginBottom: 8
   },
   conductingBody: {
-    color: '#a1a1aa',
     fontSize: 18,
     fontWeight: '600',
     marginBottom: 20
@@ -553,7 +505,6 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 20,
     borderWidth: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
     alignSelf: 'flex-start',
     marginBottom: 16,
     gap: 6
@@ -562,12 +513,11 @@ const styles = StyleSheet.create({
   statusTxt: { fontSize: 12, fontWeight: '800', letterSpacing: 0.5, textTransform: 'uppercase' },
   tagsContainer: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
   tag: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 8,
   },
-  tagText: { color: '#d4d4d8', fontSize: 12, fontWeight: '700' },
+  tagText: { fontSize: 12, fontWeight: '700' },
 
   // Match Score
   matchScoreCard: {
@@ -576,16 +526,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderRadius: 24,
     overflow: 'hidden',
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 20,
     elevation: 10,
   },
   matchGlass: {
     padding: 20,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   matchHeader: {
     flexDirection: 'row',
@@ -593,12 +541,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  matchLabel: { color: '#7C3AED', fontSize: 14, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
-  matchHint: { color: '#71717a', fontSize: 12, fontWeight: '500' },
+  matchLabel: { fontSize: 14, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 1 },
+  matchHint: { fontSize: 12, fontWeight: '500' },
   matchValue: { fontSize: 32, fontWeight: '900' },
   progressBarBg: {
     height: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 5,
     overflow: 'hidden',
   },
@@ -611,22 +558,20 @@ const styles = StyleSheet.create({
   },
   primaryActionBtn: {
     height: 64,
-    backgroundColor: '#7C3AED',
     borderRadius: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    shadowColor: '#7C3AED',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 8,
   },
   btnContent: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  primaryActionText: { color: '#FFF', fontSize: 18, fontWeight: '900' },
+  primaryActionText: { fontSize: 18, fontWeight: '900' },
   countdownBadge: {
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.15)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
@@ -639,82 +584,37 @@ const styles = StyleSheet.create({
     gap: 12,
     marginBottom: 32,
   },
-  statsGrid: { flexDirection: 'row', gap: 12 },
   factCard: {
-    backgroundColor: '#18181b',
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
   factHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12 },
-  factTitle: { color: '#71717a', fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
-  statsValue: { color: '#FFF', fontSize: 24, fontWeight: '900' },
-  factValue: { color: '#e4e4e7', fontSize: 14, fontWeight: '700', lineHeight: 18 },
-  kvLine: { flexDirection: 'row', gap: 4, alignItems: 'center' },
-  kvLabel: { color: '#71717a', fontWeight: '600', minWidth: 60, fontSize: 13 },
-  feeGrid: { gap: 6 },
+  factTitle: { fontSize: 11, fontWeight: '800', textTransform: 'uppercase', letterSpacing: 0.8 },
 
   // Eligibility specific
   eligibilityRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  eligibilityLevel: { color: '#FFF', fontSize: 18, fontWeight: '900', marginBottom: 2 },
-  ageText: { color: '#7C3AED', fontSize: 13, fontWeight: '800' },
-  rulesMini: {
-    maxWidth: '50%',
-    paddingLeft: 12,
-    borderLeftWidth: 1,
-    borderLeftColor: 'rgba(255,255,255,0.05)',
-  },
-
-  // Vacancy pills
-  totalVacBadge: {
-    marginLeft: 'auto',
-    backgroundColor: 'rgba(124,58,237,0.15)',
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(124,58,237,0.3)',
-  },
-  totalVacBadgeText: { color: '#7C3AED', fontSize: 11, fontWeight: '800' },
-  vacPillGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 4 },
-  vacPill: {
-    backgroundColor: '#27272a',
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.07)',
-    minWidth: 100,
-    flex: 0,
-  },
-  vacPillLabel: { color: '#a1a1aa', fontSize: 11, fontWeight: '600', marginBottom: 2 },
-  vacPillCount: { color: '#FFF', fontSize: 16, fontWeight: '900' },
-  vacSingleLabel: { color: '#71717a', fontSize: 11, fontWeight: '600', marginTop: 4 },
-  showMoreBtn: { marginTop: 12, alignSelf: 'flex-start' },
-  showMoreText: { color: '#7C3AED', fontSize: 13, fontWeight: '700' },
+  ageText: { fontSize: 13, fontWeight: '800' },
 
   // Timeline
   section: { paddingHorizontal: 20, marginBottom: 40 },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 20 },
-  sectionTitle: { color: '#FFF', fontSize: 22, fontWeight: '900' },
-  description: { color: '#a1a1aa', fontSize: 16, lineHeight: 26 },
+  sectionTitle: { fontSize: 22, fontWeight: '900' },
+  description: { fontSize: 16, lineHeight: 26 },
   emptyTimeline: { padding: 40, alignItems: 'center' },
-  emptyTimelineText: { color: '#52525b', fontSize: 15, fontWeight: '600' },
+  emptyTimelineText: { fontSize: 15, fontWeight: '600' },
 
   // Link Cards
   linkGrid: { flexDirection: 'row', paddingHorizontal: 20, gap: 12, marginBottom: 40 },
   linkCard: {
     flex: 1,
-    backgroundColor: '#27272a',
     padding: 16,
     borderRadius: 20,
     gap: 10,
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
   },
-  linkCardTitle: { color: '#FFF', fontSize: 13, fontWeight: '800' },
-  linkCardSub: { color: '#71717a', fontSize: 11, fontWeight: '600' },
+  linkCardTitle: { fontSize: 13, fontWeight: '800' },
+  linkCardSub: { fontSize: 11, fontWeight: '600' },
 
   // Sticky Footer
   footerSticky: {
@@ -723,38 +623,10 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     padding: 20,
-    backgroundColor: 'rgba(9,9,11,0.9)',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
   },
   moreBtn: {
-    color: '#7C3AED',
     fontSize: 14,
     fontWeight: '700',
-  },
-});
-
-const markdownStyles = StyleSheet.create({
-  body: {
-    color: '#a1a1aa',
-    fontSize: 16,
-    lineHeight: 26,
-  },
-  paragraph: {
-    marginTop: 0,
-    marginBottom: 8,
-  },
-  strong: {
-    fontWeight: 'bold',
-    color: '#FFF',
-  },
-  link: {
-    color: '#7C3AED',
-  },
-  bullet_list: {
-    marginBottom: 8,
-  },
-  ordered_list: {
-    marginBottom: 8,
   },
 });

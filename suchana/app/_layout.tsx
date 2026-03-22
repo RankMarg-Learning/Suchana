@@ -1,4 +1,4 @@
-import { DarkTheme, ThemeProvider } from '@react-navigation/native';
+import { ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -6,6 +6,9 @@ import 'react-native-reanimated';
 import { UserProvider, useUser } from '@/context/UserContext';
 import { useFirstLaunchPermissions } from '@/hooks/useFirstLaunchPermissions';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { CustomLightTheme, CustomDarkTheme, Colors } from '@/constants/theme';
+import { AdsProvider } from '@/context/AdsContext';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,17 +39,18 @@ function NavigationGuard() {
 
 export const unstable_settings = { anchor: '(tabs)' };
 
-import { AdsProvider } from '@/context/AdsContext';
-
 export default function RootLayout() {
   // Ask for notification + location permissions once on first-ever launch
   useFirstLaunchPermissions();
+  const colorScheme = useColorScheme();
+  const theme = colorScheme === 'dark' ? CustomDarkTheme : CustomLightTheme;
+  const currentColors = colorScheme === 'dark' ? Colors.dark : Colors.light;
 
   return (
     <QueryClientProvider client={queryClient}>
       <AdsProvider>
         <UserProvider>
-          <ThemeProvider value={DarkTheme}>
+          <ThemeProvider value={theme}>
             <NavigationGuard />
             <Stack screenOptions={{ headerShown: false, animation: 'fade' }}>
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -55,14 +59,15 @@ export default function RootLayout() {
                 name="exam/[id]"
                 options={{
                   headerShown: true,
-                  headerStyle: { backgroundColor: '#0D0D0F' },
-                  headerTintColor: '#F4F4F5',
+                  headerStyle: { backgroundColor: currentColors.background },
+                  headerTintColor: currentColors.text,
                   headerTitle: '',
                   headerBackTitle: 'Back',
+                  headerShadowVisible: false,
                 }}
               />
             </Stack>
-            <StatusBar style="light" />
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
           </ThemeProvider>
         </UserProvider>
       </AdsProvider>

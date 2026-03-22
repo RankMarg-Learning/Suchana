@@ -7,7 +7,6 @@ import {
     EXAM_CATEGORIES,
     EXAM_LEVELS,
     LIFECYCLE_STAGES,
-    LIFECYCLE_EVENT_TYPES,
     REVIEW_STATUSES,
     ReviewStatus,
 } from '../constants/enums';
@@ -62,7 +61,9 @@ const correctionsSchema = z.object({
     conductingBody: z.string().optional(),
     category: z.enum(EXAM_CATEGORIES as unknown as [string, ...string[]]).optional(),
     examLevel: z.enum(EXAM_LEVELS as unknown as [string, ...string[]]).optional(),
-    totalVacancies: z.number().int().optional(),
+    totalVacancies: z.string().optional(),
+    salary: z.string().optional(),
+    additionalDetails: z.string().optional(),
     description: z.string().optional(),
     officialWebsite: z.string().url().optional(),
     notificationUrl: z.string().url().optional(),
@@ -81,14 +82,19 @@ export type ReviewDecisionDto = z.infer<typeof reviewDecisionSchema>;
 
 export const updateStagedEventSchema = z.object({
     stage: z.enum(LIFECYCLE_STAGES as unknown as [string, ...string[]]).optional(),
-    eventType: z.enum(LIFECYCLE_EVENT_TYPES as unknown as [string, ...string[]]).optional(),
     title: z.string().min(2).optional(),
     description: z.string().optional(),
     startsAt: z.string().datetime().transform((d) => new Date(d)).optional().nullable(),
     endsAt: z.string().datetime().transform((d) => new Date(d)).optional().nullable(),
     isTBD: z.boolean().optional(),
-    isImportant: z.boolean().optional(),
     actionUrl: z.string().url().optional().nullable(),
     actionLabel: z.string().optional().nullable(),
+    stageOrder: z.number().int().optional().default(0),
 });
 export type UpdateStagedEventDto = z.infer<typeof updateStagedEventSchema>;
+
+export const createStagedEventSchema = updateStagedEventSchema.extend({
+    stage: z.enum(LIFECYCLE_STAGES as unknown as [string, ...string[]]),
+    title: z.string().min(2),
+});
+export type CreateStagedEventDto = z.infer<typeof createStagedEventSchema>;

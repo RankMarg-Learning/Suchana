@@ -27,6 +27,10 @@ export async function registerOrUpdateUser(dto: RegisterUserDto) {
     logger.info(`User ${user.id} synced via phone ${user.phone}`);
     return user;
 }
+export async function getUserByPhone(phone: string) {
+    return prisma.user.findUnique({ where: { phone } });
+}
+
 
 export async function getUserById(id: string) {
     const user = await prisma.user.findUnique({ where: { id } });
@@ -95,12 +99,6 @@ export async function getUserExams(id: string, page: number = 1, limit: number =
             skip: (page - 1) * limit,
             take: limit,
             orderBy: { createdAt: 'desc' },
-            include: {
-                lifecycleEvents: {
-                    where: { eventType: 'REGISTRATION' },
-                    take: 1
-                }
-            }
         }),
         prisma.exam.count({ where })
     ]);
@@ -147,7 +145,7 @@ export async function getUserNotifications(id: string) {
         },
         include: {
             exam: {
-                select: { id: true, title: true, shortTitle: true, category: true, conductingBody: true }
+                select: { id: true, slug: true, title: true, shortTitle: true, category: true, conductingBody: true }
             }
         },
         orderBy: { notifiedAt: 'desc' },

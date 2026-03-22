@@ -6,7 +6,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Bell, Calendar, ArrowRight, Sparkles, Search } from 'lucide-react-native';
+import { Calendar, ArrowRight, Sparkles, Search } from 'lucide-react-native';
 import { useQuery, useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useUser } from '@/context/UserContext';
 import { toggleSavedExam as toggleSavedService } from '@/services/userService';
@@ -17,12 +17,23 @@ import { NativeAdCard } from '@/components/NativeAdCard';
 import { ExamListRow } from '@/components/ExamListRow';
 import { HomeCarousel } from '@/components/HomeCarousel';
 import { fetchHomeBanners } from '@/services/configService';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { cleanLabel } from '@/utils/format';
 
 export default function UpdatesScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { user, userId, refreshUser } = useUser();
   const { showRewarded } = useAds();
+  const colorScheme = useColorScheme();
+
+  const background = useThemeColor({}, 'background');
+  const cardBg = useThemeColor({}, 'card');
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const tint = useThemeColor({}, 'tint');
+  const border = useThemeColor({}, 'border');
 
   const {
     data: examPages,
@@ -43,12 +54,13 @@ export default function UpdatesScreen() {
   });
 
   const updatedExams = examPages?.pages.flatMap(p => p.exams) ?? [];
-
   const { data: registrations = [], isLoading: loadingRegs, refetch: refetchRegs, isRefetching: refetchingRegs } = useQuery({
     queryKey: ['active-registrations'],
     queryFn: async () => {
-      const { exams } = await fetchExams({ isPublished: true, limit: 10, lifecycleStage: 'REGISTRATION' });
-      return exams;
+      const { exams } = await fetchExams({ isPublished: true, limit: 15, lifecycleStage: 'REGISTRATION' });
+      return exams.filter(ex =>
+        ex.status === 'REGISTRATION_OPEN'
+      );
     },
   });
 
@@ -59,8 +71,7 @@ export default function UpdatesScreen() {
 
   const saveMutation = useMutation({
     mutationFn: async (examId: string) => {
-      // Show video ad before saving
-      await showRewarded(); // Added this line
+      await showRewarded();
       return toggleSavedService(userId!, examId);
     },
     onSuccess: () => {
@@ -80,17 +91,17 @@ export default function UpdatesScreen() {
   const renderRegistration = (exam: any) => (
     <TouchableOpacity
       key={exam.id}
-      style={styles.regCard}
-      onPress={() => router.push({ pathname: '/exam/[id]', params: { id: exam.id } })}
+      style={[styles.regCard, { backgroundColor: cardBg, borderColor: border }]}
+      onPress={() => router.push({ pathname: '/exam/[id]', params: { id: exam.slug } })}
     >
-      <View style={styles.regBadge}>
-        <Text style={styles.regBadgeText}>LIVE</Text>
+      <View style={[styles.regBadge, { backgroundColor: exam.status === 'REGISTRATION_OPEN' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)' }]}>
+        <Text style={[styles.regBadgeText, { color: exam.status === 'REGISTRATION_OPEN' ? '#10B981' : '#EF4444' }]}>{exam.status === 'REGISTRATION_OPEN' ? 'LIVE' : cleanLabel(exam.status)}</Text>
       </View>
-      <Text style={styles.regTitle} numberOfLines={1}>{exam.shortTitle || exam.title}</Text>
-      <Text style={styles.regBody}>{exam.conductingBody}</Text>
+      <Text style={[styles.regTitle, { color: textPrimary }]} numberOfLines={1}>{exam.shortTitle || exam.title}</Text>
+      <Text style={[styles.regBody, { color: textMuted }]}>{exam.conductingBody}</Text>
       <View style={styles.regFooter}>
-        <Calendar size={12} color="#7C3AED" style={{ marginRight: 4 }} />
-        <Text style={styles.regDate}>Apply Now</Text>
+        <Calendar size={12} color={tint} style={{ marginRight: 4 }} />
+        <Text style={[styles.regDate, { color: tint }]}>{exam.status === 'REGISTRATION_OPEN' ? 'Apply Now' : 'Check Status'}</Text>
       </View>
     </TouchableOpacity>
   );
@@ -104,22 +115,23 @@ export default function UpdatesScreen() {
 
   const renderEmpty = () => (
     <View style={styles.empty}>
-      <Calendar size={48} color="#3F3F46" style={{ marginBottom: 16 }} />
-      <Text style={styles.emptyTitle}>No newly updated exams</Text>
-      <Text style={styles.emptySub}>Check back later for recent exam updates</Text>
+      <Calendar size={48} color={textMuted} style={{ marginBottom: 16 }} />
+      <Text style={[styles.emptyTitle, { color: textPrimary }]}>No newly updated exams</Text>
+      <Text style={[styles.emptySub, { color: textMuted }]}>Check back later for recent exam updates</Text>
     </View>
   );
 
   if (isLoading && !isRefreshing) {
     return (
-      <View style={styles.loader}>
-        <ActivityIndicator size="large" color="#7C3AED" />
+      <View style={[styles.loader, { backgroundColor: background }]}>
+        <ActivityIndicator size="large" color={tint} />
       </View>
     );
   }
 
+  const headerColors = (colorScheme === 'dark' ? ['#2E1065', '#09090B'] : ['#F5F3FF', '#FFFFFF']) as readonly [string, string];
   return (
-    <SafeAreaView style={styles.root} edges={['top']}>
+    <SafeAreaView style={[styles.root, { backgroundColor: background }]} edges={['top']}>
       <FlatList
         data={updatedExams}
         keyExtractor={item => item.id}
@@ -128,8 +140,11 @@ export default function UpdatesScreen() {
             <ExamListRow
               exam={item}
               isSaved={user?.savedExamIds?.includes(item.id)}
-              onSaveToggle={() => saveMutation.mutate(item.id)}
-              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.id } })}
+              onSaveToggle={() => {
+                if (!userId) return router.push('/onboarding');
+                saveMutation.mutate(item.id);
+              }}
+              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.slug } })}
             />
           </View>
         )}
@@ -137,22 +152,22 @@ export default function UpdatesScreen() {
           if (hasNextPage && !isFetchingNextPage) fetchNextPage();
         }}
         onEndReachedThreshold={0.5}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor="#7C3AED" />}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={tint} />}
         ListHeaderComponent={
           <View>
-            <LinearGradient colors={['#1e1b4b', '#0D0D0F']} style={styles.headerGradient}>
+            <LinearGradient colors={headerColors} style={styles.headerGradient}>
               <View style={styles.header}>
                 <View>
-                  <Text style={styles.greeting}>{greeting()}</Text>
-                  <Text style={styles.name}>{user?.name ?? 'Aspirant'}</Text>
+                  <Text style={[styles.greeting, { color: colorScheme === 'dark' ? '#94a3b8' : '#64748b' }]}>{greeting()}</Text>
+                  <Text style={[styles.name, { color: textPrimary }]}>{user?.name ?? 'Aspirant'}</Text>
                 </View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                   <TouchableOpacity
-                    style={styles.iconCircle}
+                    style={[styles.iconCircle, { backgroundColor: cardBg, borderColor: border }]}
                     onPress={() => router.push('/search')}>
-                    <Search size={20} color="#E2E8F0" />
+                    <Search size={20} color={textPrimary} />
                   </TouchableOpacity>
-                  <TouchableOpacity style={styles.profileCircle} onPress={() => router.push('/profile')}>
+                  <TouchableOpacity style={[styles.profileCircle, { backgroundColor: cardBg, borderColor: border }]} onPress={() => router.push('/profile')}>
                     <View style={styles.avatar}>
                       <Text style={styles.avatarTxt}>{user?.name?.charAt(0).toUpperCase() || 'A'}</Text>
                     </View>
@@ -175,14 +190,14 @@ export default function UpdatesScreen() {
             <HomeCarousel banners={banners} />
 
             {/* Native Ad in Updates */}
-            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 20 }} />
+            <NativeAdCard placement="HOME_TOP" style={{ marginHorizontal: 16, marginBottom: 20 }} />
 
             {/* Notifications toggle */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Active Registrations</Text>
+                <Text style={[styles.sectionTitle, { color: textPrimary }]}>Active Registrations</Text>
                 <TouchableOpacity onPress={() => router.push('/search')}>
-                  <Text style={styles.viewAll}>View All</Text>
+                  <Text style={[styles.viewAll, { color: tint }]}>View All</Text>
                 </TouchableOpacity>
               </View>
               <FlatList
@@ -195,21 +210,21 @@ export default function UpdatesScreen() {
               />
             </View>
 
-            <AdBanner style={{ marginHorizontal: 16, marginBottom: 16 }} />
+            <AdBanner placement="HOME_MIDDLE" style={{ marginHorizontal: 16, marginBottom: 16 }} />
 
             <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Recently Updated</Text>
+              <Text style={[styles.sectionTitle, { color: textPrimary }]}>Recently Updated</Text>
             </View>
-            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 16 }} />
+            <NativeAdCard placement="HOME_RECENT_UPDATED" style={{ marginHorizontal: 16, marginBottom: 16 }} />
           </View>
         }
         contentContainerStyle={{ paddingBottom: 40 }}
         ListEmptyComponent={isLoading ? null : renderEmpty}
         ListFooterComponent={updatedExams.length > 0 ? (
           <View>
-            {isFetchingNextPage && <ActivityIndicator color="#7C3AED" style={{ marginBottom: 16 }} />}
-            <AdBanner style={{ margin: 16 }} />
-            <NativeAdCard style={{ marginHorizontal: 16, marginBottom: 24 }} />
+            {isFetchingNextPage && <ActivityIndicator color={tint} style={{ marginBottom: 16 }} />}
+            <AdBanner placement="HOME_FOOTER" style={{ margin: 16 }} />
+            <NativeAdCard placement="HOME_FOOTER_NATIVE" style={{ marginHorizontal: 16, marginBottom: 24 }} />
           </View>
         ) : null}
       />
@@ -218,41 +233,39 @@ export default function UpdatesScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0D0F' },
-  loader: { flex: 1, backgroundColor: '#0D0D0F', justifyContent: 'center', alignItems: 'center' },
+  root: { flex: 1 },
+  loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   headerGradient: { paddingBottom: 24, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, marginBottom: 12 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 24, marginBottom: 16 },
-  greeting: { color: '#94a3b8', fontSize: 13, fontWeight: '600' },
-  name: { color: '#F4F4F5', fontSize: 26, fontWeight: '900', marginTop: 4 },
-  profileCircle: { width: 44, height: 44, borderRadius: 22, backgroundColor: 'rgba(255,255,255,0.08)', padding: 2, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  greeting: { fontSize: 13, fontWeight: '600' },
+  name: { fontSize: 26, fontWeight: '900', marginTop: 4 },
+  profileCircle: { width: 44, height: 44, borderRadius: 22, padding: 2, borderWidth: 1 },
   avatar: { flex: 1, borderRadius: 20, backgroundColor: '#3B0764', justifyContent: 'center', alignItems: 'center' },
   avatarTxt: { color: '#C4B5FD', fontSize: 18, fontWeight: '800' },
-  nudge: { marginHorizontal: 20, backgroundColor: '#312e81', borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
+  nudge: { marginHorizontal: 20, backgroundColor: '#5B21B6', borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
   nudgeTitle: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  nudgeSub: { color: '#a5b4fc', fontSize: 12 },
+  nudgeSub: { color: '#DDD6FE', fontSize: 12 },
   iconCircle: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.08)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
   },
   section: { marginVertical: 12 },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 12 },
-  sectionTitle: { color: '#F4F4F5', fontSize: 18, fontWeight: '800' },
-  viewAll: { color: '#7C3AED', fontSize: 13, fontWeight: '700' },
+  sectionTitle: { fontSize: 18, fontWeight: '800' },
+  viewAll: { fontSize: 13, fontWeight: '700' },
   regList: { paddingHorizontal: 20, gap: 12 },
-  regCard: { width: 160, backgroundColor: '#1C1C1E', borderRadius: 16, padding: 12, borderWidth: 1, borderColor: '#2C2C2E' },
+  regCard: { width: 160, borderRadius: 16, padding: 12, borderWidth: 1 },
   regBadge: { alignSelf: 'flex-start', backgroundColor: 'rgba(239, 68, 68, 0.1)', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4, marginBottom: 8 },
   regBadgeText: { color: '#EF4444', fontSize: 9, fontWeight: '900' },
-  regTitle: { color: '#F4F4F5', fontSize: 14, fontWeight: '700', marginBottom: 2 },
-  regBody: { color: '#9CA3AF', fontSize: 11, marginBottom: 8 },
+  regTitle: { fontSize: 14, fontWeight: '700', marginBottom: 2 },
+  regBody: { fontSize: 11, marginBottom: 8 },
   regFooter: { flexDirection: 'row', alignItems: 'center' },
-  regDate: { color: '#7C3AED', fontSize: 11, fontWeight: '600' },
+  regDate: { fontSize: 11, fontWeight: '600' },
   empty: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 40 },
-  emptyTitle: { color: '#F4F4F5', fontSize: 18, fontWeight: '800', marginBottom: 4 },
-  emptySub: { color: '#64748b', fontSize: 14, textAlign: 'center' },
+  emptyTitle: { fontSize: 18, fontWeight: '800', marginBottom: 4 },
+  emptySub: { fontSize: 14, textAlign: 'center' },
 });

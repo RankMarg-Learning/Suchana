@@ -9,6 +9,7 @@ import { ChevronLeft, Bell, BellOff, Calendar, ArrowRight } from 'lucide-react-n
 import { useQuery } from '@tanstack/react-query';
 import { getUserNotifications } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 function formatNotificationDate(dateString: string) {
   if (!dateString) return 'Recently';
@@ -33,6 +34,13 @@ export default function NotificationsScreen() {
   const router = useRouter();
   const { userId } = useUser();
 
+  const background = useThemeColor({}, 'background');
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const cardBg = useThemeColor({}, 'card');
+  const tint = useThemeColor({}, 'tint');
+  const border = useThemeColor({}, 'border');
+
   const { data: notifications = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['notifications', userId],
     queryFn: () => getUserNotifications(userId!),
@@ -44,39 +52,43 @@ export default function NotificationsScreen() {
 
     return (
       <TouchableOpacity
-        style={[styles.notificationCard, isImportant && styles.importantCard]}
+        style={[
+          styles.notificationCard, 
+          { backgroundColor: cardBg, borderColor: border },
+          isImportant && { borderColor: tint + '66', backgroundColor: tint + '18' }
+        ]}
         onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.exam.id } })}
         activeOpacity={0.7}
       >
         <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, isImportant && styles.importantIcon]}>
-            <Bell size={18} color={isImportant ? '#FFF' : '#7C3AED'} />
+          <View style={[styles.iconContainer, { backgroundColor: tint + '18' }, isImportant && { backgroundColor: tint }]}>
+            <Bell size={18} color={isImportant ? '#FFF' : tint} />
           </View>
           <View style={styles.titleContainer}>
-            <Text style={styles.examTitle} numberOfLines={1}>{item.exam.shortTitle || item.exam.title}</Text>
-            <Text style={styles.eventTitle}>{item.title}</Text>
+            <Text style={[styles.examTitle, { color: textMuted }]} numberOfLines={1}>{item.exam.shortTitle || item.exam.title}</Text>
+            <Text style={[styles.eventTitle, { color: textPrimary }]}>{item.title}</Text>
           </View>
           {isImportant && (
-            <View style={styles.importantBadge}>
+            <View style={[styles.importantBadge, { backgroundColor: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' }]}>
               <Text style={styles.importantText}>IMPORTANT</Text>
             </View>
           )}
         </View>
 
         {item.description && (
-          <Text style={styles.description} numberOfLines={2}>{item.description}</Text>
+          <Text style={[styles.description, { color: textMuted }]} numberOfLines={2}>{item.description}</Text>
         )}
 
-        <View style={styles.cardFooter}>
+        <View style={[styles.cardFooter, { borderTopColor: border }]}>
           <View style={styles.dateContainer}>
-            <Calendar size={12} color="#6B7280" style={{ marginRight: 4 }} />
-            <Text style={styles.dateText}>
+            <Calendar size={12} color={textMuted} style={{ marginRight: 4 }} />
+            <Text style={[styles.dateText, { color: textMuted }]}>
               {formatNotificationDate(item.notifiedAt)}
             </Text>
           </View>
           <View style={styles.viewMore}>
-            <Text style={styles.viewMoreText}>View Exam</Text>
-            <ArrowRight size={14} color="#7C3AED" style={{ marginLeft: 4 }} />
+            <Text style={[styles.viewMoreText, { color: tint }]}>View Exam</Text>
+            <ArrowRight size={14} color={tint} style={{ marginLeft: 4 }} />
           </View>
         </View>
       </TouchableOpacity>
@@ -85,15 +97,15 @@ export default function NotificationsScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconContainer}>
-        <BellOff size={48} color="#3F3F46" />
+      <View style={[styles.emptyIconContainer, { backgroundColor: cardBg }]}>
+        <BellOff size={48} color={border} />
       </View>
-      <Text style={styles.emptyTitle}>No notifications yet</Text>
-      <Text style={styles.emptySubtitle}>
+      <Text style={[styles.emptyTitle, { color: textPrimary }]}>No notifications yet</Text>
+      <Text style={[styles.emptySubtitle, { color: textMuted }]}>
         You'll receive alerts about registration dates, admit cards, and results for exams you follow.
       </Text>
       <TouchableOpacity
-        style={styles.exploreBtn}
+        style={[styles.exploreBtn, { backgroundColor: tint }]}
         onPress={() => router.push('/(tabs)/explore')}>
         <Text style={styles.exploreBtnText}>Follow More Exams</Text>
       </TouchableOpacity>
@@ -101,7 +113,7 @@ export default function NotificationsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={[styles.root, { backgroundColor: background }]}>
       <Stack.Screen
         options={{
           headerShown: false,
@@ -109,17 +121,17 @@ export default function NotificationsScreen() {
       />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <ChevronLeft size={24} color="#F4F4F5" />
+      <View style={[styles.header, { borderBottomColor: border }]}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: cardBg }]}>
+          <ChevronLeft size={24} color={textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notifications</Text>
+        <Text style={[styles.headerTitle, { color: textPrimary }]}>Notifications</Text>
         <View style={{ width: 40 }} />
       </View>
 
       {isLoading ? (
         <View style={styles.loader}>
-          <ActivityIndicator size="large" color="#7C3AED" />
+          <ActivityIndicator size="large" color={tint} />
         </View>
       ) : (
         <FlatList
@@ -132,7 +144,7 @@ export default function NotificationsScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor="#7C3AED"
+              tintColor={tint}
             />
           }
         />
@@ -142,7 +154,7 @@ export default function NotificationsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0D0F' },
+  root: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -150,18 +162,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1C1C1E',
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1C1C1E',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    color: '#F4F4F5',
     fontSize: 18,
     fontWeight: '800',
   },
@@ -172,15 +181,9 @@ const styles = StyleSheet.create({
     flexGrow: 1,
   },
   notificationCard: {
-    backgroundColor: '#1C1C1E',
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#2C2C2E',
-  },
-  importantCard: {
-    borderColor: 'rgba(124, 58, 237, 0.4)',
-    backgroundColor: 'rgba(124, 58, 237, 0.05)',
   },
   cardHeader: {
     flexDirection: 'row',
@@ -191,37 +194,29 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: 'rgba(124, 58, 237, 0.1)',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
-  },
-  importantIcon: {
-    backgroundColor: '#7C3AED',
   },
   titleContainer: {
     flex: 1,
   },
   examTitle: {
-    color: '#9CA3AF',
     fontSize: 12,
     fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   eventTitle: {
-    color: '#F4F4F5',
     fontSize: 16,
     fontWeight: '700',
     marginTop: 2,
   },
   importantBadge: {
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: 'rgba(239, 68, 68, 0.2)',
   },
   importantText: {
     color: '#EF4444',
@@ -229,7 +224,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   description: {
-    color: '#9CA3AF',
     fontSize: 14,
     lineHeight: 20,
     marginBottom: 16,
@@ -240,14 +234,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255, 255, 255, 0.05)',
   },
   dateContainer: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   dateText: {
-    color: '#6B7280',
     fontSize: 12,
     fontWeight: '500',
   },
@@ -256,7 +248,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   viewMoreText: {
-    color: '#7C3AED',
     fontSize: 13,
     fontWeight: '600',
   },
@@ -271,26 +262,22 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#1C1C1E',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   emptyTitle: {
-    color: '#F4F4F5',
     fontSize: 20,
     fontWeight: '800',
     marginBottom: 8,
   },
   emptySubtitle: {
-    color: '#6B7280',
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
   },
   exploreBtn: {
-    backgroundColor: '#7C3AED',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 14,

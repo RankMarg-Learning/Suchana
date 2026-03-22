@@ -9,6 +9,11 @@ export async function registerUser(payload: RegisterUserPayload): Promise<User> 
     return data.data;
 }
 
+export async function checkUserByPhone(phone: string): Promise<{ isRegistered: boolean; data: User | null }> {
+    const { data } = await client.get(`/phone/${phone}`);
+    return data;
+}
+
 export async function getUser(id: string): Promise<User> {
     const { data } = await client.get(`/${id}`);
     return data.data;

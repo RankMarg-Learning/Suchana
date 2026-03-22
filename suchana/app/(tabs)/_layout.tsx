@@ -1,24 +1,50 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, Bookmark, User } from 'lucide-react-native';
-
-const TAB_BAR_STYLE = {
-  backgroundColor: '#0D0D0F',
-  borderTopColor: '#1C1C1E',
-  borderTopWidth: 1,
-  height: 64,
-  paddingBottom: 10,
-};
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
+  const TAB_BAR_HEIGHT = 64;
+
+  const backgroundColor = useThemeColor({}, 'card');
+  const activeColor = useThemeColor({}, 'tint');
+  const inactiveColor = useThemeColor({}, 'textMuted');
+  const borderTopColor = useThemeColor({}, 'border');
+
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#7C3AED',
-        tabBarInactiveTintColor: '#4B5563',
         headerShown: false,
-        tabBarStyle: TAB_BAR_STYLE,
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarActiveTintColor: activeColor,
+        tabBarInactiveTintColor: inactiveColor,
+        tabBarStyle: {
+          position: 'relative',
+          bottom: insets.bottom,
+          height: TAB_BAR_HEIGHT,
+          paddingBottom: 0,
+          paddingTop: 0,
+          backgroundColor: backgroundColor,
+          borderTopWidth: 1,
+          borderTopColor: borderTopColor,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: '700',
+          marginBottom: 8,
+          letterSpacing: 0.1,
+        },
+        tabBarIconStyle: {
+          marginBottom: 0,
+        },
+        tabBarItemStyle: {
+          height: TAB_BAR_HEIGHT,
+        },
+        tabBarHideOnKeyboard: true,
+        tabBarShowLabel: true,
       }}>
       <Tabs.Screen
         name="index"

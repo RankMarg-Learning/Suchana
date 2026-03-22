@@ -44,13 +44,12 @@ export const ExamCard: React.FC<ExamCardProps> = ({
   onDelete,
   onManageEvents
 }) => {
-  const eventCount = exam._count?.lifecycleEvents || 0;
 
   const getStatusStyle = (status: string): { bg: string; text: string; icon: any } => {
     switch (status) {
       case ExamStatus.REGISTRATION_OPEN:
         return { bg: '#E8F5E9', text: '#2E7D32', icon: 'flash' };
-      case ExamStatus.UPCOMING:
+      case ExamStatus.NOTIFICATION:
         return { bg: '#E3F2FD', text: '#1565C0', icon: 'calendar-outline' };
       case ExamStatus.RESULT_DECLARED:
         return { bg: '#F3E5F5', text: '#7B1FA2', icon: 'trophy' };
@@ -102,25 +101,11 @@ export const ExamCard: React.FC<ExamCardProps> = ({
             <Text style={styles.infoLabel}>Conducting Body</Text>
             <Text style={styles.infoValue} numberOfLines={1}>{exam.conductingBody || 'N/A'}</Text>
           </View>
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Events Added</Text>
-            <View style={styles.eventCountRow}>
-              <Text style={[styles.infoValue, { color: eventCount === 0 ? '#EF4444' : '#1A1A1A' }]}>
-                {eventCount} Events
-              </Text>
-              {eventCount === 0 && <Ionicons name="alert-circle" size={14} color="#EF4444" style={{ marginLeft: 4 }} />}
-            </View>
-          </View>
+
         </View>
 
         {/* Dynamic Data Lists */}
         <View style={styles.metadataContainer}>
-          <RenderMetadata
-            icon="people"
-            color="#10B981"
-            label="Vacancies"
-            data={exam.totalVacancies}
-          />
           <RenderMetadata
             icon="wallet"
             color="#6366F1"

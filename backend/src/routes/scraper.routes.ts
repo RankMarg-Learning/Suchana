@@ -1,12 +1,10 @@
-// ============================================================
-// src/routes/scraper.routes.ts
-// Admin scraper + review pipeline routes
-// All routes require admin API key
-// ============================================================
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { requireAdmin } from '../middleware/auth';
 import { validate } from '../middleware/validate';
+import { redis } from '../config/redis';
+import { sendSuccess } from '../utils/apiResponse';
 import * as scraperController from '../controllers/scraper.controller';
+import { registrationLimiter, sensitiveActionsLimiter } from '../middleware/rateLimiter';
 import {
     createScrapeSourceSchema,
     updateScrapeSourceSchema,
@@ -15,16 +13,22 @@ import {
     listStagedExamQuerySchema,
     reviewDecisionSchema,
     updateStagedEventSchema,
+    createStagedEventSchema,
 } from '../schemas/scraper.schema';
 
 const router = Router();
 
-// All scraper routes are admin-only
 router.use(requireAdmin);
 
 // ─── Stats dashboard ────────────────────────────────────────────
 // GET /api/v1/scraper/stats
 router.get('/stats', scraperController.getReviewStats);
+
+// POST /api/v1/scraper/clear-cache
+router.post('/clear-cache', async (req: Request, res: Response) => {
+    await redis.flushall();
+    sendSuccess(res, { message: 'Cache cleared successfully' });
+});
 
 // ─── ScrapeSource management ────────────────────────────────────
 // GET  /api/v1/scraper/sources
@@ -51,10 +55,13 @@ router.get('/jobs/:id', scraperController.getScrapeJobById);
 
 // ─── Trigger scrape ─────────────────────────────────────────────
 // POST /api/v1/scraper/trigger        → async (fire-and-forget, 202)
-router.post('/trigger', validate(triggerScrapeSchema), scraperController.triggerScrape);
+router.post('/trigger', sensitiveActionsLimiter, validate(triggerScrapeSchema), scraperController.triggerScrape);
 
 // POST /api/v1/scraper/trigger/sync   → synchronous (waits for result)
-router.post('/trigger/sync', validate(triggerScrapeSchema), scraperController.triggerScrapeSync);
+router.post('/trigger/sync', sensitiveActionsLimiter, validate(triggerScrapeSchema), scraperController.triggerScrapeSync);
+
+// POST /api/v1/scraper/test-direct    → Direct URL test (Synchronous, no DB storage)
+router.post('/test-direct', scraperController.testScraperDirect);
 
 // ─── Review pipeline ────────────────────────────────────────────
 // GET  /api/v1/scraper/staged?reviewStatus=PENDING&page=1
@@ -65,6 +72,13 @@ router.get('/staged/:id', scraperController.getStagedExamById);
 
 // POST /api/v1/scraper/staged/:id/review  { decision, reviewNote, corrections? }
 router.post('/staged/:id/review', validate(reviewDecisionSchema), scraperController.reviewStagedExam);
+
+// POST /api/v1/scraper/staged/:stagedExamId/events
+router.post(
+    '/staged/:stagedExamId/events',
+    validate(createStagedEventSchema),
+    scraperController.addStagedEvent,
+);
 
 // ─── Staged lifecycle event editing ─────────────────────────────
 // PATCH /api/v1/scraper/staged/:stagedExamId/events/:eventId

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity, StatusBar, RefreshControl, Dimensions } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, StatusBar, RefreshControl, Dimensions, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -11,6 +11,7 @@ export default function DashboardScreen() {
   const [examCount, setExamCount] = useState(0);
   const [scraperStats, setScraperStats] = useState<ReviewStats | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [clearingCache, setClearingCache] = useState(false);
 
   const fetchStats = async () => {
     try {
@@ -36,6 +37,31 @@ export default function DashboardScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     fetchStats();
+  };
+
+  const handleClearCache = async () => {
+    Alert.alert(
+      'Flush Global Cache',
+      'This will clear the entire Redis database. This may cause a temporary load spike as data is re-fetched. Continue?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Flush Now', 
+          style: 'destructive', 
+          onPress: async () => {
+            try {
+              setClearingCache(true);
+              await scraperService.clearCache();
+              Alert.alert('Success', 'Global Redis cache has been flushed.');
+            } catch (err) {
+              Alert.alert('Error', 'Failed to clear cache');
+            } finally {
+              setClearingCache(false);
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -111,11 +137,30 @@ export default function DashboardScreen() {
             <View style={styles.infoIconBox}>
               <Ionicons name="pulse" size={24} color="#3B82F6" />
             </View>
-            <View style={{ flex: 1 }}>
+             <View style={{ flex: 1 }}>
               <Text style={styles.infoTitle}>System Healthy</Text>
               <Text style={styles.infoDesc}>All crawlers and AI extraction engines are running within normal latency parameters.</Text>
             </View>
           </LinearGradient>
+
+          <View style={styles.sectionLarge}>
+            <Text style={styles.sectionTitle}>Maintenance & Tools</Text>
+            <TouchableOpacity 
+              style={styles.maintenanceCard}
+              onPress={handleClearCache}
+              disabled={clearingCache}
+              activeOpacity={0.7}
+            >
+              <View style={styles.maintenanceIconBox}>
+                {clearingCache ? <ActivityIndicator size="small" color="#EF4444" /> : <Ionicons name="trash-outline" size={24} color="#EF4444" />}
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.maintenanceTitle}>Flush Global Cache</Text>
+                <Text style={styles.maintenanceDesc}>Purge all Redis data. Use with caution during high traffic.</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color="#D1D5DB" />
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -170,6 +215,22 @@ const styles = StyleSheet.create({
 
   infoBanner: { marginTop: 32, borderRadius: 24, padding: 16, flexDirection: 'row', gap: 16, alignItems: 'center' },
   infoIconBox: { width: 48, height: 48, borderRadius: 16, backgroundColor: '#FFF', justifyContent: 'center', alignItems: 'center' },
-  infoTitle: { fontSize: 15, fontWeight: '800', color: '#1E40AF' },
+   infoTitle: { fontSize: 15, fontWeight: '800', color: '#1E40AF' },
   infoDesc: { fontSize: 12, color: '#3B82F6', marginTop: 2, lineHeight: 18, fontWeight: '500' },
+
+  sectionLarge: { marginTop: 40, marginBottom: 20 },
+  maintenanceCard: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    gap: 16, 
+    backgroundColor: '#FFF', 
+    padding: 16, 
+    borderRadius: 24, 
+    borderWidth: 1, 
+    borderColor: '#FEE2E2', // light red border
+    shadowColor: '#EF4444', shadowOpacity: 0.05, shadowRadius: 10, elevation: 2
+  },
+  maintenanceIconBox: { width: 52, height: 52, borderRadius: 16, backgroundColor: '#FEF2F2', justifyContent: 'center', alignItems: 'center' },
+  maintenanceTitle: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  maintenanceDesc: { fontSize: 12, color: '#9CA3AF', marginTop: 2, fontWeight: '500' },
 });

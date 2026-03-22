@@ -31,12 +31,11 @@ export interface Exam {
     state: string | null;
     minAge: number | null;
     maxAge: number | null;
-    qualificationCriteria: {
-        level?: string;
-        rules?: Record<string, any>;
-    } | null;
-    totalVacancies: number | Record<string, any> | null;
-    applicationFee: Record<string, any> | null;
+    qualificationCriteria: string | null;
+    totalVacancies: string | null;
+    applicationFee: string | null;
+    salary?: string | null;
+    additionalDetails?: string | null;
     officialWebsite: string | null;
     notificationUrl: string | null;
     status: ExamStatus;
@@ -45,7 +44,6 @@ export interface Exam {
     updatedAt: string;
     createdAt: string;
     lifecycleEvents?: LifecycleEvent[];
-    _count?: { lifecycleEvents: number };
 }
 
 export type ExamCategory = Cat;

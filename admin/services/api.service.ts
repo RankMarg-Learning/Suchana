@@ -1,7 +1,7 @@
 
 import axios from 'axios';
 import { API_CONFIG } from '../config/api.config';
-import { ExamCategory, ExamLevel, ExamStatus, LifecycleEventType, LifecycleStage } from '../constants/enums';
+import { ExamCategory, ExamLevel, ExamStatus, LifecycleStage } from '../constants/enums';
 
 const apiClient = axios.create({
     baseURL: API_CONFIG.BASE_URL,
@@ -22,24 +22,21 @@ export interface Exam {
     examLevel: ExamLevel;
     state?: string;
     conductingBody: string;
-    minAge?: number;
-    maxAge?: number;
-    totalVacancies?: number;
-    qualificationCriteria?: any;
-    applicationFee?: any;
+    age?: string;
+    qualificationCriteria?: string;
+    totalVacancies?: string;
+    applicationFee?: string;
+    salary?: string;
+    additionalDetails?: string;
     officialWebsite?: string;
     notificationUrl?: string;
     isPublished: boolean;
     createdAt: string;
-    _count?: {
-        lifecycleEvents: number;
-    };
 }
 
 export interface LifecycleEvent {
     id: string;
     examId: string;
-    eventType: LifecycleEventType;
     stage: LifecycleStage;
     stageOrder: number;
     title: string;
@@ -47,7 +44,6 @@ export interface LifecycleEvent {
     startsAt?: string;
     endsAt?: string;
     isTBD: boolean;
-    isImportant: boolean;
     actionUrl?: string;
     actionLabel?: string;
 }
@@ -83,14 +79,12 @@ export interface StagedEvent {
     id: string;
     stagedExamId: string;
     stage: string;
-    eventType: string;
     stageOrder: number;
     title: string;
     description?: string;
     startsAt?: string;
     endsAt?: string;
     isTBD: boolean;
-    isImportant: boolean;
     actionUrl?: string;
     actionLabel?: string;
 }
@@ -107,12 +101,15 @@ export interface StagedExam {
     category?: string;
     examLevel?: string;
     state?: string;
-    minAge?: number;
-    maxAge?: number;
-    totalVacancies?: number;
-    applicationFee?: any;
+    age?: string;
+    totalVacancies?: string;
+    applicationFee?: string;
+    qualificationCriteria?: string;
+    salary?: string;
+    additionalDetails?: string;
     officialWebsite?: string;
     notificationUrl?: string;
+    status?: string;
     aiConfidence?: number;
     aiNotes?: string;
     reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | 'NEEDS_CORRECTION';
@@ -125,6 +122,7 @@ export interface StagedExam {
     mergedSourceUrls: string[];
     sourceUrl?: string;
     scrapedAt?: string;
+    usefulLinks?: Record<string, string>;
     createdAt: string;
     stagedEvents: StagedEvent[];
     scrapeJob?: {
@@ -271,6 +269,14 @@ export const scraperService = {
     },
     deleteStagedEvent: async (stagedExamId: string, eventId: string): Promise<any> => {
         const response = await apiClient.delete(`/scraper/staged/${stagedExamId}/events/${eventId}`);
+        return response.data;
+    },
+    addStagedEvent: async (stagedExamId: string, data: any): Promise<any> => {
+        const response = await apiClient.post(`/scraper/staged/${stagedExamId}/events`, data);
+        return response.data;
+    },
+    clearCache: async (): Promise<any> => {
+        const response = await apiClient.post('/scraper/clear-cache');
         return response.data;
     },
 };

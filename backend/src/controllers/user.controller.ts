@@ -8,6 +8,13 @@ export async function registerUser(req: Request, res: Response, next: NextFuncti
     } catch (err) { next(err); }
 }
 
+export async function getUserByPhoneHandler(req: Request, res: Response, next: NextFunction) {
+    try {
+        const user = await userService.getUserByPhone(req.params.phone);
+        res.json({ success: true, isRegistered: !!user, data: user || null });
+    } catch (err) { next(err); }
+}
+
 export async function getUser(req: Request, res: Response, next: NextFunction) {
     try {
         const user = await userService.getUserById(req.params.id);

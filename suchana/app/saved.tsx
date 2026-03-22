@@ -11,11 +11,19 @@ import { fetchSavedExams } from '@/services/examService';
 import { toggleSavedExam as toggleSavedService } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
 import { ExamCard } from '@/components/ExamCard';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 export default function SavedExamsScreen() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { userId, refreshUser } = useUser();
+
+  const background = useThemeColor({}, 'background');
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const cardBg = useThemeColor({}, 'card');
+  const tint = useThemeColor({}, 'tint');
+  const border = useThemeColor({}, 'border');
 
   const { data: exams = [], isLoading, refetch, isRefetching } = useQuery({
     queryKey: ['savedExams', userId],
@@ -34,15 +42,15 @@ export default function SavedExamsScreen() {
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
-      <View style={styles.emptyIconContainer}>
-        <Bookmark size={48} color="#3F3F46" />
+      <View style={[styles.emptyIconContainer, { backgroundColor: cardBg }]}>
+        <Bookmark size={48} color={border} />
       </View>
-      <Text style={styles.emptyTitle}>No saved exams</Text>
-      <Text style={styles.emptySubtitle}>
+      <Text style={[styles.emptyTitle, { color: textPrimary }]}>No saved exams</Text>
+      <Text style={[styles.emptySubtitle, { color: textMuted }]}>
         Exams you bookmark will appear here for quick access.
       </Text>
       <TouchableOpacity
-        style={styles.exploreBtn}
+        style={[styles.exploreBtn, { backgroundColor: tint }]}
         onPress={() => router.push('/(tabs)/explore')}>
         <Text style={styles.exploreBtnText}>Explore Exams</Text>
       </TouchableOpacity>
@@ -50,7 +58,7 @@ export default function SavedExamsScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.root}>
+    <SafeAreaView style={[styles.root, { backgroundColor: background }]}>
       <Stack.Screen
         options={{
           headerShown: false,
@@ -58,17 +66,17 @@ export default function SavedExamsScreen() {
       />
 
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-          <ChevronLeft size={24} color="#F4F4F5" />
+      <View style={[styles.header, { borderBottomColor: border }]}>
+        <TouchableOpacity onPress={() => router.back()} style={[styles.backBtn, { backgroundColor: cardBg }]}>
+          <ChevronLeft size={24} color={textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Saved Exams</Text>
+        <Text style={[styles.headerTitle, { color: textPrimary }]}>Saved Exams</Text>
         <View style={{ width: 40 }} />
       </View>
 
       {isLoading ? (
         <View style={styles.loader}>
-          <ActivityIndicator size="large" color="#7C3AED" />
+          <ActivityIndicator size="large" color={tint} />
         </View>
       ) : (
         <FlatList
@@ -79,7 +87,7 @@ export default function SavedExamsScreen() {
               exam={item}
               isSaved={true}
               onSaveToggle={() => saveMutation.mutate(item.id)}
-              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.id } })}
+              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.slug } })}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -88,7 +96,7 @@ export default function SavedExamsScreen() {
             <RefreshControl
               refreshing={isRefetching}
               onRefresh={refetch}
-              tintColor="#7C3AED"
+              tintColor={tint}
             />
           }
         />
@@ -98,7 +106,7 @@ export default function SavedExamsScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: '#0D0D0F' },
+  root: { flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -106,18 +114,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#1C1C1E',
   },
   backBtn: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1C1C1E',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
-    color: '#F4F4F5',
     fontSize: 18,
     fontWeight: '800',
   },
@@ -138,26 +143,22 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#1C1C1E',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
   },
   emptyTitle: {
-    color: '#F4F4F5',
     fontSize: 20,
     fontWeight: '800',
     marginBottom: 8,
   },
   emptySubtitle: {
-    color: '#6B7280',
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
   },
   exploreBtn: {
-    backgroundColor: '#7C3AED',
     paddingVertical: 16,
     paddingHorizontal: 32,
     borderRadius: 14,

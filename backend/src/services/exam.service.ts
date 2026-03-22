@@ -46,6 +46,7 @@ export async function listExams(query: ListExamQuery) {
             })
         };
 
+
         const [exams, total] = await Promise.all([
             prisma.exam.findMany({
                 where,
@@ -71,23 +72,11 @@ export async function listExams(query: ListExamQuery) {
                     publishedAt: true,
                     updatedAt: true,
                     createdAt: true,
-                    _count: { select: { lifecycleEvents: true } },
-                    lifecycleEvents: {
-                        where: { eventType: 'REGISTRATION' },
-                        orderBy: { endsAt: 'asc' },
-                        take: 1,
-                        select: {
-                            id: true,
-                            title: true,
-                            eventType: true,
-                            startsAt: true,
-                            endsAt: true,
-                        }
-                    },
                 },
             }),
             prisma.exam.count({ where }),
         ]);
+
 
         return { exams, total };
     });
@@ -112,18 +101,21 @@ export async function getExamById(id: string) {
 
 // ─── Get By Slug ─────────────────────────────────────────────
 export async function getExamBySlug(slug: string) {
-    const cacheKey = `exams:slug:${slug}`;
-    return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_DETAIL, async () => {
+    return cacheService.getOrSet(`exams:slug:${slug}`, env.CACHE_TTL_EXAM_DETAIL, async () => {
         const exam = await prisma.exam.findUnique({
             where: { slug },
             include: {
-                lifecycleEvents: { orderBy: { startsAt: 'asc' } },
+                lifecycleEvents: {
+                    orderBy: { startsAt: 'asc' },
+                },
             },
         });
-        if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam "${slug}" not found`);
+
+        if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam with slug "${slug}" not found`);
         return exam;
     });
 }
+
 
 // ─── Create ──────────────────────────────────────────────────
 export async function createExam(dto: CreateExamDto, adminId: string) {
@@ -135,9 +127,11 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
     const exam = await prisma.exam.create({
         data: {
             ...dto,
-            qualificationCriteria: dto.qualificationCriteria as Prisma.InputJsonValue,
-            applicationFee: dto.applicationFee as Prisma.InputJsonValue,
-            totalVacancies: dto.totalVacancies as Prisma.InputJsonValue,
+            qualificationCriteria: dto.qualificationCriteria,
+            applicationFee: dto.applicationFee,
+            totalVacancies: dto.totalVacancies,
+            salary: dto.salary,
+            additionalDetails: dto.additionalDetails,
             slug,
             createdBy: adminId,
             publishedAt: dto.isPublished ? new Date() : null,
@@ -158,19 +152,20 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
 
     const data: Prisma.ExamUpdateInput = {
         ...dto,
-        qualificationCriteria: dto.qualificationCriteria as Prisma.InputJsonValue,
-        applicationFee: dto.applicationFee as Prisma.InputJsonValue,
-        totalVacancies: dto.totalVacancies as Prisma.InputJsonValue,
+        qualificationCriteria: dto.qualificationCriteria,
+        applicationFee: dto.applicationFee,
+        totalVacancies: dto.totalVacancies,
+        salary: dto.salary,
+        additionalDetails: dto.additionalDetails,
         // Auto-set publishedAt when first publish
         ...(dto.isPublished && !existing.isPublished && { publishedAt: new Date() }),
     };
 
     const updated = await prisma.exam.update({ where: { id }, data });
 
-
     await Promise.all([
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),
-        cacheService.del(`exams: slug:${existing.slug} `),
+        cacheService.del(`exams:slug:${existing.slug}`),
         cacheService.delPattern('exams:list:*'),
     ]);
 
@@ -184,13 +179,12 @@ export async function deleteExam(id: string, adminId: string) {
 
     await prisma.exam.delete({ where: { id } });
 
-
     await Promise.all([
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),
-        cacheService.del(`exams: slug:${existing.slug} `),
+        cacheService.del(`exams:slug:${existing.slug}`),
         cacheService.delPattern('exams:list:*'),
     ]);
-    logger.info(`Exam deleted: ${id} by admin ${adminId} `);
+    logger.info(`Exam deleted: ${id} by admin ${adminId}`);
 }
 
 // ─── Get Saved Exams ─────────────────────────────────────────
@@ -220,23 +214,9 @@ export async function getSavedExams(userId: string) {
             totalVacancies: true,
             isPublished: true,
             publishedAt: true,
-            createdAt: true,
-            _count: { select: { lifecycleEvents: true } },
-            lifecycleEvents: {
-                where: { eventType: 'REGISTRATION' },
-                orderBy: { endsAt: 'asc' },
-                take: 1,
-                select: {
-                    id: true,
-                    title: true,
-                    eventType: true,
-                    startsAt: true,
-                    endsAt: true,
-                }
-            },
+            createdAt: true
         }
     });
-
     return exams;
 }
 

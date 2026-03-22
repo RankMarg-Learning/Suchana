@@ -11,6 +11,7 @@ const commonOptions = {
     retryStrategy: (times: number) => Math.min(times * 100, 3000),
     enableReadyCheck: true,
     lazyConnect: false,
+    family: 4, // Force IPv4 to avoid ENOTFOUND issues on some setups
 };
 
 // Main client (cache)
@@ -43,6 +44,7 @@ export const bullRedisConnection = (() => {
             username: url.username || undefined,
             db: Number(url.pathname.slice(1)) || 0,
             tls: isTls ? {} : undefined,
+            family: 4,
         };
     }
 

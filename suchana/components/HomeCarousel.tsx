@@ -11,10 +11,12 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import type { HomeBanner } from '@/types/config';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 const { width } = Dimensions.get('window');
 const CAROUSEL_WIDTH = width - 40;
-const CAROUSEL_HEIGHT = 180;
+const CAROUSEL_HEIGHT = CAROUSEL_WIDTH * (1 / 3);
 
 interface Props {
     banners: HomeBanner[];
@@ -23,6 +25,10 @@ interface Props {
 export function HomeCarousel({ banners }: Props) {
     const flatListRef = useRef<FlatList>(null);
     const [activeIndex, setActiveIndex] = useState(0);
+    const colorScheme = useColorScheme();
+    const tint = useThemeColor({}, 'tint');
+    const border = useThemeColor({}, 'border');
+    const cardBg = useThemeColor({}, 'card');
 
     useEffect(() => {
         if (banners.length <= 1) return;
@@ -48,7 +54,7 @@ export function HomeCarousel({ banners }: Props) {
     const renderItem = ({ item }: { item: HomeBanner }) => (
         <TouchableOpacity
             activeOpacity={0.9}
-            style={styles.slide}
+            style={[styles.slide, { backgroundColor: cardBg, borderColor: border }]}
             onPress={() => handlePress(item.actionUrl)}
         >
             <Image
@@ -60,7 +66,7 @@ export function HomeCarousel({ banners }: Props) {
                 colors={['transparent', 'rgba(0,0,0,0.8)']}
                 style={styles.gradient}
             >
-                {item.title && <Text style={styles.title}>{item.title}</Text>}
+                {item.title && <Text style={styles.title} numberOfLines={1}>{item.title}</Text>}
                 {item.description && (
                     <Text style={styles.description} numberOfLines={2}>
                         {item.description}
@@ -99,7 +105,8 @@ export function HomeCarousel({ banners }: Props) {
                             key={index}
                             style={[
                                 styles.dot,
-                                activeIndex === index && styles.activeDot,
+                                { backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)' },
+                                activeIndex === index && [styles.activeDot, { backgroundColor: tint }],
                             ]}
                         />
                     ))}
@@ -122,7 +129,7 @@ const styles = StyleSheet.create({
         height: CAROUSEL_HEIGHT,
         borderRadius: 16,
         overflow: 'hidden',
-        backgroundColor: '#18181b',
+        borderWidth: 1,
     },
     image: {
         width: '100%',
@@ -133,20 +140,20 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        height: '60%',
+        height: '100%',
         justifyContent: 'flex-end',
-        padding: 15,
+        padding: 12,
     },
     title: {
         color: '#fff',
-        fontSize: 18,
+        fontSize: 15,
         fontWeight: '900',
-        marginBottom: 4,
+        marginBottom: 2,
     },
     description: {
         color: '#d4d4d8',
-        fontSize: 13,
-        fontWeight: '500',
+        fontSize: 11,
+        fontWeight: '600',
     },
     pagination: {
         flexDirection: 'row',
@@ -158,10 +165,8 @@ const styles = StyleSheet.create({
         width: 6,
         height: 6,
         borderRadius: 3,
-        backgroundColor: 'rgba(255,255,255,0.2)',
     },
     activeDot: {
-        backgroundColor: '#7C3AED',
         width: 16,
     },
 });

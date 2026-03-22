@@ -1,6 +1,3 @@
-// ============================================================
-// src/config/env.ts  — Typed environment configuration
-// ============================================================
 import dotenv from 'dotenv';
 import { z } from 'zod';
 

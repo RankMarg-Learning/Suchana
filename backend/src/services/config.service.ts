@@ -19,28 +19,35 @@ export async function getActiveBanners() {
     });
 }
 
-export async function createHomeBanner(data: {
-    imageUrl: string;
-    actionUrl?: string;
-    title?: string;
-    description?: string;
-    priority?: number;
-    isActive?: boolean;
-    expiresAt?: Date;
-}) {
-    return prisma.homeBanner.create({ data });
+export async function createHomeBanner(data: any) {
+    const expiresAt = data.expiresAt && data.expiresAt.trim() !== "" ? new Date(data.expiresAt) : null;
+    return prisma.homeBanner.create({
+        data: {
+            ...data,
+            priority: data.priority ? Number(data.priority) : 0,
+            isActive: data.isActive === true || data.isActive === 'true',
+            expiresAt: (expiresAt && !isNaN(expiresAt.getTime())) ? expiresAt : null,
+        }
+    });
 }
 
-export async function updateHomeBanner(id: string, data: Partial<{
-    imageUrl: string;
-    actionUrl: string;
-    title: string;
-    description: string;
-    priority: number;
-    isActive: boolean;
-    expiresAt: Date | null;
-}>) {
-    return prisma.homeBanner.update({ where: { id }, data });
+export async function updateHomeBanner(id: string, data: any) {
+    const updateData: any = { ...data };
+
+    if ('expiresAt' in data) {
+        const expiresAt = data.expiresAt && data.expiresAt.trim() !== "" ? new Date(data.expiresAt) : null;
+        updateData.expiresAt = (expiresAt && !isNaN(expiresAt.getTime())) ? expiresAt : null;
+    }
+
+    if ('priority' in data) {
+        updateData.priority = Number(data.priority);
+    }
+
+    if ('isActive' in data) {
+        updateData.isActive = data.isActive === true || data.isActive === 'true';
+    }
+
+    return prisma.homeBanner.update({ where: { id }, data: updateData });
 }
 
 export async function deleteHomeBanner(id: string) {

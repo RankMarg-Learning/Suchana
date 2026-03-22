@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
-import Markdown from 'react-native-markdown-display';
 import {
   Bell,
   ClipboardList,
@@ -17,8 +16,11 @@ import {
   RefreshCcw,
   Pin
 } from 'lucide-react-native';
-import { cleanLabel } from '@/utils/format';
+import { cleanLabel, formatDate, formatDatesInText } from '@/utils/format';
 import type { LifecycleEvent } from '@/types/exam';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 
 const STAGE_ICONS: Record<string, any> = {
   NOTIFICATION: Bell,
@@ -41,48 +43,83 @@ const EVENT_ICONS: Record<string, any> = {
   OTHER: Pin,
 };
 
-function formatDate(iso: string | null | undefined) {
-  if (!iso) return 'TBD';
-  return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
-}
 
-function getStatus(event: LifecycleEvent): { label: string; color: string } {
-  if (event.isTBD) return { label: 'TBD', color: '#9CA3AF' };
+
+function getStatus(
+  event: LifecycleEvent,
+  effectiveEndsAt?: number | null,
+): { label: string; color: string } | null {
+  if (event.isTBD || !event.startsAt) return { label: 'TBD', color: '#9CA3AF' };
+
   const now = Date.now();
-  const start = event.startsAt ? new Date(event.startsAt).getTime() : null;
-  const end = event.endsAt ? new Date(event.endsAt).getTime() : null;
-  if (end && now > end) return { label: 'Closed', color: '#6B7280' };
-  if (start && now >= start && (!end || now <= end)) return { label: 'Active', color: '#34D399' };
+  const start = new Date(event.startsAt).getTime();
+
+  const end: number | null =
+    event.endsAt
+      ? new Date(event.endsAt).getTime()
+      : effectiveEndsAt ?? null;
+  if (end !== null && now > end) return null;
+
+  if (now >= start && (end === null || now <= end))
+    return { label: 'Active', color: '#34D399' };
+
   return { label: 'Upcoming', color: '#FBBF24' };
 }
 
-export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast: boolean }) {
+export function TimelineItem({
+  event,
+  isLast,
+  nextEventStartsAt,
+}: {
+  event: LifecycleEvent;
+  isLast: boolean;
+  nextEventStartsAt?: string | null;
+}) {
   const [isExpanded, setIsExpanded] = useState(false);
+  const textPrimary = useThemeColor({}, 'text');
+  const textMuted = useThemeColor({}, 'textMuted');
+  const border = useThemeColor({}, 'border');
+  const cardBg = useThemeColor({}, 'card');
+  const tint = useThemeColor({}, 'tint');
+
   const stage = event.stage || '';
   const eventType = event.eventType || '';
   const IconComponent = STAGE_ICONS[stage] || EVENT_ICONS[eventType] || Pin;
-  const status = getStatus(event);
+
+  const effectiveEndsAt: number | null = nextEventStartsAt
+    ? new Date(nextEventStartsAt).getTime()
+    : null;
+
+  const status = getStatus(event, effectiveEndsAt);
+  const colorScheme = useColorScheme();
+
+
+  // Completed events (status === null) fall back to a muted gray dot
+  const dotColor = status?.color ?? '#6B7280';
 
   return (
     <View style={styles.row}>
       {/* Left: connector */}
       <View style={styles.connector}>
-        <View style={[styles.dot, { borderColor: status.color }]}>
-          <IconComponent size={18} color={status.color} strokeWidth={2.5} />
+        <View style={[styles.dot, { borderColor: dotColor, backgroundColor: cardBg }]}>
+          <IconComponent size={18} color={dotColor} strokeWidth={2.5} />
         </View>
-        {!isLast && <View style={styles.line} />}
+        {!isLast && <View style={[styles.line, { backgroundColor: border }]} />}
       </View>
 
       {/* Right: content */}
       <View style={styles.content}>
         <View style={styles.headerRow}>
-          <Text style={styles.title}>{event.title}</Text>
-          <View style={[styles.statusBadge, { borderColor: status.color }]}>
-            <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
-          </View>
+          <Text style={[styles.title, { color: textPrimary }]}>{event.title}</Text>
+          {/* Only render the badge when status is non-null (i.e. not completed) */}
+          {status !== null && (
+            <View style={[styles.statusBadge, { borderColor: status.color }]}>
+              <Text style={[styles.statusText, { color: status.color }]}>{status.label}</Text>
+            </View>
+          )}
         </View>
-        {event.stage && <Text style={styles.stage}>{cleanLabel(event.stage)}</Text>}
-        <Text style={styles.date}>
+        {event.stage && <Text style={[styles.stage, { color: tint }]}>{cleanLabel(event.stage)}</Text>}
+        <Text style={[styles.date, { color: textMuted }]}>
           {formatDate(event.startsAt)}
           {event.endsAt ? ` – ${formatDate(event.endsAt)}` : ''}
         </Text>
@@ -90,29 +127,49 @@ export function TimelineItem({ event, isLast }: { event: LifecycleEvent; isLast:
         {event.description ? (
           <View style={styles.descContainer}>
             {isExpanded ? (
-              <Markdown style={markdownStyles}>
-                {event.description}
-              </Markdown>
+              <MarkdownRenderer
+                content={event.description}
+                variant="fact"
+                includeTime={false}
+                style={{ body: { fontSize: 12, lineHeight: 18, color: textMuted } }}
+              />
             ) : (
-              <Text style={styles.desc} numberOfLines={1}>
-                {event.description.replace(/[#*`\n]/g, ' ')}
+              <Text style={[styles.desc, { color: textMuted }]} numberOfLines={1}>
+                {formatDatesInText(event.description).replace(/[#*`\n]/g, ' ')}
               </Text>
             )}
 
             {event.description.length > 50 && (
               <TouchableOpacity onPress={() => setIsExpanded(!isExpanded)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                <Text style={styles.moreBtn}>{isExpanded ? 'Show less' : 'more'}</Text>
+                <Text style={[styles.moreBtn, { color: tint }]}>{isExpanded ? 'Show less' : 'more'}</Text>
               </TouchableOpacity>
             )}
           </View>
         ) : null}
 
         {event.actionUrl ? (
-          <TouchableOpacity
-            style={styles.actionBtn}
-            onPress={() => Linking.openURL(event.actionUrl!)}>
-            <Text style={styles.actionText}>{event.actionLabel ?? 'Open →'}</Text>
-          </TouchableOpacity>
+          status === null ? (
+            // Completed event – show button as disabled/closed
+            <TouchableOpacity
+              disabled
+              style={[
+                styles.actionBtn,
+                {
+                  borderColor: '#6B7280',
+                  backgroundColor: colorScheme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)',
+                  opacity: 0.55,
+                },
+              ]}>
+              <Text style={[styles.actionText, { color: '#9CA3AF' }]}>Closed</Text>
+            </TouchableOpacity>
+          ) : (
+            // Active / Upcoming – fully interactive
+            <TouchableOpacity
+              style={[styles.actionBtn, { borderColor: tint, backgroundColor: colorScheme === 'dark' ? '#3B0764' : tint }]}
+              onPress={() => Linking.openURL(event.actionUrl!)}>
+              <Text style={[styles.actionText, { color: colorScheme === 'dark' ? '#EDE9FE' : '#FFF' }]}>{event.actionLabel ?? 'Open →'}</Text>
+            </TouchableOpacity>
+          )
         ) : null}
       </View>
     </View>
@@ -126,16 +183,15 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#1C1C1E',
     borderWidth: 2,
     alignItems: 'center',
     justifyContent: 'center',
   },
   icon: { fontSize: 16 },
-  line: { width: 2, flex: 1, backgroundColor: '#2C2C2E', marginTop: 4 },
+  line: { width: 2, flex: 1, marginTop: 4 },
   content: { flex: 1, paddingLeft: 12, paddingBottom: 24 },
   headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  title: { color: '#F4F4F5', fontSize: 14, fontWeight: '700', flex: 1, marginRight: 8 },
+  title: { fontSize: 14, fontWeight: '700', flex: 1, marginRight: 8 },
   statusBadge: {
     borderRadius: 6,
     borderWidth: 1,
@@ -143,12 +199,11 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
   },
   statusText: { fontSize: 10, fontWeight: '700' },
-  stage: { color: '#A78BFA', fontSize: 12, fontWeight: '600', marginTop: 2 },
-  date: { color: '#9CA3AF', fontSize: 12, marginTop: 4 },
+  stage: { fontSize: 12, fontWeight: '600', marginTop: 2 },
+  date: { fontSize: 12, marginTop: 4 },
   descContainer: { marginTop: 4 },
-  desc: { color: '#D1D5DB', fontSize: 12, lineHeight: 18 },
+  desc: { fontSize: 12, lineHeight: 18 },
   moreBtn: {
-    color: '#A78BFA',
     fontSize: 12,
     fontWeight: '700',
     marginTop: 2,
@@ -156,38 +211,11 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     marginTop: 10,
-    backgroundColor: '#3B0764',
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 8,
     alignSelf: 'flex-start',
     borderWidth: 1,
-    borderColor: '#5B21B6',
   },
-  actionText: { color: '#EDE9FE', fontSize: 13, fontWeight: '800' },
-});
-
-const markdownStyles = StyleSheet.create({
-  body: {
-    color: '#D1D5DB',
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  paragraph: {
-    marginTop: 0,
-    marginBottom: 8,
-  },
-  strong: {
-    fontWeight: 'bold',
-    color: '#F4F4F5',
-  },
-  link: {
-    color: '#A78BFA',
-  },
-  bullet_list: {
-    marginBottom: 8,
-  },
-  ordered_list: {
-    marginBottom: 8,
-  },
+  actionText: { fontSize: 13, fontWeight: '800' },
 });

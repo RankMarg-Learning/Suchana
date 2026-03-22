@@ -1,53 +1,71 @@
-# Build stage
+# ────────────────────────────────────────────────
+# Stage 1 — builder: install all deps & compile TS
+# ────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Install dependencies for Prisma and building
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 
 COPY package*.json ./
 COPY prisma ./prisma/
 
-RUN npm ci
+# --ignore-scripts skips Prisma's postinstall binary download (avoids ECONNRESET);
+# prisma generate is run explicitly in the next step instead.
+RUN npm ci --ignore-scripts
+
+# Download Prisma engines & generate the typed client
+RUN npx prisma generate
 
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build the application
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine AS runner
+# ────────────────────────────────────────────────
+# Stage 2 — deps: prune devDependencies
+# ────────────────────────────────────────────────
+FROM node:20-alpine AS deps
 
 WORKDIR /app
 
-# Install production dependencies only
-RUN apk add --no-cache libc6-compat
-
+COPY --from=builder /app/node_modules ./node_modules
 COPY package*.json ./
-COPY prisma ./prisma/
 
-RUN npm ci --only=production
+# Remove devDependencies (TypeScript, ts-node, @types/*, rimraf, etc.)
+# Cuts node_modules from ~600 MB to ~200 MB
+RUN npm prune --production
 
-# Copy built assets from builder
-COPY --from=builder /app/dist ./dist
-# Copy generated prisma client
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+# ────────────────────────────────────────────────
+# Stage 3 — runner: lean production image
+# ────────────────────────────────────────────────
+FROM node:20-alpine AS runner
 
-# Copy entrypoint script
-COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-
-# Environment variables
 ENV NODE_ENV=production
 ENV PORT=8080
+
+WORKDIR /app
+
+RUN apk add --no-cache libc6-compat openssl \
+    # Run as non-root for container security
+    && addgroup -S appgroup \
+    && adduser  -S appuser -G appgroup
+
+# Only production node_modules (no devDeps)
+COPY --from=deps    /app/node_modules    ./node_modules
+# Compiled JS output
+COPY --from=builder /app/dist           ./dist
+# Prisma schema (needed by db push at runtime)
+COPY --from=builder /app/prisma         ./prisma
+COPY package*.json ./
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+USER appuser
 
 EXPOSE 8080
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-# Start the application
-CMD ["npm", "start"]
+# Call node directly — avoids npm process overhead at startup
+CMD ["node", "dist/server.js"]

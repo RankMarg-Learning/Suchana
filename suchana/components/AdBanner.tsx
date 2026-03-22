@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { AD_UNIT_IDS } from '@/constants/Ads';
+import { ADS_CONFIG, GLOBAL_ADS_ENABLED, AdPlacement } from '@/constants/AdsConfig';
 
 let BannerAd: any;
 let BannerAdSize: any;
@@ -21,18 +22,25 @@ if (Platform.OS !== 'web' && !IS_EXPO_GO) {
 }
 
 interface Props {
+  placement: AdPlacement;
   adUnitId?: string;
   style?: object;
   size?: any;
 }
 
-export function AdBanner({ adUnitId = AD_UNIT_IDS.BANNER, style, size }: Props) {
+export function AdBanner({ placement, adUnitId, style, size }: Props) {
   const [error, setError] = React.useState(false);
 
-  if (Platform.OS === 'web') {
+  if (Platform.OS === 'web' || !GLOBAL_ADS_ENABLED) {
     return null;
   }
 
+  const config = ADS_CONFIG[placement];
+  if (!config?.enabled) {
+    return null;
+  }
+
+  const activeAdUnitId = adUnitId || config.adUnitId;
   const activeSize = size || (BannerAdSize ? BannerAdSize.ANCHORED_ADAPTIVE_BANNER : 'BANNER');
 
   if (error || !BannerAd) {

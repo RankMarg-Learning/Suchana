@@ -37,13 +37,14 @@ export const EXAM_LEVELS = Object.values(ExamLevel);
 
 
 export const ExamStatus = {
-    UPCOMING: 'UPCOMING',
+    NOTIFICATION: 'NOTIFICATION',
     REGISTRATION_OPEN: 'REGISTRATION_OPEN',
     REGISTRATION_CLOSED: 'REGISTRATION_CLOSED',
     ADMIT_CARD_OUT: 'ADMIT_CARD_OUT',
     EXAM_ONGOING: 'EXAM_ONGOING',
     RESULT_DECLARED: 'RESULT_DECLARED',
     ARCHIVED: 'ARCHIVED',
+    ACTIVE: 'ACTIVE',
 } as const;
 export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
 export const EXAM_STATUSES = Object.values(ExamStatus);
@@ -73,17 +74,6 @@ export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
 };
 
 
-export const LifecycleEventType = {
-    RELEASE: 'RELEASE',
-    START: 'START',
-    END: 'END',
-    CORRECTION: 'CORRECTION',
-    RESCHEDULED: 'RESCHEDULED',
-    CANCELLED: 'CANCELLED',
-    OTHER: 'OTHER',
-} as const;
-export type LifecycleEventType = (typeof LifecycleEventType)[keyof typeof LifecycleEventType];
-export const LIFECYCLE_EVENT_TYPES = Object.values(LifecycleEventType);
 
 export const ReviewStatus = {
     PENDING: 'PENDING',
@@ -135,4 +125,13 @@ export const QualificationLevel = {
     OTHER: 'OTHER',
 } as const;
 export type QualificationLevel = (typeof QualificationLevel)[keyof typeof QualificationLevel];
+
+export const getStatusFromStage = (stage: string): ExamStatus | null => {
+    if (stage === LifecycleStage.REGISTRATION) return ExamStatus.REGISTRATION_OPEN;
+    if (stage === LifecycleStage.ADMIT_CARD) return ExamStatus.ADMIT_CARD_OUT;
+    if (stage === LifecycleStage.EXAM) return ExamStatus.EXAM_ONGOING;
+    if (stage === LifecycleStage.RESULT) return ExamStatus.RESULT_DECLARED;
+    if (stage === LifecycleStage.NOTIFICATION) return ExamStatus.NOTIFICATION;
+    return null;
+};
 

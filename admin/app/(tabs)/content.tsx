@@ -4,6 +4,8 @@ import {
   Alert, Modal, TextInput, Switch, ActivityIndicator,
   StatusBar, RefreshControl, KeyboardAvoidingView, Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { format } from 'date-fns';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -31,6 +33,7 @@ export default function ContentConfigScreen() {
   const [editingBanner, setEditingBanner] = useState<HomeBanner | null>(null);
   const [bannerForm, setBannerForm] = useState<Partial<HomeBanner>>(EMPTY_BANNER);
   const [bannerSaving, setBannerSaving] = useState(false);
+  const [showExpiryPicker, setShowExpiryPicker] = useState(false);
 
   // App Config
   const [configs, setConfigs] = useState<AppConfig[]>([]);
@@ -291,13 +294,42 @@ export default function ContentConfigScreen() {
                     />
                   </FieldGroup>
                   <FieldGroup label="Expires At" style={{ flex: 1 }}>
-                    <TextInput
-                      style={styles.input}
-                      placeholder="2025-12-31"
-                      placeholderTextColor="#9CA3AF"
-                      value={bannerForm.expiresAt ? bannerForm.expiresAt.split('T')[0] : ''}
-                      onChangeText={v => setBannerForm(f => ({ ...f, expiresAt: v ? `${v}T00:00:00.000Z` : '' }))}
-                    />
+                    <TouchableOpacity 
+                      style={[styles.input, { flexDirection: 'row', alignItems: 'center', gap: 8 }]} 
+                      onPress={() => setShowExpiryPicker(true)}
+                    >
+                      <Ionicons name="calendar-outline" size={20} color="#6366F1" />
+                      <Text style={{ 
+                        fontSize: 15, 
+                        color: bannerForm.expiresAt ? '#111827' : '#9CA3AF',
+                        fontWeight: bannerForm.expiresAt ? '600' : '400' 
+                      }}>
+                        {bannerForm.expiresAt ? format(new Date(bannerForm.expiresAt), 'PPP') : 'Never'}
+                      </Text>
+                      {!!bannerForm.expiresAt && (
+                        <TouchableOpacity 
+                          style={{ marginLeft: 'auto', padding: 4 }} 
+                          onPress={() => setBannerForm(f => ({ ...f, expiresAt: '' }))}
+                        >
+                          <Ionicons name="close-circle" size={18} color="#EF4444" />
+                        </TouchableOpacity>
+                      )}
+                    </TouchableOpacity>
+                    {showExpiryPicker && (
+                      <DateTimePicker
+                        value={bannerForm.expiresAt ? new Date(bannerForm.expiresAt) : new Date()}
+                        mode="date"
+                        display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                        onChange={(e, d) => {
+                          setShowExpiryPicker(false);
+                          if (e.type === 'set' && d) {
+                            setBannerForm(f => ({ ...f, expiresAt: d.toISOString() }));
+                          } else if (e.type === 'dismissed' && !bannerForm.expiresAt) {
+                            setBannerForm(f => ({ ...f, expiresAt: '' }));
+                          }
+                        }}
+                      />
+                    )}
                   </FieldGroup>
                 </View>
                 <View style={styles.switchRow}>

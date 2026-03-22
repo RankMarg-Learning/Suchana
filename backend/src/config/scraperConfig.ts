@@ -21,8 +21,8 @@ export const SITE_CONFIGS: Record<string, SiteConfig> = {
             'header', 'footer', 'nav', '.widget', '.sidebar', 'script', 'style',
             'noscript', '#comments', '.social', '.ad', '.advertisement',
         ],
-        contentSelectors: ['.content', '#content', 'main', 'article', 'table', '.post-content'],
-        listingLinkSelector: 'table a, .content a, h2 a',
+        contentSelectors: ['.gb-container', '.content', '#content', 'main', 'article', 'table', '.post-content'],
+        listingLinkSelector: 'table a, .content a, .gb-container a, h2 a',
         listingLinkFilter: (href) => href.includes('sarkariresult.com.cm/') && href.length > 30,
     },
     'sarkarinaukri.com': {
@@ -34,6 +34,16 @@ export const SITE_CONFIGS: Record<string, SiteConfig> = {
         listingLinkSelector: 'h2 a, h3 a, .post-title a, article a',
         listingLinkFilter: (href) => href.includes('sarkarinaukri.com/') && href.length > 30,
     },
+    'testbook.com': {
+        noiseSelectors: [
+            'header', 'footer', 'nav', '.widget', '.sidebar', '#sidebar',
+            '.advertisement', '.ad', '#ad', 'script', 'style', 'noscript',
+            '.comment', '#comments', '.social-share', '.related-posts',
+        ],
+        contentSelectors: ['article', '.entry-content', 'main', 'table', '.post-content'],
+        listingLinkSelector: 'h2 a, .entry-title a, h3 a',
+        listingLinkFilter: (href) => href.includes('testbook.com/') && !href.endsWith('testbook.com/'),
+    }
 };
 
 export function getSiteConfig(url: string): SiteConfig {

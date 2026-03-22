@@ -3,6 +3,9 @@ import { View, Text, StyleSheet, Platform, ActivityIndicator } from 'react-nativ
 import { LinearGradient } from 'expo-linear-gradient';
 import Constants from 'expo-constants';
 import { AD_UNIT_IDS } from '@/constants/Ads';
+import { ADS_CONFIG, GLOBAL_ADS_ENABLED, AdPlacement } from '@/constants/AdsConfig';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useColorScheme } from '@/hooks/use-color-scheme';
 
 let NativeAdView: any;
 let CallToActionView: any;
@@ -32,25 +35,44 @@ if (Platform.OS !== 'web' && !IS_EXPO_GO) {
 }
 
 interface Props {
+    placement: AdPlacement;
     adUnitId?: string;
     style?: any;
 }
 
-export function NativeAdCard({ adUnitId = AD_UNIT_IDS.NATIVE, style }: Props) {
+export function NativeAdCard({ placement, adUnitId, style }: Props) {
     const nativeAdRef = useRef<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
     const [aspectRatio, setAspectRatio] = useState(1.5);
+    const colorScheme = useColorScheme();
+    const border = useThemeColor({}, 'border');
+    const background = useThemeColor({}, 'background');
+    const textPrimary = useThemeColor({}, 'text');
+    const textMuted = useThemeColor({}, 'textMuted');
+    const tint = useThemeColor({}, 'tint');
 
-    if (Platform.OS === 'web' || IS_EXPO_GO || !NativeAdView) {
+    if (Platform.OS === 'web' || !GLOBAL_ADS_ENABLED) {
+        return null;
+    }
+
+    const config = ADS_CONFIG[placement];
+    if (!config?.enabled) {
+        return null;
+    }
+
+    if (IS_EXPO_GO || !NativeAdView) {
         return <MockupNativeAd style={style} />;
     }
 
+    const activeAdUnitId = adUnitId || config.adUnitId;
+    const gradientColors = (colorScheme === 'dark' ? ['#1e1b4b', '#0D0D0F'] : ['#F8FAFC', '#F1F5F9']) as readonly [string, string];
+
     return (
-        <View style={[styles.container, style]}>
+        <View style={[styles.container, { borderColor: border }, style]}>
             <NativeAdView
                 ref={nativeAdRef}
-                adUnitID={adUnitId}
+                adUnitID={activeAdUnitId}
                 onNativeAdLoaded={(data: any) => {
                     console.log('Native Ad Loaded');
                     setLoading(false);
@@ -64,38 +86,38 @@ export function NativeAdCard({ adUnitId = AD_UNIT_IDS.NATIVE, style }: Props) {
                 style={styles.nativeAdView}
             >
                 <LinearGradient
-                    colors={['#1e1b4b', '#0D0D0F']}
+                    colors={gradientColors}
                     style={styles.gradient}
                 >
                     <View style={styles.topRow}>
-                        <View style={styles.proBadge}>
-                            <AdvertiserView style={styles.advertiserText} />
+                        <View style={[styles.proBadge, { backgroundColor: tint + '18' }]}>
+                            <AdvertiserView style={[styles.advertiserText, { color: tint }]} />
                         </View>
-                        <Text style={styles.adTag}>SPONSORED</Text>
+                        <Text style={[styles.adTag, { color: textMuted }]}>SPONSORED</Text>
                     </View>
 
                     <View style={styles.contentRow}>
                         <IconView style={styles.adIcon} />
                         <View style={styles.textContainer}>
-                            <HeadlineView style={styles.title} numberOfLines={1} />
-                            <TaglineView style={styles.description} numberOfLines={2} />
+                            <HeadlineView style={[styles.title, { color: textPrimary }]} numberOfLines={1} />
+                            <TaglineView style={[styles.description, { color: textMuted }]} numberOfLines={2} />
                         </View>
                         <CallToActionView
-                            style={styles.ctaBtn}
-                            textStyle={styles.ctaText}
-                            buttonAndroidStyle={{ backgroundColor: '#FFF', borderRadius: 8 }}
+                            style={[styles.ctaBtn, { backgroundColor: textPrimary }]}
+                            textStyle={[styles.ctaText, { color: background }]}
+                            buttonAndroidStyle={{ backgroundColor: textPrimary, borderRadius: 10 }}
                         />
                     </View>
                     
                     {/* Optional Media View */}
-                    <MediaView style={[styles.mediaView, { aspectRatio }]} />
+                    <MediaView style={[styles.mediaView, { aspectRatio, backgroundColor: border }]} />
 
                 </LinearGradient>
             </NativeAdView>
             
             {loading && (
-                <View style={[StyleSheet.absoluteFill, styles.loadingOverlay]}>
-                     <ActivityIndicator color="#7C3AED" />
+                <View style={[StyleSheet.absoluteFill, styles.loadingOverlay, { backgroundColor: background }]}>
+                     <ActivityIndicator color={tint} />
                 </View>
             )}
 
@@ -105,22 +127,31 @@ export function NativeAdCard({ adUnitId = AD_UNIT_IDS.NATIVE, style }: Props) {
 }
 
 function MockupNativeAd({ style }: { style?: any }) {
+    const colorScheme = useColorScheme();
+    const border = useThemeColor({}, 'border');
+    const background = useThemeColor({}, 'background');
+    const textPrimary = useThemeColor({}, 'text');
+    const textMuted = useThemeColor({}, 'textMuted');
+    const tint = useThemeColor({}, 'tint');
+
+    const gradientColors = (colorScheme === 'dark' ? ['#1e1b4b', '#000'] : ['#F8FAFC', '#F1F5F9']) as readonly [string, string];
+
     return (
-        <View style={[styles.container, style]}>
-            <LinearGradient colors={['#1e1b4b', '#000']} style={styles.gradient}>
+        <View style={[styles.container, { borderColor: border }, style]}>
+            <LinearGradient colors={gradientColors} style={styles.gradient}>
                 <View style={styles.topRow}>
-                    <View style={styles.proBadge}>
-                        <Text style={styles.proBadgeText}>SUCHANA PRO</Text>
+                    <View style={[styles.proBadge, { backgroundColor: tint + '18' }]}>
+                        <Text style={[styles.proBadgeText, { color: tint }]}>SUCHANA PRO</Text>
                     </View>
-                    <Text style={styles.adTag}>AD</Text>
+                    <Text style={[styles.adTag, { color: textMuted }]}>AD</Text>
                 </View>
                 <View style={styles.contentRow}>
                     <View style={styles.textContainer}>
-                        <Text style={styles.title}>Unlock Your Career</Text>
-                        <Text style={styles.description}>Track 500+ exams with real-time notifications.</Text>
+                        <Text style={[styles.title, { color: textPrimary }]}>Unlock Your Career</Text>
+                        <Text style={[styles.description, { color: textMuted }]}>Track 500+ exams with real-time notifications.</Text>
                     </View>
-                    <View style={styles.ctaBtn}>
-                        <Text style={styles.ctaText}>Upgrade</Text>
+                    <View style={[styles.ctaBtn, { backgroundColor: textPrimary }]}>
+                        <Text style={[styles.ctaText, { color: background }]}>Upgrade</Text>
                     </View>
                 </View>
             </LinearGradient>
@@ -134,7 +165,6 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
         minHeight: 120,
     },
     nativeAdView: {
@@ -150,24 +180,20 @@ const styles = StyleSheet.create({
         marginBottom: 12,
     },
     proBadge: {
-        backgroundColor: 'rgba(124, 58, 237, 0.2)',
         borderRadius: 6,
         paddingHorizontal: 8,
         paddingVertical: 4,
     },
     advertiserText: {
-        color: '#a78bfa',
         fontSize: 10,
         fontWeight: '800',
         letterSpacing: 0.5,
     },
     proBadgeText: {
-        color: '#a78bfa',
         fontSize: 10,
         fontWeight: '800',
     },
     adTag: {
-        color: '#4b5563',
         fontSize: 10,
         fontWeight: '700',
         letterSpacing: 1,
@@ -186,18 +212,15 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     title: {
-        color: '#fff',
         fontSize: 16,
         fontWeight: '800',
         marginBottom: 2,
     },
     description: {
-        color: '#94a3b8',
         fontSize: 12,
         lineHeight: 16,
     },
     ctaBtn: {
-        backgroundColor: '#FFF',
         borderRadius: 10,
         paddingHorizontal: 16,
         paddingVertical: 10,
@@ -205,7 +228,6 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     ctaText: {
-        color: '#000',
         fontSize: 13,
         fontWeight: '900',
     },
@@ -213,10 +235,8 @@ const styles = StyleSheet.create({
         width: '100%',
         marginTop: 12,
         borderRadius: 12,
-        backgroundColor: '#000',
     },
     loadingOverlay: {
-        backgroundColor: '#18181b',
         justifyContent: 'center',
         alignItems: 'center',
     },

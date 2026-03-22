@@ -10,14 +10,16 @@ export interface AiStructuredExam {
     description?: string;
     conductingBody?: string;
     category?: string;
+    status?: string;
     examLevel?: string;
     state?: string;
     examYear?: number;
-    minAge?: number;
-    maxAge?: number;
-    qualificationCriteria?: Record<string, unknown>;
+    age?: string;
+    qualificationCriteria?: String;
     totalVacancies?: any;
-    applicationFee?: Record<string, unknown>;
+    salary?: string;
+    additionalDetails?: string;
+    applicationFee?: string;
     officialWebsite?: string;
     notificationUrl?: string;
     aiConfidence?: number;
@@ -29,14 +31,12 @@ export interface AiStructuredExam {
 
 export interface AiStructuredEvent {
     stage: string;
-    eventType: string;
     stageOrder?: number;
     title: string;
     description?: string;
     startsAt?: Date;
     endsAt?: Date;
     isTBD?: boolean;
-    isImportant?: boolean;
     actionUrl?: string;
     actionLabel?: string;
 }
@@ -77,6 +77,8 @@ export function buildContentHash(exam: AiStructuredExam): string {
         conductingBody: normalise(exam.conductingBody),
         examYear: exam.examYear ?? null,
         totalVacancies: exam.totalVacancies ?? null,
+        salary: exam.salary ?? null,
+        additionalDetails: exam.additionalDetails ?? null,
         notificationUrl: normalise(exam.notificationUrl),
     };
     return sha256(JSON.stringify(snapshot));
@@ -168,12 +170,14 @@ export async function checkAndStage(
             description: exam.description,
             conductingBody: exam.conductingBody,
             category: exam.category,
+            status: exam.status,
             examLevel: exam.examLevel,
             state: exam.state,
-            minAge: exam.minAge,
-            maxAge: exam.maxAge,
+            age: exam.age,
             qualificationCriteria: exam.qualificationCriteria as never,
             totalVacancies: exam.totalVacancies,
+            salary: exam.salary,
+            additionalDetails: exam.additionalDetails,
             applicationFee: exam.applicationFee as never,
             officialWebsite: exam.officialWebsite,
             notificationUrl: exam.notificationUrl,
@@ -189,14 +193,12 @@ export async function checkAndStage(
             stagedEvents: {
                 create: (exam.events ?? []).map((ev, i) => ({
                     stage: ev.stage,
-                    eventType: ev.eventType,
                     stageOrder: ev.stageOrder ?? (i + 1) * 10,
                     title: ev.title,
                     description: ev.description,
                     startsAt: ev.startsAt,
                     endsAt: ev.endsAt,
                     isTBD: ev.isTBD ?? false,
-                    isImportant: ev.isImportant ?? false,
                     actionUrl: ev.actionUrl,
                     actionLabel: ev.actionLabel,
                 })),

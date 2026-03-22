@@ -11,3 +11,14 @@ yarn-error.log*
 Dockerfile
 docker-compose.yml
 prisma/migrations
+
+# Scratch and check scripts
+check_db_users.js
+check_db.js
+check_event_types.js
+check_events.js
+verify_links.js
+
+# Documentation and env example
+README.md
+.env.example
