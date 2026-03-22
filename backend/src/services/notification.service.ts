@@ -12,11 +12,7 @@ interface FcmResult {
 
 export class NotificationService {
 
-    /**
-     * Finds users who are either:
-     * 1. Bookmarked the exam
-     * 2. Have matching preferences (Category, Level, Qualification, etc.)
-     */
+
     static async getTargetUsersForEvent(params: {
         examId: string;
         category: string;
@@ -30,7 +26,7 @@ export class NotificationService {
                 notificationsEnabled: true,
                 OR: [
                     { savedExamIds: { has: examId } },
-                    { 
+                    {
                         AND: [
                             category ? { preferredCategories: { has: category } } : {},
                             examLevel ? { preferredExamLevel: examLevel } : {},
@@ -44,9 +40,7 @@ export class NotificationService {
         });
     }
 
-    /**
-     * Get all active push tokens for these users.
-     */
+
     static async getTokensForUsers(userIds: string[]): Promise<string[]> {
         const tokens = await prisma.pushToken.findMany({
             where: {
@@ -58,9 +52,7 @@ export class NotificationService {
         return tokens.map(t => t.token);
     }
 
-    /**
-     * Sends the actual notification via FCM (with batching and error handling)
-     */
+
     static async sendToTokens(
         tokens: string[],
         title: string,
@@ -163,7 +155,7 @@ export class NotificationService {
             examLevel: event.exam.examLevel,
             qualification: event.exam.qualificationCriteria ?? undefined
         });
-        
+
         const tokens = await this.getTokensForUsers(targetUsers.map(u => u.id));
 
         if (tokens.length === 0) {
@@ -269,9 +261,9 @@ export class NotificationService {
      * targetAudience: 'BOOKMARKED' (default) or 'INTERESTED' (bookmarks + preferences)
      */
     static async sendManualExamNotification(
-        examId: string, 
-        title?: string, 
-        body?: string, 
+        examId: string,
+        title?: string,
+        body?: string,
         targetAudience: 'BOOKMARKED' | 'INTERESTED' = 'BOOKMARKED'
     ) {
         const exam = await prisma.exam.findUnique({
@@ -281,7 +273,7 @@ export class NotificationService {
         if (!exam) throw new Error('Exam not found');
 
         let targetUsers;
-        
+
         if (targetAudience === 'INTERESTED') {
             targetUsers = await this.getTargetUsersForEvent({
                 examId: exam.id,

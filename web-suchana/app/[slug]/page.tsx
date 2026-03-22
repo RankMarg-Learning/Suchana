@@ -64,11 +64,11 @@ export default async function SeoDetailPage({ params }: Props) {
   if (page.exam) {
     return (
       <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
-        <ExamDetailClient 
-            exam={{ 
-                ...page.exam, 
-                title: page.title || page.exam.title // Prefer SEO page title if provided
-            }} 
+        <ExamDetailClient
+          exam={{
+            ...page.exam,
+            title: page.title || page.exam.title // Prefer SEO page title if provided
+          }}
         />
         {/* We can still optionally show the custom SEO content at the bottom of the feed if desired, 
            but for simplicity and to match the user request "same page like /exam/[slug]", we just use the client. */}
@@ -109,22 +109,22 @@ export default async function SeoDetailPage({ params }: Props) {
 
       <main className="seo-page-container" style={{ paddingTop: 100, paddingBottom: 100, paddingLeft: '1rem', paddingRight: '1rem' }}>
         <div className="feed-main" style={{ margin: '0 auto', maxWidth: 800 }}>
-          
+
           <div className="leaderboard-wrap" style={{ marginBottom: 40 }}>
             <LeaderboardAd id="seo-top-leaderboard" />
           </div>
 
           <article className="seo-article">
-            <h1 className="seo-h1" style={{ 
-                fontSize: 'clamp(1.8rem, 5vw, 3rem)', // Responsive font size
-                fontWeight: 800, 
-                lineHeight: 1.2,
-                marginBottom: '1.5rem',
-                background: 'linear-gradient(to right, var(--text-primary), var(--accent-light))',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent'
+            <h1 className="seo-h1" style={{
+              fontSize: 'clamp(1.8rem, 5vw, 3rem)',
+              fontWeight: 800,
+              lineHeight: 1.2,
+              marginBottom: '1.5rem',
+              background: 'linear-gradient(to right, var(--text-primary), var(--accent-light))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent'
             }}>{page.title}</h1>
-            
+
             {page.ogImage && (
               <div className="seo-featured-image" style={{ marginBottom: '2rem', borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--border)' }}>
                 <img src={page.ogImage} alt={page.title} style={{ width: '100%', height: 'auto', display: 'block' }} />
@@ -136,7 +136,7 @@ export default async function SeoDetailPage({ params }: Props) {
             </div>
 
             <div style={{ marginTop: 60, borderTop: '1px solid var(--border)', paddingTop: 40 }}>
-                <InFeedAd id="seo-bottom-ad" index={0} />
+              <InFeedAd id="seo-bottom-ad" index={0} />
             </div>
           </article>
         </div>

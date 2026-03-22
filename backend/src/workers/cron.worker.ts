@@ -27,7 +27,7 @@ export function startCronWorker(): Worker {
         processCronJob,
         {
             connection: bullRedisConnection,
-            concurrency: 1, // Only 1 cron job at a time
+            concurrency: 1,
         }
     );
 

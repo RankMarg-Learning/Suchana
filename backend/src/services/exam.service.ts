@@ -1,5 +1,4 @@
 import { Prisma } from '@prisma/client';
-import { ExamCategory, ExamStatus, ExamLevel } from '../constants/enums';
 import prisma from '../config/database';
 import { cacheService } from '../utils/cache';
 import { slugify, uniqueSlug } from '../utils/slugify';
@@ -7,6 +6,7 @@ import { AppError } from '../middleware/errorHandler';
 import { env } from '../config/env';
 import type { CreateExamDto, UpdateExamDto, ListExamQuery } from '../schemas/exam.schema';
 import { logger } from '../utils/logger';
+import { SeoService } from './seo.service';
 
 const EXAM_LIST_CACHE_KEY = 'exams:list';
 const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams:detail:${id}`;
@@ -117,12 +117,15 @@ export async function getExamBySlug(slug: string) {
 }
 
 
-// ─── Create ──────────────────────────────────────────────────
 export async function createExam(dto: CreateExamDto, adminId: string) {
-    // Generate a unique slug from title
-    const baseSlug = slugify(dto.title);
+
+    const fullTitle = dto.conductingBody && !dto.title.toLowerCase().includes(dto.conductingBody.toLowerCase())
+        ? `${dto.conductingBody} ${dto.title}`
+        : dto.title;
+
+    const baseSlug = slugify(fullTitle);
     const slugExists = await prisma.exam.findUnique({ where: { slug: baseSlug } });
-    const slug = slugExists ? uniqueSlug(dto.title) : baseSlug;
+    const slug = slugExists ? uniqueSlug(fullTitle) : baseSlug;
 
     const exam = await prisma.exam.create({
         data: {
@@ -139,7 +142,6 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
     });
 
 
-    // Invalidate list cache
     await cacheService.delPattern('exams:list:*');
     logger.info(`Exam created: ${exam.id} by admin ${adminId}`);
 
@@ -162,6 +164,11 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
     };
 
     const updated = await prisma.exam.update({ where: { id }, data });
+
+    // Mark for SEO refresh
+    if (updated.isPublished) {
+        SeoService.generateExamSeoPages(id).catch(e => logger.error(`[SEO] Background refresh failed for ${id}`, e));
+    }
 
     await Promise.all([
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),

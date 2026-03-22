@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useCallback } fr
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 import { AD_UNIT_IDS, AD_CONFIG } from '@/constants/Ads';
+import { GLOBAL_ADS_ENABLED } from '@/constants/AdsConfig';
 
 interface AdsContextType {
     showInterstitial: (force?: boolean) => Promise<boolean>;
@@ -25,25 +26,18 @@ const IS_EXPO_GO =
     Constants.appOwnership === 'expo' ||
     Constants.executionEnvironment === 'storeClient';
 
-if (Platform.OS !== 'web' && !IS_EXPO_GO) {
+if (GLOBAL_ADS_ENABLED && Platform.OS !== 'web' && !IS_EXPO_GO) {
     try {
         const Ads = require('react-native-google-mobile-ads');
-        mobAds = Ads.default;
+        // Handle both default and named exports safely
+        mobAds = Ads.default || Ads;
         InterstitialAd = Ads.InterstitialAd;
         RewardedAd = Ads.RewardedAd;
         AdEventType = Ads.AdEventType;
         RewardedAdEventType = Ads.RewardedAdEventType;
         TestIds = Ads.TestIds;
-
-        interstitial = InterstitialAd.createForAdRequest(AD_UNIT_IDS.INTERSTITIAL, {
-            requestNonPersonalizedAdsOnly: true,
-        });
-
-        rewarded = RewardedAd.createForAdRequest(AD_UNIT_IDS.REWARDED, {
-            requestNonPersonalizedAdsOnly: true,
-        });
     } catch (e) {
-        console.warn('AdMob Ads not available in this build', e);
+        console.warn('AdMob Ads library not fully loaded in this build', e);
     }
 }
 
@@ -51,29 +45,54 @@ let clickCount = 0;
 
 export function AdsProvider({ children }: { children: React.ReactNode }) {
     const [loaded, setLoaded] = useState(false);
+    const [rewardedLoaded, setRewardedLoaded] = useState(false);
+    const [interstitial, setInterstitial] = useState<any>(null);
+    const [rewarded, setRewarded] = useState<any>(null);
 
+    // Initial Ad Creation
     useEffect(() => {
-        if (Platform.OS === 'web' || !mobAds) return;
+        if (Platform.OS === 'web' || !InterstitialAd || !RewardedAd) return;
 
-        // Initialize Mobile Ads
-        mobAds()
-            .initialize()
-            .then((adapterStatuses: any) => {
-                console.log('Mobile Ads Initialized:', adapterStatuses);
-                if (interstitial) {
-                    interstitial.load();
-                }
-                if (rewarded) {
-                    rewarded.load();
-                }
-            })
-            .catch((err: any) => {
-                console.warn('Mobile Ads Init Error:', err);
+        try {
+            const inst = InterstitialAd.createForAdRequest(AD_UNIT_IDS.INTERSTITIAL, {
+                requestNonPersonalizedAdsOnly: true,
             });
+            const rwd = RewardedAd.createForAdRequest(AD_UNIT_IDS.REWARDED, {
+                requestNonPersonalizedAdsOnly: true,
+            });
+            setInterstitial(inst);
+            setRewarded(rwd);
+        } catch (e) {
+            console.error('Failed to create ads instances:', e);
+        }
     }, []);
 
     useEffect(() => {
-        if (Platform.OS === 'web' || !interstitial) return;
+        if (Platform.OS === 'web' || !mobAds || typeof mobAds !== 'function') return;
+
+        // Initialize Mobile Ads
+        try {
+            mobAds()
+                .initialize()
+                .then((adapterStatuses: any) => {
+                    console.log('Mobile Ads Initialized:', adapterStatuses);
+                    if (interstitial) {
+                        interstitial.load();
+                    }
+                    if (rewarded) {
+                        rewarded.load();
+                    }
+                })
+                .catch((err: any) => {
+                    console.warn('Mobile Ads Init Error:', err);
+                });
+        } catch (e) {
+            console.warn('AdMob initialization crash avoided', e);
+        }
+    }, [interstitial, rewarded]);
+
+    useEffect(() => {
+        if (Platform.OS === 'web' || !interstitial || !AdEventType) return;
 
         const unsubscribeLoaded = interstitial.addAdEventListener(AdEventType.LOADED, () => {
             setLoaded(true);
@@ -81,26 +100,24 @@ export function AdsProvider({ children }: { children: React.ReactNode }) {
 
         const unsubscribeClosed = interstitial.addAdEventListener(AdEventType.CLOSED, () => {
             setLoaded(false);
-            interstitial.load();
+            if (interstitial?.load) interstitial.load();
         });
 
         const unsubscribeError = interstitial.addAdEventListener(AdEventType.ERROR, (error: any) => {
             console.warn('Interstitial Ad Error:', error);
         });
 
-        interstitial.load();
+        if (interstitial?.load) interstitial.load();
 
         return () => {
             unsubscribeLoaded();
             unsubscribeClosed();
             unsubscribeError();
         };
-    }, []);
-
-    const [rewardedLoaded, setRewardedLoaded] = useState(false);
+    }, [interstitial]);
 
     useEffect(() => {
-        if (Platform.OS === 'web' || !rewarded) return;
+        if (Platform.OS === 'web' || !rewarded || !RewardedAdEventType || !AdEventType) return;
 
         const unsubscribeLoaded = rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => {
             setRewardedLoaded(true);
@@ -115,14 +132,14 @@ export function AdsProvider({ children }: { children: React.ReactNode }) {
 
         const unsubscribeClosed = rewarded.addAdEventListener(AdEventType.CLOSED, () => {
             setRewardedLoaded(false);
-            rewarded.load();
+            if (rewarded?.load) rewarded.load();
         });
 
         const unsubscribeError = rewarded.addAdEventListener(AdEventType.ERROR, (error: any) => {
             console.warn('Rewarded Ad Error:', error);
         });
 
-        rewarded.load();
+        if (rewarded?.load) rewarded.load();
 
         return () => {
             unsubscribeLoaded();
@@ -130,7 +147,7 @@ export function AdsProvider({ children }: { children: React.ReactNode }) {
             unsubscribeClosed();
             unsubscribeError();
         };
-    }, []);
+    }, [rewarded]);
 
     const showInterstitial = useCallback(async (force = false) => {
         if (Platform.OS === 'web' || !interstitial) return false;
@@ -149,11 +166,11 @@ export function AdsProvider({ children }: { children: React.ReactNode }) {
                     return false;
                 }
             } else {
-                interstitial.load();
+                if (interstitial?.load) interstitial.load();
             }
         }
         return false;
-    }, [loaded]);
+    }, [loaded, interstitial]);
 
     const showRewarded = useCallback(async () => {
         if (Platform.OS === 'web' || !rewarded) {
@@ -174,10 +191,10 @@ export function AdsProvider({ children }: { children: React.ReactNode }) {
                 return false;
             }
         } else {
-            rewarded.load();
+            if (rewarded?.load) rewarded.load();
             return false;
         }
-    }, [rewardedLoaded]);
+    }, [rewardedLoaded, rewarded]);
 
     return (
         <AdsContext.Provider value={{ 

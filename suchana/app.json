@@ -2,7 +2,7 @@
   "expo": {
     "name": "Exam Suchana",
     "slug": "exam-suchana",
-    "version": "1.1.0",
+    "version": "1.2.4",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "scheme": "exam-suchana",
@@ -50,11 +50,10 @@
         "expo-build-properties",
         {
           "android": {
-            "extraProguardRules": "-keep class com.swmansion.reanimated.** { *; }\n-keep class com.facebook.react.turbomodule.** { *; }\n-keep class com.google.android.gms.ads.** { *; }\n-keep class com.google.android.gms.internal.ads.** { *; }\n-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient { *; }\n-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient$Info { *; }\n-keep class com.swmansion.gesturehandler.** { *; }\n-keep class com.swmansion.rnscreens.** { *; }\n-keep class com.horcrux.svg.** { *; }",
+            "extraProguardRules": "-keep class com.swmansion.reanimated.** { *; }\n-keep class com.facebook.react.turbomodule.** { *; }\n-keep class com.google.android.gms.ads.** { *; }\n-keep class com.google.android.gms.internal.ads.** { *; }\n-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient { *; }\n-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient$Info { *; }\n-keep class com.swmansion.gesturehandler.** { *; }\n-keep class com.swmansion.rnscreens.** { *; }\n-keep class com.horcrux.svg.** { *; }\n-keep class com.lucide.** { *; }\n-keep class com.worklets.** { *; }",
             "extraProjectProperties": {
               "android.enableMinifyInReleaseBuilds": "true",
-              "android.enableShrinkResourcesInReleaseBuilds": "true",
-              "android.enableBundleCompression": "true"
+              "android.enableShrinkResourcesInReleaseBuilds": "true"
             }
           }
         }

@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { User } from '@/types/exam';
 import { getUser } from '@/services/userService';
+import { SafeNotifications } from '@/services/notificationService';
 
 interface UserContextType {
   user: User | null;
@@ -36,6 +37,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
           setUserId(stored);
           const u = await getUser(stored);
           setUserState(u);
+          // Register push token for session
+          SafeNotifications.registerPushToken(stored).catch(() => {});
         }
       } catch (_) {
         // ignore; will show onboarding
@@ -49,6 +52,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     setUserState(u);
     setUserId(u.id);
     AsyncStorage.setItem('@suchana_userId', u.id);
+    // Register push token upon login
+    SafeNotifications.registerPushToken(u.id).catch(() => {});
   };
 
   const refreshUser = async () => {

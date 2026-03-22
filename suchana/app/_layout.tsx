@@ -1,14 +1,20 @@
 import { ThemeProvider } from '@react-navigation/native';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import 'react-native-reanimated';
+import * as SplashScreen from 'expo-splash-screen';
 import { UserProvider, useUser } from '@/context/UserContext';
 import { useFirstLaunchPermissions } from '@/hooks/useFirstLaunchPermissions';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { CustomLightTheme, CustomDarkTheme, Colors } from '@/constants/theme';
 import { AdsProvider } from '@/context/AdsContext';
+
+// Prevent the splash screen from auto-hiding before asset loading is complete.
+SplashScreen.preventAutoHideAsync().catch(() => {
+  /* reloading the app might cause this error. */
+});
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -26,8 +32,11 @@ function NavigationGuard() {
 
   useEffect(() => {
     if (isLoading) return;
+
+    // Check if splash screen can be hidden
+    SplashScreen.hideAsync().catch(() => {});
+
     // Only redirect AWAY from onboarding if user is already fully set up.
-    // Never force users INTO onboarding — it's optional for personalization.
     const inOnboarding = segments[0] === 'onboarding';
     if (isOnboarded && inOnboarding) {
       router.replace('/(tabs)');
