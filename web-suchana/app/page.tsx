@@ -13,7 +13,7 @@ import {
   STATUS_LABELS, CATEGORIES,
   cleanLabel,
 } from "./lib/types";
-import { MOCK_EXAMS, fetchExamsFromAPI, getPersonalizedExams } from "./lib/api";
+import { fetchExamsFromAPI, getPersonalizedExams } from "./lib/api";
 import { LeftSidebar, RightSidebar } from "./components/Sidebars";
 import { LeaderboardAd, InFeedAd } from "./components/AdUnits";
 import { ADS_CONFIG } from "./config/ads";
@@ -115,11 +115,7 @@ export default function HomePage() {
     setLoading(true);
     const reqPage = reset ? 1 : (pageNo ?? page);
     try {
-      const userId = typeof window !== "undefined" ? localStorage.getItem("@suchana_userId") : null;
-      let result;
-
-
-      result = await fetchExamsFromAPI(reqPage, 10,
+      const result = await fetchExamsFromAPI(reqPage, 10,
         categoryFilter !== "ALL" ? categoryFilter : undefined,
         statusFilter !== "ALL" ? statusFilter : undefined,
         debouncedSearch || undefined
@@ -129,19 +125,9 @@ export default function HomePage() {
       if (reset) { setExams(result.exams ?? []); setPage(1); }
       else { setExams((prev) => [...prev, ...(result.exams ?? [])]); }
       setHasMore((result.exams ?? []).length === 10);
-    } catch {
-      let filtered = [...MOCK_EXAMS];
-      if (categoryFilter !== "ALL") filtered = filtered.filter((e) => e.category === categoryFilter);
-      if (statusFilter !== "ALL") filtered = filtered.filter((e) => e.status === statusFilter);
-      if (debouncedSearch) {
-        const q = debouncedSearch.toLowerCase();
-        filtered = filtered.filter((e) =>
-          e.title.toLowerCase().includes(q) ||
-          e.conductingBody.toLowerCase().includes(q) ||
-          (e.shortTitle?.toLowerCase().includes(q) ?? false)
-        );
-      }
-      if (reset) { setExams(filtered); } else { setExams((prev) => [...prev, ...filtered]); }
+    } catch (err) {
+      console.error("Failed to load exams:", err);
+      if (reset) setExams([]);
       setHasMore(false);
     } finally { setLoading(false); }
   }, [categoryFilter, statusFilter, debouncedSearch, page]);

@@ -1,14 +1,9 @@
 import { MetadataRoute } from "next";
-import { SITE_URL, MOCK_EXAMS, fetchAllExamSlugs } from "./lib/api";
+import { SITE_URL, fetchAllExamSlugs } from "./lib/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all exam slugs (falls back to mock data if API is down)
-  let examSlugs: string[] = [];
-  try {
-    examSlugs = await fetchAllExamSlugs();
-  } catch {
-    examSlugs = MOCK_EXAMS.map((e) => e.slug);
-  }
+  const examSlugs = await fetchAllExamSlugs();
 
   const now = new Date().toISOString();
 

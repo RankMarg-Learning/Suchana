@@ -23,7 +23,7 @@ import {
 } from 'lucide-react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ExamStatus } from '@/constants/enums';
-import { fetchExamById, fetchTimeline } from '@/services/examService';
+import { fetchExamBySlug, fetchTimeline } from '@/services/examService';
 import { toggleSavedExam } from '@/services/userService';
 import { useUser } from '@/context/UserContext';
 import { TimelineItem } from '@/components/TimelineItem';
@@ -63,7 +63,7 @@ const STATUS_COLOR: Record<string, string> = {
 
 
 export default function ExamDetailScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id: slug } = useLocalSearchParams<{ id: string }>();
   const navigation = useNavigation();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -87,13 +87,13 @@ export default function ExamDetailScreen() {
   };
 
   const { data: exam, isLoading: examLoading } = useQuery({
-    queryKey: ['exam', id],
-    queryFn: () => fetchExamById(id),
+    queryKey: ['exam', slug],
+    queryFn: () => fetchExamBySlug(slug),
   });
 
   const { data: timeline = [], isLoading: timelineLoading } = useQuery({
-    queryKey: ['timeline', id],
-    queryFn: () => fetchTimeline(id),
+    queryKey: ['timeline', slug],
+    queryFn: () => fetchTimeline(slug),
   });
 
 
@@ -101,7 +101,7 @@ export default function ExamDetailScreen() {
     mutationFn: () => toggleSavedExam(userId!, exam!.id),
     onSuccess: () => {
       refreshUser();
-      queryClient.invalidateQueries({ queryKey: ['exam', id] });
+      queryClient.invalidateQueries({ queryKey: ['exam', slug] });
     },
   });
 

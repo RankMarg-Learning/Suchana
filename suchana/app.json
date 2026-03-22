@@ -2,14 +2,15 @@
   "expo": {
     "name": "Exam Suchana",
     "slug": "exam-suchana",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "orientation": "portrait",
     "icon": "./assets/app-icon.png",
     "scheme": "exam-suchana",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.examsuchana.app"
     },
     "android": {
       "adaptiveIcon": {
@@ -17,7 +18,8 @@
         "foregroundImage": "./assets/app-icon.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.examsuchana.app"
     },
     "web": {
       "output": "static",
@@ -43,11 +45,30 @@
           "androidAppId": "ca-app-pub-3940256099942544~3347511713",
           "iosAppId": "ca-app-pub-3940256099942544~1458002511"
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraProguardRules": "-keep class com.swmansion.reanimated.** { *; }\n-keep class com.facebook.react.turbomodule.** { *; }\n-keep class com.google.android.gms.ads.** { *; }\n-keep class com.google.android.gms.internal.ads.** { *; }\n-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient { *; }\n-keep class com.google.android.gms.ads.identifier.AdvertisingIdClient$Info { *; }\n-keep class com.swmansion.gesturehandler.** { *; }\n-keep class com.swmansion.rnscreens.** { *; }\n-keep class com.horcrux.svg.** { *; }",
+            "extraProjectProperties": {
+              "android.enableMinifyInReleaseBuilds": "true",
+              "android.enableShrinkResourcesInReleaseBuilds": "true",
+              "android.enableBundleCompression": "true"
+            }
+          }
+        }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9c343761-cb7c-4056-98a1-667cefb3ebdc"
+      }
     }
   }
 }

@@ -27,6 +27,11 @@ export async function fetchExamById(id: string): Promise<Exam> {
     return data.data;
 }
 
+export async function fetchExamBySlug(slug: string): Promise<Exam> {
+    const { data } = await client.get(`/slug/${slug}`);
+    return data.data;
+}
+
 export async function fetchTimeline(examId: string): Promise<LifecycleEvent[]> {
     const { data } = await client.get(`/${examId}/timeline`);
     if (data.data?.events && Array.isArray(data.data.events)) return data.data.events;
