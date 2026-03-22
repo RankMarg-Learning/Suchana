@@ -50,7 +50,7 @@ export function AdBanner({ placement, adUnitId, style, size }: Props) {
   return (
     <View style={[styles.container, style]}>
       <BannerAd
-        unitId={adUnitId}
+        unitId={activeAdUnitId}
         size={activeSize}
         requestOptions={{
           requestNonPersonalizedAdsOnly: true,
