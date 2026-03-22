@@ -70,4 +70,4 @@ export const ADS_CONFIG: Record<AdPlacement, AdConfig> = {
   },
 };
 
-export const GLOBAL_ADS_ENABLED = false;
+export const GLOBAL_ADS_ENABLED = true;
