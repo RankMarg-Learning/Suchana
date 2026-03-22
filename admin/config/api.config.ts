@@ -7,7 +7,7 @@ const localhost = debuggerHost?.split(':').shift() || 'localhost';
 const LOCALHOST = Platform.OS === 'android' && !debuggerHost ? '10.0.2.2' : localhost;
 
 export const API_CONFIG = {
-    BASE_URL: `http://${LOCALHOST}:3001/api/v1`,
-    API_KEY: 'hPUeHHWNwlnK8gWi5WWwhAGBq7OxHmHcRYOCCLka3bWodhIf1dba',
+    BASE_URL: process.env.EXPO_PUBLIC_API_URL || `http://${LOCALHOST}:3001/api/v1`,
+    API_KEY: process.env.EXPO_PUBLIC_API_KEY || 'hPUeHHWNwlnK8gWi5WWwhAGBq7OxHmHcRYOCCLka3bWodhIf1dba',
     ADMIN_ID: 'admin_mobile_app',
 };
