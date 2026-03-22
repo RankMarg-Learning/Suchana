@@ -148,7 +148,7 @@ export default function ExamDetailScreen() {
       `🏢 Board: ${exam.conductingBody}\n` +
       `${deadline}\n\n` +
       `Stay updated with government exam timelines on Suchana App! 🚀\n` +
-      `Download: https://suchana.app/get`;
+      `Download: https://link.examsuchana.in/get`;
 
     try {
       await Share.share(
