@@ -4,6 +4,7 @@ import { validate } from '../middleware/validate';
 import { redis } from '../config/redis';
 import { sendSuccess } from '../utils/apiResponse';
 import * as scraperController from '../controllers/scraper.controller';
+import { registrationLimiter, sensitiveActionsLimiter } from '../middleware/rateLimiter';
 import {
     createScrapeSourceSchema,
     updateScrapeSourceSchema,
@@ -54,10 +55,10 @@ router.get('/jobs/:id', scraperController.getScrapeJobById);
 
 // ─── Trigger scrape ─────────────────────────────────────────────
 // POST /api/v1/scraper/trigger        → async (fire-and-forget, 202)
-router.post('/trigger', validate(triggerScrapeSchema), scraperController.triggerScrape);
+router.post('/trigger', sensitiveActionsLimiter, validate(triggerScrapeSchema), scraperController.triggerScrape);
 
 // POST /api/v1/scraper/trigger/sync   → synchronous (waits for result)
-router.post('/trigger/sync', validate(triggerScrapeSchema), scraperController.triggerScrapeSync);
+router.post('/trigger/sync', sensitiveActionsLimiter, validate(triggerScrapeSchema), scraperController.triggerScrapeSync);
 
 // POST /api/v1/scraper/test-direct    → Direct URL test (Synchronous, no DB storage)
 router.post('/test-direct', scraperController.testScraperDirect);

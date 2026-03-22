@@ -4,6 +4,7 @@
 import { Router } from 'express';
 import * as userController from '../controllers/user.controller';
 import { validate } from '../middleware/validate';
+import { registrationLimiter } from '../middleware/rateLimiter';
 import {
     registerUserSchema,
     updateUserSchema,
@@ -13,7 +14,7 @@ import {
 const router = Router();
 
 // POST /api/v1/users — register / upsert user (no OTP, phone = identity)
-router.post('/', validate(registerUserSchema), userController.registerUser);
+router.post('/', registrationLimiter, validate(registerUserSchema), userController.registerUser);
 
 // GET /api/v1/users/phone/:phone — check if a user is already registered with this phone number
 router.get('/phone/:phone', userController.getUserByPhoneHandler);
