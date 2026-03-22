@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { MOCK_EXAMS, fetchExamBySlug, SITE_URL } from "@/app/lib/api";
+import { fetchExamBySlug, SITE_URL, fetchAllExamSlugs } from "@/app/lib/api";
 import {
   STATUS_LABELS,
   STAGE_LABELS,
@@ -18,13 +18,14 @@ interface Props {
 
 
 export async function generateStaticParams() {
-  return MOCK_EXAMS.map((e) => ({ slug: e.slug }));
+  const slugs = await fetchAllExamSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const exam = await fetchExamBySlug(slug) ?? MOCK_EXAMS.find((e) => e.slug === slug);
+  const exam = await fetchExamBySlug(slug);
 
   if (!exam) {
     return {
@@ -179,7 +180,7 @@ function buildBreadcrumbJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
 
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
-  const exam = await fetchExamBySlug(slug) ?? MOCK_EXAMS.find((e) => e.slug === slug);
+  const exam = await fetchExamBySlug(slug);
 
   if (!exam) notFound();
 
