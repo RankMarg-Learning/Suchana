@@ -1,23 +1,14 @@
 import prisma from '../config/database';
-import { ExamStatus, getStatusFromStage } from '../constants/enums';
+import { ExamStatus, getStatusFromStage, LifecycleStage } from '../constants/enums';
 import { logger } from '../utils/logger';
 
 export class CronService {
-    /**
-     * Core Sync Logic: Sync Exam statuses based on lifecycle event timelines.
-     * This runs every 4h and checks all published exams.
-     */
+
     static async syncExamStatuses() {
         const now = new Date();
-        const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000);
-        
+
         logger.info(`[CRON] Starting exam status sync at ${now.toISOString()}...`);
 
-        // Fetch published exams. 
-        // User mentioned "update exam of all exam which is update this last 4 hr".
-        // This likely means exams whose lifecycle events were updated by a scraper in the last 4 hours.
-        // We'll broaden it to check all published exams to ensure no time-based 
-        // status changes are missed even if the record wasn't updated.
         const exams = await prisma.exam.findMany({
             where: { isPublished: true },
             include: {
@@ -28,49 +19,57 @@ export class CronService {
         });
 
         let updatedCount = 0;
+        const twoWeeksInMs = 14 * 24 * 60 * 60 * 1000;
 
         for (const exam of exams) {
             const events = exam.lifecycleEvents;
             if (events.length === 0) continue;
 
             let targetStatus: string | null = null;
-            const now = new Date();
 
-            // Find the highest stageOrder event that has started
             const startedEvents = events.filter(ev => ev.startsAt && ev.startsAt <= now);
             const latestStarted = startedEvents.length > 0 ? startedEvents[startedEvents.length - 1] : null;
 
             if (latestStarted) {
-                // If it's ongoing
-                const isOngoing = !latestStarted.endsAt || latestStarted.endsAt >= now;
-                
-                if (isOngoing) {
-                    if (latestStarted.isTBD) {
-                        const hasNext = events.some(ev => ev.stageOrder > latestStarted.stageOrder);
-                        targetStatus = hasNext ? ExamStatus.ACTIVE : ExamStatus.ARCHIVED;
-                    } else {
-                        targetStatus = getStatusFromStage(latestStarted.stage) || ExamStatus.ACTIVE;
+                const nextEvent = events.find(ev => ev.stageOrder > latestStarted.stageOrder);
+                const isLastEvent = !nextEvent;
+
+                const startOfDay = new Date(latestStarted.startsAt!);
+                startOfDay.setHours(0, 0, 0, 0);
+
+                const endOfDay = latestStarted.endsAt ? new Date(latestStarted.endsAt) : new Date(latestStarted.startsAt!);
+                endOfDay.setHours(23, 59, 59, 999);
+
+                const isCurrentlyHappening = now >= startOfDay && now <= endOfDay;
+                const isPast = now > endOfDay;
+
+                if (latestStarted.isTBD) {
+                    targetStatus = ExamStatus.ACTIVE;
+                } else if (isCurrentlyHappening) {
+                    targetStatus = getStatusFromStage(latestStarted.stage) || ExamStatus.ACTIVE;
+                } else if (isPast) {
+                    let pastStatus = getStatusFromStage(latestStarted.stage) || ExamStatus.ACTIVE;
+
+                    if (latestStarted.stage === LifecycleStage.EXAM) {
+                        pastStatus = ExamStatus.ACTIVE;
+                    } else if (latestStarted.stage === LifecycleStage.REGISTRATION) {
+                        pastStatus = ExamStatus.REGISTRATION_CLOSED;
                     }
-                } else {
-                    // It's finished. Check for next upcoming
-                    const nextEvent = events.find(ev => ev.stageOrder > latestStarted.stageOrder);
-                    if (nextEvent) {
-                        targetStatus = ExamStatus.ACTIVE;
+
+                    if (isLastEvent) {
+                        if (now.getTime() - endOfDay.getTime() > twoWeeksInMs) {
+                            targetStatus = ExamStatus.ARCHIVED;
+                        } else {
+                            targetStatus = pastStatus;
+                        }
                     } else {
-                        targetStatus = ExamStatus.ARCHIVED;
+                        targetStatus = pastStatus;
                     }
                 }
             } else {
-                // No event has started yet.
-                const firstEvent = events[0];
-                if (firstEvent.isTBD) {
-                     targetStatus = ExamStatus.ACTIVE;
-                } else {
-                     targetStatus = getStatusFromStage(firstEvent.stage) || ExamStatus.NOTIFICATION;
-                }
+                targetStatus = ExamStatus.ACTIVE;
             }
 
-            // Apply update only if status changed
             if (targetStatus && targetStatus !== exam.status) {
                 try {
                     await prisma.exam.update({

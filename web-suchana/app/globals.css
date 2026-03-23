@@ -3919,3 +3919,84 @@ body::before {
   font-weight: 800;
   color: var(--text-secondary);
 }
+/* ─── Social & Shared Components (SEO/Growth) ─── */
+.whatsapp-btn {
+  background: rgba(37, 211, 102, 0.1) !important;
+  color: #25d366 !important;
+  border-color: rgba(37, 211, 102, 0.2) !important;
+}
+.whatsapp-btn:hover {
+  background: rgba(37, 211, 102, 0.2) !important;
+  border-color: rgba(37, 211, 102, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+.telegram-btn {
+  background: rgba(0, 136, 204, 0.1) !important;
+  color: #0088cc !important;
+  border-color: rgba(0, 136, 204, 0.2) !important;
+}
+.telegram-btn:hover {
+  background: rgba(0, 136, 204, 0.2) !important;
+  border-color: rgba(0, 136, 204, 0.4) !important;
+  transform: translateY(-2px);
+}
+
+.related-exam-card:hover {
+  background: var(--bg-card-hover) !important;
+  border-color: var(--accent-light) !important;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+.breadcrumb-link {
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.breadcrumb-link:hover {
+  color: var(--accent-light);
+}
+.breadcrumb-current {
+  color: var(--text-secondary);
+  font-weight: 500;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Programmatic SEO Content Styles ─── */
+.seo-article {
+  max-width: 800px;
+  margin: 0 auto;
+}
+.seo-h1 {
+  font-family: 'Space Grotesk', sans-serif;
+  margin-bottom: 2rem;
+}
+.seo-content h2 {
+  color: var(--text-primary);
+  margin: 2.5rem 0 1rem;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+.seo-content p {
+  margin-bottom: 1.5rem;
+}
+.seo-content ul {
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+.seo-content li {
+  margin-bottom: 0.5rem;
+}
+

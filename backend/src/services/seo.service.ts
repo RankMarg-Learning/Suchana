@@ -26,8 +26,8 @@ export class SeoService {
       {
         category: 'NOTIFICATION',
         slug: `${baseSlug}-notification-pdf`,
-        title: `${examName} Notification PDF Download`,
-        metaTitle: `${examName} Recruitment Notification PDF: Download Official Link`,
+        title: `${examName} Notification PDF Download — ${year} Link`,
+        metaTitle: `${examName} Recruitment 2026 Notification OUT — Apply Now ${wrap(exam.totalVacancies) !== 'TBA' ? `(${exam.totalVacancies} Posts)` : ''}`,
         metaDescription: `Download the official ${examName} notification PDF. Check important dates, vacancies, and eligibility details for ${body} ${examName} recruitment.`,
         content: `
 # ${examName} Official Notification PDF
@@ -47,8 +47,8 @@ Looking for the ${examName} official notification? The ${body} has released the 
       {
         category: 'VACANCIES',
         slug: `${baseSlug}-vacancy-details`,
-        title: `${examName} Vacancy Details ${year}-${nextYear}`,
-        metaTitle: `${examName} Vacancy ${year}: Check Category-wise Post Details`,
+        title: `${examName} Vacancy Details ${year}-${nextYear} — Category Wise`,
+        metaTitle: `${examName} Vacancy ${year}: Check Category-wise Post Details ${wrap(exam.totalVacancies) !== 'TBA' ? `(${exam.totalVacancies} Posts)` : ''}`,
         metaDescription: `Check total ${examName} vacancies for the ${year} cycle. Breakdown of posts for UR, OBC, SC, ST, and EWS categories for ${examName}.`,
         content: `
 # ${examName} Vacancy Details ${year}
@@ -140,8 +140,8 @@ The ${examName} recruitment involves multiple stages to filter the best candidat
       {
         category: 'ADMIT_CARD',
         slug: `${baseSlug}-admit-card`,
-        title: `${examName} Admit Card Download Link`,
-        metaTitle: `${examName} Admit Card ${year}: Direct Download Link for Hall Ticket`,
+        title: `${examName} Admit Card Download Link — Hall Ticket Released`,
+        metaTitle: `${examName} Admit Card ${year}: Direct Download Link OUT`,
         metaDescription: `Find the official ${examName} admit card download link. Steps to retrieve password and reporting time instructions for the exam day.`,
         content: `
 # ${examName} Admit Card
@@ -156,8 +156,8 @@ Your hall ticket for ${examName} is now available or releasing soon on the ${bod
       {
         category: 'RESULTS',
         slug: `${baseSlug}-result`,
-        title: `${examName} Result & Merit List`,
-        metaTitle: `${examName} Result ${year}: Check Scorecard and Merit List Online`,
+        title: `${examName} Result & Merit List PDF — Check Status`,
+        metaTitle: `${examName} Result ${year} DECLARED: Check Scorecard and Merit List`,
         metaDescription: `Check your ${examName} result and download the merit list PDF. Find category-wise cut-off and steps to check the scorecard.`,
         content: `
 # ${examName} Result

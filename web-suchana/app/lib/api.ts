@@ -68,13 +68,18 @@ export async function fetchSeoPageBySlug(slug: string): Promise<SeoPage | null> 
 
 export async function fetchAllSeoPageSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/seo-pages?limit=1000&fields=slug`, {
-      next: { revalidate: 86400 }, // Cache for 1 day
+    const res = await fetch(`${API_BASE}/seo-pages?limit=1000`, {
+      cache: 'no-store'
     });
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      console.error(`Failed to fetch SEO slugs: ${res.status}`);
+      return [];
+    }
     const data = await res.json();
-    return ((data.data ?? data.seoPages) ?? []).map((p: SeoPage) => p.slug);
-  } catch {
+    const items = data.data ?? data.seoPages ?? [];
+    return items.map((p: any) => p.slug).filter(Boolean);
+  } catch (err) {
+    console.error("Error fetching SEO slugs:", err);
     return [];
   }
 }
@@ -82,13 +87,18 @@ export async function fetchAllSeoPageSlugs(): Promise<string[]> {
 
 export async function fetchAllExamSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/exams?limit=500&fields=slug`, {
-      next: { revalidate: 3600 },
+    const res = await fetch(`${API_BASE}/exams?limit=100`, {
+      cache: 'no-store'
     });
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      console.error(`Failed to fetch exam slugs: ${res.status}`);
+      return [];
+    }
     const data = await res.json();
-    return ((data.data ?? data.exams) ?? []).map((e: Exam) => e.slug);
-  } catch {
+    const items = data.data ?? data.exams ?? [];
+    return items.map((e: any) => e.slug).filter(Boolean);
+  } catch (err) {
+    console.error("Error fetching exam slugs:", err);
     return [];
   }
 }

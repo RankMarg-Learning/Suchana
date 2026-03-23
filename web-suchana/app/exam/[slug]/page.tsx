@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchExamBySlug, SITE_URL, fetchAllExamSlugs } from "@/app/lib/api";
+import { fetchExamBySlug, SITE_URL, fetchAllExamSlugs, fetchExamsFromAPI } from "@/app/lib/api";
 import {
   STATUS_LABELS,
   STAGE_LABELS,
@@ -86,7 +86,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// ─── JSON-LD Builder ──────────────────────────────────────────────────────────
 
 function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
   const regEvent = exam.lifecycleEvents?.find((e) => e.stage === "REGISTRATION");
@@ -231,11 +230,16 @@ function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamByS
 }
 
 
+
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
   const exam = await fetchExamBySlug(slug);
 
   if (!exam) notFound();
+
+  // Fetch related exams for internal linking
+  const { exams: relatedExams } = await fetchExamsFromAPI(1, 5, exam.category).catch(() => ({ exams: [] }));
+  const filteredRelated = (relatedExams || []).filter(e => e.id !== exam.id).slice(0, 4);
 
   const jobPostingJsonLd = buildJobPostingJsonLd(exam);
   const eventJsonLd = buildEventJsonLd(exam);
@@ -265,7 +269,7 @@ export default async function ExamDetailPage({ params }: Props) {
         />
       )}
 
-      <ExamDetailClient exam={exam} />
+      <ExamDetailClient exam={exam} relatedExams={filteredRelated} />
     </>
   );
 }

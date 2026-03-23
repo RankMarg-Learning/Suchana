@@ -1,9 +1,11 @@
 import { MetadataRoute } from "next";
-import { SITE_URL, fetchAllExamSlugs } from "./lib/api";
+import { SITE_URL, fetchAllExamSlugs, fetchAllSeoPageSlugs } from "./lib/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  // Fetch all exam slugs (falls back to mock data if API is down)
-  const examSlugs = await fetchAllExamSlugs();
+  const [examSlugs, seoSlugs] = await Promise.all([
+    fetchAllExamSlugs(),
+    fetchAllSeoPageSlugs()
+  ]);
 
   const now = new Date().toISOString();
 
@@ -40,12 +42,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const examPages: MetadataRoute.Sitemap = examSlugs.map((slug) => ({
-    url: `${SITE_URL}/exam/${slug}`,
+  const examPages: MetadataRoute.Sitemap = examSlugs.flatMap((slug) => [
+    {
+      url: `${SITE_URL}/exam/${slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/jobs/${slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/results/${slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/admit-card/${slug}`,
+      lastModified: now,
+      changeFrequency: "daily" as const,
+      priority: 0.9,
+    },
+  ]);
+
+  const seoPages: MetadataRoute.Sitemap = seoSlugs.map((slug) => ({
+    url: `${SITE_URL}/${slug}`,
     lastModified: now,
     changeFrequency: "daily" as const,
-    priority: 0.9,
+    priority: 0.8,
   }));
 
-  return [...staticPages, ...examPages];
+  return [...staticPages, ...examPages, ...seoPages];
 }

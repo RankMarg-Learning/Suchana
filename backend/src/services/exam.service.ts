@@ -143,6 +143,11 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
 
 
     await cacheService.delPattern('exams:list:*');
+
+    if (exam.isPublished) {
+        SeoService.generateExamSeoPages(exam.id).catch(e => logger.error(`[SEO] Background generation failed for new exam ${exam.id}`, e));
+    }
+
     logger.info(`Exam created: ${exam.id} by admin ${adminId}`);
 
     return exam;

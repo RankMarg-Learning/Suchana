@@ -46,121 +46,103 @@ export class AIProvider {
   }
 
   private static buildPrompt(text: string, sourceUrl: string, hintCategory?: string): string {
-    return `You are an expert Indian government exam data extractor.
-Extract structured exam data from the text below.
+    return `You are an Indian government exam data extractor. Extract structured exam data from the source text.
 
 HINT CATEGORY: ${hintCategory ?? 'auto-detect'}
 CURRENT YEAR: ${this.CURRENT_YEAR}
 
-CRITICAL EXTRACTION RULES
-RULE 1 - FOR EXAM IDENTIFY THE TIMELINE OF THE EXAM (ONLY CENTERAL EXAM & STATE GRADE A EXAMS)
-RULE 2 — EXTRACT EVERY SINGLE EVENT (NO SKIPPING)
-The OPTIONAL stages — include ONLY when source text contains explicit data for them:
-  ANSWER_KEY  (skip entirely if no answer key date/mention exists — do NOT add a TBD placeholder)
-  DOCUMENT_VERIFICATION  (include only if mentioned)
-  JOINING  (include only if mentioned)
+## SCOPE
+Only CENTRAL exams and STATE Grade-A exams.
 
-For every MANDATORY stage that has NO date in the source text, you MUST still create a
-placeholder event with:
-  - isTBD: true
-  - startsAt: null
-  - endsAt: null
-  - title: "<Stage Name> (To Be Announced)"
-Do NOT silently drop any mandatory stage. Do NOT add TBD placeholders for optional stages.
+## RULES
 
-RULE 3 — MULTI-PHASE EXAM HANDLING
-If the exam has multiple distinct phases, tiers, or papers (e.g.,
-Prelims and Mains, Paper 1 and Paper 2), EACH phase MUST produce its OWN separate set
-of events. Never merge dates from different phases into a single event.
+**R1 — MANDATORY STAGES** (always include, even without a date):
+NOTIFICATION, REGISTRATION, ADMIT_CARD, EXAM, RESULT
+→ If date is missing: set isTBD:true, startsAt:null, endsAt:null, title:"<Stage> (To Be Announced)"
 
-NOTIFICATION (stageOrder=10) and REGISTRATION (stageOrder=20) are shared for the whole exam.
-Create only ONE notification event and ONE registration event regardless of the number of phases.
+**R2 — OPTIONAL STAGES** (include ONLY if explicitly mentioned in source):
+ANSWER_KEY, DOCUMENT_VERIFICATION, JOINING
+→ Never add TBD placeholders for these.
 
-For each individual phase, create SEPARATE events for:
-  ✓ ADMIT_CARD  (one per phase, labeled "(Exam 1 Name) Admit Card", "(Exam 2 Name) Admit Card", etc.)
-  ✓ EXAM        (one per phase — NEVER merge (Exam 1 Name) and (Exam 2 Name) into one EXAM event)
-  ✓ ANSWER_KEY  (one per phase, only if answer key data is found for that phase)
-  ✓ RESULT      (one per phase, labeled "(Exam 1 Name) Result", "(Exam 2 Name) Result", etc.)
+**R3 — EXAM PHASES & MULTIPLE POSTS**
+Each phase (Prelims, Mains, Interview) and distinct post (e.g., Officer Scale-I, Office Assistant) gets its OWN set of events if dates differ.
+NOTIFICATION and REGISTRATION are usually shared — create only ONE each unless explicitly separate.
+Label all events with the phase/post name in the title (e.g., "Office Assistant Pre Exam", "Officer Scale-I Admit Card").
+Assign stageOrder strictly by chronological date.
 
-Example for SSC CGL (2-tier):
-  stageOrder=10  → Notification Release
-  stageOrder=20  → Application Form Window
-  stageOrder=30  → Prelims Admit Card
-  stageOrder=40  → Prelims Exam (with date range if multi-day)
-  stageOrder=50  → Prelims Answer Key — only if data present
-  stageOrder=60  → Prelims Result
-... (continue this pattern for all phases)
+Example chronological order:
+10=Notification, 20=Registration, 30=Pre Admit Card (Assistant), 40=Pre Exam (Assistant),
+50=Pre Admit Card (Scale-I), 60=Pre Exam (Scale-I), 70=Pre Result (Assistant), ...
 
-Label each event title with the phase name to prevent ambiguity.
-
-RULE 4 — PER-STAGE EXTRACTION GUIDE (NOTE: IF SOURCE DIDN'T HAVE ANY DATE ABOUT NOTIFICATION DON'T ADD and FOR LOCAL EXAM DON'T ADD STATE, JUST ADD NOTIFICATION & REGISTRATION)
-
-RULE 5 — DATES:
+**R4 — DATES & RANGES (CRITICAL)**
 - Format: ISO8601 (YYYY-MM-DDTHH:mm:ss.000Z)
+- Missing year → use CURRENT_YEAR; if month already passed and context is future → CURRENT_YEAR+1
+- isTBD:true only if explicitly stated (TBA) or mandatory stage has no date. Month/Year only (e.g., "Nov 2025") -> set startsAt=1st of month.
+- Start & End Dates: "Apply Start Date" and "Last Date" MUST map to \`startsAt\` and \`endsAt\` respectively of a SINGLE event (e.g., REGISTRATION).
+- Date Ranges / Multiple Dates: For "22 - 23 Nov" or "06, 07, 13 & 14 Dec", set \`startsAt\` = First Date, \`endsAt\` = Last Date.
+- Minor Dates: Fee payment, error correction, and application printing dates should be appended to the corresponding event (like REGISTRATION) description, do NOT create standalone events for them.
 
-- Year handling:
-  • If missing → use CURRENT_YEAR (${this.CURRENT_YEAR})
-  • If month < current month AND context = future → use CURRENT_YEAR+1
+**R5 — ENUMS** (strict — no other values accepted)
+- category: ${EXAM_CATEGORIES.join(' | ')}
+- status: ${EXAM_STATUSES.join(' | ')}
+- examLevel: NATIONAL | STATE | DISTRICT
+- stage: ${LIFECYCLE_STAGES.join(' | ')}
 
-- isTBD:
-  • true → only if explicitly mentioned (TBA, Upcoming, will be notified, etc.)
-  • true → also for mandatory placeholder stages with no date
+**R6 — MARKDOWN FIELDS**
+Use **bold** and - bullets for: age, totalVacancies, applicationFee, qualificationCriteria, salary, additionalDetails, description.
+Keep values exactly as source text — only reformat, never invent.
 
-RULE 6 — MISSING / NULL DATA
-- Missing scalar fields → null (NOT "null" string, NOT "N/A").
-- Missing array fields → [] (empty array).
-- Never invent data that is not present in the source text.
+**R7 — MISSING DATA**
+- Missing scalar → null (not "null", not "N/A")
+- Missing array → []
+- Never invent data not present in source
 
-RULE 7 — ENUM VALIDATION (STRICT)
-- category: must be one of [${EXAM_CATEGORIES.join(', ')}]
-- status: must be one of [${EXAM_STATUSES.join(', ')}]
-- examLevel: must be one of [${EXAM_LEVELS.join(', ')}]
-- stage: must be one of [${LIFECYCLE_STAGES.join(', ')}]
+**R8 — LINKS**
+Extract official URLs only. No third-party, coaching, or news site links.
 
-RULE 7 — FORMATTING
-- Markdown fields (applicationFee, qualificationCriteria, totalVacancies, salary, additionalDetails,
-  description): use **bold**, - bullet points, ### headings to structure data neatly.
+**R9 — LOCAL EXAMS** (district/city level)
+Omit state field. Include only NOTIFICATION and REGISTRATION events.
 
-RULE 8 — OFFICIAL LINKS ONLY
-Extract official website and notification URLs ONLY.
-Exclude any third-party, affiliate, coaching, or news website links.
+---
 
-
-SOURCE TEXT TO EXTRACT FROM:
+SOURCE TEXT:
 ${text}
 
-OUTPUT: Return JSON MATCHING THIS EXACT SCHEMA (no extra keys, no markdown fences):
+---
+
+OUTPUT: Return only valid JSON — no markdown fences, no extra keys.
+
 {
-  "title": "string (Full official exam name)",
-  "shortTitle": "string (e.g., SSC CGL) | null",
-  "description": "string (markdown) | null : (NOTE: add seo friendly description)",
-  "conductingBody": "string | null",
-  "category": "string (From Enum) | null",
-  "status": "string (From Enum - determine based on current progress of the exam) | null",
-  "examLevel": "string (NATIONAL|STATE|DISTRICT) | null",
-  "state": "string (State name if applicable) | null",
-  "examYear": "number | null",
-  "age": "string (markdown, e.g., **18 - 32 years** as on 01.01.2024) | null",
-  "totalVacancies": "string (markdown) | null",
-  "applicationFee": "string (markdown) | null",
-  "qualificationCriteria": "string (markdown) | null",
-  "salary": "string (markdown) | null",
-  "additionalDetails": "string (additional detail and faq in markdown ) | null",
-  "officialWebsite": "string (url) | null",
-  "notificationUrl": "string (url) | null",
-  "aiConfidence": "number (0.0 - 1.0)",
+  "title": "string",
+  "shortTitle": "string|null",
+  "description": "string (markdown, SEO-friendly)|null",
+  "conductingBody": "string|null",
+  "category": "enum|null",
+  "status": "enum|null",
+  "examLevel": "NATIONAL|STATE|DISTRICT|null",
+  "state": "string|null",
+  "examYear": "number|null",
+  "age": "string (markdown)|null",
+  "totalVacancies": "string (markdown)|null",
+  "applicationFee": "string (markdown)|null",
+  "qualificationCriteria": "string (markdown)|null",
+  "salary": "string (markdown)|null",
+  "additionalDetails": "string (markdown, FAQs)|null",
+  "officialWebsite": "string (url)|null",
+  "notificationUrl": "string (url)|null",
+  "aiConfidence": "number (0.0–1.0)",
   "aiNotes": null,
   "events": [
     {
-      "stage": "string (From LIFECYCLE_STAGES Enum)",
+      "stage": "enum",
       "stageOrder": "number",
       "title": "string",
-      "description": "string (seo description)",
-      "startsAt": "string (ISO8601) | null",
-      "endsAt": "string (ISO8601) | null",
-      "isTBD": "boolean (true if date is TBD or this is a mandatory placeholder)",
-      "actionUrl": "string (url) | null",
-      "actionLabel": "string (e.g. Apply Now, Download Admit Card, Check Result) | null"
+      "description": "string (SEO)",
+      "startsAt": "ISO8601|null",
+      "endsAt": "ISO8601|null",
+      "isTBD": "boolean",
+      "actionUrl": "string|null",
+      "actionLabel": "string|null"
     }
   ]
 }`;
