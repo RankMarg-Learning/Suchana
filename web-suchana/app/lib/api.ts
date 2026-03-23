@@ -115,47 +115,47 @@ export async function fetchSavedExams(userId: string): Promise<Exam[]> {
 }
 
 export async function toggleSavedExam(userId: string, examId: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/users/${userId}/saved-exams`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ examId }),
-    });
-    const data = await res.json();
-    return data.data;
+  const res = await fetch(`${API_BASE}/users/${userId}/saved-exams`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ examId }),
+  });
+  const data = await res.json();
+  return data.data;
 }
 
 export async function getPersonalizedExams(
-    id: string,
-    page = 1,
-    limit = 20
+  id: string,
+  page = 1,
+  limit = 20
 ): Promise<{ exams: Exam[]; total: number }> {
-    try {
-        const res = await fetch(`${API_BASE}/users/${id}/exams?page=${page}&limit=${limit}`);
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        return { 
-          exams: data.exams ?? data.data ?? [], 
-          total: data.total ?? data.meta?.total ?? 0 
-        };
-    } catch {
-        return { exams: [], total: 0 };
-    }
+  try {
+    const res = await fetch(`${API_BASE}/users/${id}/exams?page=${page}&limit=${limit}`);
+    if (!res.ok) throw new Error();
+    const data = await res.json();
+    return {
+      exams: data.exams ?? data.data ?? [],
+      total: data.total ?? data.meta?.total ?? 0
+    };
+  } catch {
+    return { exams: [], total: 0 };
+  }
 }
 
 export async function getUser(id: string): Promise<any> {
-    const res = await fetch(`${API_BASE}/users/${id}`);
-    const data = await res.json();
-    return data.data;
+  const res = await fetch(`${API_BASE}/users/${id}`);
+  const data = await res.json();
+  return data.data;
 }
 
 export async function updateUser(id: string, payload: any): Promise<any> {
-    const res = await fetch(`${API_BASE}/users/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const data = await res.json();
-    return data.data;
+  const res = await fetch(`${API_BASE}/users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = await res.json();
+  return data.data;
 }
 
 export async function registerUser(payload: any): Promise<any> {

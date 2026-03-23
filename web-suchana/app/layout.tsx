@@ -66,7 +66,7 @@ export const metadata: Metadata = {
       "Never miss a government exam deadline. Get registration dates, admit card alerts, exam schedules and result notifications for UPSC, SSC, Railway, Banking and more.",
     images: [
       {
-        url: `${SITE_URL}/og-image.jpg`,
+        url: `${SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "Exam Suchana — Government Exam Tracker",
@@ -80,17 +80,26 @@ export const metadata: Metadata = {
     title: "Exam Suchana — Government Exam Notifications",
     description:
       "Track UPSC, SSC, Railway, Banking exam timelines in one place. Get instant alerts for registration, admit cards & results.",
-    images: [`${SITE_URL}/og-image.jpg`],
+    images: [`${SITE_URL}/og-image.png`],
   },
   alternates: {
     canonical: SITE_URL,
     languages: {
       "en-IN": SITE_URL,
-      "hi-IN": `${SITE_URL}/hi`,
     },
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/examsuchana-logoT.png", sizes: "192x192", type: "image/png" },
+      { url: "/examsuchana-logoT.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/examsuchana-logoT.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -99,6 +108,7 @@ export const metadata: Metadata = {
     "theme-color": "#7c3aed",
     "og:locale:alternate": "hi_IN",
   },
+  manifest: "/manifest.json",
 };
 
 // ─── Website & Organization JSON-LD ──────────────────────────────────────────
@@ -126,7 +136,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "Exam Suchana",
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.png`,
+  logo: `${SITE_URL}/examsuchana-logoT.png`,
   sameAs: [
     "https://twitter.com/ExamSuchana",
     "https://t.me/ExamSuchana",
@@ -153,8 +163,6 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/examsuchana-logoT.png" />
         <meta name="theme-color" content="#7c3aed" />
 
         {/* JSON-LD Structured Data */}

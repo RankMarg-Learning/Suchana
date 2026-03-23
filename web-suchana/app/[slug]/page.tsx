@@ -91,7 +91,7 @@ export default async function SeoDetailPage({ params }: Props) {
       "name": "Exam Suchana",
       "logo": {
         "@type": "ImageObject",
-        "url": `${SITE_URL}/logo.png`
+        "url": `${SITE_URL}/examsuchana-logoT.png`
       }
     },
     "datePublished": page.createdAt,
