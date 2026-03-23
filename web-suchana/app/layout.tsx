@@ -86,11 +86,20 @@ export const metadata: Metadata = {
     canonical: SITE_URL,
     languages: {
       "en-IN": SITE_URL,
-      "hi-IN": `${SITE_URL}/hi`,
     },
   },
   verification: {
     google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION,
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/examsuchana-logoT.png", sizes: "192x192", type: "image/png" },
+      { url: "/examsuchana-logoT.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/examsuchana-logoT.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -99,6 +108,7 @@ export const metadata: Metadata = {
     "theme-color": "#7c3aed",
     "og:locale:alternate": "hi_IN",
   },
+  manifest: "/manifest.json",
 };
 
 // ─── Website & Organization JSON-LD ──────────────────────────────────────────
@@ -153,8 +163,6 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/examsuchana-logoT.png" />
         <meta name="theme-color" content="#7c3aed" />
 
         {/* JSON-LD Structured Data */}

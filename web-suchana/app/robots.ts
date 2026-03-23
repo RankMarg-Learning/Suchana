@@ -6,12 +6,12 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        allow: ["/", "/favicon.ico", "/examsuchana-logoT.png"],
         disallow: ["/api/", "/_next/", "/admin/"],
       },
       {
         userAgent: "Googlebot",
-        allow: "/",
+        allow: ["/", "/favicon.ico", "/examsuchana-logoT.png"],
         disallow: ["/api/", "/admin/"],
         crawlDelay: 1,
       },
