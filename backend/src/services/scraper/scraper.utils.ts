@@ -83,12 +83,14 @@ export class ScraperUtils {
 
                 $container.find('h1, h2, h3, h4, h5, h6, li, p, tr').each((_, sub) => {
                     const $sub = $(sub);
+                    const tag = sub.name ? (sub as any).name.toLowerCase() : '';
 
                     if ($sub.find('h1, h2, h3, h4, h5, h6, li, p, tr').length > 0 &&
-                        !sub.name?.toLowerCase().match(/^h[1-6]$/)) return;
+                        !tag.match(/^h[1-6]|tr$/)) return;
+
+                    if (tag !== 'tr' && $sub.parents('tr').length > 0) return;
 
                     let rowData = '';
-                    const tag = sub.name ? sub.name.toLowerCase() : '';
 
                     if (tag === 'tr') {
                         rowData = $sub.find('td, th').map((_, cell) => $(cell).text().replace(/\s+/g, ' ').trim())
@@ -102,9 +104,8 @@ export class ScraperUtils {
                     if (seenLines.has(normalized)) return;
 
                     const isHeading = tag.match(/^h[1-6]$/);
-                    const hasData = rowData.includes(':') || /\d/.test(rowData);
+                    const hasData = rowData.includes(':') || /\d/.test(rowData) || tag === 'li';
                     const isKeywordMatch = targetKeywords.some(kw => new RegExp(kw, 'i').test(rowData));
-
                     const isNoise = /whatsapp|telegram|join our|follow now|click here|youtube|instagram|facebook|download app|play store|related post|latest post/i.test(rowData);
 
                     if ((isHeading || hasData || isKeywordMatch) && !isNoise) {

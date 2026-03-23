@@ -120,7 +120,7 @@ OUTPUT: Return only valid JSON — no markdown fences, no extra keys.
   "category": "enum|null",
   "status": "enum|null",
   "examLevel": "NATIONAL|STATE|DISTRICT|null",
-  "state": "string|null",
+  "state": "string|null (if exam is state level, then state is required)",
   "examYear": "number|null",
   "age": "string (markdown)|null",
   "totalVacancies": "string (markdown)|null",
