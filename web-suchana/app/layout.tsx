@@ -66,7 +66,7 @@ export const metadata: Metadata = {
       "Never miss a government exam deadline. Get registration dates, admit card alerts, exam schedules and result notifications for UPSC, SSC, Railway, Banking and more.",
     images: [
       {
-        url: `${SITE_URL}/og-image.jpg`,
+        url: `${SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
         alt: "Exam Suchana — Government Exam Tracker",
@@ -80,7 +80,7 @@ export const metadata: Metadata = {
     title: "Exam Suchana — Government Exam Notifications",
     description:
       "Track UPSC, SSC, Railway, Banking exam timelines in one place. Get instant alerts for registration, admit cards & results.",
-    images: [`${SITE_URL}/og-image.jpg`],
+    images: [`${SITE_URL}/og-image.png`],
   },
   alternates: {
     canonical: SITE_URL,
@@ -136,7 +136,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "Exam Suchana",
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.png`,
+  logo: `${SITE_URL}/examsuchana-logoT.png`,
   sameAs: [
     "https://twitter.com/ExamSuchana",
     "https://t.me/ExamSuchana",

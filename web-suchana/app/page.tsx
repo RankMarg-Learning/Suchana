@@ -8,6 +8,8 @@ import {
   Search, ChevronDown, ArrowRight,
   MapPin, Info, RefreshCw, Zap, X,
 } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import {
   Exam,
   STATUS_LABELS, CATEGORIES,
@@ -88,6 +90,17 @@ function SkeletonRow() {
 
 
 export default function HomePage() {
+  return (
+    <Suspense fallback={<div className="loading-screen"><RefreshCw className="spin-icon" /></div>}>
+      <HomePageContent />
+    </Suspense>
+  );
+}
+
+function HomePageContent() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams?.get("search") || "";
+
   const [now, setNow] = useState(0);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
@@ -101,7 +114,7 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
