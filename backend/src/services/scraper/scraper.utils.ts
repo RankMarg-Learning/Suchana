@@ -81,32 +81,50 @@ export class ScraperUtils {
             const containerText = $container.text();
             if (targetKeywords.some(kw => new RegExp(kw, 'i').test(containerText))) {
 
+                let isSkippingSection = false;
                 $container.find('h1, h2, h3, h4, h5, h6, li, p, tr').each((_, sub) => {
                     const $sub = $(sub);
                     const tag = sub.name ? (sub as any).name.toLowerCase() : '';
+                    const text = $sub.text().trim();
+
+                    if (tag.match(/^h[1-6]$/)) {
+                        if (/how to|disclaimer|frequently asked|important question|faq|q & a|related post/i.test(text)) {
+                            isSkippingSection = true;
+                            return;
+                        } else {
+                            isSkippingSection = false;
+                        }
+                    }
+
+                    if (isSkippingSection) return;
 
                     if ($sub.find('h1, h2, h3, h4, h5, h6, li, p, tr').length > 0 &&
                         !tag.match(/^h[1-6]|tr$/)) return;
 
                     if (tag !== 'tr' && $sub.parents('tr').length > 0) return;
 
-                    let rowData = '';
+                    let rowData = text;
 
                     if (tag === 'tr') {
                         rowData = $sub.find('td, th').map((_, cell) => $(cell).text().replace(/\s+/g, ' ').trim())
                             .get().filter(t => t).join(' : ');
-                    } else {
-                        rowData = $sub.text().replace(/\s+/g, ' ').trim();
                     }
 
-                    if (!rowData) return;
+                    if (!rowData || rowData.length < 2) return;
                     const normalized = rowData.toLowerCase();
                     if (seenLines.has(normalized)) return;
 
                     const isHeading = tag.match(/^h[1-6]$/);
                     const hasData = rowData.includes(':') || /\d/.test(rowData) || tag === 'li';
                     const isKeywordMatch = targetKeywords.some(kw => new RegExp(kw, 'i').test(rowData));
-                    const isNoise = /whatsapp|telegram|join our|follow now|click here|youtube|instagram|facebook|download app|play store|related post|latest post/i.test(rowData);
+
+                    const noisePatterns = [
+                        /whatsapp|telegram|join our|follow now|click here|youtube|instagram|facebook|download app|play store/i,
+                        /related post|latest post|all rights reserved|copyright|maintained by|designed by/i,
+                        /disclaimer|how to check|how to download|how to apply|frequently asked|important question/i,
+                        /^(question|answer|q\.|a\.|ans\.):/i
+                    ];
+                    const isNoise = noisePatterns.some(p => p.test(rowData));
 
                     if ((isHeading || hasData || isKeywordMatch) && !isNoise) {
                         seenLines.add(normalized);

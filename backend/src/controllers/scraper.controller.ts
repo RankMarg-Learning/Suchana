@@ -174,17 +174,16 @@ export async function testScraperDirect(req: Request, res: Response, next: NextF
         }
 
         const { text, charCount, extractedLinks } = ScraperUtils.cleanHtml(htmlToProcess, url);
-        console.log("text", text)
-        // const extracted = await AIProvider.extractExamData(text, url, hintCategory);
+        const extracted = await AIProvider.extractExamData(text, url, hintCategory);
 
-        // if (!extracted) {
-        //     sendError(res, 500, 'AI_FAILED', 'AI failed to extract data');
-        //     return;
-        // }
+        if (!extracted) {
+            sendError(res, 500, 'AI_FAILED', 'AI failed to extract data');
+            return;
+        }
 
-        // extracted.sourceUrl = url;
-        // extracted.scrapedAt = new Date();
-        sendSuccess(res, text);
+        extracted.sourceUrl = url;
+        extracted.scrapedAt = new Date();
+        sendSuccess(res, extracted);
     } catch (err: any) {
         logger.error(`[Scraper] test-direct failed: ${err.message}`);
         sendError(res, 500, 'SCRAPE_TEST_FAILED', err.message);
