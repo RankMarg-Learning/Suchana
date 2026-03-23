@@ -93,6 +93,17 @@ export function TimelineItem({
   const status = getStatus(event, effectiveEndsAt);
   const colorScheme = useColorScheme();
 
+  const now = Date.now();
+  let actionEnd: number | null = event.endsAt
+    ? new Date(event.endsAt).getTime()
+    : effectiveEndsAt ?? null;
+
+  if (actionEnd !== null) {
+      const bufferDays = event.stage === 'REGISTRATION' ? 4 : 20;
+      actionEnd += bufferDays * 24 * 60 * 60 * 1000;
+  }
+
+  const isActionClosed = actionEnd !== null && now > actionEnd;
 
   // Completed events (status === null) fall back to a muted gray dot
   const dotColor = status?.color ?? '#6B7280';
@@ -148,8 +159,8 @@ export function TimelineItem({
         ) : null}
 
         {event.actionUrl ? (
-          status === null ? (
-            // Completed event – show button as disabled/closed
+          isActionClosed ? (
+            // Completed event with elapsed buffer – show button as disabled/closed
             <TouchableOpacity
               disabled
               style={[
@@ -163,7 +174,7 @@ export function TimelineItem({
               <Text style={[styles.actionText, { color: '#9CA3AF' }]}>Closed</Text>
             </TouchableOpacity>
           ) : (
-            // Active / Upcoming – fully interactive
+            // Active / Upcoming / Buffer range – fully interactive
             <TouchableOpacity
               style={[styles.actionBtn, { borderColor: tint, backgroundColor: colorScheme === 'dark' ? '#3B0764' : tint }]}
               onPress={() => Linking.openURL(event.actionUrl!)}>

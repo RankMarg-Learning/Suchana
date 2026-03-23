@@ -141,14 +141,13 @@ export default function ExamDetailScreen() {
       })}`
       : '';
 
-    const vacancies = exam.totalVacancies || 'Check Details';
 
     const message =
       `🏛️ *${exam.title}*\n` +
       `🏢 Board: ${exam.conductingBody}\n` +
       `${deadline}\n\n` +
       `Stay updated with government exam timelines on Suchana App! 🚀\n` +
-      `Download: https://suchana.app/get`;
+      `Download: https://link.examsuchana.in/get`;
 
     try {
       await Share.share(

@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import { rateLimit, ipKeyGenerator } from 'express-rate-limit';
 import { env } from '../config/env';
 import { sendError } from '../utils/apiResponse';
 
@@ -12,7 +12,9 @@ export const globalLimiter = rateLimit({
         const userId = req.headers['x-user-id'] as string;
         const auth = req.headers['authorization'] as string;
 
-        return userId || auth || req.ip || 'unknown';
+        if (userId) return userId;
+        if (auth) return auth;
+        return ipKeyGenerator(req.ip || 'unknown');
     },
     message: (req: any, res: any) => {
         sendError(res, 429, 'TOO_MANY_REQUESTS', 'You have exceeded the request limit. Please try again later.');
