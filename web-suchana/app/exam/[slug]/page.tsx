@@ -9,6 +9,7 @@ import {
   getTotalVacancies,
   getStageState,
   countdownStr,
+  stripHtml,
 } from "@/app/lib/types";
 import ExamDetailClient from "./ExamDetailClient";
 
@@ -89,19 +90,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
   const regEvent = exam.lifecycleEvents?.find((e) => e.stage === "REGISTRATION");
-  const examEvent = exam.lifecycleEvents?.find(
-    (e) => e.stage === "EXAM_DATE" || e.stage === "EXAM"
-  );
+  const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
 
   return {
-    "@context": "https://schema.org",
     "@type": "JobPosting",
+    "@id": `${canonicalUrl}#job`,
     title: exam.title,
-    description: exam.description ?? `${exam.title} — Government recruitment by ${exam.conductingBody}.`,
+    description: stripHtml(exam.description) || `${exam.title} — Government recruitment by ${exam.conductingBody}.`,
     hiringOrganization: {
       "@type": "Organization",
-      name: exam.conductingBody,
-      url: exam.officialWebsite,
+      "@id": `${SITE_URL}#organization`,
+      name: exam.conductingBody || "Government Agency",
+      url: exam.officialWebsite || SITE_URL,
     },
     jobLocation: {
       "@type": "Place",
@@ -114,7 +114,7 @@ function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
     employmentType: "FULL_TIME",
     validThrough: regEvent?.endsAt ?? undefined,
     datePosted: regEvent?.startsAt ?? new Date().toISOString(),
-    url: `${SITE_URL}/exam/${exam.slug}`,
+    url: canonicalUrl,
     ...(exam.totalVacancies
       ? { totalJobOpenings: parseInt(exam.totalVacancies) || undefined }
       : {}),
@@ -124,7 +124,7 @@ function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
           "@type": "ContactPoint",
           url: exam.notificationUrl ?? exam.officialWebsite,
           name: "Application Details",
-          description: exam.applicationFee
+          description: stripHtml(exam.applicationFee)
         },
       }
       : {}),
@@ -135,15 +135,18 @@ function buildEventJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamB
   const examEvent = exam.lifecycleEvents?.find((e) => e.stage === "EXAM_DATE" || e.stage === "EXAM");
   if (!examEvent?.startsAt) return null;
 
+  const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
+
   return {
-    "@context": "https://schema.org",
     "@type": "Event",
+    "@id": `${canonicalUrl}#event`,
     name: exam.shortTitle ?? exam.title,
-    description: exam.description ?? `${exam.title} examination.`,
+    description: stripHtml(exam.description) || `${exam.title} examination.`,
     startDate: examEvent.startsAt,
     endDate: examEvent.endsAt ?? examEvent.startsAt,
     organizer: {
       "@type": "Organization",
+      "@id": `${SITE_URL}#organization`,
       name: exam.conductingBody,
       url: exam.officialWebsite,
     },
@@ -157,74 +160,88 @@ function buildEventJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamB
     },
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    url: `${SITE_URL}/exam/${exam.slug}`,
+    url: canonicalUrl,
   };
 }
 
 function buildBreadcrumbJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
+  const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
   return {
-    "@context": "https://schema.org",
     "@type": "BreadcrumbList",
+    "@id": `${canonicalUrl}#breadcrumb`,
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
       { "@type": "ListItem", position: 2, name: cleanLabel(exam.category), item: `${SITE_URL}/?category=${exam.category}` },
-      { "@type": "ListItem", position: 3, name: exam.shortTitle ?? exam.title, item: `${SITE_URL}/exam/${exam.slug}` },
+      { "@type": "ListItem", position: 3, name: exam.shortTitle ?? exam.title, item: canonicalUrl },
     ],
   };
 }
 
 function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
   const faqs = [];
+  const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
 
   if (exam.qualificationCriteria) {
-    faqs.push({
-      "@type": "Question",
-      name: `What is the qualification for ${exam.shortTitle || exam.title}?`,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: exam.qualificationCriteria,
-      },
-    });
+    const text = stripHtml(exam.qualificationCriteria);
+    if (text.length > 5) {
+      faqs.push({
+        "@type": "Question",
+        name: `What is the qualification for ${exam.shortTitle || exam.title}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: text,
+        },
+      });
+    }
   }
 
   if (exam.age) {
-    faqs.push({
-      "@type": "Question",
-      name: `What is the age limit for ${exam.shortTitle || exam.title}?`,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: exam.age,
-      },
-    });
+    const text = stripHtml(exam.age);
+    if (text.length > 3) {
+      faqs.push({
+        "@type": "Question",
+        name: `What is the age limit for ${exam.shortTitle || exam.title}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: text,
+        },
+      });
+    }
   }
 
   if (exam.salary) {
-    faqs.push({
-      "@type": "Question",
-      name: `What is the salary for ${exam.shortTitle || exam.title}?`,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: `The salary details for ${exam.title} are: ${exam.salary}`,
-      },
-    });
+    const text = stripHtml(exam.salary);
+    if (text.length > 3) {
+      faqs.push({
+        "@type": "Question",
+        name: `What is the salary for ${exam.shortTitle || exam.title}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `The salary details for ${exam.title} are: ${text}`,
+        },
+      });
+    }
   }
 
   if (exam.totalVacancies) {
-    faqs.push({
-      "@type": "Question",
-      name: `How many vacancies are there in ${exam.shortTitle || exam.title}?`,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: `There are a total of ${exam.totalVacancies} vacancies announced for this recruitment.`,
-      },
-    });
+    const text = stripHtml(exam.totalVacancies);
+    if (text.length > 0 && text !== "TBA") {
+      faqs.push({
+        "@type": "Question",
+        name: `How many vacancies are there in ${exam.shortTitle || exam.title}?`,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: `There are a total of ${text} vacancies announced for this recruitment.`,
+        },
+      });
+    }
   }
 
   if (faqs.length === 0) return null;
 
   return {
-    "@context": "https://schema.org",
     "@type": "FAQPage",
+    "@id": `${canonicalUrl}#faq`,
     mainEntity: faqs,
   };
 }
@@ -237,7 +254,6 @@ export default async function ExamDetailPage({ params }: Props) {
 
   if (!exam) notFound();
 
-  // Fetch related exams for internal linking
   const { exams: relatedExams } = await fetchExamsFromAPI(1, 5, exam.category).catch(() => ({ exams: [] }));
   const filteredRelated = (relatedExams || []).filter(e => e.id !== exam.id).slice(0, 4);
 
@@ -246,28 +262,22 @@ export default async function ExamDetailPage({ params }: Props) {
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(exam);
   const faqJsonLd = buildFaqJsonLd(exam);
 
+  const combinedJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      jobPostingJsonLd,
+      eventJsonLd,
+      breadcrumbJsonLd,
+      faqJsonLd,
+    ].filter(Boolean),
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(combinedJsonLd) }}
       />
-      {eventJsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
-        />
-      )}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
-      {faqJsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        />
-      )}
 
       <ExamDetailClient exam={exam} relatedExams={filteredRelated} />
     </>

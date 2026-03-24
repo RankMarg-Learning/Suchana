@@ -2,234 +2,292 @@
 
 import { useState, useEffect } from 'react';
 import { 
-    FileText, 
     Search, 
     Plus, 
-    Filter, 
-    MoreHorizontal, 
-    Eye, 
-    Edit3, 
-    Trash2, 
+    MoreHorizontal,
     ChevronLeft, 
     ChevronRight,
-    ArrowUpDown,
-    CheckCircle2,
-    Clock,
-    Archive
+    Loader2,
+    Calendar,
+    Filter,
+    Globe,
+    Edit3,
+    Trash2
 } from 'lucide-react';
 import Link from 'next/link';
 import { cn, formatDate } from '@/lib/utils';
 import { examService, Exam } from '@/lib/api';
 import { ExamStatus, EXAM_STATUSES } from '@/constants/enums';
+import { toast } from 'sonner';
 
 export default function ExamsPage() {
     const [exams, setExams] = useState<Exam[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<string>('ALL');
+    const [publishFilter, setPublishFilter] = useState<'ALL' | 'PUBLISHED' | 'UNPUBLISHED'>('ALL');
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 15;
 
     useEffect(() => {
-        const fetchExams = async () => {
-            try {
-                const data = await examService.getAllExams();
-                setExams(data?.data || []);
-            } catch (error) {
-                console.error('Failed to fetch exams:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchExams();
     }, []);
 
+    const fetchExams = async () => {
+        try {
+            setLoading(true);
+            const data = await examService.getAllExams();
+            setExams(data?.data || []);
+        } catch (error) {
+            console.error('Failed to fetch exams:', error);
+            toast.error('Failed to load exams');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const filteredExams = exams.filter(exam => {
         const matchesSearch = exam.title.toLowerCase().includes(search.toLowerCase()) || 
-                             exam.shortTitle.toLowerCase().includes(search.toLowerCase());
+                             exam.shortTitle?.toLowerCase().includes(search.toLowerCase()) ||
+                             exam.conductingBody?.toLowerCase().includes(search.toLowerCase());
         const matchesStatus = statusFilter === 'ALL' || exam.status === statusFilter;
-        return matchesSearch && matchesStatus;
+        const matchesPublish = publishFilter === 'ALL' ? true : 
+                               publishFilter === 'PUBLISHED' ? !!exam.isPublished : 
+                               !exam.isPublished;
+        return matchesSearch && matchesStatus && matchesPublish;
     });
 
-    const getStatusStyle = (status: ExamStatus) => {
+    const totalPages = Math.max(1, Math.ceil(filteredExams.length / pageSize));
+    const paginatedExams = filteredExams.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [search, statusFilter, publishFilter]);
+
+    const getStatusStyle = (status: string) => {
         switch(status) {
-            case ExamStatus.ACTIVE:
-            case ExamStatus.REGISTRATION_OPEN:
-                return "bg-emerald-500/10 text-emerald-500 border-emerald-500/20";
-            case ExamStatus.NOTIFICATION:
-                return "bg-blue-500/10 text-blue-500 border-blue-500/20";
-            case ExamStatus.ARCHIVED:
-                return "bg-slate-500/10 text-slate-500 border-slate-500/20";
-            case ExamStatus.RESULT_DECLARED:
-                return "bg-amber-500/10 text-amber-500 border-amber-500/20";
+            case 'ACTIVE':
+            case 'REGISTRATION_OPEN':
+                return "bg-green-50 text-green-700 border-green-200";
+            case 'NOTIFICATION':
+                return "bg-blue-50 text-blue-700 border-blue-200";
+            case 'RESULT_DECLARED':
+                return "bg-yellow-50 text-yellow-700 border-yellow-200";
+            case 'ADMIT_CARD_OUT':
+                return "bg-purple-50 text-purple-700 border-purple-200";
             default:
-                return "bg-muted text-muted-foreground border-border";
+                return "bg-gray-50 text-gray-700 border-gray-200";
         }
     };
 
     return (
-        <div className="space-y-10">
-            {/* Header */}
+        <div className="space-y-6">
+            {/* Simple Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold font-outfit">Exams Management</h1>
-                    <p className="text-muted-foreground mt-1 text-lg">Manage, track and update government exam entries.</p>
+                    <h1 className="text-2xl font-bold text-gray-900">All Exams</h1>
+                    <p className="text-gray-500 text-sm">Manage all your government exam data and timelines</p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <Link href="/exams/create" className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all duration-300 font-bold text-sm">
-                        <Plus className="w-5 h-5" />
-                        <span>Create New Exam</span>
-                    </Link>
-                </div>
+                <Link href="/exams/create" className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm">
+                    <Plus className="w-4 h-4" />
+                    <span>Add Exam</span>
+                </Link>
             </div>
 
-            {/* Filters Bar */}
-            <div className="premium-card rounded-3xl p-6 flex items-center justify-between gap-6 flex-wrap">
-                <div className="flex-1 min-w-[300px] relative group">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            {/* Simple Filters */}
+            <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4">
+                <div className="flex-1 relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input 
                         type="text" 
-                        placeholder="Search by title, short title, or slug..." 
-                        className="w-full bg-muted/30 border border-border/50 rounded-2xl py-3.5 pl-12 pr-4 outline-none focus:border-primary/50 transition-all text-sm font-medium"
+                        placeholder="Search exams by title or content..." 
+                        className="w-full bg-transparent border-gray-200 border rounded-lg py-2 pl-10 pr-4 outline-none focus:border-primary transition-all text-sm"
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                     />
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2 bg-muted/30 p-1.5 rounded-2xl border border-border/50">
-                        {['ALL', ...EXAM_STATUSES].map((status) => (
-                            <button
-                                key={status}
-                                onClick={() => setStatusFilter(status)}
-                                className={cn(
-                                    "px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-300",
-                                    statusFilter === status 
-                                        ? "bg-card text-foreground shadow-sm border border-border/50" 
-                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                                )}
-                            >
-                                {status.replace('_', ' ')}
-                            </button>
-                        ))}
-                    </div>
+                <div className="flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-gray-400" />
+                    <select 
+                        className="bg-transparent border-gray-200 border rounded-lg py-2 px-3 outline-none focus:border-primary text-sm min-w-[140px]"
+                        value={publishFilter}
+                        onChange={(e) => setPublishFilter(e.target.value as any)}
+                    >
+                        <option value="ALL">All Visibility</option>
+                        <option value="PUBLISHED">Published Only</option>
+                        <option value="UNPUBLISHED">Unpublished Exams</option>
+                    </select>
+                    <select 
+                        className="bg-transparent border-gray-200 border rounded-lg py-2 px-3 outline-none focus:border-primary text-sm min-w-[150px]"
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                    >
+                        <option value="ALL">All Statuses</option>
+                        {EXAM_STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
+                    </select>
                 </div>
             </div>
 
-            {/* Table */}
-            <div className="premium-card rounded-3xl overflow-hidden">
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-muted/30 border-b border-border">
-                                <th className="p-6 font-bold text-sm uppercase tracking-wider text-muted-foreground">
-                                    <div className="flex items-center gap-2 cursor-pointer hover:text-foreground">
-                                        Exam Details <ArrowUpDown className="w-3.5 h-3.5" />
-                                    </div>
-                                </th>
-                                <th className="p-6 font-bold text-sm uppercase tracking-wider text-muted-foreground">Category</th>
-                                <th className="p-6 font-bold text-sm uppercase tracking-wider text-muted-foreground">Status</th>
-                                <th className="p-6 font-bold text-sm uppercase tracking-wider text-muted-foreground">Level</th>
-                                <th className="p-6 font-bold text-sm uppercase tracking-wider text-muted-foreground">Created At</th>
-                                <th className="p-6 font-bold text-sm uppercase tracking-wider text-muted-foreground text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/50">
-                            {loading ? (
-                                [1, 2, 3, 4, 5].map((i) => (
-                                    <tr key={i} className="animate-pulse">
-                                        <td colSpan={6} className="p-6 bg-muted/10 h-20" />
-                                    </tr>
-                                ))
-                            ) : filteredExams.length > 0 ? (
-                                filteredExams.map((exam) => (
-                                    <tr key={exam.id} className="hover:bg-muted/30 transition-all duration-300 group">
-                                        <td className="p-6">
-                                            <div className="flex items-center gap-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold text-xl group-hover:bg-primary group-hover:text-white transition-all duration-500">
-                                                    {exam.shortTitle?.[0] || 'E'}
-                                                </div>
-                                                <div className="flex flex-col gap-1">
-                                                    <span className="font-bold text-lg group-hover:text-primary transition-colors">{exam.title}</span>
-                                                    <span className="text-xs text-muted-foreground font-medium uppercase tracking-widest">{exam.shortTitle} • {exam.slug}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="p-6">
-                                            <span className="text-sm font-semibold px-3 py-1.5 rounded-xl bg-muted border border-border text-foreground">
-                                                {exam.category.replace('_', ' ')}
-                                            </span>
-                                        </td>
-                                        <td className="p-6">
-                                            <span className={cn(
-                                                "px-4 py-1.5 rounded-full text-[10px] font-bold border uppercase tracking-widest whitespace-nowrap inline-flex items-center gap-1.5",
-                                                getStatusStyle(exam.status)
-                                            )}>
-                                                {exam.status === ExamStatus.ACTIVE && <CheckCircle2 className="w-3 h-3" />}
-                                                {exam.status === ExamStatus.NOTIFICATION && <Clock className="w-3 h-3" />}
-                                                {exam.status === ExamStatus.ARCHIVED && <Archive className="w-3 h-3" />}
-                                                {exam.status.replace('_', ' ')}
-                                            </span>
-                                        </td>
-                                        <td className="p-6">
-                                            <span className="text-sm font-bold text-foreground">{exam.examLevel}</span>
-                                        </td>
-                                        <td className="p-6 font-medium text-muted-foreground text-sm">
-                                            {formatDate(exam.createdAt)}
-                                        </td>
-                                        <td className="p-6 text-right">
-                                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
-                                                <Link href={`/exams/${exam.id}`} className="p-2.5 rounded-xl bg-muted text-foreground hover:bg-primary hover:text-white transition-all shadow-sm">
-                                                    <Eye className="w-4 h-4" />
-                                                </Link>
-                                                <button className="p-2.5 rounded-xl bg-muted text-foreground hover:bg-amber-500 hover:text-white transition-all shadow-sm">
-                                                    <Edit3 className="w-4 h-4" />
-                                                </button>
-                                                <button className="p-2.5 rounded-xl bg-muted text-foreground hover:bg-destructive hover:text-white transition-all shadow-sm">
-                                                    <Trash2 className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={6} className="p-20 text-center">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
-                                                <FileText className="w-10 h-10" />
-                                            </div>
-                                            <div>
-                                                <h4 className="text-xl font-bold font-outfit">No Exams Found</h4>
-                                                <p className="text-muted-foreground mt-1">Try adjusting your filters or search query.</p>
-                                            </div>
+            {/* RankAdmin Table */}
+            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+                <table className="w-full text-left border-collapse">
+                    <thead className="bg-[#fcfcfc] border-b border-gray-200">
+                        <tr>
+                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Exam ID</th>
+                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Title</th>
+                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Category</th>
+                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Status</th>
+                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Authority</th>
+                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Live</th>
+                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                        {loading ? (
+                            [1, 2, 3, 4, 5].map((i) => (
+                                <tr key={i} className="animate-pulse">
+                                    <td colSpan={7} className="px-6 py-6">
+                                        <div className="h-4 bg-gray-100 rounded w-full" />
+                                    </td>
+                                </tr>
+                            ))
+                        ) : paginatedExams.length > 0 ? (
+                            paginatedExams.map((exam) => (
+                                <tr key={exam.id} className="hover:bg-gray-50/50 transition-colors">
+                                    <td className="px-4 py-3">
+                                        <span className="text-gray-400 font-mono text-[10px]">{exam.id.substring(0, 6)}</span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <Link href={`/exam/${exam.slug || exam.id}/edit`} className="font-bold text-gray-900 hover:text-primary hover:underline cursor-pointer block max-w-[250px] truncate text-sm">
+                                            {exam.title}
+                                        </Link>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="px-2 py-1 bg-gray-100 text-gray-800 text-[9px] font-bold uppercase tracking-wider rounded-md truncate max-w-[120px] block">
+                                            {exam.category.replace(/_/g, ' ')}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        <span className={cn(
+                                            "px-2 py-1 text-[9px] font-bold uppercase tracking-wider border rounded-md inline-block whitespace-nowrap",
+                                            getStatusStyle(exam.status)
+                                        )}>
+                                            {exam.status.replace(/_/g, ' ')}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3">
+                                        <span className="text-xs text-gray-600 block max-w-[150px] truncate">{exam.conductingBody || '-'}</span>
+                                    </td>
+                                    <td className="px-4 py-3 text-center">
+                                        <span className={cn(
+                                            "px-2 py-1 text-[9px] font-bold uppercase tracking-wider border rounded-md inline-block",
+                                            exam.isPublished ? "bg-green-50 text-green-600 border-green-200" : "bg-red-50 text-red-600 border-red-200"
+                                        )}>
+                                            {exam.isPublished ? 'Yes' : 'No'}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-3 text-right">
+                                        <div className="flex items-center justify-end gap-2">
                                             <button 
-                                                onClick={() => { setSearch(''); setStatusFilter('ALL'); }}
-                                                className="mt-2 text-primary font-bold hover:underline"
+                                                onClick={async (e) => {
+                                                    e.preventDefault();
+                                                    try {
+                                                        await examService.updateExam(exam.id, { isPublished: !exam.isPublished });
+                                                        toast.success(`Exam ${exam.isPublished ? 'unpublished' : 'published'} successfully`);
+                                                        fetchExams();
+                                                    } catch (error) {
+                                                        toast.error('Failed to update published status');
+                                                    }
+                                                }}
+                                                className="p-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-400 flex items-center justify-center border border-transparent hover:border-gray-200"
+                                                title={exam.isPublished ? "Unpublish" : "Publish"}
                                             >
-                                                Clear all filters
+                                                <Globe className={cn("w-4 h-4", exam.isPublished && "text-emerald-500")} />
+                                            </button>
+                                            <Link 
+                                                href={`/exam/${exam.slug || exam.id}/edit`} 
+                                                className="p-1.5 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors text-gray-400 flex items-center justify-center border border-transparent hover:border-blue-100"
+                                                title="Edit Exam"
+                                            >
+                                                <Edit3 className="w-4 h-4" />
+                                            </Link>
+                                            <button 
+                                                onClick={async (e) => {
+                                                    e.preventDefault();
+                                                    if (confirm('Are you sure you want to delete this exam?')) {
+                                                        try {
+                                                            await examService.deleteExam(exam.id);
+                                                            toast.success('Exam deleted');
+                                                            fetchExams();
+                                                        } catch (error) {
+                                                            toast.error('Failed to delete exam');
+                                                        }
+                                                    }
+                                                }}
+                                                className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors text-gray-400 flex items-center justify-center border border-transparent hover:border-red-100"
+                                                title="Delete Exam"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={7} className="px-6 py-20 text-center">
+                                    <p className="text-gray-400 font-medium">No results found for &quot;{search}&quot;</p>
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
 
-                {/* Pagination */}
-                <div className="p-6 bg-muted/30 border-t border-border flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground font-medium">
-                        Showing <span className="text-foreground font-bold">{filteredExams.length}</span> of <span className="text-foreground font-bold">{exams.length}</span> exams
-                    </p>
+                <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-[#fcfcfc]">
+                    <div className="text-xs text-gray-500 font-medium">
+                        Showing {Math.min((currentPage * pageSize) - pageSize + 1, filteredExams.length)} to {Math.min(currentPage * pageSize, filteredExams.length)} of {filteredExams.length} exams
+                    </div>
                     <div className="flex items-center gap-2">
-                        <button className="p-2 rounded-xl border border-border bg-card text-muted-foreground hover:bg-muted disabled:opacity-50 transition-all">
-                            <ChevronLeft className="w-5 h-5" />
+                        <button 
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
                         </button>
+                        
                         <div className="flex items-center gap-1">
-                            <button className="w-10 h-10 rounded-xl bg-primary text-primary-foreground font-bold shadow-lg shadow-primary/20">1</button>
-                            <button className="w-10 h-10 rounded-xl hover:bg-muted text-muted-foreground font-bold transition-all">2</button>
-                            <button className="w-10 h-10 rounded-xl hover:bg-muted text-muted-foreground font-bold transition-all">3</button>
+                            {[...Array(totalPages)].map((_, i) => {
+                                const pageNumber = i + 1;
+                                if (pageNumber === 1 || pageNumber === totalPages || (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)) {
+                                    return (
+                                        <button 
+                                            key={i}
+                                            onClick={() => setCurrentPage(pageNumber)}
+                                            className={cn(
+                                                "min-w-[32px] h-[32px] flex items-center justify-center font-medium text-xs rounded-lg border transition-colors",
+                                                currentPage === pageNumber 
+                                                    ? "bg-primary text-black font-bold border-primary shadow-sm shadow-primary/20" 
+                                                    : "border-transparent text-gray-500 hover:bg-gray-50"
+                                            )}
+                                        >
+                                            {pageNumber}
+                                        </button>
+                                    );
+                                }
+                                if (pageNumber === currentPage - 2 || pageNumber === currentPage + 2) {
+                                    return <span key={i} className="px-1 text-gray-400">...</span>;
+                                }
+                                return null;
+                            })}
                         </div>
-                        <button className="p-2 rounded-xl border border-border bg-card text-muted-foreground hover:bg-muted transition-all">
-                            <ChevronRight className="w-5 h-5" />
+
+                        <button 
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages || totalPages === 1}
+                            className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all"
+                        >
+                            <ChevronRight className="w-4 h-4" />
                         </button>
                     </div>
                 </div>
