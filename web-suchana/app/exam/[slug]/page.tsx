@@ -90,17 +90,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
   const regEvent = exam.lifecycleEvents?.find((e) => e.stage === "REGISTRATION");
-  const examEvent = exam.lifecycleEvents?.find(
-    (e) => e.stage === "EXAM_DATE" || e.stage === "EXAM"
-  );
+  const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
 
   return {
-    "@context": "https://schema.org",
     "@type": "JobPosting",
+    "@id": `${canonicalUrl}#job`,
     title: exam.title,
-    description: exam.description ?? `${exam.title} — Government recruitment by ${exam.conductingBody}.`,
+    description: stripHtml(exam.description) || `${exam.title} — Government recruitment by ${exam.conductingBody}.`,
     hiringOrganization: {
       "@type": "Organization",
+      "@id": `${SITE_URL}#organization`,
       name: exam.conductingBody || "Government Agency",
       url: exam.officialWebsite || SITE_URL,
     },
@@ -115,7 +114,7 @@ function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
     employmentType: "FULL_TIME",
     validThrough: regEvent?.endsAt ?? undefined,
     datePosted: regEvent?.startsAt ?? new Date().toISOString(),
-    url: `${SITE_URL}/exam/${exam.slug}`,
+    url: canonicalUrl,
     ...(exam.totalVacancies
       ? { totalJobOpenings: parseInt(exam.totalVacancies) || undefined }
       : {}),
@@ -136,15 +135,18 @@ function buildEventJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamB
   const examEvent = exam.lifecycleEvents?.find((e) => e.stage === "EXAM_DATE" || e.stage === "EXAM");
   if (!examEvent?.startsAt) return null;
 
+  const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
+
   return {
-    "@context": "https://schema.org",
     "@type": "Event",
+    "@id": `${canonicalUrl}#event`,
     name: exam.shortTitle ?? exam.title,
     description: stripHtml(exam.description) || `${exam.title} examination.`,
     startDate: examEvent.startsAt,
     endDate: examEvent.endsAt ?? examEvent.startsAt,
     organizer: {
       "@type": "Organization",
+      "@id": `${SITE_URL}#organization`,
       name: exam.conductingBody,
       url: exam.officialWebsite,
     },
@@ -158,24 +160,26 @@ function buildEventJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamB
     },
     eventStatus: "https://schema.org/EventScheduled",
     eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-    url: `${SITE_URL}/exam/${exam.slug}`,
+    url: canonicalUrl,
   };
 }
 
 function buildBreadcrumbJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
+  const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
   return {
-    "@context": "https://schema.org",
     "@type": "BreadcrumbList",
+    "@id": `${canonicalUrl}#breadcrumb`,
     itemListElement: [
       { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
       { "@type": "ListItem", position: 2, name: cleanLabel(exam.category), item: `${SITE_URL}/?category=${exam.category}` },
-      { "@type": "ListItem", position: 3, name: exam.shortTitle ?? exam.title, item: `${SITE_URL}/exam/${exam.slug}` },
+      { "@type": "ListItem", position: 3, name: exam.shortTitle ?? exam.title, item: canonicalUrl },
     ],
   };
 }
 
 function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
   const faqs = [];
+  const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
 
   if (exam.qualificationCriteria) {
     const text = stripHtml(exam.qualificationCriteria);
@@ -236,8 +240,8 @@ function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamByS
   if (faqs.length === 0) return null;
 
   return {
-    "@context": "https://schema.org",
     "@type": "FAQPage",
+    "@id": `${canonicalUrl}#faq`,
     mainEntity: faqs,
   };
 }
@@ -258,28 +262,22 @@ export default async function ExamDetailPage({ params }: Props) {
   const breadcrumbJsonLd = buildBreadcrumbJsonLd(exam);
   const faqJsonLd = buildFaqJsonLd(exam);
 
+  const combinedJsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      jobPostingJsonLd,
+      eventJsonLd,
+      breadcrumbJsonLd,
+      faqJsonLd,
+    ].filter(Boolean),
+  };
+
   return (
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jobPostingJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(combinedJsonLd) }}
       />
-      {eventJsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(eventJsonLd) }}
-        />
-      )}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
-      />
-      {faqJsonLd && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
-        />
-      )}
 
       <ExamDetailClient exam={exam} relatedExams={filteredRelated} />
     </>
