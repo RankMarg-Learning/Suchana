@@ -116,6 +116,19 @@ export function cleanLabel(s: string): string {
   return s.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/**
+ * Removes HTML tags and trims whitespace. 
+ * Useful for JSON-LD schema where HTML is either limited or not allowed.
+ */
+export function stripHtml(html: string | null | undefined): string {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]*>?/gm, "") // Remove HTML tags
+    .replace(/&nbsp;/g, " ") // Clean common entities
+    .replace(/\s+/g, " ") // Collapse whitespace
+    .trim();
+}
+
 export function getStageState(event: LifecycleEvent, now: number): "done" | "active" | "upcoming" {
   const start = event.startsAt ? new Date(event.startsAt).getTime() : null;
   const end = event.endsAt ? new Date(event.endsAt).getTime() : null;
