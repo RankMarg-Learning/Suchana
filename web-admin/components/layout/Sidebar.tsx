@@ -13,7 +13,14 @@ import {
     Menu,
     X,
     ChevronRight,
-    Search
+    Search,
+    BookOpen,
+    Users,
+    UploadCloud,
+    CreditCard,
+    MessageSquare,
+    LogOut,
+    Smartphone
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -21,42 +28,35 @@ import { cn } from '@/lib/utils';
 const navItems = [
     { title: 'Dashboard', href: '/', icon: LayoutDashboard },
     { title: 'Exams', href: '/exams', icon: FileText },
-    { title: 'Lifecycle Events', href: '/events', icon: Layers },
-    { title: 'Scraper Jobs', href: '/scraper', icon: Database },
+    { title: 'Scraper Monitor', href: '/scraper', icon: Database },
+    { title: 'Lifecycle', href: '/events', icon: Smartphone },
     { title: 'Review Queue', href: '/review', icon: ClipboardList },
-    { title: 'Notifications', href: '/notifications', icon: Bell },
+    { title: 'User Profiles', href: '/users', icon: Users },
+    { title: 'Service Plans', href: '/plans', icon: CreditCard },
+    { title: 'Feedback', href: '/feedback', icon: MessageSquare },
     { title: 'Settings', href: '/settings', icon: Settings },
 ];
 
 export function Sidebar() {
     const pathname = usePathname();
-    const [collapsed, setCollapsed] = useState(false);
 
     return (
-        <aside 
-            className={cn(
-                "h-screen sticky top-0 bg-card border-r border-border transition-all duration-300 ease-in-out flex flex-col z-50",
-                collapsed ? "w-20" : "w-64"
-            )}
-        >
+        <aside className="h-screen sticky top-0 bg-white border-r border-gray-200 w-64 flex flex-col z-50 overflow-hidden">
+            {/* Logo */}
             <div className="p-6 flex items-center justify-between">
-                {!collapsed && (
-                    <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                            <Layers className="text-white w-5 h-5" />
-                        </div>
-                        <span className="font-bold text-xl tracking-tight">Suchana</span>
+                <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                        <Layers className="text-black w-5 h-5" />
                     </div>
-                )}
-                <button 
-                    onClick={() => setCollapsed(!collapsed)}
-                    className="p-2 rounded-lg hover:bg-muted transition-colors"
-                >
-                    {collapsed ? <Menu className="w-5 h-5" /> : <X className="w-5 h-5" />}
-                </button>
+                    <span className="font-black text-xl tracking-tight text-gray-900">
+                        <span className="text-primary mr-1">Rank</span>
+                        <span className="text-gray-900">Admin</span>
+                    </span>
+                </div>
             </div>
 
-            <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
+            {/* Navigation */}
+            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 {navItems.map((item) => {
                     const active = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
                     return (
@@ -64,43 +64,25 @@ export function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group relative",
+                                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group relative",
                                 active 
-                                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
-                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    ? "bg-primary text-black font-bold shadow-sm" 
+                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
                             )}
                         >
-                            <item.icon className={cn("w-5 h-5 transition-transform group-hover:scale-110", active ? "text-white" : "text-muted-foreground")} />
-                            {!collapsed && (
-                                <span className="font-medium">{item.title}</span>
-                            )}
-                            {!collapsed && active && (
-                                <ChevronRight className="w-4 h-4 ml-auto text-primary-foreground/70" />
-                            )}
-                            {collapsed && active && (
-                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
-                            )}
+                            <item.icon className={cn("w-5 h-5", active ? "text-black" : "text-gray-400 group-hover:text-gray-900")} />
+                            <span className="text-sm">{item.title}</span>
                         </Link>
                     );
                 })}
             </nav>
 
-            <div className="p-4 border-t border-border">
-                {!collapsed ? (
-                    <div className="bg-muted/50 rounded-2xl p-4 flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
-                            A
-                        </div>
-                        <div className="flex flex-col">
-                            <span className="text-sm font-semibold">Admin User</span>
-                            <span className="text-xs text-muted-foreground truncate w-32">admin@suchana.org</span>
-                        </div>
-                    </div>
-                ) : (
-                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold mx-auto">
-                        A
-                    </div>
-                )}
+            {/* Footer / Logout */}
+            <div className="px-4 py-6 border-t border-gray-100">
+                <button className="flex items-center justify-center gap-2 w-full py-3 bg-primary rounded-xl text-black font-bold text-sm shadow-lg shadow-primary/20 hover:brightness-95 transition-all">
+                    <LogOut className="w-5 h-5" />
+                    <span>Logout</span>
+                </button>
             </div>
         </aside>
     );

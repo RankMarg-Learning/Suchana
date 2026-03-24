@@ -94,6 +94,7 @@ export const QualificationLevel = {
     OTHER: 'OTHER',
 } as const;
 export type QualificationLevel = (typeof QualificationLevel)[keyof typeof QualificationLevel];
+export const QUALIFICATION_LEVELS = Object.values(QualificationLevel);
 
 export const getStatusFromStage = (stage: string): ExamStatus | null => {
     if (stage === LifecycleStage.REGISTRATION) return ExamStatus.REGISTRATION_OPEN;
