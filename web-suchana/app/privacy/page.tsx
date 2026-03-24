@@ -8,9 +8,25 @@ export const metadata: Metadata = {
     "Read Exam Suchana's Privacy Policy. Learn how we collect, use, and protect your personal data.",
 };
 
-const LAST_UPDATED = "17 March 2026";
+const LAST_UPDATED = "24 March 2026";
 
 export default function PrivacyPage() {
+  const sections = [
+    { id: "intro", label: "1. Introduction" },
+    { id: "info", label: "2. Information We Collect" },
+    { id: "usage", label: "3. How We Use Information" },
+    { id: "disclaimer", label: "4. Government Data Disclaimer" },
+    { id: "sharing", label: "5. Data Sharing" },
+    { id: "thirdparty", label: "6. Third-Party Services" },
+    { id: "security", label: "7. Data Security" },
+    { id: "rights", label: "8. User Rights" },
+    { id: "children", label: "9. Children's Privacy" },
+    { id: "external", label: "10. External Links" },
+    { id: "changes", label: "11. Changes to Policy" },
+    { id: "contact", label: "12. Contact Information" },
+    { id: "transparency", label: "13. Source Transparency" },
+  ];
+
   return (
     <>
       <SiteNav />
@@ -45,7 +61,7 @@ export default function PrivacyPage() {
         <section style={{ padding: "0 0 100px" }}>
           <div
             className="container"
-            style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 48, alignItems: "start" }}
+            style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 48, alignItems: "start" }}
           >
             {/* Sticky TOC */}
             <aside
@@ -61,19 +77,7 @@ export default function PrivacyPage() {
               <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>
                 Contents
               </div>
-              {[
-                { id: "p1", label: "Information We Collect" },
-                { id: "p2", label: "How We Use It" },
-                { id: "p3", label: "Data Sharing" },
-                { id: "p4", label: "Cookies" },
-                { id: "p5", label: "Push Notifications" },
-                { id: "p6", label: "Data Retention" },
-                { id: "p7", label: "Your Rights" },
-                { id: "p8", label: "Security" },
-                { id: "p9", label: "Children's Privacy" },
-                { id: "p10", label: "Changes" },
-                { id: "p11", label: "Contact" },
-              ].map(({ id, label }) => (
+              {sections.map(({ id, label }) => (
                 <a
                   key={id}
                   href={`#${id}`}
@@ -82,7 +86,7 @@ export default function PrivacyPage() {
                     fontSize: 13,
                     color: "var(--text-secondary)",
                     textDecoration: "none",
-                    padding: "6px 0",
+                    padding: "8px 0",
                     borderBottom: "1px solid var(--border)",
                     transition: "color 0.2s",
                   }}
@@ -94,111 +98,131 @@ export default function PrivacyPage() {
 
             {/* Content */}
             <div className="legal-content">
-              <Section id="p1" title="1. Information We Collect">
-                <p>We collect information you provide directly to us, such as when you:</p>
-                <ul>
-                  <li>Subscribe to notifications by entering your name and email</li>
-                  <li>Contact us through the contact form</li>
-                  <li>Use our mobile application</li>
-                </ul>
-                <p>We also automatically collect certain information when you use our services, including:</p>
-                <ul>
-                  <li>Device information (device type, operating system, browser type)</li>
-                  <li>Usage data (pages visited, features used, time spent)</li>
-                  <li>IP address and approximate geographic location</li>
-                  <li>Push notification tokens (if you enable notifications)</li>
-                </ul>
-              </Section>
-
-              <Section id="p2" title="2. How We Use Your Information">
-                <p>We use the information we collect to:</p>
-                <ul>
-                  <li>Deliver personalized exam notifications based on your preferences</li>
-                  <li>Operate, maintain, and improve our platform</li>
-                  <li>Respond to your questions and support requests</li>
-                  <li>Send you important service updates and announcements</li>
-                  <li>Analyze usage to improve our exam data coverage and UI</li>
-                  <li>Detect, prevent, and address technical issues</li>
-                </ul>
-              </Section>
-
-              <Section id="p3" title="3. Data Sharing and Disclosure">
+              <Section id="intro" title="1. Introduction">
                 <p>
-                  <strong>We do not sell, rent, or trade your personal data to third parties.</strong> We may share information only in the following limited circumstances:
+                  <strong>Exam Suchana</strong> is a private platform that aggregates publicly available government job information. Our mission is to provide candidates with a structured, actionable timeline of government exam lifecycles.
                 </p>
+                <p>
+                  Please note that Exam Suchana is an <strong>independent platform</strong> and is not associated with any government entity.
+                </p>
+              </Section>
+
+              <Section id="info" title="2. Information We Collect">
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 8 }}>A. Personal Information</h3>
+                <p>We collect personally identifiable information only when you voluntarily provide it. This may include:</p>
                 <ul>
-                  <li><strong>Service Providers:</strong> Vendors who assist us in operating the platform (e.g., cloud hosting, email delivery) under strict confidentiality agreements.</li>
-                  <li><strong>Legal Requirements:</strong> If required by law, court order, or governmental authority.</li>
-                  <li><strong>Business Transfer:</strong> In connection with a merger or acquisition, with prior notice to users.</li>
+                  <li>Name</li>
+                  <li>Email address</li>
+                  <li>Phone number (for account creation or notifications)</li>
+                </ul>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 12 }}>B. Non-Personal Information</h3>
+                <p>To improve your experience, we may collect:</p>
+                <ul>
+                  <li>Device type and model</li>
+                  <li>Operating system version</li>
+                  <li>App usage data and feature interactions</li>
+                  <li>IP address</li>
+                </ul>
+                <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 12 }}>C. Automatically Collected Data</h3>
+                <p>Our systems automatically log certain data, including:</p>
+                <ul>
+                  <li>Log records and access times</li>
+                  <li>Crash reports for stability monitoring</li>
+                  <li>Analytics data (via Google Firebase and other providers)</li>
                 </ul>
               </Section>
 
-              <Section id="p4" title="4. Cookies and Tracking Technologies">
-                <p>We use cookies and similar technologies to:</p>
+              <Section id="usage" title="3. How We Use Information">
+                <p>We use the collected information for the following purposes:</p>
                 <ul>
-                  <li>Remember your filter preferences and session state</li>
-                  <li>Measure traffic and understand user behavior (via anonymized analytics)</li>
-                  <li>Improve load times through caching</li>
+                  <li>To improve app performance and stability</li>
+                  <li>To personalize your user experience and exam preferences</li>
+                  <li>To analyze usage trends and optimize our content delivery</li>
+                  <li>To send push notifications for exam updates (if enabled)</li>
                 </ul>
-                <p>You can control cookies through your browser settings. Disabling cookies may affect some features of the platform.</p>
-              </Section>
-
-              <Section id="p5" title="5. Push Notifications">
-                <p>
-                  If you opt in to push notifications, we store your push token to deliver exam alerts. You can revoke push notification permission at any time through your browser or device settings. We will honor this immediately.
+                <p style={{ fontStyle: "italic", color: "var(--text-muted)" }}>
+                  Important: Exam Suchana provides informational tracking only. We do not manage official job applications, guarantee results, or provide "official processing."
                 </p>
               </Section>
 
-              <Section id="p6" title="6. Data Retention">
-                <p>
-                  We retain your information for as long as your account is active or as needed to provide services. If you wish to delete your data, contact us at{" "}
-                  <a href="mailto:help@examsuchana.in" style={{ color: "var(--accent-light)" }}>
-                    help@examsuchana.in
-                  </a>{" "}
-                  and we will process your request within 30 days.
-                </p>
+              <Section id="disclaimer" title="4. Government Data Disclaimer (CRITICAL)">
+                <div style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, padding: 20 }}>
+                  <p style={{ fontWeight: 700, color: "#ef4444", marginBottom: 12 }}>Mandatory Transparency Disclosure:</p>
+                  <ul style={{ color: "var(--text-primary)", fontWeight: 500 }}>
+                    <li style={{ marginBottom: 8 }}>Exam Suchana is <strong>not affiliated</strong> with any government organization.</li>
+                    <li style={{ marginBottom: 8 }}>The app only provides information aggregated from <strong>publicly available official government websites</strong> such as SSC, UPSC, Railway, IBPS, and others.</li>
+                    <li style={{ marginBottom: 8 }}>We do <strong>not represent</strong> any government entity and do not provide any government services or official forms.</li>
+                    <li style={{ marginBottom: 0 }}>Users are strongly advised to <strong>verify all information directly from official sources</strong> before taking any action.</li>
+                  </ul>
+                </div>
               </Section>
 
-              <Section id="p7" title="7. Your Rights">
-                <p>You have the right to:</p>
+              <Section id="sharing" title="5. Data Sharing & Third Parties">
+                <p>
+                  <strong>We do NOT sell user data.</strong> We value your privacy and only share data in these cases:
+                </p>
                 <ul>
-                  <li>Access the personal data we hold about you</li>
-                  <li>Request correction of inaccurate data</li>
-                  <li>Request deletion of your data</li>
-                  <li>Withdraw consent for marketing communications at any time</li>
-                  <li>Lodge a complaint with a data protection authority</li>
+                  <li><strong>Analytics Providers:</strong> We use Google Firebase and other tools to understand app performance.</li>
+                  <li><strong>Ad Networks:</strong> If ads are displayed, we may share anonymized IDs with ad partners.</li>
+                  <li><strong>Legal Compliance:</strong> If required by law or a valid government request.</li>
+                </ul>
+              </Section>
+
+              <Section id="thirdparty" title="6. Third-Party Services">
+                <p>We utilize the following third-party services to power our platform:</p>
+                <ul>
+                  <li>Google Analytics / Firebase (for app performance and usage tracking)</li>
+                  <li>AdMob (if advertisements are enabled)</li>
                 </ul>
                 <p>
-                  To exercise any of these rights, email us at{" "}
-                  <a href="mailto:help@examsuchana.in" style={{ color: "var(--accent-light)" }}>
-                    help@examsuchana.in
-                  </a>.
+                  These third-party services may collect information as per their own privacy policies. We encourage you to review their policies respectively.
                 </p>
               </Section>
 
-              <Section id="p8" title="8. Data Security">
+              <Section id="security" title="7. Data Security">
                 <p>
-                  We implement industry-standard security measures including HTTPS encryption, hashed credential storage, and regular security audits. However, no method of transmission over the internet is 100% secure, and we cannot guarantee absolute security.
+                  We implement robust security measures to protect your information, including industry-standard encryption for data in transit and secure server architectures. While we strive to use commercially acceptable means to protect your data, no method of transmission over the internet is 100% secure.
                 </p>
               </Section>
 
-              <Section id="p9" title="9. Children's Privacy">
+              <Section id="rights" title="8. User Rights">
+                <p>As a user, you have the right to:</p>
+                <ul>
+                  <li>Request a copy of the data we have collected about you</li>
+                  <li>Request the <strong>deletion of your data</strong> from our systems</li>
+                  <li>Opt-out of non-essential data collection</li>
+                  <li>Contact us for any privacy-related queries</li>
+                </ul>
+              </Section>
+
+              <Section id="children" title="9. Children’s Privacy">
                 <p>
-                  Exam Suchana is not directed at children under 13. We do not knowingly collect personal information from children under 13. If you believe we have inadvertently collected such information, please contact us immediately.
+                  This app is not intended for children under 13 years of age. We do not knowingly collect or solicit personal data from children. If we discover that we have collected data from a child under 13, we will delete it immediately.
                 </p>
               </Section>
 
-              <Section id="p10" title="10. Changes to This Policy">
+              <Section id="external" title="10. External Links Disclaimer">
                 <p>
-                  We may update this Privacy Policy from time to time. We will notify you of significant changes by posting a notice on our platform or by sending an email. Your continued use of the service after changes constitutes acceptance.
+                  Our app contains many links to external websites (official government portals). Exam Suchana is <strong>not responsible</strong> for the content, accuracy, or privacy practices of these external websites. We encourage users to read the privacy policies of any site they visit.
                 </p>
               </Section>
 
-              <Section id="p11" title="11. Contact Us">
+              <Section id="changes" title="11. Changes to Privacy Policy">
                 <p>
-                  If you have any questions about this Privacy Policy, please contact us:
+                  We may update our Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. Significant changes will be announced within the app or via email.
                 </p>
+                <p><strong>Current Version Last Updated:</strong> {LAST_UPDATED}</p>
+              </Section>
+
+              <Section id="contact" title="12. Contact Information">
+                <p>If you have any questions, concerns, or requests regarding this policy, please reach out to us:</p>
                 <ContactBlock />
+              </Section>
+
+              <Section id="transparency" title="13. Source Transparency Statement">
+                <p>
+                  We are committed to accuracy and transparency. All job notifications, results, and exam updates provided in this app include references or direct links to <strong>official government sources</strong> wherever applicable, ensuring users can verify the information at the source.
+                </p>
               </Section>
             </div>
           </div>
@@ -264,7 +288,7 @@ function ContactBlock() {
         Exam Suchana
       </div>
       <div style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 6 }}>
-        📧{" "}
+        📩{" "}
         <a href="mailto:help@examsuchana.in" style={{ color: "var(--accent-light)" }}>
           help@examsuchana.in
         </a>
