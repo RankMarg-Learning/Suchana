@@ -19,6 +19,7 @@ import { cn, formatDate } from '@/lib/utils';
 import { examService, Exam } from '@/lib/api';
 import { ExamStatus, EXAM_STATUSES } from '@/constants/enums';
 import { toast } from 'sonner';
+import SummaryStats from '@/components/exams/SummaryStats';
 
 export default function ExamsPage() {
     const [exams, setExams] = useState<Exam[]>([]);
@@ -93,6 +94,9 @@ export default function ExamsPage() {
                     <span>Add Exam</span>
                 </Link>
             </div>
+
+            {/* Premium Stats Summary */}
+            <SummaryStats exams={exams} loading={loading} />
 
             {/* Simple Filters */}
             <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4">

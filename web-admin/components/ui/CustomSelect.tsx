@@ -1,8 +1,15 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { ChevronDown } from 'lucide-react';
-import { useState, useRef, useEffect } from 'react';
+import {
+    Select,
+    SelectContent,
+    SelectGroup,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select"
+import { Label } from './label';
 
 interface SelectProps {
     value: string;
@@ -15,64 +22,43 @@ interface SelectProps {
 }
 
 export function CustomSelect({ value, onChange, options, placeholder, disabled, label, className }: SelectProps) {
-    const [isOpen, setIsOpen] = useState(false);
-    const containerRef = useRef<HTMLDivElement>(null);
-
-    const normalizedOptions = options.map(opt => 
+    const normalizedOptions = options.map(opt =>
         typeof opt === 'string' ? { label: opt.replace(/_/g, ' '), value: opt } : opt
     );
 
-    const activeOption = normalizedOptions.find(opt => opt.value === value);
-
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
     return (
-        <div className="space-y-2 relative" ref={containerRef}>
-            {label && <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">{label}</label>}
-            <button
-                type="button"
-                disabled={disabled}
-                onClick={() => setIsOpen(!isOpen)}
-                className={cn(
-                    "w-full bg-white border border-gray-200 rounded-lg py-3 px-4 flex items-center justify-between outline-none transition-all text-sm font-bold shadow-sm hover:border-primary disabled:opacity-50",
-                    isOpen && "border-primary ring-2 ring-primary/10"
-                )}
-            >
-                <span className={cn(!activeOption && "text-gray-400")}>
-                    {activeOption ? activeOption.label : placeholder || 'Select option...'}
-                </span>
-                <ChevronDown className={cn("w-4 h-4 text-gray-400 transition-transform", isOpen && "rotate-180")} />
-            </button>
+        <div className="space-y-1.5 w-full">
+            {label && (
+                <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 ml-1">
+                    {label}
+                </Label>
+            )}
 
-            {isOpen && !disabled && (
-                <div className="absolute z-50 top-full mt-2 w-full bg-white border border-gray-100 rounded-xl shadow-2xl py-2 animate-in fade-in zoom-in-95 duration-200">
-                    <div className="max-h-[240px] overflow-y-auto">
+            <Select
+                value={value}
+                onValueChange={onChange}
+                disabled={disabled}
+            >
+                <SelectTrigger className={cn(
+                    "w-full h-10 px-4 bg-white border-gray-100 rounded-xl focus:ring-primary/5 transition-all font-bold text-xs ring-offset-0",
+                    className
+                )}>
+                    <SelectValue placeholder={placeholder || 'Select option...'} />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl border-gray-100 shadow-2xl p-1 animate-in fade-in-0 zoom-in-95 duration-200">
+                    <SelectGroup>
                         {normalizedOptions.map((opt) => (
-                            <button
+                            <SelectItem
                                 key={opt.value}
-                                onClick={() => {
-                                    onChange(opt.value);
-                                    setIsOpen(false);
-                                }}
-                                className={cn(
-                                    "w-full text-left px-4 py-2.5 text-xs font-bold uppercase tracking-widest hover:bg-gray-50 transition-colors",
-                                    value === opt.value ? "text-primary bg-primary/5" : "text-gray-600"
-                                )}
+                                value={opt.value}
+                                className="rounded-lg py-2.5 px-4 text-[10px] font-black uppercase tracking-widest focus:bg-primary/5 focus:text-primary transition-colors cursor-pointer"
                             >
                                 {opt.label}
-                            </button>
+                            </SelectItem>
                         ))}
-                    </div>
-                </div>
-            )}
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
         </div>
     );
 }

@@ -2,37 +2,30 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-    LayoutDashboard, 
-    FileText, 
-    Database, 
-    ClipboardList, 
-    Settings, 
-    Bell,
-    Layers,
-    Menu,
-    X,
-    ChevronRight,
-    Search,
-    BookOpen,
+import {
+    LayoutDashboard,
+    FileText,
+    Database,
+    ClipboardList,
+    Settings,
     Users,
-    UploadCloud,
     CreditCard,
     MessageSquare,
     LogOut,
-    Smartphone
+    Smartphone,
+    ShieldCheck,
 } from 'lucide-react';
-import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const navItems = [
     { title: 'Dashboard', href: '/', icon: LayoutDashboard },
     { title: 'Exams', href: '/exams', icon: FileText },
-    { title: 'Scraper Monitor', href: '/scraper', icon: Database },
-    { title: 'Lifecycle', href: '/events', icon: Smartphone },
-    { title: 'Review Queue', href: '/review', icon: ClipboardList },
-    { title: 'User Profiles', href: '/users', icon: Users },
-    { title: 'Service Plans', href: '/plans', icon: CreditCard },
+    { title: 'Timeline', href: '/events', icon: Smartphone },
+    { title: 'Scrapers', href: '/scraper', icon: Database },
+    { title: 'Reviews', href: '/review', icon: ClipboardList },
+    { title: 'Users', href: '/users', icon: Users },
+    { title: 'Billing', href: '/plans', icon: CreditCard },
     { title: 'Feedback', href: '/feedback', icon: MessageSquare },
     { title: 'Settings', href: '/settings', icon: Settings },
 ];
@@ -41,22 +34,21 @@ export function Sidebar() {
     const pathname = usePathname();
 
     return (
-        <aside className="h-screen sticky top-0 bg-white border-r border-gray-200 w-64 flex flex-col z-50 overflow-hidden">
-            {/* Logo */}
-            <div className="p-6 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                        <Layers className="text-black w-5 h-5" />
+        <aside className="w-64 h-screen sticky top-0 bg-white border-r border-slate-100 flex flex-col z-50">
+            {/* Minimal Logo */}
+            <div className="p-8 pb-4">
+                <Link href="/" className="flex items-center gap-2 group">
+                    <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <ShieldCheck className="text-white w-5 h-5" />
                     </div>
-                    <span className="font-black text-xl tracking-tight text-gray-900">
-                        <span className="text-primary mr-1">Rank</span>
-                        <span className="text-gray-900">Admin</span>
+                    <span className="font-outfit font-bold text-lg tracking-tight text-slate-900">
+                        Suchana Admin
                     </span>
-                </div>
+                </Link>
             </div>
 
-            {/* Navigation */}
-            <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+            {/* Simple Navigation */}
+            <nav className="flex-1 px-4 py-6 space-y-1">
                 {navItems.map((item) => {
                     const active = pathname === item.href || (item.href !== '/' && pathname?.startsWith(item.href));
                     return (
@@ -64,24 +56,37 @@ export function Sidebar() {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 group relative",
-                                active 
-                                    ? "bg-primary text-black font-bold shadow-sm" 
-                                    : "text-gray-500 hover:bg-gray-50 hover:text-gray-900"
+                                "group flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all duration-200 relative",
+                                active
+                                    ? "text-indigo-600 bg-indigo-50/50"
+                                    : "text-slate-500 hover:text-slate-900 hover:bg-slate-50"
                             )}
                         >
-                            <item.icon className={cn("w-5 h-5", active ? "text-black" : "text-gray-400 group-hover:text-gray-900")} />
-                            <span className="text-sm">{item.title}</span>
+                            <item.icon className={cn(
+                                "w-5 h-5 transition-colors",
+                                active ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"
+                            )} />
+                            <span className={cn(
+                                "text-sm font-medium",
+                                active ? "text-indigo-700" : "text-slate-600"
+                            )}>{item.title}</span>
+
+                            {active && (
+                                <motion.div
+                                    layoutId="nav-active"
+                                    className="absolute left-0 w-1 h-5 bg-indigo-600 rounded-r-full"
+                                />
+                            )}
                         </Link>
                     );
                 })}
             </nav>
 
-            {/* Footer / Logout */}
-            <div className="px-4 py-6 border-t border-gray-100">
-                <button className="flex items-center justify-center gap-2 w-full py-3 bg-primary rounded-xl text-black font-bold text-sm shadow-lg shadow-primary/20 hover:brightness-95 transition-all">
-                    <LogOut className="w-5 h-5" />
-                    <span>Logout</span>
+            {/* Minimal Footer */}
+            <div className="p-4 border-t border-slate-50">
+                <button className="flex items-center gap-3 w-full px-4 py-3 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all group">
+                    <LogOut className="w-5 h-5 text-slate-400 group-hover:text-rose-500" />
+                    <span className="text-sm font-semibold">Logout</span>
                 </button>
             </div>
         </aside>
