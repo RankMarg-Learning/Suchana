@@ -6,7 +6,8 @@ import SiteFooter from '../components/SiteFooter';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import { LeaderboardAd, InFeedAd } from '../components/AdUnits';
 import ExamDetailClient from "../exam/[slug]/ExamDetailClient";
-import { STATUS_LABELS, cleanLabel, formatDate, getTotalVacancies } from "@/app/lib/types";
+import { STATUS_LABELS, cleanLabel, formatDate, getTotalVacancies, SeoPage } from "@/app/lib/types";
+import SeoExamPageLayout from '../components/SeoExamPageLayout';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -90,14 +91,13 @@ export default async function DynamicSlugPage({ params }: Props) {
   if (page) {
     if (page.exam) {
       return (
-        <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
-          <ExamDetailClient
-            exam={{
-              ...page.exam,
-              title: page.title || page.exam.title
-            }}
-          />
-        </div>
+        <SeoExamPageLayout
+          exam={page.exam}
+          seoPage={{
+            ...page,
+            title: page.title || page.exam.title
+          } as SeoPage}
+        />
       );
     }
 
