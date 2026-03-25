@@ -354,15 +354,15 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Vacancies</Label>
-                                <Input {...register('totalVacancies')} placeholder="e.g. 500+" />
+                                <Textarea {...register('totalVacancies')} placeholder="e.g. 500+" className="min-h-[60px]" />
                             </div>
                             <div className="space-y-2">
                                 <Label>Salary</Label>
-                                <Input {...register('salary')} placeholder="e.g. Pay Level 10" />
+                                <Textarea {...register('salary')} placeholder="e.g. Pay Level 10" className="min-h-[60px]" />
                             </div>
                             <div className="space-y-2">
                                 <Label>Age Limit</Label>
-                                <Input {...register('age')} placeholder="e.g. 21 - 32 years" />
+                                <Textarea {...register('age')} placeholder="e.g. 21 - 32 years" className="min-h-[60px]" />
                             </div>
                         </CardContent>
                     </Card>
