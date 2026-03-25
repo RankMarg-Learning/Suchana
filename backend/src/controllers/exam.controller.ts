@@ -3,11 +3,16 @@ import { NotificationService } from '../services/notification.service';
 import * as examService from '../services/exam.service';
 import { sendSuccess, buildPaginationMeta } from '../utils/apiResponse';
 import type { CreateExamDto, UpdateExamDto, ListExamQuery } from '../schemas/exam.schema';
+import { env } from '../config/env';
+
+function isAdminRequest(req: Request) {
+    return req.headers['authorization'] === `Bearer ${env.API_KEY_SECRET}` || !!req.adminId;
+}
 
 export async function listExams(req: Request, res: Response, next: NextFunction) {
     try {
         const query = req.query as unknown as ListExamQuery;
-        const { exams, total } = await examService.listExams(query);
+        const { exams, total } = await examService.listExams(query, isAdminRequest(req));
         sendSuccess(res, exams, 200, buildPaginationMeta(total, query.page, query.limit));
     } catch (err) {
         next(err);
@@ -16,7 +21,7 @@ export async function listExams(req: Request, res: Response, next: NextFunction)
 
 export async function getExamById(req: Request, res: Response, next: NextFunction) {
     try {
-        const exam = await examService.getExamById(req.params.id as string);
+        const exam = await examService.getExamById(req.params.id as string, isAdminRequest(req));
         sendSuccess(res, exam);
     } catch (err) {
         next(err);
@@ -25,7 +30,7 @@ export async function getExamById(req: Request, res: Response, next: NextFunctio
 
 export async function getExamBySlug(req: Request, res: Response, next: NextFunction) {
     try {
-        const exam = await examService.getExamBySlug(req.params.slug as string);
+        const exam = await examService.getExamBySlug(req.params.slug as string, isAdminRequest(req));
         sendSuccess(res, exam);
     } catch (err) {
         next(err);

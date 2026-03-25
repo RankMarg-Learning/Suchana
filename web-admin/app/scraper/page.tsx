@@ -6,21 +6,20 @@ import {
     Play,
     RefreshCcw,
     Activity,
-    Link as LinkIcon,
     Server,
     Zap,
     History,
     FileSearch,
     Loader2,
     Plus,
-    X,
     Trash2,
     Settings2,
     ExternalLink,
     Search,
-    CheckCircle2
+    CheckCircle2,
+    AlertCircle
 } from 'lucide-react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { cn, formatDate } from '@/lib/utils';
 import { scraperService, ScrapeJob, ScrapeSource, ReviewStats, StagedExam } from '@/lib/api';
@@ -70,7 +69,7 @@ export default function ScraperPage() {
             setStagedExams(stagedRes.data || []);
         } catch (error) {
             console.error('Failed to sync scraper data:', error);
-            toast.error('Sync failed: Network error or server unavailable');
+            toast.error('Failed to load data. Please check your connection.');
         } finally {
             setLoading(false);
             setIsRefreshing(false);
@@ -85,23 +84,23 @@ export default function ScraperPage() {
 
     const handleTrigger = async (id: string, label: string) => {
         try {
-            toast.info(`Manual trigger initiated for: ${label}`);
+            toast.info(`Starting scraper for: ${label}`);
             await scraperService.triggerScrape(id);
-            toast.success(`Success: Scraping job for ${label} is now in queue`);
+            toast.success(`Scraper started for ${label}`);
             fetchData(true);
         } catch (error: any) {
-            toast.error(error.response?.data?.error?.message || 'Trigger failed: Command rejected by server');
+            toast.error(error.response?.data?.error?.message || 'Failed to start scraper');
         }
     };
 
     const handleTriggerAll = async () => {
         const active = sources.filter(s => s.isActive);
         if (active.length === 0) {
-            toast.error('Protocol Error: No active sources found to trigger');
+            toast.error('No active sources found to run');
             return;
         }
 
-        toast.info(`Batch trigger starting for ${active.length} active vectors...`);
+        toast.info(`Running ${active.length} scrapers...`);
         let successCount = 0;
         for (const source of active) {
             try {
@@ -113,10 +112,10 @@ export default function ScraperPage() {
         }
 
         if (successCount > 0) {
-            toast.success(`Batch Success: ${successCount} scraper jobs initiated`);
+            toast.success(`Started ${successCount} scrapers`);
             fetchData(true);
         } else {
-            toast.error('Batch Failure: All triggers were rejected');
+            toast.error('All scraper requests failed');
         }
     };
 
@@ -129,10 +128,10 @@ export default function ScraperPage() {
         if (!sourceToDelete) return;
         try {
             await scraperService.deleteSource(sourceToDelete.id);
-            toast.success(`Vector decommissioned: ${sourceToDelete.label}`);
+            toast.success(`Source removed: ${sourceToDelete.label}`);
             fetchData(true);
         } catch (error) {
-            toast.error('Deletion failed: Source could not be removed from extraction nodes');
+            toast.error('Failed to remove source');
         } finally {
             setIsDeleteDialogOpen(false);
             setSourceToDelete(null);
@@ -146,23 +145,23 @@ export default function ScraperPage() {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'COMPLETED': return <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border-none">Success</Badge>;
-            case 'RUNNING': return <Badge variant="outline" className="border-primary animate-pulse">Running</Badge>;
-            case 'FAILED': return <Badge variant="destructive">Failed</Badge>;
-            case 'PARTIAL': return <Badge variant="secondary">Partial</Badge>;
+            case 'COMPLETED': return <Badge className="bg-emerald-50 text-emerald-600 hover:bg-emerald-50 border-emerald-100" variant="outline">Success</Badge>;
+            case 'RUNNING': return <Badge className="bg-blue-50 text-blue-600 animate-pulse border-blue-100" variant="outline">Running</Badge>;
+            case 'FAILED': return <Badge className="bg-rose-50 text-rose-600 border-rose-100" variant="outline">Failed</Badge>;
+            case 'PARTIAL': return <Badge className="bg-amber-50 text-amber-600 border-amber-100" variant="outline">Partial</Badge>;
             default: return <Badge variant="outline">{status}</Badge>;
         }
     };
 
     return (
-        <div className="space-y-8 pb-10 max-w-[1400px] mx-auto">
+        <div className="space-y-8 pb-10">
             {/* Page Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-gray-900">Scraper Admin</h1>
-                    <p className="text-gray-500 mt-1">Manage automated discovery sources and monitor job execution.</p>
+                    <h1 className="text-2xl font-semibold tracking-tight">Scrapers</h1>
+                    <p className="text-muted-foreground text-sm">Monitor and manage website data sources.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
                     <Button
                         variant="outline"
                         size="icon"
@@ -172,142 +171,104 @@ export default function ScraperPage() {
                     >
                         <RefreshCcw className="w-4 h-4" />
                     </Button>
-                    <Button onClick={handleTriggerAll} variant="secondary" className="gap-2">
-                        <Zap className="w-4 h-4 text-primary" />
-                        Execute All
+                    <Button onClick={handleTriggerAll} variant="outline" className="gap-2">
+                        <Play className="w-4 h-4" />
+                        Run All
                     </Button>
-                    <Button onClick={() => handleOpenModal()} className="gap-2">
+                    <Button onClick={() => handleOpenModal()} className="gap-2 shadow-sm">
                         <Plus className="w-4 h-4" />
-                        Provision Source
+                        Add Source
                     </Button>
                 </div>
             </div>
 
-            {/* Quick Stats Grid */}
+            {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Active Sources</CardTitle>
-                        <Server className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{sources.filter(s => s.isActive).length} / {sources.length}</div>
-                        <p className="text-xs text-muted-foreground mt-1 text-blue-600 font-semibold italic">Discovery vectors online</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Extractions (24h)</CardTitle>
-                        <Activity className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats?.totalJobs || 0}</div>
-                        <p className="text-xs text-muted-foreground mt-1 text-primary font-semibold italic">Total jobs completed</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Review Queue</CardTitle>
-                        <Database className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats?.reviewQueue.pending || 0}</div>
-                        <p className="text-xs text-muted-foreground mt-1 text-orange-600 font-semibold italic">Awaiting verification</p>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-                        <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">98.4%</div>
-                        <p className="text-xs text-muted-foreground mt-1 text-emerald-600 font-semibold italic">Nominal health</p>
-                    </CardContent>
-                </Card>
+                {[
+                    { title: "Active Sources", value: `${sources.filter(s => s.isActive).length} / ${sources.length}`, icon: Server, color: "text-blue-600" },
+                    { title: "Jobs (24h)", value: stats?.totalJobs || 0, icon: Activity, color: "text-indigo-600" },
+                    { title: "Pending Review", value: stats?.reviewQueue.pending || 0, icon: Database, color: "text-amber-600" },
+                    { title: "Success Rate", value: "98.4%", icon: CheckCircle2, color: "text-emerald-600" }
+                ].map((stat, i) => (
+                    <Card key={i} className="border-none shadow-sm bg-card">
+                        <CardHeader className="flex flex-row items-center justify-between pb-2">
+                            <CardTitle className="text-xs font-medium text-muted-foreground">{stat.title}</CardTitle>
+                            <stat.icon className={cn("h-4 w-4", stat.color)} />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-semibold">{stat.value}</div>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                {/* Main Content Area */}
-                <div className="lg:col-span-8">
-                    <Tabs defaultValue="sources" className="w-full flex flex-col">
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 border-b border-gray-100 pb-4">
-                            <TabsList variant="line" className="h-auto p-0 bg-transparent">
-                                <TabsTrigger
-                                    value="sources"
-                                    className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary transition-all font-bold text-sm"
-                                >
-                                    Discovery Vectors
-                                </TabsTrigger>
-                                <TabsTrigger
-                                    value="history"
-                                    className="px-6 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-primary/5 data-[state=active]:text-primary transition-all font-bold text-sm"
-                                >
-                                    Execution Logs
-                                </TabsTrigger>
+                {/* Main Content */}
+                <div className="lg:col-span-8 space-y-6">
+                    <Tabs defaultValue="sources" className="w-full">
+                        <div className="flex items-center justify-between mb-6">
+                            <TabsList className="bg-muted/50 p-1">
+                                <TabsTrigger value="sources" className="text-xs font-medium px-4">Sources</TabsTrigger>
+                                <TabsTrigger value="history" className="text-xs font-medium px-4">Activity Logs</TabsTrigger>
                             </TabsList>
 
-                            <div className="relative w-full sm:w-64 sm:ml-auto">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <div className="relative w-64 hidden md:block">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                                 <Input
-                                    placeholder="Search vectors..."
-                                    className="pl-10 h-10 bg-white border-gray-100 rounded-xl focus:ring-primary/20 text-xs font-semibold"
+                                    placeholder="Search sources..."
+                                    className="pl-9 h-9 text-sm"
                                 />
                             </div>
                         </div>
 
                         <TabsContent value="sources" className="mt-0 outline-none">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {loading ? (
-                                    [1, 2, 3, 4].map(i => <div key={i} className="h-44 bg-gray-50 rounded-2xl animate-pulse border border-gray-100" />)
+                                    Array(4).fill(0).map((_, i) => <div key={i} className="h-40 bg-muted/50 rounded-xl animate-pulse" />)
                                 ) : sources.map(source => (
-                                    <Card key={source.id} className="group hover:border-primary/40 transition-all shadow-sm rounded-2xl overflow-hidden border-gray-100">
-                                        <CardHeader className="pb-4 bg-gray-50/30">
-                                            <div className="flex justify-between items-start gap-4">
-                                                <div className="flex items-center gap-4 min-w-0">
-                                                    <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center font-black text-primary italic shrink-0">
-                                                        {source.label[0]}
-                                                    </div>
-                                                    <div className="min-w-0">
-                                                        <CardTitle className="text-sm font-black truncate text-gray-900 group-hover:text-primary transition-colors uppercase tracking-tight italic">{source.label}</CardTitle>
-                                                        <CardDescription className="text-[10px] font-mono truncate text-gray-400 mt-0.5">{source.url}</CardDescription>
-                                                    </div>
-                                                </div>
-                                                <Badge variant={source.isActive ? "default" : "secondary"} className="text-[9px] uppercase font-black px-2 py-0.5 tracking-tighter shrink-0">
-                                                    {source.isActive ? 'Active' : 'Standby'}
-                                                </Badge>
+                                    <Card key={source.id} className="group hover:ring-1 hover:ring-primary/20 transition-all shadow-sm">
+                                        <CardHeader className="pb-3 flex flex-row items-start justify-between">
+                                            <div className="space-y-1 pr-4 min-w-0">
+                                                <CardTitle className="text-sm font-semibold truncate">{source.label}</CardTitle>
+                                                <CardDescription className="text-xs truncate flex items-center gap-1">
+                                                    <ExternalLink className="w-3 h-3 shrink-0" />
+                                                    {new URL(source.url).hostname}
+                                                </CardDescription>
                                             </div>
+                                            <Badge variant={source.isActive ? "default" : "secondary"} className="text-[10px] h-5">
+                                                {source.isActive ? 'Active' : 'Paused'}
+                                            </Badge>
                                         </CardHeader>
-                                        <CardContent className="py-5 flex items-center justify-between gap-4">
+                                        <CardContent className="pb-4 flex items-center justify-between border-t pt-4 bg-muted/5">
                                             <div className="flex items-center gap-2">
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <Button
                                                             size="sm"
                                                             variant="default"
-                                                            className="gap-2 h-9 px-4 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/10"
+                                                            className="h-8 px-3 text-xs gap-1.5"
                                                             disabled={!source.isActive}
                                                             onClick={() => handleTrigger(source.id, source.label)}
                                                         >
                                                             <Play className="w-3.5 h-3.5 fill-current" />
-                                                            Trigger
+                                                            Run Now
                                                         </Button>
                                                     </TooltipTrigger>
-                                                    <TooltipContent>Execute Manual Discovery Pulse</TooltipContent>
+                                                    <TooltipContent>Run scraper manually</TooltipContent>
                                                 </Tooltip>
-
-                                                <Button size="sm" variant="outline" className="h-9 w-9 p-0 rounded-lg border-gray-100" asChild>
+                                                
+                                                <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
                                                     <a href={source.url} target="_blank" rel="noopener noreferrer">
-                                                        <ExternalLink className="w-3.5 h-3.5 text-gray-400" />
+                                                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                                                     </a>
                                                 </Button>
                                             </div>
                                             <div className="flex items-center gap-1">
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg hover:bg-primary/5 hover:text-primary transition-colors" onClick={() => handleOpenModal(source)}>
-                                                    <Settings2 className="w-4 h-4" />
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted" onClick={() => handleOpenModal(source)}>
+                                                    <Settings2 className="w-4 h-4 text-muted-foreground" />
                                                 </Button>
-                                                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-rose-400 hover:text-white hover:bg-rose-500 transition-all" onClick={() => handleDeleteSource(source)}>
-                                                    <Trash2 className="w-4 h-4" />
+                                                <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-rose-50 hover:text-rose-600" onClick={() => handleDeleteSource(source)}>
+                                                    <Trash2 className="w-4 h-4 text-muted-foreground" />
                                                 </Button>
                                             </div>
                                         </CardContent>
@@ -317,48 +278,37 @@ export default function ScraperPage() {
                         </TabsContent>
 
                         <TabsContent value="history" className="mt-0 outline-none">
-                            <Card className="shadow-sm border-gray-100 rounded-2xl overflow-hidden">
+                            <Card className="shadow-sm border-none">
                                 <Table>
-                                    <TableHeader>
-                                        <TableRow className="bg-gray-50/80 hover:bg-gray-50/80 border-b border-gray-100">
-                                            <TableHead className="text-[10px] uppercase font-black tracking-widest text-gray-400 h-12">Vector Source</TableHead>
-                                            <TableHead className="text-[10px] uppercase font-black tracking-widest text-gray-400 h-12">Status</TableHead>
-                                            <TableHead className="text-[10px] uppercase font-black tracking-widest text-gray-400 h-12">Execution Time</TableHead>
-                                            <TableHead className="text-[10px] uppercase font-black tracking-widest text-gray-400 h-12 text-right pr-6">Yield</TableHead>
+                                    <TableHeader className="bg-muted/30">
+                                        <TableRow>
+                                            <TableHead className="text-xs font-medium">Source</TableHead>
+                                            <TableHead className="text-xs font-medium">Status</TableHead>
+                                            <TableHead className="text-xs font-medium">Time</TableHead>
+                                            <TableHead className="text-xs font-medium text-right">Items</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {loading ? (
-                                            [1, 2, 3, 4, 5, 6].map(i => <TableRow key={i} className="animate-pulse"><TableCell colSpan={4} className="h-16 bg-white border-b border-gray-50" /></TableRow>)
+                                            Array(5).fill(0).map((_, i) => <TableRow key={i}><TableCell colSpan={4} className="h-12 animate-pulse bg-muted/10" /></TableRow>)
                                         ) : jobs.length > 0 ? jobs.map(job => (
-                                            <TableRow key={job.id} className="hover:bg-primary/[0.02] group transition-colors border-b border-gray-50 last:border-0">
-                                                <TableCell className="py-4">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={cn("w-1.5 h-1.5 rounded-full transition-all group-hover:scale-150",
-                                                            job.status === 'COMPLETED' ? "bg-emerald-400" :
-                                                                job.status === 'RUNNING' ? "bg-primary animate-pulse" : "bg-rose-400"
-                                                        )} />
-                                                        <span className="font-bold text-xs text-gray-700 tracking-tight">{job.scrapeSource?.label || 'Decommissioned Vector'}</span>
-                                                    </div>
+                                            <TableRow key={job.id} className="hover:bg-muted/5">
+                                                <TableCell className="py-3">
+                                                    <span className="font-medium text-sm">{job.scrapeSource?.label || 'Deleted Source'}</span>
                                                 </TableCell>
-                                                <TableCell className="py-4">
-                                                    {getStatusBadge(job.status)}
-                                                </TableCell>
-                                                <TableCell className="text-[11px] text-gray-400 font-medium py-4">
+                                                <TableCell>{getStatusBadge(job.status)}</TableCell>
+                                                <TableCell className="text-xs text-muted-foreground">
                                                     {formatDate(job.startedAt)}
                                                 </TableCell>
-                                                <TableCell className="text-right py-4 pr-6">
-                                                    <div className="flex flex-col items-end">
-                                                        <span className={cn("font-black text-sm", job.candidatesFound > 0 ? "text-primary italic" : "text-gray-200")}>
-                                                            {job.candidatesFound}
-                                                        </span>
-                                                        <span className="text-[8px] font-black uppercase text-gray-300 tracking-[0.2em] -mt-1 leading-none">Candidates</span>
-                                                    </div>
+                                                <TableCell className="text-right">
+                                                    <span className={cn("font-medium", job.candidatesFound > 0 ? "text-primary" : "text-muted-foreground/30")}>
+                                                        {job.candidatesFound}
+                                                    </span>
                                                 </TableCell>
                                             </TableRow>
                                         )) : (
                                             <TableRow>
-                                                <TableCell colSpan={4} className="h-48 text-center text-gray-400 text-[10px] font-black uppercase tracking-widest italic">No execution pulses recorded</TableCell>
+                                                <TableCell colSpan={4} className="h-32 text-center text-muted-foreground text-sm">No recent activity</TableCell>
                                             </TableRow>
                                         )}
                                     </TableBody>
@@ -368,76 +318,75 @@ export default function ScraperPage() {
                     </Tabs>
                 </div>
 
-
-                {/* Sidebar Column: Staged Vault */}
+                {/* Sidebar */}
                 <div className="lg:col-span-4 space-y-6">
-                    <Card className="border-orange-100 shadow-sm bg-orange-50/10">
+                    <Card className="border-none shadow-sm bg-card overflow-hidden">
                         <CardHeader className="pb-4">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="text-sm font-bold flex items-center gap-2 text-orange-600">
-                                    <Database className="w-4 h-4" />
-                                    Staged Entries
+                                <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                    <Database className="w-4 h-4 text-primary" />
+                                    Awaiting Review
                                 </CardTitle>
-                                <Badge variant="outline" className="bg-white border-orange-200 text-orange-600 font-bold uppercase text-[9px]">
-                                    {stagedExams.length} Urgent
+                                <Badge variant="outline" className="text-[10px] font-bold">
+                                    {stagedExams.length}
                                 </Badge>
                             </div>
                         </CardHeader>
-                        <CardContent className="space-y-3">
+                        <CardContent className="space-y-2">
                             {loading ? (
-                                [1, 2, 3].map(i => <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse" />)
+                                Array(3).fill(0).map((_, i) => <div key={i} className="h-12 bg-muted/50 rounded-lg animate-pulse" />)
                             ) : stagedExams.length > 0 ? stagedExams.map(staged => (
-                                <div key={staged.id} className="bg-white border border-gray-100 rounded-xl p-3 hover:border-orange-300 hover:shadow-md transition-all group cursor-pointer flex items-center justify-between">
-                                    <div className="min-w-0 pr-4">
-                                        <p className="text-xs font-bold text-gray-900 truncate uppercase tracking-tight">{staged.title || 'Untitled Discovery'}</p>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <span className="text-[9px] text-gray-400 font-medium italic">{formatDate(staged.createdAt)}</span>
+                                <Link 
+                                    key={staged.id} 
+                                    href={`/review?id=${staged.id}`} 
+                                    className="block p-3 rounded-lg border bg-background hover:border-primary/50 hover:shadow-sm transition-all group"
+                                >
+                                    <div className="flex items-center justify-between">
+                                        <div className="min-w-0 pr-2">
+                                            <p className="text-xs font-medium truncate">{staged.title || 'Untitled item'}</p>
+                                            <p className="text-[10px] text-muted-foreground mt-0.5">{formatDate(staged.createdAt)}</p>
                                         </div>
+                                        <FileSearch className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary shrink-0" />
                                     </div>
-                                    <FileSearch className="w-4 h-4 text-gray-300 group-hover:text-orange-500 transition-colors" />
-                                </div>
+                                </Link>
                             )) : (
-                                <div className="text-center py-8">
-                                    <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto mb-2 shadow-sm">
-                                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                                    </div>
-                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Vault Nominal</p>
+                                <div className="text-center py-6">
+                                    <CheckCircle2 className="w-6 h-6 text-emerald-500 mx-auto mb-2 opacity-50" />
+                                    <p className="text-xs text-muted-foreground font-medium">All caught up!</p>
                                 </div>
                             )}
                         </CardContent>
-                        <CardFooter className="pt-0">
-                            <Button variant="ghost" className="w-full text-xs text-orange-600 hover:text-orange-700 hover:bg-orange-50 font-bold uppercase tracking-widest h-10 border-t border-orange-50/50 rounded-none" asChild>
+                        <CardFooter className="pt-0 border-t">
+                            <Button variant="ghost" className="w-full text-xs h-10 gap-2 hover:bg-muted" asChild>
                                 <Link href="/review">
-                                    Open Full Triage Queue
+                                    View Review Queue
+                                    <ExternalLink className="w-3 h-3" />
                                 </Link>
                             </Button>
                         </CardFooter>
                     </Card>
 
-                    {/* Operational Protocols */}
-                    <Card className="bg-slate-900 text-white border-none py-2 overflow-hidden relative">
-                        <Zap className="absolute top-0 right-0 w-32 h-32 text-white opacity-5 -translate-y-8 translate-x-8" />
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-base font-black tracking-tight uppercase italic flex items-center gap-2">
-                                <Activity className="w-5 h-5 text-primary" />
-                                Protocols
+                    <Card className="bg-slate-950 text-slate-50 border-none shadow-lg overflow-hidden relative group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent opacity-50" />
+                        <CardHeader className="pb-2 relative">
+                            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                                <Activity className="w-4 h-4 text-primary" />
+                                System Status
                             </CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4 pt-2">
-                            <p className="text-xs text-slate-400 leading-relaxed font-semibold">Discovery engine active. Candidates polling at Layer 4 frequency.</p>
-                            <div className="space-y-3">
-                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500 border-b border-slate-800 pb-2">
-                                    <span>Uptime</span>
-                                    <span className="text-emerald-400">99.9% Nominal</span>
-                                </div>
-                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500 border-b border-slate-800 pb-2">
-                                    <span>Throughput</span>
-                                    <span className="text-primary italic">2.4k Candidates / Hr</span>
-                                </div>
-                                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                                    <span>Pulse</span>
-                                    <span className="text-slate-300 underline font-mono">1.2ms latency</span>
-                                </div>
+                        <CardContent className="space-y-4 pt-2 relative">
+                            <p className="text-xs text-slate-400 font-medium leading-relaxed">The scraper engine is running normally and monitoring active sources.</p>
+                            <div className="space-y-3 pt-2">
+                                {[
+                                    { label: "Uptime", value: "99.9%", color: "text-emerald-400" },
+                                    { label: "Daily Volume", value: "~2,400 items", color: "text-primary" },
+                                    { label: "Latency", value: "1.2ms", color: "text-slate-300" }
+                                ].map((row, i) => (
+                                    <div key={i} className="flex items-center justify-between text-[11px] border-b border-slate-800 pb-2 last:border-0 last:pb-0">
+                                        <span className="text-slate-500 font-medium">{row.label}</span>
+                                        <span className={cn("font-medium", row.color)}>{row.value}</span>
+                                    </div>
+                                ))}
                             </div>
                         </CardContent>
                     </Card>
@@ -455,47 +404,39 @@ export default function ScraperPage() {
                             try {
                                 if (editingSource) {
                                     await scraperService.updateSource(editingSource.id, data);
-                                    toast.success('Configuration updated successfuly');
+                                    toast.success('Source updated successfully');
                                 } else {
                                     await scraperService.createSource(data);
-                                    toast.success('Discovery vector provisioned successfully');
+                                    toast.success('New source added');
                                 }
                                 setIsModalOpen(false);
                                 fetchData(true);
                             } catch (error) {
-                                toast.error('Fatal Protocol Error: Operation could not be completed');
+                                toast.error('An error occurred. Please try again.');
                             }
                         }}
                     />
                 )}
             </AnimatePresence>
 
-            {/* Deletion Pulse Confirmation */}
+            {/* Delete Confirmation */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-                <AlertDialogContent className="rounded-[2rem] border-none shadow-2xl p-0 overflow-hidden">
-                    <AlertDialogHeader className="p-8 bg-rose-500 text-white">
-                        <AlertDialogTitle className="text-2xl font-black uppercase italic tracking-tighter">Decommission Vector?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-white/80 text-[10px] font-black uppercase tracking-widest mt-1">
-                            Critical intelligence pipeline teardown
+                <AlertDialogContent className="rounded-2xl max-w-md">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Remove Source?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-sm">
+                            You are about to remove <span className="font-semibold text-foreground">{sourceToDelete?.label}</span>. This will stop all scheduled scraping for this website.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <div className="p-8 space-y-4 bg-white">
-                        <p className="text-xs font-bold text-gray-500 leading-relaxed uppercase tracking-tight">
-                            You are about to decommission <span className="text-rose-600 font-black italic">{sourceToDelete?.label}</span>.
-                            This will permanently remove the extraction node from the polling cluster.
-                            This operation cannot be reversed.
-                        </p>
-                        <AlertDialogFooter className="pt-4 flex gap-3 sm:gap-2">
-                            <AlertDialogCancel className="flex-1 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest border-gray-100 hover:bg-gray-50">Abort</AlertDialogCancel>
-                            <AlertDialogAction onClick={confirmDeleteSource} className="flex-[2] h-12 rounded-xl text-[10px] font-black uppercase tracking-[0.2em] bg-rose-500 hover:bg-rose-600 shadow-lg shadow-rose-200">Decommission</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </div>
+                    <AlertDialogFooter className="mt-4">
+                        <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDeleteSource} className="rounded-xl bg-rose-600 hover:bg-rose-700">Remove Source</AlertDialogAction>
+                    </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
         </div>
     );
 }
-
 
 function SourceModal({ source, isOpen, onClose, onSave }: { source: ScrapeSource | null, isOpen: boolean, onClose: () => void, onSave: (data: any) => Promise<void> }) {
     const [label, setLabel] = useState(source?.label || '');
@@ -506,7 +447,7 @@ function SourceModal({ source, isOpen, onClose, onSave }: { source: ScrapeSource
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const categories = [
-        { id: 'GLOBAL', label: 'Global Discovery (Default)' },
+        { id: 'GLOBAL', label: 'All Categories' },
         { id: 'GOVERNMENT_JOBS', label: 'Government Central/State' },
         { id: 'BANKING_JOBS', label: 'Banking & Financial' },
         { id: 'RAILWAY_JOBS', label: 'Railway Recruitment' },
@@ -516,9 +457,9 @@ function SourceModal({ source, isOpen, onClose, onSave }: { source: ScrapeSource
         { id: 'SSC', label: 'Staff Selection' },
         { id: 'STATE_PSC', label: 'State Commission' },
         { id: 'TEACHING_ELIGIBILITY', label: 'Teaching & Academia' },
-        { id: 'ENGINEERING_ENTRANCE', label: 'Engineering Professional' },
-        { id: 'MEDICAL_ENTRANCE', label: 'Medical Entrance' },
-        { id: 'OTHER', label: 'Miscellaneous' },
+        { id: 'ENGINEERING_ENTRANCE', label: 'Engineering' },
+        { id: 'MEDICAL_ENTRANCE', label: 'Medical' },
+        { id: 'OTHER', label: 'Other' },
     ];
 
     const handleFormSave = async (e: React.FormEvent) => {
@@ -533,83 +474,84 @@ function SourceModal({ source, isOpen, onClose, onSave }: { source: ScrapeSource
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[480px] p-0 overflow-hidden rounded-[2rem] border-none shadow-2xl">
-                <DialogHeader className="p-8 bg-slate-900 text-white">
-                    <DialogTitle className="text-2xl font-black uppercase italic tracking-tighter">
-                        {source ? 'Configure Vector' : 'Provision Vector'}
+            <DialogContent className="sm:max-w-[440px] p-0 overflow-hidden rounded-2xl border-none shadow-2xl">
+                <DialogHeader className="p-6 pb-4 border-b">
+                    <DialogTitle className="text-lg font-semibold">
+                        {source ? 'Edit Source' : 'Add New Source'}
                     </DialogTitle>
-                    <DialogDescription className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">
-                        Advanced extraction module v4.2
+                    <DialogDescription className="text-xs">
+                        {source ? 'Update the details for this website.' : 'Provide a name and URL to start scraping data.'}
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleFormSave} className="p-8 space-y-6 bg-white">
+                <form onSubmit={handleFormSave} className="p-6 space-y-5 bg-background">
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="label" className="text-[10px] font-black uppercase tracking-widest text-gray-400">Label Identifier</Label>
+                            <Label htmlFor="label" className="text-xs font-medium text-muted-foreground">Source Name</Label>
                             <Input
                                 id="label"
                                 required
                                 value={label}
                                 onChange={e => setLabel(e.target.value)}
                                 placeholder="e.g. UPSC Official Portal"
-                                className="h-12 rounded-xl focus:ring-primary font-bold"
+                                className="h-10 rounded-lg text-sm"
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="url" className="text-[10px] font-black uppercase tracking-widest text-gray-400">Source Point (URL)</Label>
+                            <Label htmlFor="url" className="text-xs font-medium text-muted-foreground">Website URL</Label>
                             <Input
                                 id="url"
                                 required
                                 value={url}
                                 onChange={e => setUrl(e.target.value)}
-                                placeholder="https://..."
-                                className="h-12 rounded-xl focus:ring-primary font-bold"
+                                placeholder="https://example.com/jobs"
+                                className="h-10 rounded-lg text-sm"
+                                type="url"
                             />
                         </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Strategy Mode</Label>
+                            <Label className="text-xs font-medium text-muted-foreground">Scrape Mode</Label>
                             <Select value={sourceType} onValueChange={(val: any) => setSourceType(val)}>
-                                <SelectTrigger className="h-12 rounded-xl font-bold">
-                                    <SelectValue placeholder="Select type" />
+                                <SelectTrigger className="h-10 rounded-lg text-sm">
+                                    <SelectValue placeholder="Select mode" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-xl">
-                                    <SelectItem value="LISTING" className="font-bold">Index/Listing</SelectItem>
-                                    <SelectItem value="DETAIL" className="font-bold">Deep/Single</SelectItem>
+                                <SelectContent>
+                                    <SelectItem value="LISTING">Listing Page</SelectItem>
+                                    <SelectItem value="DETAIL">Single Page</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label className="text-[10px] font-black uppercase tracking-widest text-gray-400">Intel Category</Label>
+                            <Label className="text-xs font-medium text-muted-foreground">Category</Label>
                             <Select value={hintCategory} onValueChange={setHintCategory}>
-                                <SelectTrigger className="h-12 rounded-xl font-bold">
+                                <SelectTrigger className="h-10 rounded-lg text-sm text-left">
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
-                                <SelectContent className="rounded-xl">
+                                <SelectContent>
                                     {categories.map(cat => (
-                                        <SelectItem key={cat.id} value={cat.id} className="font-bold text-xs uppercase">{cat.label}</SelectItem>
+                                        <SelectItem key={cat.id} value={cat.id} className="text-sm">{cat.label}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                    <div className="flex items-center justify-between p-4 bg-muted/30 rounded-xl border border-dashed">
                         <div className="space-y-0.5">
-                            <Label className="text-[11px] font-black uppercase tracking-widest block italic leading-none">Automated Polling</Label>
-                            <span className="text-[9px] font-medium text-gray-400 uppercase tracking-tighter">Toggle global activity pulse</span>
+                            <Label className="text-sm font-medium block">Active Status</Label>
+                            <span className="text-[10px] text-muted-foreground">Toggle to pause or resume scraping</span>
                         </div>
-                        <Switch checked={isActive} onCheckedChange={setIsActive} className="data-[state=checked]:bg-primary" />
+                        <Switch checked={isActive} onCheckedChange={setIsActive} />
                     </div>
 
-                    <DialogFooter className="pt-4 flex gap-3 sm:gap-0">
-                        <Button type="button" variant="ghost" onClick={onClose} className="flex-1 rounded-xl h-12 uppercase tracking-widest text-[10px] font-black">Abort</Button>
-                        <Button type="submit" disabled={isSubmitting} className="flex-[2] rounded-xl h-12 uppercase tracking-[0.2em] text-[10px] font-black shadow-lg shadow-primary/20">
-                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : source ? 'Update Config' : 'Release Vector'}
+                    <div className="flex justify-end gap-3 pt-2">
+                        <Button type="button" variant="ghost" onClick={onClose} className="rounded-lg h-10 px-6 text-sm">Cancel</Button>
+                        <Button type="submit" disabled={isSubmitting} className="rounded-lg h-10 px-8 text-sm shadow-md">
+                            {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : source ? 'Save Changes' : 'Add Source'}
                         </Button>
-                    </DialogFooter>
+                    </div>
                 </form>
             </DialogContent>
         </Dialog>

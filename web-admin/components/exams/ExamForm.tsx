@@ -1,28 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import {
-    ArrowLeft,
-    Save,
-    Terminal,
-    Layers,
-    Link as LinkIcon,
-    Info,
-    CheckCircle2,
-    ArrowRight,
-    Loader2,
-    BookOpen,
-    Building2,
-    Calendar,
-    Briefcase,
-    Zap,
-    Layout,
-    ShieldCheck,
-    MapPin,
-    FileText,
-    Fingerprint,
-    Globe,
-    Clock
+import { 
+    ArrowLeft, 
+    Save, 
+    Loader2, 
+    Calendar as CalendarIcon,
+    Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -32,18 +15,60 @@ import {
     EXAM_LEVELS,
     EXAM_STATUSES,
 } from '@/constants/enums';
-import { ApiResponse, Exam, LifecycleEvent, examService, lifecycleService } from '@/lib/api';
-import { ExamCategory, ExamLevel, ExamStatus, LifecycleStage } from '@/constants/enums';
+import { ApiResponse, Exam, examService } from '@/lib/api';
 import { toast } from 'sonner';
 
-import { CustomSelect } from '@/components/ui/CustomSelect';
+// Shadcn UI
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/DatePicker';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import TextareaAutosize from 'react-textarea-autosize';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { 
+    Popover,
+    PopoverContent,
+    PopoverTrigger 
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
+
 import TimelineManager from './TimelineManager';
-import { Label } from '../ui/label';
-import { Input } from '../ui/input';
+import { useForm, Controller, FieldValues } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+
+const examSchema = z.object({
+    title: z.string().min(5, "Title must be at least 5 characters"),
+    shortTitle: z.string().min(2, "Short title is required"),
+    conductingBody: z.string().min(2, "Authority name is required"),
+    category: z.string().min(1, "Category is required"),
+    examLevel: z.string().min(1, "Level is required"),
+    state: z.string().nullable(),
+    description: z.string().nullable(),
+    qualificationCriteria: z.string().nullable(),
+    totalVacancies: z.string().nullable(),
+    salary: z.string().nullable(),
+    age: z.string().nullable(),
+    officialWebsite: z.string().nullable(),
+    notificationUrl: z.string().nullable(),
+    applicationFee: z.string().nullable(),
+    additionalDetails: z.string().nullable(),
+    status: z.string().min(1),
+    isPublished: z.boolean(),
+    publishedAt: z.string().nullable(),
+});
+
+type ExamFormValues = z.infer<typeof examSchema>;
 
 interface ExamFormProps {
     initialData?: ApiResponse<Exam> | Exam | any;
@@ -51,395 +76,354 @@ interface ExamFormProps {
     slug?: string;
 }
 
-export default function ExamForm({ initialData = null, isEdit = false, slug = '' }: ExamFormProps) {
-    console.log("initialData", initialData)
+export default function ExamForm({ initialData = null, isEdit = false }: ExamFormProps) {
     const router = useRouter();
-    const [loading, setLoading] = useState(false);
-    const defaultDefaults = {
-        title: '',
-        shortTitle: '',
-        slug: slug !== 'new' ? slug : '',
-        conductingBody: '',
-        category: 'GOVERNMENT_JOBS',
-        examLevel: 'NATIONAL',
-        state: '',
-        description: '',
-        age: '',
-        lifecycleService: [],
-        qualificationCriteria: '',
-        totalVacancies: '',
-        salary: '',
-        officialWebsite: '',
-        notificationUrl: '',
-        applicationFee: '',
-        additionalDetails: '',
-        status: 'NOTIFICATION',
-        isPublished: true,
-    };
-
-    // Robust data extraction from the API envelope
+    const queryClient = useQueryClient();
+    
     const actualInitialData = (initialData as any)?.data && !(initialData as any).title ? (initialData as any).data : initialData;
 
-    const [formData, setFormData] = useState<Partial<Exam>>({
-        ...defaultDefaults,
-        ...(actualInitialData || {})
+    const {
+        register,
+        handleSubmit,
+        control,
+        watch,
+        setValue,
+        formState: { errors }
+    } = useForm<ExamFormValues>({
+        resolver: zodResolver(examSchema),
+        defaultValues: {
+            title: actualInitialData?.title || '',
+            shortTitle: actualInitialData?.shortTitle || '',
+            conductingBody: actualInitialData?.conductingBody || '',
+            category: actualInitialData?.category || 'GOVERNMENT_JOBS',
+            examLevel: actualInitialData?.examLevel || 'NATIONAL',
+            state: actualInitialData?.state || '',
+            description: actualInitialData?.description || '',
+            qualificationCriteria: actualInitialData?.qualificationCriteria || '',
+            totalVacancies: actualInitialData?.totalVacancies || '',
+            salary: actualInitialData?.salary || '',
+            age: actualInitialData?.age || '',
+            officialWebsite: actualInitialData?.officialWebsite || '',
+            notificationUrl: actualInitialData?.notificationUrl || '',
+            applicationFee: actualInitialData?.applicationFee || '',
+            additionalDetails: actualInitialData?.additionalDetails || '',
+            status: actualInitialData?.status || 'NOTIFICATION',
+            isPublished: actualInitialData?.isPublished ?? true,
+            publishedAt: actualInitialData?.publishedAt || '',
+        }
     });
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        const checked = (e.target as HTMLInputElement).checked;
-
-        setFormData((prev) => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value
-        }));
-    };
-
-
-
-    const handleSubmit = async () => {
-        try {
-            setLoading(true);
-            const payload = { ...formData };
-            delete (payload as any).slug;
-            delete (payload as any).qualificationLevel;
-
+    const mutation = useMutation({
+        mutationFn: async (values: ExamFormValues) => {
+            const payload = { ...values };
             Object.keys(payload).forEach(key => {
                 if ((payload as any)[key] === '') {
                     (payload as any)[key] = null;
                 }
             });
 
-            if (isEdit && initialData?.id) {
-                await examService.updateExam(initialData.id, payload);
-                toast.success('Exam updated successfully');
+            if (isEdit && actualInitialData?.id) {
+                return await examService.updateExam(actualInitialData.id, payload as any);
             } else {
-                await examService.createExam(payload);
-                toast.success('Exam created successfully');
+                return await examService.createExam(payload as any);
             }
-            router.push(`/exams`);
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        } catch (error: any) {
-            console.error('Failed to create/update exam:', error);
-            const errorMsg = error.response?.data?.message || error.response?.data?.error || 'Failed to save exam';
-            toast.error(typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg));
-        } finally {
-            setLoading(false);
+        },
+        onSuccess: () => {
+            toast.success(isEdit ? 'Exam updated' : 'Exam created');
+            queryClient.invalidateQueries({ queryKey: ['exams'] });
+            router.push('/exams');
+        },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.error?.message || 'Failed to save exam');
         }
+    });
+
+    const isPublished = watch('isPublished');
+    const examLevel = watch('examLevel');
+
+    const onSubmit = (values: ExamFormValues) => {
+        mutation.mutate(values);
     };
 
-    const labelClasses = "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 block ml-1";
-    const inputClasses = "w-full bg-white border border-gray-200 rounded-lg py-3 px-4 outline-none focus:border-primary transition-all text-sm font-bold shadow-sm";
-
     return (
-        <div className="space-y-6 pb-20 max-w-[1600px] mx-auto">
-            {/* Header Action Bar */}
-            <div className="flex items-center justify-between sticky top-0 z-50 bg-gray-50/80 backdrop-blur-md py-4 border-b border-gray-200 -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 container mx-auto py-8">
+            <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <Link href="/exams" className="p-2 rounded-xl bg-white border border-gray-200 hover:bg-gray-50 transition-all shadow-sm">
-                        <ArrowLeft className="w-4 h-4 text-gray-400" />
-                    </Link>
+                    <Button variant="outline" size="icon" asChild>
+                        <Link href="/exams">
+                            <ArrowLeft className="h-4 w-4" />
+                        </Link>
+                    </Button>
                     <div>
-                        <h1 className="text-xl font-black font-outfit uppercase tracking-tight text-gray-900 leading-none">{isEdit ? 'Edit Exam' : 'Create New Exam'}</h1>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em] font-mono mt-1">Admin Execution Layer</p>
+                        <h1 className="text-2xl font-bold">{isEdit ? 'Edit Exam' : 'Create New Exam'}</h1>
+                        <p className="text-sm text-muted-foreground">Manage exam details and recruitment lifecycle</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <button
-                        onClick={() => setFormData({ ...formData, isPublished: !formData.isPublished })}
-                        className={cn(
-                            "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border",
-                            formData.isPublished
-                                ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm shadow-emerald-500/10"
-                                : "bg-white text-gray-400 border-gray-100"
-                        )}
-                    >
-                        <Globe className="w-3.5 h-3.5" />
-                        {formData.isPublished ? 'Public' : 'Draft'}
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading}
-                        className="px-8 py-2.5 bg-black text-primary rounded-xl font-black text-[10px] uppercase tracking-[0.2em] flex items-center gap-3 hover:brightness-125 disabled:opacity-50 transition-all active:scale-95 shadow-xl shadow-primary/20"
-                    >
-                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                    <div className="flex items-center space-x-2 mr-4">
+                        <Switch 
+                            id="published"
+                            checked={isPublished}
+                            onCheckedChange={(checked) => setValue('isPublished', checked)}
+                        />
+                        <Label htmlFor="published">{isPublished ? 'Published' : 'Draft'}</Label>
+                    </div>
+                    <Button type="submit" disabled={mutation.isPending}>
+                        {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
                         Save Exam
-                    </button>
+                    </Button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-12 gap-6 items-start">
-                {/* Main Content Area */}
-                <div className="col-span-12 lg:col-span-8 space-y-6">
-                    {/* Core Identity */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-                        <div className="px-6 py-3 bg-gray-50/30 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Fingerprint className="w-3.5 h-3.5 text-primary" />
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-900">Core Identity</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Basic Information</CardTitle>
+                            <CardDescription>Core identity and conducting authority details</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="title">Exam Title *</Label>
+                                <Input id="title" {...register('title')} placeholder="Full official name of the exam" />
+                                {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
                             </div>
-                        </div>
 
-                        <div className="p-6 space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-1.5">
-                                    <Label >Full Exam Title</Label>
-                                    <Input
-                                        name="title"
-                                        value={formData.title ?? ""}
-                                        onChange={handleChange}
-                                        placeholder="UPSC Civil Services 2025"
-                                        className='rounded-sm'
-                                    />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="shortTitle">Short Title / Code *</Label>
+                                    <Input id="shortTitle" {...register('shortTitle')} placeholder="e.g. UPSC CSE" />
+                                    {errors.shortTitle && <p className="text-sm text-destructive">{errors.shortTitle.message}</p>}
                                 </div>
-                                <div className="space-y-1.5">
-                                    <Label>Conducting Authority</Label>
-                                    <Input
-                                        name="conductingBody"
-                                        value={formData.conductingBody ?? ""}
-                                        onChange={handleChange}
-                                        placeholder="Public Service Commission"
-                                        className='rounded-sm'
-                                    />
+                                <div className="space-y-2">
+                                    <Label htmlFor="conductingBody">Conducting Body *</Label>
+                                    <Input id="conductingBody" {...register('conductingBody')} placeholder="e.g. UPSC" />
+                                    {errors.conductingBody && <p className="text-sm text-destructive">{errors.conductingBody.message}</p>}
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-1.5">
-                                    <Label>Short Signature</Label>
-                                    <Input
-                                        name="shortTitle"
-                                        value={formData.shortTitle ?? ""}
-                                        onChange={handleChange}
-                                        placeholder="UPSC CSE"
-                                        className='rounded-sm'
-                                    />
-                                </div>
-                                <div className="space-y-1.5 opacity-60">
-                                    <Label>URL Identifier (Slug)</Label>
-                                    <div className="flex items-center gap-2 bg-gray-100/50 border border-gray-100 rounded-xl py-2.5 px-4 text-[11px] text-gray-400">
-                                        <Globe className="w-3 h-3" />
-                                        <span>/exams/{formData.slug || 'auto-generated'}</span>
-                                    </div>
+                            <div className="space-y-2">
+                                <Label>Slug</Label>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md">
+                                    <Globe className="h-4 w-4" />
+                                    <span>/{actualInitialData?.slug || 'auto-generated'}</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
-                    {/* Rich Details */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-8">
-                        <div className='space-y-2'>
-                            <Label> Exam Description</Label>
-                            <Textarea
-                                name="description"
-                                value={formData.description ?? ""}
-                                onChange={handleChange}
-                                placeholder="Describe the exam scope..."
-                                className="!border-none !pb-0"
-                            />
-                        </div>
-
-
-                        <div className="h-px bg-gray-50" />
-                        <div className='space-y-2'>
-                            <Label> Eligibility</Label>
-                            <Textarea
-                                name="qualificationCriteria"
-                                value={formData.qualificationCriteria ?? ""}
-                                onChange={handleChange}
-                                placeholder="Selection & qualification data..."
-                                className="!border-none !pb-0"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Timeline Interaction */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 overflow-hidden">
-                        {isEdit && formData?.id ? (
-                            <TimelineManager examId={formData.id} initialEvents={formData.lifecycleEvents} />
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-1.5 h-4 bg-gray-200 rounded-full" />
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Lifecycle Roadmap</h4>
-                                </div>
-                                <div className="bg-gray-50/50 border border-dashed border-gray-100 rounded-xl p-8 flex flex-col items-center justify-center text-center gap-2">
-                                    <Zap className="w-5 h-5 text-gray-200 animate-pulse" />
-                                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest max-w-[200px]">Save this exam first to activate the lifecycle roadmap system</p>
-                                </div>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Description & Qualification</CardTitle>
+                            <CardDescription>Detailed information about the recruitment process</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Short Description</Label>
+                                <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[120px]" />
                             </div>
-                        )}
-                    </div>
-
-                    {/* Footer Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-2">
-                            <Label>Application Fees</Label>
-                            <Textarea
-                                name="applicationFee"
-                                value={formData.applicationFee ?? ""}
-                                onChange={handleChange}
-                                placeholder="GEN: 100..."
-                                className="!border-none !pb-0"
-                            />
-                        </div>
-                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-2">
-                            <Label>Additional Details</Label>
-                            <Textarea
-                                name="additionalDetails"
-                                value={formData.additionalDetails ?? ""}
-                                onChange={handleChange}
-                                placeholder="Misc data..."
-                                className="!border-none !pb-0"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Sidebar Controls */}
-                <div className="col-span-12 lg:col-span-4 space-y-6">
-                    {/* Categorization */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-                        <div className="px-6 py-3 bg-gray-50/30">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-900 flex items-center gap-2">
-                                <Layers className="w-3.5 h-3.5 text-primary" />
-                                Taxonomy
-                            </h3>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Classification</label>
-                                <CustomSelect
-                                    value={formData.category ?? 'GOVERNMENT_JOBS'}
-                                    onChange={(val) => setFormData({ ...formData, category: val as ExamCategory })}
-                                    options={EXAM_CATEGORIES}
-                                    className="!border-gray-100 !bg-gray-50/50 !rounded-xl !py-2.5"
-                                />
+                            <div className="space-y-2">
+                                <Label htmlFor="qualificationCriteria">Qualification Criteria</Label>
+                                <Textarea id="qualificationCriteria" {...register('qualificationCriteria')} placeholder="Educational and other eligibility requirements..." className="min-h-[100px]" />
                             </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Operation Level</Label>
-                                <CustomSelect
-                                    value={formData.examLevel ?? 'NATIONAL'}
-                                    onChange={(val) => setFormData({ ...formData, examLevel: val as ExamLevel })}
-                                    options={EXAM_LEVELS}
-                                    className="!border-gray-100 !bg-gray-50/50 !rounded-xl !py-2.5"
-                                />
-                            </div>
-                            {formData.examLevel === 'STATE' && (
-                                <div className="space-y-1.5 animate-in slide-in-from-top-1">
-                                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Region/State</label>
-                                    <input
-                                        name="state"
-                                        value={formData.state ?? ""}
-                                        onChange={handleChange}
-                                        placeholder="Ex: Bihar"
-                                        className="w-full bg-gray-50/50 border border-gray-100 rounded-xl py-2.5 px-4 outline-none focus:border-primary text-sm font-bold shadow-sm"
-                                    />
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Exam Timeline</CardTitle>
+                            <CardDescription>Manage application dates and exam schedule</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {isEdit && actualInitialData?.id ? (
+                                <TimelineManager examId={actualInitialData.id} initialEvents={actualInitialData.lifecycleEvents} />
+                            ) : (
+                                <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                    <p className="text-muted-foreground">Save the exam first to manage the timeline.</p>
                                 </div>
                             )}
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
-                    {/* Quick Specifics */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-                        <div className="px-6 py-3 bg-emerald-50/10">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-700 flex items-center gap-2">
-                                <Briefcase className="w-3.5 h-3.5" />
-                                Particulars
-                            </h3>
-                        </div>
-                        <div className="p-6 space-y-5">
-                            <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Total Vacancies</Label>
-                                <Textarea
-                                    name="totalVacancies"
-                                    value={formData.totalVacancies ?? ""}
-                                    onChange={handleChange}
-                                    placeholder="500 positions"
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Salary Grade</Label>
-                                <Textarea
-                                    name="salary"
-                                    value={formData.salary ?? ""}
-                                    onChange={handleChange}
-                                    placeholder="Level 10..."
-                                />
-                            </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Age Spectrum</Label>
-                                <Textarea
-                                    name="age"
-                                    value={formData.age ?? ""}
-                                    onChange={handleChange}
-                                    placeholder="21-32 years..."
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Utility Links */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-                        <div className="px-6 py-3 bg-blue-50/10">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-700 flex items-center gap-2">
-                                <Globe className="w-3.5 h-3.5" />
-                                Navigation
-                            </h3>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Official Portal</label>
-                                <div className="relative group">
-                                    <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-100 group-focus-within:text-blue-500 transition-colors" />
-                                    <input
-                                        name="officialWebsite"
-                                        value={formData.officialWebsite ?? ""}
-                                        onChange={handleChange}
-                                        placeholder="https://..."
-                                        className="w-full bg-gray-50/50 border border-gray-100 rounded-xl py-2.5 pl-10 pr-4 outline-none focus:border-blue-500 text-xs font-black text-gray-900 transition-all font-mono"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Notification PDF</label>
-                                <div className="relative group">
-                                    <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-100 group-focus-within:text-blue-500 transition-colors" />
-                                    <input
-                                        name="notificationUrl"
-                                        value={formData.notificationUrl ?? ""}
-                                        onChange={handleChange}
-                                        placeholder="https://..."
-                                        className="w-full bg-gray-50/50 border border-gray-100 rounded-xl py-2.5 pl-10 pr-4 outline-none focus:border-blue-500 text-xs font-black text-gray-900 transition-all font-mono"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Publication Detail */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-                        <div className="px-6 py-3 bg-purple-50/10">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-700 flex items-center gap-2">
-                                <CalendarIcon className="w-3.5 h-3.5" />
-                                Publication Detail
-                            </h3>
-                        </div>
-                        <div className="p-6">
-                            <DatePicker
-                                label="Published At"
-                                date={formData.publishedAt ?? undefined}
-                                onChange={(date) => setFormData({ ...formData, publishedAt: date?.toISOString() || null })}
-                                placeholder="Auto-set on publish"
-                            />
-                            <p className="mt-2 text-[8px] text-gray-400 font-medium px-1 italic">
-                                Note: This date determines visibility.
-                            </p>
-                        </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Fees</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea {...register('applicationFee')} placeholder="Fee details for different categories..." className="min-h-[80px]" />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Other Details</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea {...register('additionalDetails')} placeholder="Any other relevant information..." className="min-h-[80px]" />
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
+
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Categorization</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Category</Label>
+                                <Controller
+                                    name="category"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select value={field.value} onValueChange={field.onChange}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {EXAM_CATEGORIES.map(cat => (
+                                                    <SelectItem key={cat} value={cat}>{cat.replace(/_/g, ' ')}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Level</Label>
+                                <Controller
+                                    name="examLevel"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select 
+                                            value={field.value} 
+                                            onValueChange={(val) => {
+                                                field.onChange(val);
+                                                if (val !== 'STATE') setValue('state', null);
+                                            }}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select level" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {EXAM_LEVELS.map(level => (
+                                                    <SelectItem key={level} value={level}>{level}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                            </div>
+
+                            {examLevel === 'STATE' && (
+                                <div className="space-y-2">
+                                    <Label htmlFor="state">State</Label>
+                                    <Input id="state" {...register('state')} placeholder="e.g. Maharashtra" />
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <Label>Status</Label>
+                                <Controller
+                                    name="status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select value={field.value} onValueChange={field.onChange}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Current status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {EXAM_STATUSES.map(s => (
+                                                    <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Key Metrics</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Vacancies</Label>
+                                <Input {...register('totalVacancies')} placeholder="e.g. 500+" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Salary</Label>
+                                <Input {...register('salary')} placeholder="e.g. Pay Level 10" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Age Limit</Label>
+                                <Input {...register('age')} placeholder="e.g. 21 - 32 years" />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Links</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Official Website</Label>
+                                <Input {...register('officialWebsite')} placeholder="https://..." />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Notification PDF URL</Label>
+                                <Input {...register('notificationUrl')} placeholder="https://..." />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Publication</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Published At</Label>
+                                <Controller
+                                    name="publishedAt"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value ? new Date(field.value) : undefined}
+                                                    onSelect={(date) => field.onChange(date?.toISOString() || null)}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    )}
+                                />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
             </div>
-        </div>
+        </form>
     );
 }

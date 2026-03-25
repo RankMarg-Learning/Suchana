@@ -45,6 +45,8 @@ export const bullRedisConnection = (() => {
             db: Number(url.pathname.slice(1)) || 0,
             tls: isTls ? {} : undefined,
             family: 4,
+            maxRetriesPerRequest: null,
+            enableReadyCheck: false
         };
     }
 
@@ -53,5 +55,7 @@ export const bullRedisConnection = (() => {
         port: env.REDIS_PORT,
         password: env.REDIS_PASSWORD || undefined,
         db: env.REDIS_DB,
+        maxRetriesPerRequest: null,
+        enableReadyCheck: false
     };
 })();

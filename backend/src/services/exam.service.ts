@@ -11,11 +11,11 @@ import { SeoService } from './seo.service';
 const EXAM_LIST_CACHE_KEY = 'exams:list';
 const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams:detail:${id}`;
 
-export async function listExams(query: ListExamQuery) {
+export async function listExams(query: ListExamQuery, bypassCache = false) {
     const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state, lifecycleStage } = query;
     const cacheKey = `${EXAM_LIST_CACHE_KEY}:${JSON.stringify(query)}`;
 
-    return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_LIST, async () => {
+    const fetchExams = async () => {
         const where: Prisma.ExamWhereInput = {
             ...(category && { category }),
             ...(status && { status }),
@@ -79,12 +79,18 @@ export async function listExams(query: ListExamQuery) {
 
 
         return { exams, total };
-    });
+    };
+
+    if (bypassCache || search) {
+        return fetchExams();
+    }
+
+    return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_LIST, fetchExams);
 }
 
 // ─── Get By ID ───────────────────────────────────────────────
-export async function getExamById(id: string) {
-    return cacheService.getOrSet(EXAM_DETAIL_CACHE_KEY(id), env.CACHE_TTL_EXAM_DETAIL, async () => {
+export async function getExamById(id: string, bypassCache = false) {
+    const fetchExam = async () => {
         const exam = await prisma.exam.findUnique({
             where: { id },
             include: {
@@ -96,12 +102,15 @@ export async function getExamById(id: string) {
 
         if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam with ID "${id}" not found`);
         return exam;
-    });
+    };
+
+    if (bypassCache) return fetchExam();
+    return cacheService.getOrSet(EXAM_DETAIL_CACHE_KEY(id), env.CACHE_TTL_EXAM_DETAIL, fetchExam);
 }
 
 // ─── Get By Slug ─────────────────────────────────────────────
-export async function getExamBySlug(slug: string) {
-    return cacheService.getOrSet(`exams:slug:${slug}`, env.CACHE_TTL_EXAM_DETAIL, async () => {
+export async function getExamBySlug(slug: string, bypassCache = false) {
+    const fetchExam = async () => {
         const exam = await prisma.exam.findUnique({
             where: { slug },
             include: {
@@ -113,7 +122,10 @@ export async function getExamBySlug(slug: string) {
 
         if (!exam) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam with slug "${slug}" not found`);
         return exam;
-    });
+    };
+
+    if (bypassCache) return fetchExam();
+    return cacheService.getOrSet(`exams:slug:${slug}`, env.CACHE_TTL_EXAM_DETAIL, fetchExam);
 }
 
 

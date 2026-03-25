@@ -1,297 +1,398 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { 
     Search, 
     Plus, 
-    MoreHorizontal,
     ChevronLeft, 
     ChevronRight,
-    Loader2,
-    Calendar,
-    Filter,
     Globe,
     Edit3,
-    Trash2
+    Trash2,
+    Layers,
+    RefreshCw,
+    MoreHorizontal,
+    Eye
 } from 'lucide-react';
 import Link from 'next/link';
-import { cn, formatDate } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import { examService, Exam } from '@/lib/api';
-import { ExamStatus, EXAM_STATUSES } from '@/constants/enums';
+import { EXAM_STATUSES } from '@/constants/enums';
 import { toast } from 'sonner';
+import SummaryStats from '@/components/exams/SummaryStats';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+
+// Shadcn UI
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+const PAGE_SIZE = 15;
 
 export default function ExamsPage() {
-    const [exams, setExams] = useState<Exam[]>([]);
-    const [loading, setLoading] = useState(true);
+    const router = useRouter();
+    const queryClient = useQueryClient();
     const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState<string>('ALL');
-    const [publishFilter, setPublishFilter] = useState<'ALL' | 'PUBLISHED' | 'UNPUBLISHED'>('ALL');
+    const [statusFilter, setStatusFilter] = useState('ALL');
+    const [publishFilter, setPublishFilter] = useState('ALL');
     const [currentPage, setCurrentPage] = useState(1);
-    const pageSize = 15;
+    const [deletingExam, setDeletingExam] = useState<Exam | null>(null);
 
-    useEffect(() => {
-        fetchExams();
-    }, []);
-
-    const fetchExams = async () => {
-        try {
-            setLoading(true);
-            const data = await examService.getAllExams();
-            setExams(data?.data || []);
-        } catch (error) {
-            console.error('Failed to fetch exams:', error);
-            toast.error('Failed to load exams');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const filteredExams = exams.filter(exam => {
-        const matchesSearch = exam.title.toLowerCase().includes(search.toLowerCase()) || 
-                             exam.shortTitle?.toLowerCase().includes(search.toLowerCase()) ||
-                             exam.conductingBody?.toLowerCase().includes(search.toLowerCase());
-        const matchesStatus = statusFilter === 'ALL' || exam.status === statusFilter;
-        const matchesPublish = publishFilter === 'ALL' ? true : 
-                               publishFilter === 'PUBLISHED' ? !!exam.isPublished : 
-                               !exam.isPublished;
-        return matchesSearch && matchesStatus && matchesPublish;
+    // Main query for the paginated & filtered list
+    const { data: response, isLoading, isRefetching } = useQuery({
+        queryKey: ['exams', currentPage, search, statusFilter, publishFilter],
+        queryFn: () => examService.getAllExams({
+            page: currentPage,
+            limit: PAGE_SIZE,
+            search: search || undefined,
+            status: statusFilter === 'ALL' ? undefined : statusFilter,
+            isPublished: publishFilter === 'PUBLISHED' ? 'true' : 
+                         publishFilter === 'UNPUBLISHED' ? 'false' : undefined
+        }),
     });
 
-    const totalPages = Math.max(1, Math.ceil(filteredExams.length / pageSize));
-    const paginatedExams = filteredExams.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    const exams = response?.data || [];
+    const meta = (response as any)?.meta;
+    const totalPages = meta?.totalPages || 1;
+    const totalCount = meta?.total || 0;
 
-    useEffect(() => {
-        setCurrentPage(1);
-    }, [search, statusFilter, publishFilter]);
+    const { data: globalResponse } = useQuery({
+        queryKey: ['exams-global-stats'],
+        queryFn: () => examService.getAllExams({ limit: 1 }),
+        staleTime: 60000,
+    });
+    
+    const globalCount = (globalResponse as any)?.meta?.total || 0;
 
-    const getStatusStyle = (status: string) => {
+    // Mutation for publish toggle
+    const publishMutation = useMutation({
+        mutationFn: ({ id, isPublished }: { id: string, isPublished: boolean }) => 
+            examService.updateExam(id, { isPublished }),
+        onSuccess: (_, variables) => {
+            toast.success(`Exam ${variables.isPublished ? 'published' : 'unpublished'} successfully`);
+            queryClient.invalidateQueries({ queryKey: ['exams'] });
+        },
+        onError: () => toast.error('Failed to update published status')
+    });
+
+    // Mutation for deletion
+    const deleteMutation = useMutation({
+        mutationFn: (id: string) => examService.deleteExam(id),
+        onSuccess: () => {
+            toast.success('Exam deleted successfully');
+            queryClient.invalidateQueries({ queryKey: ['exams'] });
+            setDeletingExam(null);
+        },
+        onError: () => toast.error('Failed to delete exam')
+    });
+
+    const getStatusVariant = (status: string) => {
         switch(status) {
             case 'ACTIVE':
             case 'REGISTRATION_OPEN':
-                return "bg-green-50 text-green-700 border-green-200";
+                return "default"; // emerald in our theme
             case 'NOTIFICATION':
-                return "bg-blue-50 text-blue-700 border-blue-200";
+                return "secondary"; // indigo/blue
             case 'RESULT_DECLARED':
-                return "bg-yellow-50 text-yellow-700 border-yellow-200";
+                return "outline"; // yellow
             case 'ADMIT_CARD_OUT':
-                return "bg-purple-50 text-purple-700 border-purple-200";
+                return "outline"; // purple
             default:
-                return "bg-gray-50 text-gray-700 border-gray-200";
+                return "secondary";
         }
     };
 
     return (
-        <div className="space-y-6">
-            {/* Simple Header */}
-            <div className="flex items-center justify-between">
+        <div className="space-y-6 container mx-auto py-8">
+            {/* Header Section */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">All Exams</h1>
-                    <p className="text-gray-500 text-sm">Manage all your government exam data and timelines</p>
+                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Exams</h1>
+                    <p className="text-muted-foreground mt-1 text-sm">Reviewing {globalCount} exam lifecycles and recruitment schedules.</p>
                 </div>
-                <Link href="/exams/create" className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-all font-semibold text-sm shadow-sm">
-                    <Plus className="w-4 h-4" />
-                    <span>Add Exam</span>
-                </Link>
-            </div>
-
-            {/* Simple Filters */}
-            <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4">
-                <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input 
-                        type="text" 
-                        placeholder="Search exams by title or content..." 
-                        className="w-full bg-transparent border-gray-200 border rounded-lg py-2 pl-10 pr-4 outline-none focus:border-primary transition-all text-sm"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
-                </div>
-                <div className="flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-gray-400" />
-                    <select 
-                        className="bg-transparent border-gray-200 border rounded-lg py-2 px-3 outline-none focus:border-primary text-sm min-w-[140px]"
-                        value={publishFilter}
-                        onChange={(e) => setPublishFilter(e.target.value as any)}
+                <div className="flex items-center gap-3">
+                    <Button 
+                        variant="outline" 
+                        onClick={() => queryClient.invalidateQueries({ queryKey: ['exams'] })} 
+                        disabled={isLoading || isRefetching}
                     >
-                        <option value="ALL">All Visibility</option>
-                        <option value="PUBLISHED">Published Only</option>
-                        <option value="UNPUBLISHED">Unpublished Exams</option>
-                    </select>
-                    <select 
-                        className="bg-transparent border-gray-200 border rounded-lg py-2 px-3 outline-none focus:border-primary text-sm min-w-[150px]"
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                        <option value="ALL">All Statuses</option>
-                        {EXAM_STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
-                    </select>
+                        <RefreshCw className={cn("mr-2 h-4 w-4", isRefetching && "animate-spin")} />
+                        Refresh
+                    </Button>
+                    <Button onClick={() => router.push('/exams/create')}>
+                        <Plus className="mr-2 h-4 w-4" />
+                        Create Exam
+                    </Button>
                 </div>
             </div>
 
-            {/* RankAdmin Table */}
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-left border-collapse">
-                    <thead className="bg-[#fcfcfc] border-b border-gray-200">
-                        <tr>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Exam ID</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Title</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Category</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Status</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Authority</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-center">Live</th>
-                            <th className="px-4 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                        {loading ? (
-                            [1, 2, 3, 4, 5].map((i) => (
-                                <tr key={i} className="animate-pulse">
-                                    <td colSpan={7} className="px-6 py-6">
-                                        <div className="h-4 bg-gray-100 rounded w-full" />
-                                    </td>
-                                </tr>
+            {/* Stats Summary */}
+            <SummaryStats exams={exams} loading={isLoading} />
+
+            {/* Filter Bar */}
+            <Card className="border shadow-sm">
+                <CardContent className="p-4 flex flex-col md:flex-row gap-4">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                            placeholder="Search title, authority or slug..." 
+                            className="pl-9"
+                            value={search}
+                            onChange={(e) => {
+                                setSearch(e.target.value);
+                                setCurrentPage(1);
+                            }}
+                        />
+                    </div>
+                    <div className="flex gap-3">
+                        <Select value={publishFilter} onValueChange={(val) => { setPublishFilter(val); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-[160px]">
+                                <SelectValue placeholder="Visibility" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Visibility</SelectItem>
+                                <SelectItem value="PUBLISHED">Published</SelectItem>
+                                <SelectItem value="UNPUBLISHED">Unpublished</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Status" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Statuses</SelectItem>
+                                {EXAM_STATUSES.map(s => (
+                                    <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </CardContent>
+            </Card>
+
+            {/* Data Table */}
+            <Card className="border shadow-sm overflow-hidden">
+                <Table>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow>
+                            <TableHead className="w-[100px]">ID</TableHead>
+                            <TableHead className="min-w-[300px]">Exam Details</TableHead>
+                            <TableHead className="hidden md:table-cell">Category</TableHead>
+                            <TableHead className="text-center">Status</TableHead>
+                            <TableHead className="text-center">Public</TableHead>
+                            <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            Array(PAGE_SIZE).fill(0).map((_, i) => (
+                                <TableRow key={i}>
+                                    <TableCell><Skeleton className="h-4 w-12" /></TableCell>
+                                    <TableCell><Skeleton className="h-10 w-full" /></TableCell>
+                                    <TableCell className="hidden md:table-cell"><Skeleton className="h-4 w-24" /></TableCell>
+                                    <TableCell><Skeleton className="h-6 w-20 mx-auto" /></TableCell>
+                                    <TableCell><Skeleton className="h-8 w-8 rounded-full mx-auto" /></TableCell>
+                                    <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
+                                </TableRow>
                             ))
-                        ) : paginatedExams.length > 0 ? (
-                            paginatedExams.map((exam) => (
-                                <tr key={exam.id} className="hover:bg-gray-50/50 transition-colors">
-                                    <td className="px-4 py-3">
-                                        <span className="text-gray-400 font-mono text-[10px]">{exam.id.substring(0, 6)}</span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <Link href={`/exam/${exam.slug || exam.id}/edit`} className="font-bold text-gray-900 hover:text-primary hover:underline cursor-pointer block max-w-[250px] truncate text-sm">
-                                            {exam.title}
-                                        </Link>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className="px-2 py-1 bg-gray-100 text-gray-800 text-[9px] font-bold uppercase tracking-wider rounded-md truncate max-w-[120px] block">
-                                            {exam.category.replace(/_/g, ' ')}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <span className={cn(
-                                            "px-2 py-1 text-[9px] font-bold uppercase tracking-wider border rounded-md inline-block whitespace-nowrap",
-                                            getStatusStyle(exam.status)
-                                        )}>
-                                            {exam.status.replace(/_/g, ' ')}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        <span className="text-xs text-gray-600 block max-w-[150px] truncate">{exam.conductingBody || '-'}</span>
-                                    </td>
-                                    <td className="px-4 py-3 text-center">
-                                        <span className={cn(
-                                            "px-2 py-1 text-[9px] font-bold uppercase tracking-wider border rounded-md inline-block",
-                                            exam.isPublished ? "bg-green-50 text-green-600 border-green-200" : "bg-red-50 text-red-600 border-red-200"
-                                        )}>
-                                            {exam.isPublished ? 'Yes' : 'No'}
-                                        </span>
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <div className="flex items-center justify-end gap-2">
-                                            <button 
-                                                onClick={async (e) => {
-                                                    e.preventDefault();
-                                                    try {
-                                                        await examService.updateExam(exam.id, { isPublished: !exam.isPublished });
-                                                        toast.success(`Exam ${exam.isPublished ? 'unpublished' : 'published'} successfully`);
-                                                        fetchExams();
-                                                    } catch (error) {
-                                                        toast.error('Failed to update published status');
-                                                    }
-                                                }}
-                                                className="p-1.5 hover:bg-gray-100 rounded-md transition-colors text-gray-400 flex items-center justify-center border border-transparent hover:border-gray-200"
-                                                title={exam.isPublished ? "Unpublish" : "Publish"}
-                                            >
-                                                <Globe className={cn("w-4 h-4", exam.isPublished && "text-emerald-500")} />
-                                            </button>
+                        ) : exams.length > 0 ? (
+                            exams.map((exam) => (
+                                <TableRow key={exam.id} className="group hover:bg-muted/30 transition-colors">
+                                    <TableCell className="font-mono text-xs text-muted-foreground">
+                                        #{exam.id.substring(0, 6)}
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="flex flex-col gap-0.5">
                                             <Link 
                                                 href={`/exam/${exam.slug || exam.id}/edit`} 
-                                                className="p-1.5 hover:bg-blue-50 hover:text-blue-600 rounded-md transition-colors text-gray-400 flex items-center justify-center border border-transparent hover:border-blue-100"
-                                                title="Edit Exam"
+                                                className="font-semibold text-slate-900 hover:text-primary transition-colors line-clamp-1"
                                             >
-                                                <Edit3 className="w-4 h-4" />
+                                                {exam.title}
                                             </Link>
-                                            <button 
-                                                onClick={async (e) => {
-                                                    e.preventDefault();
-                                                    if (confirm('Are you sure you want to delete this exam?')) {
-                                                        try {
-                                                            await examService.deleteExam(exam.id);
-                                                            toast.success('Exam deleted');
-                                                            fetchExams();
-                                                        } catch (error) {
-                                                            toast.error('Failed to delete exam');
-                                                        }
-                                                    }
-                                                }}
-                                                className="p-1.5 hover:bg-red-50 hover:text-red-600 rounded-md transition-colors text-gray-400 flex items-center justify-center border border-transparent hover:border-red-100"
-                                                title="Delete Exam"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                            <span className="text-xs text-muted-foreground font-medium">
+                                                {exam.conductingBody}
+                                            </span>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </TableCell>
+                                    <TableCell className="hidden md:table-cell">
+                                        <div className="flex items-center gap-2">
+                                            <Badge variant="outline" className="font-medium">
+                                                {exam.category.replace(/_/g, ' ')}
+                                            </Badge>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <Badge variant={getStatusVariant(exam.status)}>
+                                            {exam.status.replace(/_/g, ' ')}
+                                        </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-center">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className={cn(
+                                                "h-8 w-8 rounded-full border transition-all",
+                                                exam.isPublished ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "text-muted-foreground/30 border-transparent"
+                                            )}
+                                            onClick={() => publishMutation.mutate({ id: exam.id, isPublished: !exam.isPublished })}
+                                            disabled={publishMutation.isPending}
+                                        >
+                                            <Globe className={cn("h-4 w-4", exam.isPublished ? "opacity-100" : "opacity-50")} />
+                                        </Button>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button variant="ghost" size="icon" className="h-8 w-8" asChild title="Edit Exam">
+                                                <Link href={`/exam/${exam.slug || exam.id}/edit`}>
+                                                    <Edit3 className="h-4 w-4" />
+                                                </Link>
+                                            </Button>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                        <MoreHorizontal className="h-4 w-4" />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent align="end">
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem onClick={() => window.open(`https://examsuchana.in/exam/${exam.slug}`, '_blank')}>
+                                                        <Eye className="mr-2 h-4 w-4" /> View Live
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => router.push(`/exam/${exam.slug || exam.id}/edit`)}>
+                                                        <Edit3 className="mr-2 h-4 w-4" /> Edit Details
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuItem 
+                                                        className="text-destructive focus:text-destructive" 
+                                                        onClick={() => setDeletingExam(exam)}
+                                                    >
+                                                        <Trash2 className="mr-2 h-4 w-4" /> Delete Exam
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
                             ))
                         ) : (
-                            <tr>
-                                <td colSpan={7} className="px-6 py-20 text-center">
-                                    <p className="text-gray-400 font-medium">No results found for &quot;{search}&quot;</p>
-                                </td>
-                            </tr>
+                            <TableRow>
+                                <TableCell colSpan={6} className="h-64 text-center">
+                                    <div className="flex flex-col items-center justify-center space-y-3 text-muted-foreground">
+                                        <Search className="h-10 w-10 opacity-20" />
+                                        <p className="text-sm font-medium">No results matched your filters</p>
+                                        <Button variant="outline" size="sm" onClick={() => { setSearch(''); setStatusFilter('ALL'); setPublishFilter('ALL'); }}>
+                                            Clear Filters
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                            </TableRow>
                         )}
-                    </tbody>
-                </table>
+                    </TableBody>
+                </Table>
 
-                <div className="px-6 py-4 border-t border-gray-100 flex items-center justify-between bg-[#fcfcfc]">
-                    <div className="text-xs text-gray-500 font-medium">
-                        Showing {Math.min((currentPage * pageSize) - pageSize + 1, filteredExams.length)} to {Math.min(currentPage * pageSize, filteredExams.length)} of {filteredExams.length} exams
+                {/* Pagination */}
+                <div className="px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 bg-muted/20 border-t">
+                    <div className="text-sm text-muted-foreground font-medium">
+                        Showing {exams.length} of {totalCount} exams
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button 
+                    <div className="flex items-center gap-1.5">
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all"
+                            disabled={currentPage === 1 || isLoading}
                         >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        
-                        <div className="flex items-center gap-1">
-                            {[...Array(totalPages)].map((_, i) => {
-                                const pageNumber = i + 1;
-                                if (pageNumber === 1 || pageNumber === totalPages || (pageNumber >= currentPage - 1 && pageNumber <= currentPage + 1)) {
-                                    return (
-                                        <button 
-                                            key={i}
-                                            onClick={() => setCurrentPage(pageNumber)}
-                                            className={cn(
-                                                "min-w-[32px] h-[32px] flex items-center justify-center font-medium text-xs rounded-lg border transition-colors",
-                                                currentPage === pageNumber 
-                                                    ? "bg-primary text-black font-bold border-primary shadow-sm shadow-primary/20" 
-                                                    : "border-transparent text-gray-500 hover:bg-gray-50"
-                                            )}
-                                        >
-                                            {pageNumber}
-                                        </button>
-                                    );
-                                }
-                                if (pageNumber === currentPage - 2 || pageNumber === currentPage + 2) {
-                                    return <span key={i} className="px-1 text-gray-400">...</span>;
-                                }
-                                return null;
+                            <ChevronLeft className="mr-2 h-4 w-4" />
+                            Previous
+                        </Button>
+                        <div className="hidden sm:flex items-center gap-1 mx-1">
+                            {Array.from({ length: Math.min(5, totalPages) }).map((_, i) => {
+                                let pageNum = 1;
+                                if (totalPages <= 5) pageNum = i + 1;
+                                else if (currentPage <= 3) pageNum = i + 1;
+                                else if (currentPage >= totalPages - 2) pageNum = totalPages - 4 + i;
+                                else pageNum = currentPage - 2 + i;
+
+                                return (
+                                    <Button
+                                        key={pageNum}
+                                        variant={currentPage === pageNum ? "default" : "ghost"}
+                                        size="icon"
+                                        className="h-8 w-8 text-xs font-semibold"
+                                        onClick={() => setCurrentPage(pageNum)}
+                                    >
+                                        {pageNum}
+                                    </Button>
+                                );
                             })}
                         </div>
-
-                        <button 
+                        <Button 
+                            variant="outline" 
+                            size="sm" 
                             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages || totalPages === 1}
-                            className="p-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-all"
+                            disabled={currentPage === totalPages || totalPages === 1 || isLoading}
                         >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
+                            Next
+                            <ChevronRight className="ml-2 h-4 w-4" />
+                        </Button>
                     </div>
                 </div>
-            </div>
+            </Card>
+
+            {/* Deletion Dialog */}
+            <AlertDialog open={!!deletingExam} onOpenChange={(open) => !open && setDeletingExam(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Permanent Deletion</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you absolutely sure? This will remove all lifecycle events, notifications logs, and SEO bindings associated with <span className="font-bold text-slate-900">"{deletingExam?.title}"</span>. This action cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction className="bg-rose-600 hover:bg-rose-700" onClick={() => deletingExam && deleteMutation.mutate(deletingExam.id)}>
+                            {deleteMutation.isPending ? "Deleting..." : "Delete Execution"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
