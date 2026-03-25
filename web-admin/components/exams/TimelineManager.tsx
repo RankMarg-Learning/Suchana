@@ -22,11 +22,13 @@ import { Reorder } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import MarkdownRenderer from '../MarkdownRenderer';
 
 interface TimelineManagerProps {
     examId: string;
@@ -202,6 +204,32 @@ export default function TimelineManager({ examId, initialEvents }: TimelineManag
                             </div>
                         </div>
 
+                        {newEvent.description && (
+                            <div className="space-y-2">
+                                 <Label>Description <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
+                                 <Textarea 
+                                    value={newEvent.description || ''}
+                                    onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                                    placeholder="Details about this stage..."
+                                    className="min-h-[80px] resize-y"
+                                 />
+                                 <div className="p-2 border rounded bg-muted/5 text-[11px] overflow-y-auto custom-scrollbar max-h-[120px] min-h-[100px]">
+                                    <MarkdownRenderer content={newEvent.description} variant="fact" />
+                                 </div>
+                            </div>
+                        )}
+                        {!newEvent.description && (
+                            <div className="space-y-2">
+                                <Label>Description <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
+                                <Textarea 
+                                   value={newEvent.description || ''}
+                                   onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                                   placeholder="Details about this stage..."
+                                   className="min-h-[80px] resize-y"
+                                />
+                            </div>
+                        )}
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <DatePicker
@@ -309,6 +337,11 @@ function TimelineItem({ event, onUpdate, onDelete }: { event: LifecycleEvent, on
                             <Badge variant="outline" className="text-[10px] text-orange-500 border-orange-200 uppercase">TBD</Badge>
                         )}
                     </div>
+                    {event.description && (
+                        <div className="mb-2 line-clamp-1 max-w-[400px]">
+                            <MarkdownRenderer content={event.description} variant="fact" />
+                        </div>
+                    )}
                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                         <Clock className="w-3.5 h-3.5" />
                         {event.isTBD ? (
@@ -383,6 +416,21 @@ function TimelineItem({ event, onUpdate, onDelete }: { event: LifecycleEvent, on
                             onChange={(e) => setEditData({ ...editData, actionUrl: e.target.value })}
                             placeholder="https://..."
                         />
+                    </div>
+
+                    <div className="space-y-2">
+                         <Label>Description <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
+                         <Textarea 
+                            value={editData.description || ''}
+                            onChange={(e) => setEditData({ ...editData, description: e.target.value })}
+                            placeholder="Details about this stage..."
+                            className="min-h-[80px] resize-y"
+                         />
+                         {editData.description && (
+                             <div className="p-2 border rounded bg-muted/5 text-[11px] overflow-y-auto custom-scrollbar max-h-[120px] min-h-[100px]">
+                                <MarkdownRenderer content={editData.description} variant="fact" />
+                             </div>
+                         )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
