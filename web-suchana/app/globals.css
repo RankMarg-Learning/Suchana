@@ -3765,6 +3765,16 @@ body::before {
   line-height: 1.5;
 }
 
+.markdown-renderer.fact-variant table {
+  font-size: 12px;
+  margin: 12px 0;
+}
+
+.markdown-renderer.fact-variant th,
+.markdown-renderer.fact-variant td {
+  padding: 8px 12px;
+}
+
 .markdown-renderer.fact-variant strong {
   color: var(--accent-light);
 }
@@ -3772,22 +3782,50 @@ body::before {
 .markdown-renderer table {
   width: 100%;
   border-collapse: collapse;
-  margin: 16px 0;
-  font-size: 13px;
+  margin: 20px 0;
+  font-size: 14px;
   border: 1px solid var(--border-strong);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 16px;
+  border-radius: 12px;
 }
 
 .markdown-renderer th,
 .markdown-renderer td {
-  padding: 10px 14px;
-  border: 1px solid var(--border);
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   text-align: left;
 }
 
+.markdown-renderer th:last-child,
+.markdown-renderer td:last-child {
+  border-right: none;
+}
+
+.markdown-renderer tr:last-child td {
+  border-bottom: none;
+}
+
 .markdown-renderer th {
-  background: var(--bg-card);
+  background: var(--bg-card-hover);
   color: var(--text-primary);
   font-weight: 700;
+  text-transform: uppercase;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+}
+
+.markdown-renderer tr:hover {
+  background: rgba(255, 255, 255, 0.02);
 }
 
 /* ─── SEO Content Layer ─── */
