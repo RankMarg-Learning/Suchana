@@ -6,9 +6,15 @@ import type {
     UpdateLifecycleEventDto,
 } from '../schemas/lifecycle.schema';
 
+import { env } from '../config/env';
+
+function isAdminRequest(req: Request) {
+    return req.headers['authorization'] === `Bearer ${env.API_KEY_SECRET}` || !!req.adminId;
+}
+
 export async function getTimeline(req: Request, res: Response, next: NextFunction) {
     try {
-        const timeline = await lifecycleService.getExamTimeline(req.params.id as string);
+        const timeline = await lifecycleService.getExamTimeline(req.params.id as string, isAdminRequest(req));
         sendSuccess(res, timeline);
     } catch (err) {
         next(err);

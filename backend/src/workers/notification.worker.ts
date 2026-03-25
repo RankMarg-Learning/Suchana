@@ -44,11 +44,8 @@ export function startNotificationWorker(): Worker<NotificationJobData> {
         processNotificationJob,
         {
             connection: bullRedisConnection,
-            concurrency: 5,
-            limiter: {
-                max: 100,
-                duration: 1000
-            }
+            concurrency: 1, // lowered to reduce parallel active redis polling commands
+            // Removed local limiter to prevent heavy Redis script executions (not needed for 500 daily users limit)
         }
     );
 
