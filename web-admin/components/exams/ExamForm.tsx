@@ -42,6 +42,7 @@ import { format } from "date-fns";
 import { Separator } from "@/components/ui/separator";
 
 import TimelineManager from './TimelineManager';
+import MarkdownRenderer from '../MarkdownRenderer';
 import { useForm, Controller, FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -141,6 +142,15 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
     const isPublished = watch('isPublished');
     const examLevel = watch('examLevel');
 
+    // Watch fields for markdown previews
+    const description = watch('description');
+    const qualificationCriteria = watch('qualificationCriteria');
+    const totalVacancies = watch('totalVacancies');
+    const salary = watch('salary');
+    const age = watch('age');
+    const applicationFee = watch('applicationFee');
+    const additionalDetails = watch('additionalDetails');
+
     const onSubmit = (values: ExamFormValues) => {
         mutation.mutate(values);
     };
@@ -218,14 +228,37 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                             <CardTitle>Description & Qualification</CardTitle>
                             <CardDescription>Detailed information about the recruitment process</CardDescription>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="description">Short Description</Label>
-                                <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[120px]" />
+                        <CardContent className="space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="description">Short Description</Label>
+                                    <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[150px]" />
+                                </div>
+                                {description && (
+                                    <div className="space-y-2 flex-1 flex flex-col">
+                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
+                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[190px] overflow-y-auto custom-scrollbar shadow-inner">
+                                            <MarkdownRenderer content={description} />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="qualificationCriteria">Qualification Criteria</Label>
-                                <Textarea id="qualificationCriteria" {...register('qualificationCriteria')} placeholder="Educational and other eligibility requirements..." className="min-h-[100px]" />
+                            
+                            <Separator />
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="qualificationCriteria">Qualification Criteria</Label>
+                                    <Textarea id="qualificationCriteria" {...register('qualificationCriteria')} placeholder="Educational and other eligibility requirements..." className="min-h-[120px]" />
+                                </div>
+                                {qualificationCriteria && (
+                                    <div className="space-y-2 flex-1 flex flex-col">
+                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
+                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[150px] overflow-y-auto custom-scrollbar shadow-inner">
+                                            <MarkdownRenderer content={qualificationCriteria} variant="fact" />
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>
@@ -251,16 +284,26 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                             <CardHeader>
                                 <CardTitle>Fees</CardTitle>
                             </CardHeader>
-                            <CardContent>
-                                <Textarea {...register('applicationFee')} placeholder="Fee details for different categories..." className="min-h-[80px]" />
+                            <CardContent className="space-y-4">
+                                <Textarea {...register('applicationFee')} placeholder="Fee details..." className="min-h-[100px] resize-y" />
+                                {applicationFee && (
+                                    <div className="p-3 border rounded-md bg-muted/5 text-xs overflow-y-auto custom-scrollbar max-h-[150px] min-h-[125px]">
+                                        <MarkdownRenderer content={applicationFee} variant="fact" />
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                         <Card>
                             <CardHeader>
                                 <CardTitle>Other Details</CardTitle>
                             </CardHeader>
-                            <CardContent>
-                                <Textarea {...register('additionalDetails')} placeholder="Any other relevant information..." className="min-h-[80px]" />
+                            <CardContent className="space-y-4">
+                                <Textarea {...register('additionalDetails')} placeholder="Any other relevant information..." className="min-h-[100px] resize-y" />
+                                {additionalDetails && (
+                                    <div className="p-3 border rounded-md bg-muted/5 text-xs overflow-y-auto custom-scrollbar max-h-[150px] min-h-[125px]">
+                                        <MarkdownRenderer content={additionalDetails} variant="fact" />
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
@@ -354,15 +397,30 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <Label>Vacancies</Label>
-                                <Textarea {...register('totalVacancies')} placeholder="e.g. 500+" className="min-h-[60px]" />
+                                <Textarea {...register('totalVacancies')} placeholder="e.g. 500+" className="min-h-[60px] resize-y" />
+                                {totalVacancies && (
+                                    <div className="p-2 border rounded bg-muted/5 text-[11px] overflow-y-auto custom-scrollbar max-h-[120px] min-h-[75px]">
+                                        <MarkdownRenderer content={totalVacancies} variant="fact" />
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label>Salary</Label>
-                                <Textarea {...register('salary')} placeholder="e.g. Pay Level 10" className="min-h-[60px]" />
+                                <Textarea {...register('salary')} placeholder="e.g. Pay Level 10" className="min-h-[60px] resize-y" />
+                                {salary && (
+                                    <div className="p-2 border rounded bg-muted/5 text-[11px] overflow-y-auto custom-scrollbar max-h-[120px] min-h-[75px]">
+                                        <MarkdownRenderer content={salary} variant="fact" />
+                                    </div>
+                                )}
                             </div>
                             <div className="space-y-2">
                                 <Label>Age Limit</Label>
-                                <Textarea {...register('age')} placeholder="e.g. 21 - 32 years" className="min-h-[60px]" />
+                                <Textarea {...register('age')} placeholder="e.g. 21 - 32 years" className="min-h-[60px] resize-y" />
+                                {age && (
+                                    <div className="p-2 border rounded bg-muted/5 text-[11px] overflow-y-auto custom-scrollbar max-h-[120px] min-h-[75px]">
+                                        <MarkdownRenderer content={age} variant="fact" />
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

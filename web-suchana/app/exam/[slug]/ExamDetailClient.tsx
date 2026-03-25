@@ -469,7 +469,7 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
                 <div className="fee-card-title">Qualification Criteria</div>
                 <div className="fact-content">
                   <MarkdownRenderer
-                    content={cleanLabel(exam.qualificationCriteria || "Please refer to the official notification for detailed qualification requirements.")}
+                    content={exam.qualificationCriteria || "Please refer to the official notification for detailed qualification requirements."}
                     variant="fact"
                   />
                 </div>

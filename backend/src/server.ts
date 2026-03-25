@@ -14,15 +14,22 @@ async function bootstrap(): Promise<void> {
     logger.info('🚀 Starting Government Exam Execution Platform Backend...');
     logger.info('✅ Database connected');
 
-    await redis.ping();
-    logger.info('✅ Redis connected');
+    try {
+        await redis.ping();
+        logger.info('✅ Redis connected');
 
-    worker = startNotificationWorker();
-    logger.info('✅ Notification worker started');
+        // Note: Notification queue explicitly disabled as requested by user
+        // worker = startNotificationWorker();
+        // logger.info('✅ Notification worker started');
 
-    cronWorker = startCronWorker();
-    await setupRepeatableJobs();
-    logger.info('✅ Cron worker & repeatable jobs initialized');
+        // cronWorker = startCronWorker();
+        // await setupRepeatableJobs();
+        // logger.info('✅ Cron worker & repeatable jobs initialized');
+    } catch (err) {
+        logger.warn('⚠️ Redis connection failed or limit reached. Running without background workers/cache.', { 
+            error: (err as Error).message 
+        });
+    }
 
     const app = createApp();
     const server = app.listen(env.PORT, '0.0.0.0', () => {

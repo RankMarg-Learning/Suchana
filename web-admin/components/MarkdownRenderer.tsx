@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
-import { formatDatesInText } from "@/app/lib/types";
+import { formatDatesInText } from "@/lib/markdown-utils";
 
 interface MarkdownRendererProps {
   content: string;
@@ -20,6 +20,7 @@ export default function MarkdownRenderer({
 }: MarkdownRendererProps) {
   const processedContent = useMemo(() => {
     if (!content) return "";
+    // Handle literal "\n" strings that often come from JSON/API responses
     const unescaped = content.replace(/\\n/g, "\n");
     return formatDatesInText(unescaped, includeTime);
   }, [content, includeTime]);
@@ -28,8 +29,8 @@ export default function MarkdownRenderer({
 
   return (
     <div className={`markdown-renderer ${variant}-variant ${className}`}>
-      <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
+      <ReactMarkdown 
+        remarkPlugins={[remarkGfm, remarkBreaks]} 
         rehypePlugins={[rehypeRaw]}
         components={{
           table: ({ node, ...props }) => (
