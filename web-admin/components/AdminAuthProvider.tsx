@@ -7,11 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Key, Lock, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 
-/**
- * Super simple auth layer for Suchana Admin.
- * Key is compared against process.env.NEXT_PUBLIC_ADMIN_KEY
- * Persistence is handled via localStorage.
- */
 
 interface AdminAuthContextType {
     isAuthorized: boolean;
@@ -39,7 +34,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
 
     const handleKeySubmit = (e?: React.FormEvent) => {
         e?.preventDefault();
-        
+
         if (inputKey === TARGET_KEY) {
             localStorage.setItem(ADMIN_KEY_STORAGE_NAME, inputKey);
             setIsAuthorized(true);
@@ -87,8 +82,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
                                     autoFocus
                                 />
                             </div>
-                            <Button 
-                                type="submit" 
+                            <Button
+                                type="submit"
                                 className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]"
                             >
                                 Unlock Dashboard

@@ -27,7 +27,7 @@ export class SeoService {
         category: 'NOTIFICATION',
         slug: `${baseSlug}-notification-pdf`,
         title: `${examName} Notification PDF Download — ${year} Link`,
-        metaTitle: `${examName} Recruitment 2026 Notification OUT — Apply Now ${wrap(exam.totalVacancies) !== 'TBA' ? `(${exam.totalVacancies} Posts)` : ''}`,
+        metaTitle: `${examName} Recruitment ${year} Notification OUT — Apply Now ${wrap(exam.totalVacancies) !== 'TBA' ? `(${exam.totalVacancies} Posts)` : ''}`,
         metaDescription: `Download the official ${examName} notification PDF. Check important dates, vacancies, and eligibility details for ${body} ${examName} recruitment.`,
         content: `
 # ${examName} Official Notification PDF
@@ -37,11 +37,22 @@ Looking for the ${examName} official notification? The ${body} has released the 
 - **Organization**: ${body}
 - **Exam Name**: ${examName}
 - **Official Website**: ${wrap(exam.officialWebsite)}
+- **Total Posts**: ${wrap(exam.totalVacancies)}
 
 ## How to Download Notification
-1. Visit ${wrap(exam.officialWebsite)}.
-2. Search for "${examName} Official Ad".
-3. Download the PDF for future reference.
+1. Visit the official portal: ${wrap(exam.officialWebsite)}.
+2. Search for "${examName} Advertisement" in the latest news/notifications section.
+3. Click on the download link to save the PDF for future reference.
+
+## Frequently Asked Questions (FAQs)
+**Q: Is the ${examName} ${year} notification released?**
+A: Yes, the official notification is usually released a few weeks before the registration starts. Check the latest updates above.
+
+**Q: Where can I download the ${examName} official PDF?**
+A: You can download it directly from the ${body} official website or find the direct link on this page.
+
+## What to Do Next?
+After reading the notification, your next step should be to check the [${examName} Eligibility Criteria](/${baseSlug}-eligibility-criteria) and see if you qualify.
         `
       },
       {
@@ -55,14 +66,23 @@ Looking for the ${examName} official notification? The ${body} has released the 
 The total number of vacancies for ${examName} is a crucial factor in determining your chances of selection.
 
 ## Total Vacancies
-The ${body} has announced **${wrap(exam.totalVacancies, 'multiple')}** vacancies for various posts.
+The ${body} has announced **${wrap(exam.totalVacancies, 'multiple')}** vacancies for various posts in the ${year} cycle.
 
 ## Category-wise Breakdown
-Candidates are advised to check the official vertical and horizontal reservation data in the notification PDF. Usually, the vacancies are split across:
-- Unreserved (UR)
-- Other Backward Classes (OBC)
-- Scheduled Castes (SC) / Scheduled Tribes (ST)
-- Economically Weaker Section (EWS)
+Usually, the vacancies are split across:
+- **Unreserved (UR)**: General category candidates.
+- **OBC / EWS**: Candidates under backward and economically weaker sections.
+- **SC / ST**: Reserved categories as per government norms.
+
+## FAQs
+**Q: How many vacancies are there in ${examName} ${year}?**
+A: A total of ${wrap(exam.totalVacancies)} posts have been notified by the ${body}.
+
+**Q: Are the vacancies temporary or permanent?**
+A: Most government vacancies released via official notifications are permanent, but you should check the "Terms of Service" in the [Official Notification PDF](/${baseSlug}-notification-pdf).
+
+## Next Step
+If you are satisfied with the vacancy count, check the [${examName} Salary Structure](/${baseSlug}-salary-job-profile) to understand the pay scale.
         `
       },
       {
@@ -77,10 +97,21 @@ Before applying for ${examName}, ensure you meet all the eligibility parameters 
 
 ## Educational Qualification
 **Requirement**: ${wrap(exam.qualificationCriteria)}
+*Candidates appearing in their final year might be eligible depending on the cutoff date mentioned in the notification.*
 
 ## Age Limit
 **Criteria**: ${wrap(exam.age, 'Refer to official notification')}
 *Age relaxation applies for OBC (3 years), SC/ST (5 years), and PwD candidates as per government norms.*
+
+## FAQs
+**Q: What is the minimum qualification for ${examName}?**
+A: The basic requirement is ${wrap(exam.qualificationCriteria)}.
+
+**Q: Is there any age relaxation?**
+A: Yes, reserved category candidates get age relaxation as per GOI rules (usually 3-5 years).
+
+## Next Step
+Met the eligibility? Start your preparation by checking the [${examName} Syllabus and Exam Pattern](/${baseSlug}-syllabus-exam-pattern).
         `
       },
       {
@@ -95,10 +126,17 @@ The salary for ${examName} posts is governed by the ${exam.examLevel === 'NATION
 
 ## Pay Scale Details
 - **Current Salary Estimate**: ${wrap(exam.salary)}
-- **Allowances**: DA, HRA, Transport Allowance, and Medical Benefits.
+- **Allowances**: DA (Dearness Allowance), HRA (House Rent Allowance), Transport Allowance, and Medical Benefits.
 
 ## Job Responsibilities
 Candidates selected for ${examName} will be responsible for ${wrap(exam.description, 'administrative and operational duties')} within the department.
+
+## FAQs
+**Q: What is the in-hand salary of ${examName}?**
+A: After deductions like NPS and Tax, the in-hand salary is approximately 70-80% of the gross pay mentioned (${wrap(exam.salary)}).
+
+## Next Step
+Understand the [Selection Process](/${baseSlug}-selection-process) to know how to secure this position.
         `
       },
       {
@@ -112,12 +150,26 @@ Candidates selected for ${examName} will be responsible for ${wrap(exam.descript
 Understanding the ${examName} syllabus is the first step towards success.
 
 ## Exam Pattern Overview
-- **Mode**: Online/Offline
-- **Type**: Objective / Descriptive
-- **Marking**: Check for negative marking rules in the official guide.
+- **Mode**: Online (CBT) / Offline (Pen-Paper)
+- **Type**: Objective (MCQs) / Descriptive
+- **Marking**: Negative marking is usually 0.25 or 0.33 per wrong answer.
 
 ## Subjects Covered
-Typically includes General Intelligence, Reasoning, Quantitative Aptitude, English/Hindi language, and General Awareness.
+Typically includes:
+1. General Intelligence & Reasoning
+2. Quantitative Aptitude (Maths)
+3. English / Hindi Language
+4. General Awareness (GK/Current Affairs)
+
+## FAQs
+**Q: Is there negative marking in ${examName}?**
+A: Most objective stages have negative marking. Refer to the [Official Notification PDF](/${baseSlug}-notification-pdf) for exact details.
+
+**Q: Is the ${examName} syllabus changed this year?**
+A: Usually, the syllabus remains consistent. Any changes will be updated here immediately.
+
+## Next Step
+Practice with previous year trends and check the [${examName} Cut Off Marks](/${baseSlug}-cut-off-marks).
         `
       },
       {
@@ -131,10 +183,17 @@ Typically includes General Intelligence, Reasoning, Quantitative Aptitude, Engli
 The ${examName} recruitment involves multiple stages to filter the best candidates.
 
 ## Stages of Selection
-1. **Stage 1**: Preliminary Examination
-2. **Stage 2**: Main Examination / Skill Test
-3. **Stage 3**: Document Verification (DV)
-4. **Final Step**: Medical Examination and Merit List
+1. **Tier/Stage 1**: Online Computer Based Test (Screening).
+2. **Tier/Stage 2**: Main Examination / Skill Test / Physical Test.
+3. **Stage 3**: Document Verification (DV) & Medical Examination.
+4. **Final Step**: Release of Merit List and Joining.
+
+## FAQs
+**Q: How many stages are there in ${examName}?**
+A: Usually, there are 2 to 3 stages of selection.
+
+## Next Step
+Ready to apply? Check the [Registration Updates](/${baseSlug}-registration-updates) to see if forms are open.
         `
       },
       {
@@ -148,9 +207,25 @@ The ${examName} recruitment involves multiple stages to filter the best candidat
 Your hall ticket for ${examName} is now available or releasing soon on the ${body} portal.
 
 ## How to Download
-1. Visit **${wrap(exam.officialWebsite)}**.
-2. Click on "Download Admit Card for ${examName}".
-3. Enter Application No. and Password.
+1. Visit the official website: **${wrap(exam.officialWebsite)}**.
+2. Look for the "Admit Card" or "Call Letter" section.
+3. Enter your Registration Number and Date of Birth / Password.
+4. Download and print the hall ticket.
+
+## Important Documents for Exam
+- Printout of Admit Card
+- Original Photo ID Proof (Aadhar, PAN, etc.)
+- Passport size photographs
+
+## FAQs
+**Q: When will the ${examName} admit card be released?**
+A: Admit cards are typically released 10-14 days before the exam date.
+
+**Q: I forgot my registration ID, what should I do?**
+A: Use the "Forgot Password/ID" link on the official login page and check your registered email or phone for recovery.
+
+## Next Step
+After the exam, stay tuned for the [${examName} Answer Key](/${baseSlug}-answer-key).
         `
       },
       {
@@ -165,8 +240,19 @@ The results for ${examName} are officially declared after the exam cycle conclud
 
 ## Steps to Check Result
 - Visit the official portal.
-- Find the "Results" tab.
-- Look for ${examName} recruitment link.
+- Navigate to the "Results" section.
+- Click on the link for "${examName} Scorecard / Merit List".
+- Enter your credentials if required, or download the PDF list of selected candidates.
+
+## FAQs
+**Q: When will ${examName} result be out?**
+A: Results are usually announced 30-45 days after the examination.
+
+**Q: Where can I see the merit list?**
+A: The merit list PDF is published on ${wrap(exam.officialWebsite)}.
+
+## Next Step
+If you cleared the exam, prepare for [Document Verification](/${baseSlug}-document-verification-updates).
         `
       },
       {
@@ -180,9 +266,16 @@ The results for ${examName} are officially declared after the exam cycle conclud
 The cut-off is the minimum score required to qualify for the next stage of ${examName}.
 
 ## Factors Affecting Cut-off
-- Difficulty level of the paper.
-- Number of vacancies available.
-- Total number of candidates who appeared.
+- **Difficulty Level**: Tougher papers lead to lower cut-offs.
+- **Vacancies**: More posts usually mean slightly lower cut-offs.
+- **Participation**: Higher number of candidates increases competition.
+
+## FAQs
+**Q: Is there a sectional cut-off in ${examName}?**
+A: Some exams have sectional cut-offs. Check the [Syllabus & Pattern](/${baseSlug}-syllabus-exam-pattern) page for details.
+
+## Next Step
+Check the [Previous Year Merit List](/${baseSlug}-result) to see the marks of selected candidates.
         `
       },
       {
@@ -196,7 +289,17 @@ The cut-off is the minimum score required to qualify for the next stage of ${exa
 Check your estimated score using the official ${examName} answer key.
 
 ## Objection Window
-If you find any discrepancies, follow the official portal instructions to "Raise Objections" within the specified timeframe.
+If you find any discrepancies in the provisional key, you can "Raise Objections" by:
+1. Logging into the candidate portal.
+2. Selecting the question ID you wish to contest.
+3. Uploading supporting documents and paying the required objection fee.
+
+## FAQs
+**Q: Can I challenge the ${examName} answer key?**
+A: Yes, there is usually a 3 to 5-day window to raise objections after the provisional key is released.
+
+## Next Step
+Once objections are processed, wait for the [Final Result](/${baseSlug}-result).
         `
       }
     ];
@@ -209,20 +312,34 @@ If you find any discrepancies, follow the official portal instructions to "Raise
         category: 'STAGES',
         slug: `${baseSlug}-${stageSlug}-updates`,
         title: `${examName} ${event.stage} Updates`,
-        metaTitle: `${examName} ${event.stage}: Check Important Dates & Instructions`,
+        metaTitle: `${examName} ${event.stage} ${year}: Check Important Dates & Instructions`,
         metaDescription: `Get the latest updates for the ${event.stage} of ${examName} recruitment. Important dates, links, and detailed information for candidates.`,
         content: `
-# ${examName} ${event.stage}
+# ${examName} ${event.stage} Updates
 This page covers the latest information regarding the **${event.stage}** of the ${examName} examination.
 
-## Details
+## Important Details
+- **Current Status**: ${event.isTBD ? 'TBA' : 'Active/Upcoming'}
+- **Action Required**: ${wrap(event.actionLabel, 'Check the links below')}
 - **Description**: ${wrap(event.description)}
-- **Action Link**: ${wrap(event.actionUrl, 'Check Official Portal')}
 
-Stay connected for real-time updates on this stage.
+## Action Links
+${event.actionUrl ? `[Click here to access the ${event.stage} portal](${event.actionUrl})` : 'The official link will be updated here as soon as it is active.'}
+
+## Frequently Asked Questions
+**Q: When does ${event.stage} start for ${examName}?**
+A: According to the schedule, it starts on ${formatDate(event.startsAt) || 'TBA'}.
+
+**Q: Where can I get official updates for this stage?**
+A: Always refer to ${wrap(exam.officialWebsite)} for the most authentic information.
+
+## Journey-Based Navigation
+- Check out the [Full ${examName} Timeline](/${baseSlug})
+- Go back to [Eligibility Criteria](/${baseSlug}-eligibility-criteria)
             `
       });
     }
+
 
     for (const config of pageConfigs) {
       try {
@@ -257,7 +374,6 @@ Stay connected for real-time updates on this stage.
     logger.info(`[SEO] Successfully generated ${pageConfigs.length} pages for exam: ${exam.title}`);
   }
 
-
   static async generateAllExamSeoPages() {
     const exams = await prisma.exam.findMany({
       where: { isPublished: true }
@@ -271,4 +387,10 @@ Stay connected for real-time updates on this stage.
 
     logger.info(`[SEO] Bulk generation completed`);
   }
+}
+
+function formatDate(dateStr?: string | Date | null): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
 }
