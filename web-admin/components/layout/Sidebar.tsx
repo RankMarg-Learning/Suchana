@@ -14,6 +14,7 @@ import {
     LogOut,
     Smartphone,
     ShieldCheck,
+    Globe,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -24,9 +25,7 @@ const navItems = [
     { title: 'Timeline', href: '/events', icon: Smartphone },
     { title: 'Scrapers', href: '/scraper', icon: Database },
     { title: 'Reviews', href: '/review', icon: ClipboardList },
-    { title: 'Users', href: '/users', icon: Users },
-    { title: 'Billing', href: '/plans', icon: CreditCard },
-    { title: 'Feedback', href: '/feedback', icon: MessageSquare },
+    { title: 'Articles & SEO', href: '/seo', icon: Globe },
     { title: 'Settings', href: '/settings', icon: Settings },
 ];
 

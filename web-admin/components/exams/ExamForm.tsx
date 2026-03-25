@@ -1,28 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import {
-    ArrowLeft,
-    Save,
-    Terminal,
-    Layers,
-    Link as LinkIcon,
-    Info,
-    CheckCircle2,
-    ArrowRight,
-    Loader2,
-    BookOpen,
-    Building2,
-    Calendar,
-    Briefcase,
-    Zap,
-    Layout,
-    ShieldCheck,
-    MapPin,
-    FileText,
-    Fingerprint,
-    Globe,
-    Clock
+import { 
+    ArrowLeft, 
+    Save, 
+    Loader2, 
+    Calendar as CalendarIcon,
+    Globe
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -32,23 +15,37 @@ import {
     EXAM_LEVELS,
     EXAM_STATUSES,
 } from '@/constants/enums';
-import { ApiResponse, Exam, LifecycleEvent, examService, lifecycleService } from '@/lib/api';
-import { ExamCategory, ExamLevel, ExamStatus, LifecycleStage } from '@/constants/enums';
+import { ApiResponse, Exam, examService } from '@/lib/api';
 import { toast } from 'sonner';
 
-import { CustomSelect } from '@/components/ui/CustomSelect';
+// Shadcn UI
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { DatePicker } from '@/components/ui/DatePicker';
-import { Calendar as CalendarIcon } from 'lucide-react';
-import TextareaAutosize from 'react-textarea-autosize';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { 
+    Popover,
+    PopoverContent,
+    PopoverTrigger 
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { Separator } from "@/components/ui/separator";
+
 import TimelineManager from './TimelineManager';
-import { useForm, Controller, SubmitHandler, FieldValues } from 'react-hook-form';
+import { useForm, Controller, FieldValues } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Label } from '../ui/label';
-import { Input } from '../ui/input';
 
 const examSchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
@@ -56,19 +53,19 @@ const examSchema = z.object({
     conductingBody: z.string().min(2, "Authority name is required"),
     category: z.string().min(1, "Category is required"),
     examLevel: z.string().min(1, "Level is required"),
-    state: z.string().nullish(),
-    description: z.string().nullish(),
-    qualificationCriteria: z.string().nullish(),
-    totalVacancies: z.string().nullish(),
-    salary: z.string().nullish(),
-    age: z.string().nullish(),
-    officialWebsite: z.string().nullish(),
-    notificationUrl: z.string().nullish(),
-    applicationFee: z.string().nullish(),
-    additionalDetails: z.string().nullish(),
-    status: z.string().default('NOTIFICATION'),
-    isPublished: z.boolean().default(true),
-    publishedAt: z.string().nullish(),
+    state: z.string().nullable(),
+    description: z.string().nullable(),
+    qualificationCriteria: z.string().nullable(),
+    totalVacancies: z.string().nullable(),
+    salary: z.string().nullable(),
+    age: z.string().nullable(),
+    officialWebsite: z.string().nullable(),
+    notificationUrl: z.string().nullable(),
+    applicationFee: z.string().nullable(),
+    additionalDetails: z.string().nullable(),
+    status: z.string().min(1),
+    isPublished: z.boolean(),
+    publishedAt: z.string().nullable(),
 });
 
 type ExamFormValues = z.infer<typeof examSchema>;
@@ -79,11 +76,10 @@ interface ExamFormProps {
     slug?: string;
 }
 
-export default function ExamForm({ initialData = null, isEdit = false, slug = '' }: ExamFormProps) {
+export default function ExamForm({ initialData = null, isEdit = false }: ExamFormProps) {
     const router = useRouter();
     const queryClient = useQueryClient();
     
-    // Robust data extraction from the API envelope
     const actualInitialData = (initialData as any)?.data && !(initialData as any).title ? (initialData as any).data : initialData;
 
     const {
@@ -93,7 +89,7 @@ export default function ExamForm({ initialData = null, isEdit = false, slug = ''
         watch,
         setValue,
         formState: { errors }
-    } = useForm({
+    } = useForm<ExamFormValues>({
         resolver: zodResolver(examSchema),
         defaultValues: {
             title: actualInitialData?.title || '',
@@ -120,7 +116,6 @@ export default function ExamForm({ initialData = null, isEdit = false, slug = ''
     const mutation = useMutation({
         mutationFn: async (values: ExamFormValues) => {
             const payload = { ...values };
-            
             Object.keys(payload).forEach(key => {
                 if ((payload as any)[key] === '') {
                     (payload as any)[key] = null;
@@ -134,342 +129,301 @@ export default function ExamForm({ initialData = null, isEdit = false, slug = ''
             }
         },
         onSuccess: () => {
-            toast.success(isEdit ? 'Execution updated successfully' : 'New execution created');
+            toast.success(isEdit ? 'Exam updated' : 'Exam created');
             queryClient.invalidateQueries({ queryKey: ['exams'] });
             router.push('/exams');
         },
         onError: (error: any) => {
-            console.error('Mutation failed:', error);
-            const errorMsg = error.response?.data?.message || 'Failed to save changes';
-            toast.error(errorMsg);
+            toast.error(error.response?.data?.error?.message || 'Failed to save exam');
         }
     });
 
     const isPublished = watch('isPublished');
     const examLevel = watch('examLevel');
 
-    const onSubmit = (values: FieldValues) => {
-        mutation.mutate(values as ExamFormValues);
+    const onSubmit = (values: ExamFormValues) => {
+        mutation.mutate(values);
     };
-
-    const handleFormSubmit = () => {
-        handleSubmit(onSubmit)();
-    };
-
-    const labelClasses = "text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-2 block ml-1";
-    const inputClasses = "w-full bg-white border border-gray-200 rounded-lg py-3 px-4 outline-none focus:border-primary transition-all text-sm font-bold shadow-sm";
 
     return (
-        <div className="space-y-6 pb-20 max-w-[1600px] mx-auto">
-            {/* Header Action Bar */}
-            <div className="flex items-center justify-between sticky top-0 z-50 bg-gray-50/80 backdrop-blur-md py-4 border-b border-gray-200 -mx-4 px-4 sm:-mx-8 sm:px-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 container mx-auto py-8">
+            <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <Link href="/exams" className={cn(buttonVariants({ variant: "outline", size: "icon" }), "rounded-xl shadow-sm border-gray-200")}>
-                        <ArrowLeft className="w-4 h-4 text-gray-400" />
-                    </Link>
+                    <Button variant="outline" size="icon" asChild>
+                        <Link href="/exams">
+                            <ArrowLeft className="h-4 w-4" />
+                        </Link>
+                    </Button>
                     <div>
-                        <h1 className="text-xl font-black font-outfit uppercase tracking-tight text-gray-900 leading-none">{isEdit ? 'Edit Exam' : 'Create New Exam'}</h1>
-                        <p className="text-[9px] font-bold text-gray-400 uppercase tracking-[0.3em] font-mono mt-1">Admin Execution Layer</p>
+                        <h1 className="text-2xl font-bold">{isEdit ? 'Edit Exam' : 'Create New Exam'}</h1>
+                        <p className="text-sm text-muted-foreground">Manage exam details and recruitment lifecycle</p>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                    <Button
-                        variant="outline"
-                        type="button"
-                        onClick={() => setValue('isPublished', !isPublished)}
-                        className={cn(
-                            "px-4 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all gap-2",
-                            isPublished
-                                ? "bg-emerald-50 text-emerald-600 border-emerald-100 shadow-sm shadow-emerald-500/10 hover:bg-emerald-100/50"
-                                : "bg-white text-gray-400 border-gray-100"
-                        )}
-                    >
-                        <Globe className="w-3.5 h-3.5" />
-                        {isPublished ? 'Public' : 'Draft'}
-                    </Button>
-                    <Button
-                        onClick={handleFormSubmit}
-                        disabled={mutation.isPending}
-                        className="px-8 h-10 bg-indigo-600 text-white hover:bg-indigo-700 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] gap-3 shadow-xl shadow-indigo-500/20"
-                    >
-                        {mutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-                        Save Execution
+                    <div className="flex items-center space-x-2 mr-4">
+                        <Switch 
+                            id="published"
+                            checked={isPublished}
+                            onCheckedChange={(checked) => setValue('isPublished', checked)}
+                        />
+                        <Label htmlFor="published">{isPublished ? 'Published' : 'Draft'}</Label>
+                    </div>
+                    <Button type="submit" disabled={mutation.isPending}>
+                        {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Exam
                     </Button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-12 gap-6 items-start">
-                {/* Main Content Area */}
-                <div className="col-span-12 lg:col-span-8 space-y-6">
-                    {/* Core Identity */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-                        <div className="px-6 py-3 bg-gray-50/30 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <Fingerprint className="w-3.5 h-3.5 text-primary" />
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-900">Core Identity</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Basic Information</CardTitle>
+                            <CardDescription>Core identity and conducting authority details</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="title">Exam Title *</Label>
+                                <Input id="title" {...register('title')} placeholder="Full official name of the exam" />
+                                {errors.title && <p className="text-sm text-destructive">{errors.title.message}</p>}
                             </div>
-                        </div>
 
-                        <div className="p-6 space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-1.5">
-                                    <Label className={errors.title ? "text-destructive" : ""}>Full Exam Title</Label>
-                                    <Input
-                                        {...register('title')}
-                                        placeholder="UPSC Civil Services 2025"
-                                        className={cn('rounded-sm', errors.title && "border-destructive")}
-                                    />
-                                    {errors.title && <p className="text-[10px] text-destructive font-bold">{errors.title.message}</p>}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="shortTitle">Short Title / Code *</Label>
+                                    <Input id="shortTitle" {...register('shortTitle')} placeholder="e.g. UPSC CSE" />
+                                    {errors.shortTitle && <p className="text-sm text-destructive">{errors.shortTitle.message}</p>}
                                 </div>
-                                <div className="space-y-1.5">
-                                    <Label className={errors.conductingBody ? "text-destructive" : ""}>Conducting Authority</Label>
-                                    <Input
-                                        {...register('conductingBody')}
-                                        placeholder="Public Service Commission"
-                                        className={cn('rounded-sm', errors.conductingBody && "border-destructive")}
-                                    />
-                                    {errors.conductingBody && <p className="text-[10px] text-destructive font-bold">{errors.conductingBody.message}</p>}
+                                <div className="space-y-2">
+                                    <Label htmlFor="conductingBody">Conducting Body *</Label>
+                                    <Input id="conductingBody" {...register('conductingBody')} placeholder="e.g. UPSC" />
+                                    {errors.conductingBody && <p className="text-sm text-destructive">{errors.conductingBody.message}</p>}
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-1.5">
-                                    <Label className={errors.shortTitle ? "text-destructive" : ""}>Short Signature</Label>
-                                    <Input
-                                        {...register('shortTitle')}
-                                        placeholder="UPSC CSE"
-                                        className={cn('rounded-sm', errors.shortTitle && "border-destructive")}
-                                    />
-                                    {errors.shortTitle && <p className="text-[10px] text-destructive font-bold">{errors.shortTitle.message}</p>}
-                                </div>
-                                <div className="space-y-1.5 opacity-60">
-                                    <Label>URL Identifier (Slug)</Label>
-                                    <div className="flex items-center gap-2 bg-gray-100/50 border border-gray-100 rounded-xl py-2.5 px-4 text-[11px] text-gray-400">
-                                        <Globe className="w-3 h-3" />
-                                        <span>/exams/{actualInitialData?.slug || 'auto-generated'}</span>
-                                    </div>
+                            <div className="space-y-2">
+                                <Label>Slug</Label>
+                                <div className="flex items-center gap-2 text-sm text-muted-foreground bg-muted p-2 rounded-md">
+                                    <Globe className="h-4 w-4" />
+                                    <span>/{actualInitialData?.slug || 'auto-generated'}</span>
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
 
-                    {/* Rich Details */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-8">
-                        <div className='space-y-2'>
-                            <Label> Exam Description</Label>
-                            <Textarea
-                                {...register('description')}
-                                placeholder="Describe the exam scope..."
-                                className="!border-none !pb-0"
-                            />
-                        </div>
-
-
-                        <div className="h-px bg-gray-50" />
-                        <div className='space-y-2'>
-                            <Label> Eligibility</Label>
-                            <Textarea
-                                {...register('qualificationCriteria')}
-                                placeholder="Selection & qualification data..."
-                                className="!border-none !pb-0"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Timeline Interaction */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 overflow-hidden">
-                        {isEdit && actualInitialData?.id ? (
-                            <TimelineManager examId={actualInitialData.id} initialEvents={actualInitialData.lifecycleEvents} />
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-1.5 h-4 bg-gray-200 rounded-full" />
-                                    <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400">Lifecycle Roadmap</h4>
-                                </div>
-                                <div className="bg-gray-50/50 border border-dashed border-gray-100 rounded-xl p-8 flex flex-col items-center justify-center text-center gap-2">
-                                    <Zap className="w-5 h-5 text-gray-200 animate-pulse" />
-                                    <p className="text-[9px] font-black uppercase text-gray-400 tracking-widest max-w-[200px]">Save this exam first to activate the lifecycle roadmap system</p>
-                                </div>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Description & Qualification</CardTitle>
+                            <CardDescription>Detailed information about the recruitment process</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="description">Short Description</Label>
+                                <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[120px]" />
                             </div>
-                        )}
-                    </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="qualificationCriteria">Qualification Criteria</Label>
+                                <Textarea id="qualificationCriteria" {...register('qualificationCriteria')} placeholder="Educational and other eligibility requirements..." className="min-h-[100px]" />
+                            </div>
+                        </CardContent>
+                    </Card>
 
-                    {/* Footer Info */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Exam Timeline</CardTitle>
+                            <CardDescription>Manage application dates and exam schedule</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {isEdit && actualInitialData?.id ? (
+                                <TimelineManager examId={actualInitialData.id} initialEvents={actualInitialData.lifecycleEvents} />
+                            ) : (
+                                <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                                    <p className="text-muted-foreground">Save the exam first to manage the timeline.</p>
+                                </div>
+                            )}
+                        </CardContent>
+                    </Card>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-2">
-                            <Label>Application Fees</Label>
-                            <Textarea
-                                {...register('applicationFee')}
-                                placeholder="GEN: 100..."
-                                className="!border-none !pb-0"
-                            />
-                        </div>
-                        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 space-y-2">
-                            <Label>Additional Details</Label>
-                            <Textarea
-                                {...register('additionalDetails')}
-                                placeholder="Misc data..."
-                                className="!border-none !pb-0"
-                            />
-                        </div>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Fees</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea {...register('applicationFee')} placeholder="Fee details for different categories..." className="min-h-[80px]" />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Other Details</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <Textarea {...register('additionalDetails')} placeholder="Any other relevant information..." className="min-h-[80px]" />
+                            </CardContent>
+                        </Card>
                     </div>
                 </div>
 
-                {/* Sidebar Controls */}
-                <div className="col-span-12 lg:col-span-4 space-y-6">
-                    {/* Categorization */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm divide-y divide-gray-50">
-                        <div className="px-6 py-4 bg-gray-50/30">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-900 flex items-center gap-2">
-                                <Layers className="w-3.5 h-3.5 text-indigo-500" />
-                                Taxonomy
-                            </h3>
-                        </div>
-                        <div className="p-6 space-y-6">
+                <div className="space-y-6">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Categorization</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Category</label>
+                                <Label>Category</Label>
                                 <Controller
                                     name="category"
                                     control={control}
                                     render={({ field }) => (
-                                        <CustomSelect
-                                            value={field.value}
-                                            onChange={field.onChange}
-                                            options={EXAM_CATEGORIES}
-                                            className="!border-gray-100 !bg-gray-50/50 !rounded-xl"
-                                        />
+                                        <Select value={field.value} onValueChange={field.onChange}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {EXAM_CATEGORIES.map(cat => (
+                                                    <SelectItem key={cat} value={cat}>{cat.replace(/_/g, ' ')}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     )}
                                 />
-                                {errors.category && <p className="text-[10px] text-destructive font-bold">{errors.category.message}</p>}
                             </div>
+
                             <div className="space-y-2">
-                                <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Exam Level</label>
+                                <Label>Level</Label>
                                 <Controller
                                     name="examLevel"
                                     control={control}
                                     render={({ field }) => (
-                                        <CustomSelect
-                                            value={field.value}
-                                            onChange={(val) => {
+                                        <Select 
+                                            value={field.value} 
+                                            onValueChange={(val) => {
                                                 field.onChange(val);
                                                 if (val !== 'STATE') setValue('state', null);
                                             }}
-                                            options={EXAM_LEVELS}
-                                            className="!border-gray-100 !bg-gray-50/50 !rounded-xl"
-                                        />
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select level" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {EXAM_LEVELS.map(level => (
+                                                    <SelectItem key={level} value={level}>{level}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                     )}
                                 />
-                                {errors.examLevel && <p className="text-[10px] text-destructive font-bold">{errors.examLevel.message}</p>}
                             </div>
+
                             {examLevel === 'STATE' && (
-                                <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
-                                    <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Region/State</label>
-                                    <Input
-                                        {...register('state')}
-                                        placeholder="Ex: Bihar, Delhi"
-                                        className="bg-gray-50/50 border-gray-100 rounded-xl"
-                                    />
+                                <div className="space-y-2">
+                                    <Label htmlFor="state">State</Label>
+                                    <Input id="state" {...register('state')} placeholder="e.g. Maharashtra" />
                                 </div>
                             )}
-                        </div>
-                    </div>
 
-                    {/* Quick Specifics */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-                        <div className="px-6 py-3 bg-emerald-50/10">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-700 flex items-center gap-2">
-                                <Briefcase className="w-3.5 h-3.5" />
-                                Particulars
-                            </h3>
-                        </div>
-                        <div className="p-6 space-y-5">
-                            <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Total Vacancies</Label>
-                                <Textarea
-                                    {...register('totalVacancies')}
-                                    placeholder="500 positions"
+                            <div className="space-y-2">
+                                <Label>Status</Label>
+                                <Controller
+                                    name="status"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select value={field.value} onValueChange={field.onChange}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Current status" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {EXAM_STATUSES.map(s => (
+                                                    <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
                                 />
                             </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Salary Grade</Label>
-                                <Textarea
-                                    {...register('salary')}
-                                    placeholder="Level 10..."
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Key Metrics</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Vacancies</Label>
+                                <Input {...register('totalVacancies')} placeholder="e.g. 500+" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Salary</Label>
+                                <Input {...register('salary')} placeholder="e.g. Pay Level 10" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Age Limit</Label>
+                                <Input {...register('age')} placeholder="e.g. 21 - 32 years" />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Links</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Official Website</Label>
+                                <Input {...register('officialWebsite')} placeholder="https://..." />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Notification PDF URL</Label>
+                                <Input {...register('notificationUrl')} placeholder="https://..." />
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Publication</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-2">
+                                <Label>Published At</Label>
+                                <Controller
+                                    name="publishedAt"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value ? new Date(field.value) : undefined}
+                                                    onSelect={(date) => field.onChange(date?.toISOString() || null)}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    )}
                                 />
                             </div>
-                            <div className="space-y-1.5">
-                                <Label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Age Spectrum</Label>
-                                <Textarea
-                                    {...register('age')}
-                                    placeholder="21-32 years..."
-                                />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Utility Links */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-                        <div className="px-6 py-3 bg-blue-50/10">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-700 flex items-center gap-2">
-                                <Globe className="w-3.5 h-3.5" />
-                                Navigation
-                            </h3>
-                        </div>
-                        <div className="p-6 space-y-4">
-                            <div className="space-y-1.5">
-                                <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Official Portal</label>
-                                <div className="relative group">
-                                    <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-100 group-focus-within:text-blue-500 transition-colors" />
-                                    <input
-                                        {...register('officialWebsite')}
-                                        placeholder="https://..."
-                                        className="w-full bg-gray-50/50 border border-gray-100 rounded-xl py-2.5 pl-10 pr-4 outline-none focus:border-blue-500 text-xs font-black text-gray-900 transition-all font-mono"
-                                    />
-                                </div>
-                            </div>
-                            <div className="space-y-1.5">
-                                <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest ml-1">Notification PDF</label>
-                                <div className="relative group">
-                                    <FileText className="absolute left-3.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-100 group-focus-within:text-blue-500 transition-colors" />
-                                    <input
-                                        {...register('notificationUrl')}
-                                        placeholder="https://..."
-                                        className="w-full bg-gray-50/50 border border-gray-100 rounded-xl py-2.5 pl-10 pr-4 outline-none focus:border-blue-500 text-xs font-black text-gray-900 transition-all font-mono"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Publication Detail */}
-                    <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-                        <div className="px-6 py-3 bg-purple-50/10">
-                            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-700 flex items-center gap-2">
-                                <CalendarIcon className="w-3.5 h-3.5" />
-                                Publication Detail
-                            </h3>
-                        </div>
-                        <div className="p-6">
-                            <Controller
-                                name="publishedAt"
-                                control={control}
-                                render={({ field }) => (
-                                    <DatePicker
-                                        label="Published At"
-                                        date={field.value || undefined}
-                                        onChange={(date) => field.onChange(date?.toISOString() || null)}
-                                        placeholder="Auto-set on publish"
-                                    />
-                                )}
-                            />
-                            <p className="mt-2 text-[8px] text-gray-400 font-medium px-1 italic">
-                                Note: This date determines visibility.
-                            </p>
-                        </div>
-                    </div>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
-        </div>
+        </form>
     );
 }

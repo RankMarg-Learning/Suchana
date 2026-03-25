@@ -54,3 +54,11 @@ export async function deleteEvent(req: Request, res: Response, next: NextFunctio
         next(err);
     }
 }
+export async function getAllEvents(req: Request, res: Response, next: NextFunction) {
+    try {
+        const events = await lifecycleService.getAllEvents();
+        sendSuccess(res, events);
+    } catch (err) {
+        next(err);
+    }
+}

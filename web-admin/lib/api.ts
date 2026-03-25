@@ -165,6 +165,46 @@ export interface ApiResponse<T> {
     };
 }
 
+export interface HomeBanner {
+    id: string;
+    imageUrl: string;
+    actionUrl?: string;
+    title?: string;
+    description?: string;
+    priority: number;
+    isActive: boolean;
+    expiresAt?: string;
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface AppConfig {
+    id: string;
+    key: string;
+    value: any;
+    description?: string;
+    createdAt?: string;
+    updatedAt: string;
+}
+
+export interface SeoPage {
+    id: string;
+    slug: string;
+    title: string;
+    metaTitle?: string;
+    metaDescription?: string;
+    content: string;
+    keywords: string[];
+    ogImage?: string;
+    canonicalUrl?: string;
+    isPublished: boolean;
+    category?: string;
+    createdAt: string;
+    updatedAt: string;
+    examId?: string | null;
+    exam?: Exam;
+}
+
 export const examService = {
     getAllExams: async (params?: any): Promise<ApiResponse<Exam[]>> => {
         const response = await apiClient.get('/exams', { params });
@@ -213,6 +253,10 @@ export const lifecycleService = {
         const response = await apiClient.delete(`/exams/${examId}/events/${eventId}`);
         return response.data;
     },
+    getAllEvents: async (): Promise<ApiResponse<LifecycleEvent[]>> => {
+        const response = await apiClient.get('/events');
+        return response.data;
+    },
 };
 
 export const scraperService = {
@@ -254,6 +298,74 @@ export const scraperService = {
     },
     triggerScrape: async (sourceId: string): Promise<ApiResponse<{ message: string; sourceId: string }>> => {
         const response = await apiClient.post('/scraper/trigger', { sourceId });
+        return response.data;
+    },
+    clearCache: async (): Promise<ApiResponse<{ message: string }>> => {
+        const response = await apiClient.post('/scraper/clear-cache');
+        return response.data;
+    },
+};
+
+export const configService = {
+    getBanners: async (): Promise<ApiResponse<HomeBanner[]>> => {
+        const response = await apiClient.get('/config/banners');
+        return response.data;
+    },
+    createBanner: async (data: Partial<HomeBanner>): Promise<ApiResponse<HomeBanner>> => {
+        const response = await apiClient.post('/config/banners', data);
+        return response.data;
+    },
+    updateBanner: async (id: string, data: Partial<HomeBanner>): Promise<ApiResponse<HomeBanner>> => {
+        const response = await apiClient.patch(`/config/banners/${id}`, data);
+        return response.data;
+    },
+    deleteBanner: async (id: string): Promise<ApiResponse<{ deleted: boolean }>> => {
+        const response = await apiClient.delete(`/config/banners/${id}`);
+        return response.data;
+    },
+    getAllConfigs: async (): Promise<ApiResponse<AppConfig[]>> => {
+        const response = await apiClient.get('/config/settings');
+        return response.data;
+    },
+    setConfig: async (key: string, value: any, description?: string): Promise<ApiResponse<AppConfig>> => {
+        const response = await apiClient.post('/config', { key, value, description });
+        return response.data;
+    },
+    deleteConfig: async (id: string): Promise<ApiResponse<{ deleted: boolean }>> => {
+        const response = await apiClient.delete(`/config/settings/${id}`);
+        return response.data;
+    },
+};
+
+export const seoService = {
+    // Public (slugs only)
+    getAllSlugs: async (): Promise<ApiResponse<{ slug: string }[]>> => {
+        const response = await apiClient.get('/seo-pages');
+        return response.data;
+    },
+    // Admin (full details)
+    getAllPages: async (params?: any): Promise<ApiResponse<{ pages: SeoPage[], total: number, page: number, totalPages: number }>> => {
+        const response = await apiClient.get('/seo-pages/admin/list', { params });
+        return response.data;
+    },
+    // Fetch individual page details (public/admin)
+    getPageBySlug: async (slug: string): Promise<ApiResponse<SeoPage>> => {
+        const response = await apiClient.get(`/seo-pages/${slug}`);
+        return response.data;
+    },
+    // Create new SEO page
+    createPage: async (data: Partial<SeoPage>): Promise<ApiResponse<SeoPage>> => {
+        const response = await apiClient.post('/seo-pages', data);
+        return response.data;
+    },
+    // Update existing SEO page
+    updatePage: async (id: string, data: Partial<SeoPage>): Promise<ApiResponse<SeoPage>> => {
+        const response = await apiClient.patch(`/seo-pages/${id}`, data);
+        return response.data;
+    },
+    // Delete SEO page
+    deletePage: async (id: string): Promise<ApiResponse<{ deleted: boolean }>> => {
+        const response = await apiClient.delete(`/seo-pages/${id}`);
         return response.data;
     },
 };

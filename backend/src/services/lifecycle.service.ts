@@ -176,3 +176,18 @@ export async function getUpcomingNotifiableEvents(leadTimeHours: number) {
         orderBy: { startsAt: 'asc' },
     });
 }
+
+export async function getAllEvents(params?: any) {
+    return prisma.lifecycleEvent.findMany({
+        where: {
+            startsAt: { gte: params?.from || new Date() },
+        },
+        include: {
+            exam: {
+                select: { id: true, title: true, shortTitle: true, slug: true }
+            }
+        },
+        orderBy: { startsAt: 'asc' },
+        take: 100
+    });
+}
