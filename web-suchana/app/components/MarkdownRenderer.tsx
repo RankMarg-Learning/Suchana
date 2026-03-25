@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
+import rehypeRaw from "rehype-raw";
 import { formatDatesInText } from "@/app/lib/types";
 
 interface MarkdownRendererProps {
@@ -22,7 +24,17 @@ export default function MarkdownRenderer({
 
   return (
     <div className={`markdown-renderer ${variant}-variant ${className}`}>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+      <ReactMarkdown 
+        remarkPlugins={[remarkGfm, remarkBreaks]} 
+        rehypePlugins={[rehypeRaw]}
+        components={{
+          table: ({ node, ...props }) => (
+            <div className="table-responsive">
+              <table {...props} />
+            </div>
+          ),
+        }}
+      >
         {processedContent}
       </ReactMarkdown>
     </div>
