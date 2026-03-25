@@ -2,11 +2,8 @@ import prisma from '../config/database';
 import { logger } from '../utils/logger';
 
 export class SeoService {
-  /**
-   * Generates a comprehensive suite of SEO pages for a single exam
-   * Covers notification, vacancies, eligibility, salary, syllabus, and every lifecycle stage
-   */
-  static async generateExamSeoPages(examId: string) {
+
+  static async generateExamSeoPages(examId: string, categories?: string[]) {
     const exam = await prisma.exam.findUnique({
       where: { id: examId },
       include: { lifecycleEvents: true }
@@ -20,14 +17,17 @@ export class SeoService {
     const examName = exam.shortTitle || exam.title;
     const body = exam.conductingBody || 'Government';
 
-    const wrap = (val: string | null | undefined, fallback: string = 'Check official notification') => val || fallback;
+    const wrap = (val: string | null | undefined, fallback: string = 'Check official notification') => {
+      if (!val || val === 'TBA' || val === 'TBD') return 'Coming Soon';
+      return val;
+    };
 
-    const pageConfigs: any[] = [
+    let pageConfigs: any[] = [
       {
         category: 'NOTIFICATION',
         slug: `${baseSlug}-notification-pdf`,
         title: `${examName} Notification PDF Download — ${year} Link`,
-        metaTitle: `${examName} Recruitment ${year} Notification OUT — Apply Now ${wrap(exam.totalVacancies) !== 'TBA' ? `(${exam.totalVacancies} Posts)` : ''}`,
+        metaTitle: `${examName} Recruitment ${year} Notification ${wrap(exam.notificationUrl) === 'Coming Soon' ? 'Coming Soon' : 'OUT'} — Apply Now ${wrap(exam.totalVacancies) !== 'Coming Soon' ? `(${exam.totalVacancies} Posts)` : ''}`,
         metaDescription: `Download the official ${examName} notification PDF. Check important dates, vacancies, and eligibility details for ${body} ${examName} recruitment.`,
         content: `
 # ${examName} Official Notification PDF
@@ -59,7 +59,7 @@ After reading the notification, your next step should be to check the [${examNam
         category: 'VACANCIES',
         slug: `${baseSlug}-vacancy-details`,
         title: `${examName} Vacancy Details ${year}-${nextYear} — Category Wise`,
-        metaTitle: `${examName} Vacancy ${year}: Check Category-wise Post Details ${wrap(exam.totalVacancies) !== 'TBA' ? `(${exam.totalVacancies} Posts)` : ''}`,
+        metaTitle: `${examName} Vacancy ${year}: Check Category-wise Post Details ${wrap(exam.totalVacancies) !== 'Coming Soon' ? `(${exam.totalVacancies} Posts)` : '(Coming Soon)'}`,
         metaDescription: `Check total ${examName} vacancies for the ${year} cycle. Breakdown of posts for UR, OBC, SC, ST, and EWS categories for ${examName}.`,
         content: `
 # ${examName} Vacancy Details ${year}
@@ -199,8 +199,8 @@ Ready to apply? Check the [Registration Updates](/${baseSlug}-registration-updat
       {
         category: 'ADMIT_CARD',
         slug: `${baseSlug}-admit-card`,
-        title: `${examName} Admit Card Download Link — Hall Ticket Released`,
-        metaTitle: `${examName} Admit Card ${year}: Direct Download Link OUT`,
+        title: `${examName} Admit Card Download Link — Hall Ticket ${wrap(exam.notificationUrl) === 'Coming Soon' ? 'Expected' : 'Released'}`,
+        metaTitle: `${examName} Admit Card ${year}: ${wrap(exam.notificationUrl) === 'Coming Soon' ? 'Dates Coming Soon' : 'Direct Download Link OUT'}`,
         metaDescription: `Find the official ${examName} admit card download link. Steps to retrieve password and reporting time instructions for the exam day.`,
         content: `
 # ${examName} Admit Card
@@ -231,8 +231,8 @@ After the exam, stay tuned for the [${examName} Answer Key](/${baseSlug}-answer-
       {
         category: 'RESULTS',
         slug: `${baseSlug}-result`,
-        title: `${examName} Result & Merit List PDF — Check Status`,
-        metaTitle: `${examName} Result ${year} DECLARED: Check Scorecard and Merit List`,
+        title: `${examName} Result & Merit List PDF — ${wrap(exam.notificationUrl) === 'Coming Soon' ? 'Awaited' : 'Check Status'}`,
+        metaTitle: `${examName} Result ${year}: ${wrap(exam.notificationUrl) === 'Coming Soon' ? 'Announcement Coming Soon' : 'DECLARED - Check Merit List'}`,
         metaDescription: `Check your ${examName} result and download the merit list PDF. Find category-wise cut-off and steps to check the scorecard.`,
         content: `
 # ${examName} Result
@@ -307,19 +307,30 @@ Once objections are processed, wait for the [Final Result](/${baseSlug}-result).
 
     for (const event of exam.lifecycleEvents) {
       const stageSlug = event.stage.replace(/[\s_]+/g, '-').toLowerCase();
+      // Avoid redundancy like "exam-exam-updates"
+      let finalStageSlug = `${baseSlug}-${stageSlug}`;
+      if (baseSlug.toLowerCase().endsWith(stageSlug)) {
+        finalStageSlug = baseSlug;
+      }
+
+      const isStageDetermined = !event.isTBD && !!event.startsAt;
 
       pageConfigs.push({
         category: 'STAGES',
-        slug: `${baseSlug}-${stageSlug}-updates`,
-        title: `${examName} ${event.stage} Updates`,
-        metaTitle: `${examName} ${event.stage} ${year}: Check Important Dates & Instructions`,
-        metaDescription: `Get the latest updates for the ${event.stage} of ${examName} recruitment. Important dates, links, and detailed information for candidates.`,
+        slug: `${finalStageSlug}-updates`,
+        title: `${examName} ${event.stage} Updates — ${isStageDetermined ? formatDate(event.startsAt) : 'Coming Soon'}`,
+        metaTitle: isStageDetermined
+          ? `${examName} ${event.stage} ${year}: Check Important Dates & Instructions`
+          : `${examName} ${event.stage} ${year}: Date Coming Soon — Check Updates`,
+        metaDescription: isStageDetermined
+          ? `Get the latest updates for the ${event.stage} of ${examName} recruitment. Important dates, links, and detailed information for candidates.`
+          : `Important dates for ${examName} ${event.stage} haven't been announced yet. Check here for expected schedule and latest news.`,
         content: `
 # ${examName} ${event.stage} Updates
 This page covers the latest information regarding the **${event.stage}** of the ${examName} examination.
 
 ## Important Details
-- **Current Status**: ${event.isTBD ? 'TBA' : 'Active/Upcoming'}
+- **Current Status**: ${event.isTBD ? 'Coming Soon' : 'Active/Upcoming'}
 - **Action Required**: ${wrap(event.actionLabel, 'Check the links below')}
 - **Description**: ${wrap(event.description)}
 
@@ -328,7 +339,7 @@ ${event.actionUrl ? `[Click here to access the ${event.stage} portal](${event.ac
 
 ## Frequently Asked Questions
 **Q: When does ${event.stage} start for ${examName}?**
-A: According to the schedule, it starts on ${formatDate(event.startsAt) || 'TBA'}.
+A: According to the schedule, it starts on ${formatDate(event.startsAt) || 'Coming Soon'}.
 
 **Q: Where can I get official updates for this stage?**
 A: Always refer to ${wrap(exam.officialWebsite)} for the most authentic information.
@@ -340,21 +351,27 @@ A: Always refer to ${wrap(exam.officialWebsite)} for the most authentic informat
       });
     }
 
+    if (categories && categories.length > 0) {
+      pageConfigs = pageConfigs.filter(p => categories.includes(p.category));
+    }
+
+    let generatedCount = 0;
+    let skippedCount = 0;
 
     for (const config of pageConfigs) {
       try {
-        await prisma.seoPage.upsert({
-          where: { slug: config.slug },
-          update: {
-            title: config.title,
-            metaTitle: config.metaTitle,
-            metaDescription: config.metaDescription,
-            content: config.content.trim(),
-            category: config.category,
-            isPublished: true,
-            examId: exam.id,
-          },
-          create: {
+        const existingPage = await prisma.seoPage.findUnique({
+          where: { slug: config.slug }
+        });
+
+        if (existingPage) {
+          skippedCount++;
+          logger.debug(`[SEO] Skipping generation for existing page: ${config.slug}`);
+          continue;
+        }
+
+        await prisma.seoPage.create({
+          data: {
             slug: config.slug,
             title: config.title,
             metaTitle: config.metaTitle,
@@ -365,13 +382,15 @@ A: Always refer to ${wrap(exam.officialWebsite)} for the most authentic informat
             examId: exam.id,
           }
         });
-        logger.debug(`[SEO] Generated/Updated page: ${config.slug}`);
+        generatedCount++;
+        logger.debug(`[SEO] Generated new page: ${config.slug}`);
       } catch (error) {
         logger.error(`[SEO] Failed to generate page ${config.slug}:`, error);
       }
     }
 
-    logger.info(`[SEO] Successfully generated ${pageConfigs.length} pages for exam: ${exam.title}`);
+    logger.info(`[SEO] Successfully generated ${generatedCount} pages for exam: ${exam.title} (${skippedCount} existing pages skipped)`);
+    return generatedCount;
   }
 
   static async generateAllExamSeoPages() {

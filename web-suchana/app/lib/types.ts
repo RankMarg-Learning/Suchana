@@ -34,6 +34,8 @@ export interface Exam {
   notificationUrl?: string;
   description?: string;
   lifecycleEvents?: LifecycleEvent[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface SeoPage {

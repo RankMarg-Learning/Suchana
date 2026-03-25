@@ -58,8 +58,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const regEvent = exam.lifecycleEvents?.find((e) => e.stage === "REGISTRATION");
     const deadline = regEvent?.endsAt ? `Registration deadline ${formatDate(regEvent.endsAt)}.` : "";
     
-    const seoTitle = `${title} Recruitment ${year}: Apply Online, Full Schedule & Details`;
-    const description = `${title} official notification by ${exam.conductingBody}. Status: ${statusLabel}. ${vacancies !== "TBA" ? `${vacancies} vacancies.` : ""} ${deadline} Check syllabus & details.`;
+    const seoTitle = `${title} Recruitment ${year}: Apply Online, Full Schedule, Vacancies & Eligibility`;
+    const description = 
+      exam.description
+        ? `${exam.description.slice(0, 140)}... Status: ${statusLabel}. Vacancies: ${vacancies}. ${deadline} Get real-time updates on Exam Suchana.`
+        : `${title} official notification by ${exam.conductingBody}. Status: ${statusLabel}. ${vacancies !== "TBA" ? `${vacancies} vacancies.` : ""} ${deadline} Check syllabus, result & admit card.`;
     
     return {
       title: seoTitle,
@@ -68,17 +71,51 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         canonical: `${SITE_URL}/${slug}`,
       },
       openGraph: {
-        title: `${title} Recruitment ${year} — Check Full Timeline`,
+        title: `${title} Recruitment ${year} — Check Full Timeline & Details`,
         description,
         url: `${SITE_URL}/${slug}`,
         siteName: 'Exam Suchana',
         type: 'article',
-      }
+        publishedTime: exam.createdAt,
+        section: cleanLabel(exam.category),
+        tags: [title, exam.conductingBody, cleanLabel(exam.category)],
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${title} — ${statusLabel} Updates`,
+        description: `${vacancies} vacancies. ${deadline} Full timeline on Exam Suchana.`,
+      },
     };
   }
 
   return {
     title: 'Page Not Found | Exam Suchana',
+  };
+}
+
+// ─── JSON-LD Builders (Moved from ExamDetailPage) ──────────────────────────────
+function buildJobPostingJsonLd(exam: any) {
+  const regEvent = exam.lifecycleEvents?.find((e: any) => e.stage === "REGISTRATION");
+  const canonicalUrl = `${SITE_URL}/${exam.slug}`;
+  return {
+    "@type": "JobPosting",
+    "@id": `${canonicalUrl}#job`,
+    title: exam.title,
+    description: exam.description || `${exam.title} — Government recruitment by ${exam.conductingBody}.`,
+    hiringOrganization: {
+      "@type": "Organization",
+      "@id": `${SITE_URL}#organization`,
+      name: exam.conductingBody || "Government Agency",
+      url: exam.officialWebsite || SITE_URL,
+    },
+    jobLocation: {
+      "@type": "Place",
+      address: { "@type": "PostalAddress", addressCountry: "IN", addressRegion: exam.state ?? "India" },
+    },
+    employmentType: "FULL_TIME",
+    validThrough: regEvent?.endsAt ?? undefined,
+    datePosted: regEvent?.startsAt ?? new Date().toISOString(),
+    url: canonicalUrl,
   };
 }
 
@@ -141,12 +178,28 @@ export default async function DynamicSlugPage({ params }: Props) {
     );
   }
 
-  // 2. Fallback to standard Exam page (Enables Short-URL functionality)
+  // 2. Fallback to standard Exam page (Enables Root-level Exam URLs)
   const exam = await fetchExamBySlug(slug);
   if (exam) {
+    const { fetchExamsFromAPI } = await import('@/app/lib/api');
+    const { exams: relatedExams } = await fetchExamsFromAPI(1, 5, exam.category).catch(() => ({ exams: [] }));
+    const filteredRelated = (relatedExams || []).filter(e => e.id !== exam.id).slice(0, 4);
+
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@graph": [
+        buildJobPostingJsonLd(exam),
+        { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+      ].filter(Boolean)
+    };
+
     return (
       <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
-        <ExamDetailClient exam={exam} />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <ExamDetailClient exam={exam} relatedExams={filteredRelated} />
       </div>
     );
   }

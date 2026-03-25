@@ -17,7 +17,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { examService, Exam } from '@/lib/api';
+import { examService, seoService, Exam } from '@/lib/api';
 import { EXAM_STATUSES } from '@/constants/enums';
 import { toast } from 'sonner';
 import SummaryStats from '@/components/exams/SummaryStats';
@@ -62,6 +62,31 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
+// Re-checking list_dir, checkbox.tsx was missing. I'll use standard input type="checkbox" or Switch.
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+
+const SEO_CATEGORIES = [
+    { id: 'NOTIFICATION', label: 'Notification PDF' },
+    { id: 'VACANCIES', label: 'Vacancy Details' },
+    { id: 'ELIGIBILITY', label: 'Eligibility Criteria' },
+    { id: 'SALARY', label: 'Salary/Job Profile' },
+    { id: 'SYLLABUS', label: 'Syllabus/Exam Pattern' },
+    { id: 'SELECTION_PROCESS', label: 'Selection Process' },
+    { id: 'ADMIT_CARD', label: 'Admit Card' },
+    { id: 'RESULTS', label: 'Results' },
+    { id: 'CUT_OFF', label: 'Cut Off Marks' },
+    { id: 'ANSWER_KEY', label: 'Answer Key' },
+    { id: 'STAGES', label: 'Lifecycle Stages' },
+];
 
 const PAGE_SIZE = 15;
 
@@ -73,6 +98,8 @@ export default function ExamsPage() {
     const [publishFilter, setPublishFilter] = useState('ALL');
     const [currentPage, setCurrentPage] = useState(1);
     const [deletingExam, setDeletingExam] = useState<Exam | null>(null);
+    const [generatingSeoExam, setGeneratingSeoExam] = useState<Exam | null>(null);
+    const [selectedCategories, setSelectedCategories] = useState<string[]>(SEO_CATEGORIES.map(c => c.id));
 
     // Main query for the paginated & filtered list
     const { data: response, isLoading, isRefetching } = useQuery({
@@ -120,6 +147,16 @@ export default function ExamsPage() {
             setDeletingExam(null);
         },
         onError: () => toast.error('Failed to delete exam')
+    });
+
+    const generateSeoMutation = useMutation({
+        mutationFn: ({ examId, categories }: { examId: string, categories: string[] }) => 
+            seoService.generateExamPages(examId, categories),
+        onSuccess: (response) => {
+            toast.success(`Generated ${response.data.generatedCount} SEO pages successfully`);
+            setGeneratingSeoExam(null);
+        },
+        onError: () => toast.error('Failed to generate SEO pages')
     });
 
     const getStatusVariant = (status: string) => {
@@ -298,6 +335,12 @@ export default function ExamsPage() {
                                                     <DropdownMenuItem onClick={() => router.push(`/exam/${exam.slug || exam.id}/edit`)}>
                                                         <Edit3 className="mr-2 h-4 w-4" /> Edit Details
                                                     </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => {
+                                                        setGeneratingSeoExam(exam);
+                                                        setSelectedCategories(SEO_CATEGORIES.map(c => c.id));
+                                                    }}>
+                                                        <Layers className="mr-2 h-4 w-4" /> Generate SEO
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem 
                                                         className="text-destructive focus:text-destructive" 
@@ -393,6 +436,72 @@ export default function ExamsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            {/* SEO Generation Dialog */}
+            <Dialog open={!!generatingSeoExam} onOpenChange={(open) => !open && setGeneratingSeoExam(null)}>
+                <DialogContent className="sm:max-w-[500px]">
+                    <DialogHeader>
+                        <DialogTitle>Generate SEO Pages</DialogTitle>
+                        <DialogDescription>
+                            Select the page categories you want to generate/update for <span className="font-bold text-slate-900">"{generatingSeoExam?.shortTitle || generatingSeoExam?.title}"</span>.
+                        </DialogDescription>
+                    </DialogHeader>
+                    
+                    <div className="grid grid-cols-2 gap-4 py-4">
+                        {SEO_CATEGORIES.map((cat) => (
+                            <div key={cat.id} className="flex items-center space-x-2 border p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
+                                if (selectedCategories.includes(cat.id)) {
+                                    setSelectedCategories(selectedCategories.filter(id => id !== cat.id));
+                                } else {
+                                    setSelectedCategories([...selectedCategories, cat.id]);
+                                }
+                            }}>
+                                <Switch 
+                                    id={`cat-${cat.id}`} 
+                                    checked={selectedCategories.includes(cat.id)}
+                                    // onCheckedChange already handled by parent div click for better UX
+                                />
+                                <Label htmlFor={`cat-${cat.id}`} className="flex-1 cursor-pointer text-sm font-medium">
+                                    {cat.label}
+                                </Label>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="flex justify-between items-center bg-muted/30 p-3 rounded-lg text-xs text-muted-foreground">
+                        <span>{selectedCategories.length} categories selected</span>
+                        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => {
+                            if (selectedCategories.length === SEO_CATEGORIES.length) setSelectedCategories([]);
+                            else setSelectedCategories(SEO_CATEGORIES.map(c => c.id));
+                        }}>
+                            {selectedCategories.length === SEO_CATEGORIES.length ? 'Deselect All' : 'Select All'}
+                        </Button>
+                    </div>
+
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setGeneratingSeoExam(null)}>Cancel</Button>
+                        <Button 
+                            onClick={() => generatingSeoExam && generateSeoMutation.mutate({ 
+                                examId: generatingSeoExam.id, 
+                                categories: selectedCategories 
+                            })}
+                            disabled={generateSeoMutation.isPending || selectedCategories.length === 0}
+                        >
+                            {generateSeoMutation.isPending ? (
+                                <>
+                                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                                    Generating...
+                                </>
+                            ) : (
+                                <>
+                                    <Globe className="mr-2 h-4 w-4" />
+                                    Generate Pages
+                                </>
+                            )}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

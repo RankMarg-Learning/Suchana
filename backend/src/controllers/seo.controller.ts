@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import prisma from '../config/database';
 import { AppError } from '../middleware/errorHandler';
 import { sendSuccess } from '../utils/apiResponse';
+import { SeoService } from '../services/seo.service';
 
 export class SeoController {
   // Public - used by frontend
@@ -142,4 +143,19 @@ export class SeoController {
       next(err);
     }
   }
+
+  static async generateExamPages(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { examId, categories } = req.body;
+      if (!examId) {
+        throw new AppError(400, 'BAD_REQUEST', 'Exam ID is required');
+      }
+
+      const generatedCount = await SeoService.generateExamSeoPages(examId, categories);
+      sendSuccess(res, { message: 'Generation complete', generatedCount });
+    } catch (err) {
+      next(err);
+    }
+  }
 }
+
