@@ -18,14 +18,18 @@ export default function MarkdownRenderer({
   variant = 'default',
   includeTime = false
 }: MarkdownRendererProps) {
-  const processedContent = useMemo(() => formatDatesInText(content, includeTime), [content, includeTime]);
+  const processedContent = useMemo(() => {
+    if (!content) return "";
+    const unescaped = content.replace(/\\n/g, "\n");
+    return formatDatesInText(unescaped, includeTime);
+  }, [content, includeTime]);
 
   if (!content) return null;
 
   return (
     <div className={`markdown-renderer ${variant}-variant ${className}`}>
-      <ReactMarkdown 
-        remarkPlugins={[remarkGfm, remarkBreaks]} 
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm, remarkBreaks]}
         rehypePlugins={[rehypeRaw]}
         components={{
           table: ({ node, ...props }) => (
