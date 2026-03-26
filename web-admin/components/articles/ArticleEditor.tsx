@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-    Save, 
-    ChevronLeft, 
-    Eye, 
+import {
+    Save,
+    ChevronLeft,
+    Eye,
     Code,
     RefreshCw,
     ImageIcon,
@@ -57,6 +57,21 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
         category: ''
     });
 
+    const [isSlugLocked, setIsSlugLocked] = useState(!!initialData?.slug);
+
+    const handleTitleChange = (newTitle: string) => {
+        const updates: Partial<SeoPage> = { title: newTitle };
+        if (!isSlugLocked) {
+            updates.slug = newTitle
+                .toLowerCase()
+                .trim()
+                .replace(/[^\w\s-]/g, '')
+                .replace(/[\s_]+/g, '-')
+                .replace(/-+/g, '-');
+        }
+        setFormData({ ...formData, ...updates });
+    };
+
     const handleKeywordChange = (val: string) => {
         const keywords = val.split(',').map(k => k.trim()).filter(Boolean);
         setFormData({ ...formData, keywords });
@@ -75,8 +90,8 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                         <p className="text-sm text-muted-foreground">Manage article content and SEO metadata</p>
                     </div>
                 </div>
-                <Button 
-                    onClick={() => onSave(formData)} 
+                <Button
+                    onClick={() => onSave(formData)}
                     disabled={isSaving || !formData.slug || !formData.title || !formData.content}
                 >
                     {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
@@ -108,29 +123,41 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                 <CardContent className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="title">Title</Label>
-                                        <Input 
+                                        <Input
                                             id="title"
                                             placeholder="Article Title"
                                             value={formData.title}
-                                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                            onChange={(e) => handleTitleChange(e.target.value)}
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="slug">Slug</Label>
                                         <div className="flex">
                                             <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-input bg-muted text-muted-foreground text-sm">/</span>
-                                            <Input 
+                                            <Input
                                                 id="slug"
-                                                className="rounded-l-none"
+                                                className="rounded-none border-x-0"
                                                 placeholder="article-slug"
                                                 value={formData.slug}
-                                                onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') })}
+                                                onChange={(e) => {
+                                                    setIsSlugLocked(true);
+                                                    setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/\s+/g, '-') });
+                                                }}
                                             />
+                                            <Button
+                                                variant="outline"
+                                                className="rounded-l-none border-l-0"
+                                                onClick={() => setIsSlugLocked(!isSlugLocked)}
+                                                type="button"
+                                                title={isSlugLocked ? "Unlock to auto-generate from title" : "Lock to prevent auto-changes"}
+                                            >
+                                                {isSlugLocked ? <LinkIcon className="w-4 h-4 text-muted-foreground" /> : <RefreshCw className="w-4 h-4 text-blue-500" />}
+                                            </Button>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="content">Content (Markdown)</Label>
-                                        <TextareaAutosize 
+                                        <TextareaAutosize
                                             id="content"
                                             placeholder="Write your content here..."
                                             className="min-h-[400px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
@@ -151,7 +178,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                 <CardContent className="space-y-4">
                                     <div className="flex items-center justify-between space-x-2">
                                         <Label htmlFor="published">Published</Label>
-                                        <Switch 
+                                        <Switch
                                             id="published"
                                             checked={formData.isPublished}
                                             onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked })}
@@ -159,8 +186,8 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="exam">Linked Exam</Label>
-                                        <Select 
-                                            value={formData.examId || "none"} 
+                                        <Select
+                                            value={formData.examId || "none"}
                                             onValueChange={(val) => setFormData({ ...formData, examId: val === "none" ? null : val })}
                                         >
                                             <SelectTrigger id="exam">
@@ -174,6 +201,31 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                             </SelectContent>
                                         </Select>
                                     </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="category">Article Category</Label>
+                                        <Select
+                                            value={formData.category || "OTHERS"}
+                                            onValueChange={(val) => setFormData({ ...formData, category: val })}
+                                        >
+                                            <SelectTrigger id="category">
+                                                <SelectValue placeholder="Select Category" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="NOTIFICATION">Notification PDF</SelectItem>
+                                                <SelectItem value="VACANCIES">Vacancy Details</SelectItem>
+                                                <SelectItem value="ELIGIBILITY">Eligibility Criteria</SelectItem>
+                                                <SelectItem value="SALARY">Salary & Job Profile</SelectItem>
+                                                <SelectItem value="SYLLABUS">Syllabus & Pattern</SelectItem>
+                                                <SelectItem value="SELECTION_PROCESS">Selection Process</SelectItem>
+                                                <SelectItem value="ADMIT_CARD">Admit Card</SelectItem>
+                                                <SelectItem value="RESULTS">Results</SelectItem>
+                                                <SelectItem value="CUT_OFF">Cut Off Marks</SelectItem>
+                                                <SelectItem value="ANSWER_KEY">Answer Key</SelectItem>
+                                                <SelectItem value="STAGES">Timeline Stages</SelectItem>
+                                                <SelectItem value="OTHERS">Others</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </CardContent>
                             </Card>
 
@@ -184,7 +236,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                 <CardContent className="space-y-4">
                                     <div className="space-y-2">
                                         <Label htmlFor="metaTitle">Meta Title</Label>
-                                        <Input 
+                                        <Input
                                             id="metaTitle"
                                             placeholder="Search results title"
                                             value={formData.metaTitle || ''}
@@ -193,7 +245,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="metaDescription">Meta Description</Label>
-                                        <Textarea 
+                                        <Textarea
                                             id="metaDescription"
                                             className="h-24"
                                             placeholder="Search results description"
@@ -203,7 +255,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="keywords">Keywords</Label>
-                                        <Input 
+                                        <Input
                                             id="keywords"
                                             placeholder="Comma separated"
                                             defaultValue={formData.keywords?.join(', ')}
@@ -212,7 +264,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="ogImage">OG Image URL</Label>
-                                        <Input 
+                                        <Input
                                             id="ogImage"
                                             placeholder="https://-image-url"
                                             value={formData.ogImage || ''}

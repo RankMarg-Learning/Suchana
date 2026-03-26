@@ -97,6 +97,10 @@ export async function getExamById(id: string, bypassCache = false) {
                 lifecycleEvents: {
                     orderBy: { startsAt: 'asc' },
                 },
+                seoPages: {
+                    where: { isPublished: true },
+                    select: { slug: true, category: true }
+                }
             },
         });
 
@@ -117,6 +121,10 @@ export async function getExamBySlug(slug: string, bypassCache = false) {
                 lifecycleEvents: {
                     orderBy: { startsAt: 'asc' },
                 },
+                seoPages: {
+                    where: { isPublished: true },
+                    select: { slug: true, category: true }
+                }
             },
         });
 

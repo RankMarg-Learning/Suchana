@@ -5,16 +5,52 @@ import { sendSuccess } from '../utils/apiResponse';
 import { SeoService } from '../services/seo.service';
 
 export class SeoController {
-  // Public - used by frontend
+
   static async getPageBySlug(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
       const page = await prisma.seoPage.findUnique({
         where: { slug, isPublished: true },
-        include: { 
+        select: {
+          slug: true,
+          title: true,
+          metaTitle: true,
+          metaDescription: true,
+          content: true,
+          keywords: true,
+          ogImage: true,
+          canonicalUrl: true,
+          category: true,
+          createdAt: true,
+          updatedAt: true,
           exam: {
-            include: { 
-              lifecycleEvents: { orderBy: { stageOrder: 'asc' } } 
+            select: {
+              title: true,
+              shortTitle: true,
+              slug: true,
+              status: true,
+              category: true,
+              examLevel: true,
+              state: true,
+              conductingBody: true,
+              officialWebsite: true,
+              lifecycleEvents: {
+                orderBy: { stageOrder: 'asc' },
+                select: {
+                  stage: true,
+                  startsAt: true,
+                  endsAt: true,
+                  actionUrl: true,
+                  actionLabel: true,
+                }
+              },
+              seoPages: {
+                where: {
+                  isPublished: true,
+                  category: { in: ['SYLLABUS', 'ELIGIBILITY', 'SALARY', 'NOTIFICATION'] }
+                },
+                select: { slug: true, category: true }
+              }
             }
           }
         }
@@ -80,7 +116,7 @@ export class SeoController {
   static async createPage(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug, title, content, metaTitle, metaDescription, keywords, ogImage, canonicalUrl, isPublished, examId, category } = req.body;
-      
+
       const existing = await prisma.seoPage.findUnique({ where: { slug } });
       if (existing) {
         throw new AppError(400, 'CONFLICT', `A page with slug "${slug}" already exists`);
