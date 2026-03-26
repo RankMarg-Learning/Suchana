@@ -224,7 +224,7 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
                 </div>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Vacancies</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{getTotalVacancies(exam.totalVacancies)}</div>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{<MarkdownRenderer content={getTotalVacancies(exam.totalVacancies)} />}</div>
                 </div>
               </div>
 
