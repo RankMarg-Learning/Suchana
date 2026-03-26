@@ -109,12 +109,6 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         logger.info(`[Promote] Updated existing Exam ${staged.existingExamId} from StagedExam ${stagedExamId}`);
 
         try {
-            await SeoService.generateExamSeoPages(staged.existingExamId!);
-        } catch (e) {
-            logger.error(`Failed to auto-generate SEO pages for ${staged.existingExamId}:`, e);
-        }
-
-        try {
             await NotificationService.sendManualExamNotification(
                 staged.existingExamId!,
                 `📢 Update: ${staged.shortTitle || staged.title}`,
@@ -163,12 +157,6 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
         });
         return { examId: exam.id };
     });
-
-    try {
-        await SeoService.generateExamSeoPages(examId);
-    } catch (e) {
-        logger.error(`Failed to auto-generate SEO pages for ${examId}:`, e);
-    }
 
     try {
         await notificationQueue.enqueueNewExamNotification(examId);

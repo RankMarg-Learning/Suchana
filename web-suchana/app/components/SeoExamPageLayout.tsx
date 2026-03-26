@@ -63,6 +63,22 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
     { label: seoPage.title, href: "" },
   ];
 
+  const quickLinks = [
+    { label: 'Syllabus & Pattern', category: 'SYLLABUS', slug: `/${exam.slug}-syllabus-exam-pattern` },
+    { label: 'Eligibility Details', category: 'ELIGIBILITY', slug: `/${exam.slug}-eligibility-criteria` },
+    { label: 'Salary & Job Profile', category: 'SALARY', slug: `/${exam.slug}-salary-job-profile` },
+    { label: 'Notification PDF', category: 'NOTIFICATION', slug: `/${exam.slug}-notification-pdf` },
+  ];
+
+  const availableLinks = quickLinks.filter(link => {
+    const linkSlugNoSlash = link.slug.replace(/^\//, '');
+    if (seoPage.slug === linkSlugNoSlash) return false;
+
+    return exam.seoPages?.some(p =>
+      p.category === link.category || p.slug === linkSlugNoSlash
+    );
+  });
+
   return (
     <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
       <SiteNav />
@@ -173,35 +189,32 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
             </div>
 
             {/* Stage Quick Navigation */}
-            <div style={{ marginTop: 60, padding: 24, borderRadius: 16, background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, color: 'var(--text-primary)' }}>
-                Explore More for {exam.shortTitle || exam.title}
-              </h3>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                <Link href={`/${exam.slug}-syllabus-exam-pattern`} className="official-link-btn" style={{ justifyContent: 'space-between', padding: '12px 16px' }}>
-                  <span>Syllabus & Pattern</span>
-                  <ChevronRight size={14} />
-                </Link>
-                <Link href={`/${exam.slug}-eligibility-criteria`} className="official-link-btn" style={{ justifyContent: 'space-between', padding: '12px 16px' }}>
-                  <span>Eligibility Details</span>
-                  <ChevronRight size={14} />
-                </Link>
-                <Link href={`/${exam.slug}-salary-job-profile`} className="official-link-btn" style={{ justifyContent: 'space-between', padding: '12px 16px' }}>
-                  <span>Salary & Job Profile</span>
-                  <ChevronRight size={14} />
-                </Link>
-                <Link href={`/${exam.slug}-notification-pdf`} className="official-link-btn" style={{ justifyContent: 'space-between', padding: '12px 16px' }}>
-                  <span>Notification PDF</span>
-                  <ChevronRight size={14} />
-                </Link>
-              </div>
+            {availableLinks.length > 0 && (
+              <div style={{ marginTop: 60, padding: 24, borderRadius: 16, background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, color: 'var(--text-primary)' }}>
+                  Explore More for {exam.shortTitle || exam.title}
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: availableLinks.length > 1 ? '1fr 1fr' : '1fr', gap: 12 }}>
+                  {availableLinks.map((link) => (
+                    <Link
+                      key={link.slug}
+                      href={link.slug}
+                      className="official-link-btn"
+                      style={{ justifyContent: 'space-between', padding: '12px 16px' }}
+                    >
+                      <span>{link.label}</span>
+                      <ChevronRight size={14} />
+                    </Link>
+                  ))}
+                </div>
 
-              <div style={{ marginTop: 24, textAlign: 'center' }}>
-                <Link href={`/${exam.slug}`} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                  View Full Exam Timeline <ArrowRight size={16} />
-                </Link>
+                <div style={{ marginTop: 24, textAlign: 'center' }}>
+                  <Link href={`/exam/${exam.slug}`} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
+                    View Full Exam Timeline <ArrowRight size={16} />
+                  </Link>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Inline Ad */}
             <div style={{ margin: '40px 0' }}>
@@ -218,15 +231,6 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
               Exam Overview
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ background: 'var(--bg-secondary)', padding: 8, borderRadius: 8, height: 'fit-content' }}>
-                  <Briefcase size={16} color="var(--accent-light)" />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Vacancies</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{getTotalVacancies(exam.totalVacancies)}</div>
-                </div>
-              </div>
 
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ background: 'var(--bg-secondary)', padding: 8, borderRadius: 8, height: 'fit-content' }}>

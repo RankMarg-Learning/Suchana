@@ -368,6 +368,11 @@ export const seoService = {
         const response = await apiClient.delete(`/seo-pages/${id}`);
         return response.data;
     },
+    // Generate Exam Pages
+    generateExamPages: async (examId: string, categories?: string[]): Promise<ApiResponse<{ message: string; generatedCount: number }>> => {
+        const response = await apiClient.post('/seo-pages/admin/generate-exam-pages', { examId, categories });
+        return response.data;
+    },
 };
 
 export default apiClient;

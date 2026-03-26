@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { fetchExamBySlug, SITE_URL, fetchAllExamSlugs, fetchExamsFromAPI } from "@/app/lib/api";
 import {
   STATUS_LABELS,
@@ -250,36 +250,8 @@ function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamByS
 
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
-  const exam = await fetchExamBySlug(slug);
-
-  if (!exam) notFound();
-
-  const { exams: relatedExams } = await fetchExamsFromAPI(1, 5, exam.category).catch(() => ({ exams: [] }));
-  const filteredRelated = (relatedExams || []).filter(e => e.id !== exam.id).slice(0, 4);
-
-  const jobPostingJsonLd = buildJobPostingJsonLd(exam);
-  const eventJsonLd = buildEventJsonLd(exam);
-  const breadcrumbJsonLd = buildBreadcrumbJsonLd(exam);
-  const faqJsonLd = buildFaqJsonLd(exam);
-
-  const combinedJsonLd = {
-    "@context": "https://schema.org",
-    "@graph": [
-      jobPostingJsonLd,
-      eventJsonLd,
-      breadcrumbJsonLd,
-      faqJsonLd,
-    ].filter(Boolean),
-  };
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(combinedJsonLd) }}
-      />
-
-      <ExamDetailClient exam={exam} relatedExams={filteredRelated} />
-    </>
-  );
+  
+  // SEO optimization: Redirect to root-level URL to avoid duplicate pages.
+  // app/[slug]/page.tsx now handles both SEO pages and Exam details.
+  redirect(`/${slug}`);
 }

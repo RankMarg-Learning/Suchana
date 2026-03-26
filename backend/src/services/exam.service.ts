@@ -97,6 +97,10 @@ export async function getExamById(id: string, bypassCache = false) {
                 lifecycleEvents: {
                     orderBy: { startsAt: 'asc' },
                 },
+                seoPages: {
+                    where: { isPublished: true },
+                    select: { slug: true, category: true }
+                }
             },
         });
 
@@ -117,6 +121,10 @@ export async function getExamBySlug(slug: string, bypassCache = false) {
                 lifecycleEvents: {
                     orderBy: { startsAt: 'asc' },
                 },
+                seoPages: {
+                    where: { isPublished: true },
+                    select: { slug: true, category: true }
+                }
             },
         });
 
@@ -156,10 +164,6 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
 
     await cacheService.delPattern('exams:list:*');
 
-    if (exam.isPublished) {
-        SeoService.generateExamSeoPages(exam.id).catch(e => logger.error(`[SEO] Background generation failed for new exam ${exam.id}`, e));
-    }
-
     logger.info(`Exam created: ${exam.id} by admin ${adminId}`);
 
     return exam;
@@ -181,11 +185,6 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
     };
 
     const updated = await prisma.exam.update({ where: { id }, data });
-
-    // Mark for SEO refresh
-    if (updated.isPublished) {
-        SeoService.generateExamSeoPages(id).catch(e => logger.error(`[SEO] Background refresh failed for ${id}`, e));
-    }
 
     await Promise.all([
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),

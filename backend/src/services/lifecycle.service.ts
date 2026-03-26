@@ -88,10 +88,6 @@ export async function addLifecycleEvent(examId: string, dto: CreateLifecycleEven
 
     logger.info(`Event ${event.id} registered for exam ${examId}`);
 
-    if (exam.isPublished) {
-        SeoService.generateExamSeoPages(examId).catch(e => logger.error(`[SEO] Async refresh failed for ${examId}`, e));
-    }
-
     return event;
 }
 
@@ -135,12 +131,6 @@ export async function updateLifecycleEvent(examId: string, eventId: string, dto:
         logger.info(`Exam ${examId} status auto-updated to ${newStatus} due to updated event ${eventId}`);
     }
 
-    // Refresh SEO pages
-    const exam = await prisma.exam.findUnique({ where: { id: examId } });
-    if (exam?.isPublished) {
-        SeoService.generateExamSeoPages(examId).catch(e => logger.error(`[SEO] Async refresh failed for ${examId}`, e));
-    }
-
     return updated;
 }
 
@@ -155,12 +145,6 @@ export async function deleteLifecycleEvent(examId: string, eventId: string, _adm
     ]);
 
     logger.info(`Event ${eventId} purged`);
-
-    // Refresh SEO pages (as a stage might have been removed)
-    const exam = await prisma.exam.findUnique({ where: { id: examId } });
-    if (exam?.isPublished) {
-        SeoService.generateExamSeoPages(examId).catch(e => logger.error(`[SEO] Async refresh failed for ${examId}`, e));
-    }
 }
 
 /**

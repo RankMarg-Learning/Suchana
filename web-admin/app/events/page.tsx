@@ -194,8 +194,8 @@ export default function EventsTimelinePage() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-8 w-8 text-indigo-600 hover:bg-indigo-50"
-                                                onClick={() => router.push(`/exam/${event.examId}/edit`)}
+                                                className="h-8 w-8 text-indigo-600 hover:bg-indigo-50 cursor-pointer"
+                                                onClick={() => router.push(`/exam/${event.exam?.slug}/edit`)}
                                             >
                                                 <ExternalLink className="h-4 w-4" />
                                             </Button>

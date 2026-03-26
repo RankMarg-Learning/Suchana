@@ -50,14 +50,14 @@ export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
 export const EXAM_STATUSES = Object.values(ExamStatus);
 
 export const LifecycleStage = {
-    NOTIFICATION: 'NOTIFICATION',           // stageOrder: 10
-    REGISTRATION: 'REGISTRATION',           // stageOrder: 20
-    ADMIT_CARD: 'ADMIT_CARD',             // stageOrder: 30
-    EXAM: 'EXAM',                   // stageOrder: 40
-    ANSWER_KEY: 'ANSWER_KEY',             // stageOrder: 50
-    RESULT: 'RESULT',                 // stageOrder: 60
-    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',  // stageOrder: 70
-    JOINING: 'JOINING',                // stageOrder: 80
+    NOTIFICATION: 'NOTIFICATION',
+    REGISTRATION: 'REGISTRATION',
+    ADMIT_CARD: 'ADMIT_CARD',
+    EXAM: 'EXAM',
+    ANSWER_KEY: 'ANSWER_KEY',
+    RESULT: 'RESULT',
+    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',
+    JOINING: 'JOINING',
 } as const;
 export type LifecycleStage = (typeof LifecycleStage)[keyof typeof LifecycleStage];
 export const LIFECYCLE_STAGES = Object.values(LifecycleStage);
@@ -126,12 +126,31 @@ export const QualificationLevel = {
 } as const;
 export type QualificationLevel = (typeof QualificationLevel)[keyof typeof QualificationLevel];
 
+/**
+ * Status to show while a lifecycle stage window is CURRENTLY OPEN.
+ * Returns null for stages that should show ACTIVE (ANSWER_KEY, DOC_VERIFICATION, JOINING).
+ */
 export const getStatusFromStage = (stage: string): ExamStatus | null => {
-    if (stage === LifecycleStage.REGISTRATION) return ExamStatus.REGISTRATION_OPEN;
-    if (stage === LifecycleStage.ADMIT_CARD) return ExamStatus.ADMIT_CARD_OUT;
-    if (stage === LifecycleStage.EXAM) return ExamStatus.EXAM_ONGOING;
-    if (stage === LifecycleStage.RESULT) return ExamStatus.RESULT_DECLARED;
     if (stage === LifecycleStage.NOTIFICATION) return ExamStatus.NOTIFICATION;
+    if (stage === LifecycleStage.REGISTRATION) return ExamStatus.REGISTRATION_OPEN;
+    if (stage === LifecycleStage.ADMIT_CARD)   return ExamStatus.ADMIT_CARD_OUT;
+    if (stage === LifecycleStage.EXAM)         return ExamStatus.EXAM_ONGOING;
+    if (stage === LifecycleStage.RESULT)       return ExamStatus.RESULT_DECLARED;
+    // ANSWER_KEY, DOCUMENT_VERIFICATION, JOINING → show ACTIVE (generic in-progress)
     return null;
+};
+
+/**
+ * Status to show when this stage is the LAST completed event and
+ * there are no more future events (terminal state before archival).
+ * Only called for the final event, after its window has closed.
+ */
+export const getTerminalStatusFromStage = (stage: string): ExamStatus => {
+    if (stage === LifecycleStage.REGISTRATION)          return ExamStatus.REGISTRATION_CLOSED;
+    if (stage === LifecycleStage.RESULT)                return ExamStatus.RESULT_DECLARED;
+    if (stage === LifecycleStage.DOCUMENT_VERIFICATION) return ExamStatus.RESULT_DECLARED;
+    if (stage === LifecycleStage.JOINING)               return ExamStatus.RESULT_DECLARED;
+    // Everything else that ends last → ACTIVE (e.g. exam day was last listed event)
+    return ExamStatus.ACTIVE;
 };
 
