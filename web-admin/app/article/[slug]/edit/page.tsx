@@ -6,7 +6,6 @@ import { seoService, examService, SeoPage } from '@/lib/api';
 import ArticleEditor from '@/components/articles/ArticleEditor';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
-import React from 'react';
 
 export default function EditArticlePage() {
     const router = useRouter();
@@ -27,8 +26,22 @@ export default function EditArticlePage() {
 
     const updateMutation = useMutation({
         mutationFn: (data: Partial<SeoPage>) => {
-            const id = (pageResponse?.data as any)?.id;
-            return seoService.updatePage(id, data);
+            const pageId = (pageResponse?.data as any)?.id;
+
+            const {
+                id,
+                exam,
+                createdAt,
+                updatedAt,
+                ...sanitizedData
+            } = data as any;
+
+            if (!pageId) {
+                toast.error("Error: Article ID is missing. Please refresh the page.");
+                throw new Error("Article ID is undefined");
+            }
+
+            return seoService.updatePage(pageId, sanitizedData);
         },
         onSuccess: () => {
             toast.success('Article updated successfully');
@@ -67,7 +80,7 @@ export default function EditArticlePage() {
 
     return (
         <div className="container mx-auto py-8 max-w-7xl h-full min-h-screen">
-            <ArticleEditor 
+            <ArticleEditor
                 title={`Edit Article: ${pageResponse.data.title}`}
                 initialData={pageResponse.data}
                 exams={examsResponse?.data || []}
