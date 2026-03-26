@@ -34,6 +34,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Separator } from '@/components/ui/separator';
+import MarkdownRenderer from '../MarkdownRenderer';
 
 interface ArticleEditorProps {
     initialData?: Partial<SeoPage>;
@@ -44,6 +45,7 @@ interface ArticleEditorProps {
 }
 
 export default function ArticleEditor({ initialData, exams, isSaving, onSave, title }: ArticleEditorProps) {
+
     const [formData, setFormData] = useState<Partial<SeoPage>>(initialData || {
         slug: '',
         title: '',
@@ -282,9 +284,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                         <CardContent className="p-8 prose prose-slate max-w-none">
                             <h1>{formData.title || 'Untitled Article'}</h1>
                             <div className="mt-8">
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                    {formData.content || '*No content to preview*'}
-                                </ReactMarkdown>
+                                <MarkdownRenderer content={formData.content || '*No content to preview*'} />
                             </div>
                         </CardContent>
                     </Card>

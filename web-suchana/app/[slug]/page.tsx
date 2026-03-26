@@ -20,8 +20,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  
-  // 1. Try SEO Page Metadata first
+
   const page = await fetchSeoPageBySlug(slug);
 
   if (page) {
@@ -48,7 +47,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  // 2. Fallback to Exam Metadata if no SEO page exists
   const exam = await fetchExamBySlug(slug);
   if (exam) {
     const year = new Date().getFullYear();
@@ -57,13 +55,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const vacancies = getTotalVacancies(exam.totalVacancies);
     const regEvent = exam.lifecycleEvents?.find((e) => e.stage === "REGISTRATION");
     const deadline = regEvent?.endsAt ? `Registration deadline ${formatDate(regEvent.endsAt)}.` : "";
-    
+
     const seoTitle = `${title} Recruitment ${year}: Apply Online, Full Schedule, Vacancies & Eligibility`;
-    const description = 
+    const description =
       exam.description
         ? `${exam.description.slice(0, 140)}... Status: ${statusLabel}. Vacancies: ${vacancies}. ${deadline} Get real-time updates on Exam Suchana.`
         : `${title} official notification by ${exam.conductingBody}. Status: ${statusLabel}. ${vacancies !== "TBA" ? `${vacancies} vacancies.` : ""} ${deadline} Check syllabus, result & admit card.`;
-    
+
     return {
       title: seoTitle,
       description,
@@ -93,7 +91,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-// ─── JSON-LD Builders (Moved from ExamDetailPage) ──────────────────────────────
 function buildJobPostingJsonLd(exam: any) {
   const regEvent = exam.lifecycleEvents?.find((e: any) => e.stage === "REGISTRATION");
   const canonicalUrl = `${SITE_URL}/${exam.slug}`;
@@ -121,7 +118,7 @@ function buildJobPostingJsonLd(exam: any) {
 
 export default async function DynamicSlugPage({ params }: Props) {
   const { slug } = await params;
-  
+
   // 1. Check for SEO Page (Custom Content or Linked Exam)
   const page = await fetchSeoPageBySlug(slug);
 

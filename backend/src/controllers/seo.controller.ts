@@ -9,9 +9,12 @@ export class SeoController {
   static async getPageBySlug(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
+      const isAdmin = !!req.headers.authorization;
+      
       const page = await prisma.seoPage.findUnique({
-        where: { slug, isPublished: true },
+        where: { slug, ...(isAdmin ? {} : { isPublished: true }) },
         select: {
+          id: true,
           slug: true,
           title: true,
           metaTitle: true,
@@ -21,6 +24,7 @@ export class SeoController {
           ogImage: true,
           canonicalUrl: true,
           category: true,
+          isPublished: true,
           createdAt: true,
           updatedAt: true,
           exam: {
