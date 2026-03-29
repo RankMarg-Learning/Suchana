@@ -141,7 +141,6 @@ const organizationJsonLd = {
   url: SITE_URL,
   logo: `${SITE_URL}/examsuchana-logoT.png`,
   sameAs: [
-    "https://twitter.com/ExamSuchana",
     "https://t.me/ExamSuchana",
   ],
   contactPoint: {
