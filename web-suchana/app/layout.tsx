@@ -107,6 +107,9 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-status-bar-style": "black-translucent",
     "theme-color": "#7c3aed",
     "og:locale:alternate": "hi_IN",
+    "geo.region": "IN",
+    "geo.placename": "India",
+    "DC.title": "Exam Suchana - India's Government Exam Lifecycle Tracker",
   },
   manifest: "/manifest.json",
 };
