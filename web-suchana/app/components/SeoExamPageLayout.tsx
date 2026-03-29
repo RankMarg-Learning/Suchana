@@ -21,6 +21,7 @@ import SiteFooter from './SiteFooter';
 import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd, InFeedAd } from './AdUnits';
 import { Exam, SeoPage, cleanLabel, formatDate, getTotalVacancies, STATUS_LABELS } from '../lib/types';
+import { LifecycleStage } from '../lib/enums';
 
 interface Props {
   exam: Exam;
@@ -35,9 +36,9 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
     const now = Date.now();
 
     const categoryToStage: Record<string, string> = {
-      'ADMIT_CARD': 'ADMIT_CARD',
-      'RESULTS': 'RESULT',
-      'ANSWER_KEY': 'ANSWER_KEY',
+      'ADMIT_CARD': LifecycleStage.ADMIT_CARD,
+      'RESULTS': LifecycleStage.RESULT,
+      'ANSWER_KEY': LifecycleStage.ANSWER_KEY,
     };
 
     const targetStage = categoryToStage[seoPage.category || ''];

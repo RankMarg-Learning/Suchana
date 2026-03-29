@@ -6,12 +6,14 @@ import SiteFooter from '../components/SiteFooter';
 import MarkdownRenderer from '../components/MarkdownRenderer';
 import { LeaderboardAd, InFeedAd } from '../components/AdUnits';
 import ExamDetailClient from "../exam/[slug]/ExamDetailClient";
-import { STATUS_LABELS, cleanLabel, formatDate, getTotalVacancies, SeoPage } from "@/app/lib/types";
+import { STATUS_LABELS, cleanLabel, formatDate, getTotalVacancies, SeoPage, stripHtml } from "@/app/lib/types";
 import SeoExamPageLayout from '../components/SeoExamPageLayout';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
+
+// ─── SEO Helper Functions ──────────────────────────────────────────────────
 
 export async function generateStaticParams() {
   const slugs = await fetchAllSeoPageSlugs();
@@ -20,28 +22,31 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-
   const page = await fetchSeoPageBySlug(slug);
 
   if (page) {
     const canonical = page.canonicalUrl || `${SITE_URL}/${slug}`;
+    const description = page.metaDescription || (page.content ? stripHtml(page.content).slice(0, 160) : '');
+
     return {
       title: page.metaTitle || `${page.title} | Exam Suchana`,
-      description: page.metaDescription,
+      description,
       keywords: page.keywords,
-      alternates: { canonical: canonical },
+      alternates: { canonical },
       openGraph: {
         title: page.metaTitle || page.title,
-        description: page.metaDescription ?? undefined,
+        description,
         url: canonical,
         siteName: 'Exam Suchana',
         images: page.ogImage ? [{ url: page.ogImage }] : undefined,
         type: 'article',
+        publishedTime: page.createdAt,
+        modifiedTime: page.updatedAt,
       },
       twitter: {
         card: 'summary_large_image',
         title: page.metaTitle || page.title,
-        description: page.metaDescription ?? undefined,
+        description,
         images: page.ogImage ? [page.ogImage] : undefined,
       },
     };
@@ -91,6 +96,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+// ─── JSON-LD Builders ────────────────────────────────────────────────────────
+
+function buildBreadcrumbJsonLd(slug: string, title: string, parent?: { label: string; href: string }) {
+  const items = [
+    { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+  ];
+  if (parent) {
+    items.push({ "@type": "ListItem", position: 2, name: parent.label, item: `${SITE_URL}${parent.href}` });
+    items.push({ "@type": "ListItem", position: 3, name: title, item: `${SITE_URL}/${slug}` });
+  } else {
+    items.push({ "@type": "ListItem", position: 2, name: title, item: `${SITE_URL}/${slug}` });
+  }
+
+  return {
+    "@type": "BreadcrumbList",
+    "itemListElement": items
+  };
+}
+
 function buildJobPostingJsonLd(exam: any) {
   const regEvent = exam.lifecycleEvents?.find((e: any) => e.stage === "REGISTRATION");
   const canonicalUrl = `${SITE_URL}/${exam.slug}`;
@@ -98,7 +122,7 @@ function buildJobPostingJsonLd(exam: any) {
     "@type": "JobPosting",
     "@id": `${canonicalUrl}#job`,
     title: exam.title,
-    description: exam.description || `${exam.title} — Government recruitment by ${exam.conductingBody}.`,
+    description: stripHtml(exam.description) || `${exam.title} — Government recruitment by ${exam.conductingBody}.`,
     hiringOrganization: {
       "@type": "Organization",
       "@id": `${SITE_URL}#organization`,
@@ -116,40 +140,70 @@ function buildJobPostingJsonLd(exam: any) {
   };
 }
 
+function buildEventJsonLd(exam: any) {
+  const examEvent = exam.lifecycleEvents?.find((e: any) => e.stage === "EXAM_DATE" || e.stage === "EXAM");
+  if (!examEvent?.startsAt) return null;
+
+  return {
+    "@type": "Event",
+    "name": exam.title,
+    "startDate": examEvent.startsAt,
+    "location": {
+      "@type": "Place",
+      "name": exam.state || "India",
+      "address": { "@type": "PostalAddress", "addressCountry": "IN" }
+    }
+  };
+}
+
 export default async function DynamicSlugPage({ params }: Props) {
   const { slug } = await params;
 
-  // 1. Check for SEO Page (Custom Content or Linked Exam)
+  // 1. Check for SEO Page
   const page = await fetchSeoPageBySlug(slug);
 
   if (page) {
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Article",
+          "headline": page.title,
+          "description": page.metaDescription,
+          "image": page.ogImage,
+          "datePublished": page.createdAt,
+          "dateModified": page.updatedAt,
+          "author": { "@type": "Organization", "name": "Exam Suchana" }
+        },
+        buildBreadcrumbJsonLd(
+          page.slug, 
+          page.title, 
+          page.exam ? { label: page.exam.shortTitle || page.exam.title, href: `/${page.exam.slug}` } : undefined
+        ),
+        page.exam ? buildJobPostingJsonLd(page.exam) : null,
+        page.exam ? buildEventJsonLd(page.exam) : null,
+      ].filter(Boolean)
+    };
+
     if (page.exam) {
       return (
-        <SeoExamPageLayout
-          exam={page.exam}
-          seoPage={{
-            ...page,
-            title: page.title || page.exam.title
-          } as SeoPage}
-        />
+        <>
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+          <SeoExamPageLayout
+            exam={page.exam}
+            seoPage={{
+              ...page,
+              title: page.title || page.exam.title
+            } as SeoPage}
+          />
+        </>
       );
     }
-
-    const articleJsonLd = {
-      "@context": "https://schema.org",
-      "@type": "Article",
-      "headline": page.title,
-      "description": page.metaDescription,
-      "image": page.ogImage,
-      "author": { "@type": "Organization", "name": "Exam Suchana" },
-      "datePublished": page.createdAt,
-      "dateModified": page.updatedAt
-    };
 
     return (
       <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
         <SiteNav />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
         <main className="seo-page-container" style={{ paddingTop: 100, paddingBottom: 100, paddingLeft: '1rem', paddingRight: '1rem' }}>
           <div className="feed-main" style={{ margin: '0 auto', maxWidth: 800 }}>
             <div className="leaderboard-wrap" style={{ marginBottom: 40 }}>
@@ -175,7 +229,7 @@ export default async function DynamicSlugPage({ params }: Props) {
     );
   }
 
-  // 2. Fallback to standard Exam page (Enables Root-level Exam URLs)
+  // 2. Fallback to standard Exam page
   const exam = await fetchExamBySlug(slug);
   if (exam) {
     const { fetchExamsFromAPI } = await import('@/app/lib/api');
@@ -186,7 +240,8 @@ export default async function DynamicSlugPage({ params }: Props) {
       "@context": "https://schema.org",
       "@graph": [
         buildJobPostingJsonLd(exam),
-        { "@type": "ListItem", position: 1, name: "Home", item: SITE_URL },
+        buildEventJsonLd(exam),
+        buildBreadcrumbJsonLd(exam.slug, exam.shortTitle || exam.title),
       ].filter(Boolean)
     };
 
@@ -201,6 +256,6 @@ export default async function DynamicSlugPage({ params }: Props) {
     );
   }
 
-  // 3. True 404
   notFound();
 }
+
