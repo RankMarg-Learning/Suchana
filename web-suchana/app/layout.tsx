@@ -107,6 +107,9 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-status-bar-style": "black-translucent",
     "theme-color": "#7c3aed",
     "og:locale:alternate": "hi_IN",
+    "geo.region": "IN",
+    "geo.placename": "India",
+    "DC.title": "Exam Suchana - India's Government Exam Lifecycle Tracker",
   },
   manifest: "/manifest.json",
 };
@@ -138,7 +141,6 @@ const organizationJsonLd = {
   url: SITE_URL,
   logo: `${SITE_URL}/examsuchana-logoT.png`,
   sameAs: [
-    "https://twitter.com/ExamSuchana",
     "https://t.me/ExamSuchana",
   ],
   contactPoint: {
@@ -177,15 +179,19 @@ export default function RootLayout({
       </head>
       <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
         {children}
-        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-1SHT5DRT85" />
-        <Script id="google-analytics">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-1SHT5DRT85');
-          `}
-        </Script>
+        {process.env.NODE_ENV === "production" && (
+          <>
+            <Script async src="https://www.googletagmanager.com/gtag/js?id=G-1SHT5DRT85" />
+            <Script id="google-analytics">
+              {`
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-1SHT5DRT85');
+              `}
+            </Script>
+          </>
+        )}
       </body>
     </html>
   );
