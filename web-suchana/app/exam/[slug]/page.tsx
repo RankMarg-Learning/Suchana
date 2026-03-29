@@ -3,12 +3,9 @@ import { notFound, redirect } from "next/navigation";
 import { fetchExamBySlug, SITE_URL, fetchAllExamSlugs, fetchExamsFromAPI } from "@/app/lib/api";
 import {
   STATUS_LABELS,
-  STAGE_LABELS,
   cleanLabel,
   formatDate,
   getTotalVacancies,
-  getStageState,
-  countdownStr,
   stripHtml,
 } from "@/app/lib/types";
 import ExamDetailClient from "./ExamDetailClient";
@@ -250,8 +247,35 @@ function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamByS
 
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
-  
-  // SEO optimization: Redirect to root-level URL to avoid duplicate pages.
-  // app/[slug]/page.tsx now handles both SEO pages and Exam details.
-  redirect(`/${slug}`);
+  const exam = await fetchExamBySlug(slug);
+
+  if (!exam) {
+    notFound();
+  }
+
+  // Fetch related exams for the client component
+  const { fetchExamsFromAPI } = await import('@/app/lib/api');
+  const { exams: relatedExams } = await fetchExamsFromAPI(1, 5, exam.category).catch(() => ({ exams: [] }));
+  const filteredRelated = (relatedExams || []).filter(e => e.id !== exam.id).slice(0, 4);
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      buildJobPostingJsonLd(exam),
+      buildEventJsonLd(exam),
+      buildBreadcrumbJsonLd(exam),
+      buildFaqJsonLd(exam),
+    ].filter(Boolean)
+  };
+
+  return (
+    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ExamDetailClient exam={exam} relatedExams={filteredRelated} />
+    </div>
+  );
 }
+

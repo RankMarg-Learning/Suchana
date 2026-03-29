@@ -1,48 +1,24 @@
-import { Worker, Job } from 'bullmq';
-import { bullRedisConnection } from '../config/redis';
-import { CRON_QUEUE_NAME } from '../queues/cron.queue';
+import cron from 'node-cron';
 import { CronService } from '../services/cron.service';
 import { logger } from '../utils/logger';
 
-async function processCronJob(job: Job): Promise<void> {
-    const { name } = job;
+export function startCronWorker(): void {
+    logger.info('🚀 Direct cron jobs initialized...');
 
-    try {
-        switch (name) {
-            case 'update-exam-statuses':
-                await CronService.syncExamStatuses();
-                break;
-            default:
-                logger.warn(`Unknown cron job: ${name}`);
+    // Exam status sync every 4 hours (matching the existing schedule: 0 */4 * * *)
+    cron.schedule('0 */4 * * *', async () => {
+        logger.debug('[CronWorker] Starting scheduled job: update-exam-statuses');
+        try {
+            await CronService.syncExamStatuses();
+            logger.debug('[CronWorker] Scheduled job update-exam-statuses completed successfully');
+        } catch (error) {
+            logger.error('[CronWorker] Scheduled job update-exam-statuses failed:', error);
         }
-    } catch (error) {
-        logger.error(`Error processing cron job ${job.id} (name: ${name}):`, error);
-        throw error;
-    }
+    });
+
+    // Run once on startup to ensure fresh data
+    CronService.syncExamStatuses().catch(err => {
+        logger.error('[CronWorker] Initial status sync on startup failed:', err);
+    });
 }
 
-export function startCronWorker(): Worker {
-    const worker = new Worker(
-        CRON_QUEUE_NAME,
-        processCronJob,
-        {
-            connection: bullRedisConnection,
-            concurrency: 1,
-        }
-    );
-
-    worker.on('completed', (job) => {
-        logger.debug(`[CronWorker] Job ${job.id} (${job.name}) completed successfully`);
-    });
-
-    worker.on('failed', (job, err) => {
-        logger.error(`[CronWorker] Job ${job?.id} failed: ${err.message}`);
-    });
-
-    worker.on('error', (err) => {
-        logger.error('[CronWorker] Fatal error:', err);
-    });
-
-    logger.info('🚀 Cron worker active and listening for repeat jobs...');
-    return worker;
-}

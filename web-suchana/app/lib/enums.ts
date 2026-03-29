@@ -1,0 +1,155 @@
+export const ExamCategory = {
+    ENGINEERING_ENTRANCE: "ENGINEERING_ENTRANCE",
+    MEDICAL_ENTRANCE: "MEDICAL_ENTRANCE",
+    LAW_ENTRANCE: "LAW_ENTRANCE",
+    MBA_ENTRANCE: "MBA_ENTRANCE",
+    GOVERNMENT_JOBS: "GOVERNMENT_JOBS",
+    BANKING_JOBS: "BANKING_JOBS",
+    RAILWAY_JOBS: "RAILWAY_JOBS",
+    DEFENCE_JOBS: "DEFENCE_JOBS",
+    POLICE_JOBS: "POLICE_JOBS",
+    TEACHING_ELIGIBILITY: "TEACHING_ELIGIBILITY",
+    STATE_PSC: "STATE_PSC",
+    UPSC: "UPSC",
+    SSC: "SSC",
+    PROFESSIONAL_CERTIFICATION: "PROFESSIONAL_CERTIFICATION",
+    SCHOOL_BOARD: "SCHOOL_BOARD",
+    SCHOLARSHIP_EXAMS: "SCHOLARSHIP_EXAMS",
+    OLYMPIAD_EXAMS: "OLYMPIAD_EXAMS",
+    AGRICULTURE_ENTRANCE: "AGRICULTURE_ENTRANCE",
+    PARAMEDICAL_ENTRANCE: "PARAMEDICAL_ENTRANCE",
+    FOREIGN_STUDY_EXAMS: "FOREIGN_STUDY_EXAMS",
+    SKILL_CERTIFICATION: "SKILL_CERTIFICATION",
+    UNIVERSITY_ENTRANCE: "UNIVERSITY_ENTRANCE",
+    OTHER: "OTHER"
+} as const;
+export type ExamCategory = (typeof ExamCategory)[keyof typeof ExamCategory];
+export const EXAM_CATEGORIES = Object.values(ExamCategory);
+
+
+export const ExamLevel = {
+    NATIONAL: 'NATIONAL',
+    STATE: 'STATE',
+    DISTRICT: 'DISTRICT',
+} as const;
+export type ExamLevel = (typeof ExamLevel)[keyof typeof ExamLevel];
+export const EXAM_LEVELS = Object.values(ExamLevel);
+
+
+export const ExamStatus = {
+    NOTIFICATION: 'NOTIFICATION',
+    REGISTRATION_OPEN: 'REGISTRATION_OPEN',
+    REGISTRATION_CLOSED: 'REGISTRATION_CLOSED',
+    ADMIT_CARD_OUT: 'ADMIT_CARD_OUT',
+    EXAM_ONGOING: 'EXAM_ONGOING',
+    RESULT_DECLARED: 'RESULT_DECLARED',
+    ARCHIVED: 'ARCHIVED',
+    ACTIVE: 'ACTIVE',
+} as const;
+export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
+export const EXAM_STATUSES = Object.values(ExamStatus);
+
+export const LifecycleStage = {
+    NOTIFICATION: 'NOTIFICATION',
+    REGISTRATION: 'REGISTRATION',
+    ADMIT_CARD: 'ADMIT_CARD',
+    EXAM: 'EXAM',
+    ANSWER_KEY: 'ANSWER_KEY',
+    RESULT: 'RESULT',
+    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',
+    JOINING: 'JOINING',
+} as const;
+export type LifecycleStage = (typeof LifecycleStage)[keyof typeof LifecycleStage];
+export const LIFECYCLE_STAGES = Object.values(LifecycleStage);
+
+export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
+    NOTIFICATION: 10,
+    REGISTRATION: 20,
+    ADMIT_CARD: 30,
+    EXAM: 40,
+    ANSWER_KEY: 50,
+    RESULT: 60,
+    DOCUMENT_VERIFICATION: 70,
+    JOINING: 80,
+};
+
+
+
+export const ReviewStatus = {
+    PENDING: 'PENDING',
+    APPROVED: 'APPROVED',
+    REJECTED: 'REJECTED',
+    NEEDS_CORRECTION: 'NEEDS_CORRECTION',
+} as const;
+export type ReviewStatus = (typeof ReviewStatus)[keyof typeof ReviewStatus];
+export const REVIEW_STATUSES = Object.values(ReviewStatus);
+
+export const ScrapeJobStatus = {
+    RUNNING: 'RUNNING',
+    COMPLETED: 'COMPLETED',
+    FAILED: 'FAILED',
+    PARTIAL: 'PARTIAL',
+} as const;
+export type ScrapeJobStatus = (typeof ScrapeJobStatus)[keyof typeof ScrapeJobStatus];
+
+
+export const ScrapeSourceType = {
+    LISTING: 'LISTING',
+    DETAIL: 'DETAIL',
+} as const;
+export type ScrapeSourceType = (typeof ScrapeSourceType)[keyof typeof ScrapeSourceType];
+
+export const NotificationStatus = {
+    PENDING: 'PENDING',
+    QUEUED: 'QUEUED',
+    SENT: 'SENT',
+    PARTIAL: 'PARTIAL',
+    FAILED: 'FAILED',
+} as const;
+export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus];
+
+
+export const PushPlatform = {
+    ANDROID: 'ANDROID',
+    IOS: 'IOS',
+} as const;
+export type PushPlatform = (typeof PushPlatform)[keyof typeof PushPlatform];
+
+export const QualificationLevel = {
+    TEN_PASS: '10TH_PASS',
+    TWELVE_PASS: '12TH_PASS',
+    DIPLOMA: 'DIPLOMA',
+    GRADUATE: 'GRADUATE',
+    POST_GRADUATE: 'POST_GRADUATE',
+    PHD: 'PHD',
+    OTHER: 'OTHER',
+} as const;
+export type QualificationLevel = (typeof QualificationLevel)[keyof typeof QualificationLevel];
+
+/**
+ * Status to show while a lifecycle stage window is CURRENTLY OPEN.
+ * Returns null for stages that should show ACTIVE (ANSWER_KEY, DOC_VERIFICATION, JOINING).
+ */
+export const getStatusFromStage = (stage: string): ExamStatus | null => {
+    if (stage === LifecycleStage.NOTIFICATION) return ExamStatus.NOTIFICATION;
+    if (stage === LifecycleStage.REGISTRATION) return ExamStatus.REGISTRATION_OPEN;
+    if (stage === LifecycleStage.ADMIT_CARD)   return ExamStatus.ADMIT_CARD_OUT;
+    if (stage === LifecycleStage.EXAM)         return ExamStatus.EXAM_ONGOING;
+    if (stage === LifecycleStage.RESULT)       return ExamStatus.RESULT_DECLARED;
+    // ANSWER_KEY, DOCUMENT_VERIFICATION, JOINING → show ACTIVE (generic in-progress)
+    return null;
+};
+
+/**
+ * Status to show when this stage is the LAST completed event and
+ * there are no more future events (terminal state before archival).
+ * Only called for the final event, after its window has closed.
+ */
+export const getTerminalStatusFromStage = (stage: string): ExamStatus => {
+    if (stage === LifecycleStage.REGISTRATION)          return ExamStatus.REGISTRATION_CLOSED;
+    if (stage === LifecycleStage.RESULT)                return ExamStatus.RESULT_DECLARED;
+    if (stage === LifecycleStage.DOCUMENT_VERIFICATION) return ExamStatus.RESULT_DECLARED;
+    if (stage === LifecycleStage.JOINING)               return ExamStatus.RESULT_DECLARED;
+    // Everything else that ends last → ACTIVE (e.g. exam day was last listed event)
+    return ExamStatus.ACTIVE;
+};

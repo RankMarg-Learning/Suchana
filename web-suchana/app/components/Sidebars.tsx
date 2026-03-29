@@ -8,7 +8,30 @@ import {
   Smartphone
 } from "lucide-react";
 import { SidebarAd } from "./AdUnits";
-import { Exam, CATEGORIES, STATUSES, STAGE_LABELS, cleanLabel } from "../lib/types";
+import { Exam, STAGE_LABELS, cleanLabel } from "../lib/types";
+import { ExamCategory, ExamStatus } from "../lib/enums";
+
+const SIDEBAR_CATEGORIES = [
+  { value: "ALL", label: "All Exams", icon: "🏛️" },
+  { value: ExamCategory.UPSC, label: "UPSC", icon: "⚖️" },
+  { value: ExamCategory.SSC, label: "SSC", icon: "📋" },
+  { value: ExamCategory.RAILWAY_JOBS, label: "Railway", icon: "🚂" },
+  { value: ExamCategory.BANKING_JOBS, label: "Banking", icon: "🏦" },
+  { value: ExamCategory.DEFENCE_JOBS, label: "Defence", icon: "🪖" },
+  { value: ExamCategory.POLICE_JOBS, label: "Police", icon: "👮" },
+  { value: ExamCategory.TEACHING_ELIGIBILITY, label: "Teaching", icon: "📚" },
+  { value: ExamCategory.STATE_PSC, label: "State PSC", icon: "🏛️" },
+];
+
+const SIDEBAR_STATUSES = [
+  { value: "ALL", label: "All Status" },
+  { value: ExamStatus.REGISTRATION_OPEN, label: "Registration Open" },
+  { value: ExamStatus.NOTIFICATION, label: "Notification" },
+  { value: ExamStatus.ADMIT_CARD_OUT, label: "Admit Card Out" },
+  { value: ExamStatus.EXAM_ONGOING, label: "Ongoing" },
+  { value: ExamStatus.RESULT_DECLARED, label: "Result Declared" },
+  { value: ExamStatus.REGISTRATION_CLOSED, label: "Closed" },
+];
 
 // ─── Notify Widget ────────────────────────────────────────────────────────────
 
@@ -73,7 +96,7 @@ export function LeftSidebar({
       <div className="sidebar-widget">
         <div className="sidebar-widget-title"><Layers size={14} /> Categories</div>
         <div className="category-list">
-          {CATEGORIES.map(({ value, label, icon }) => (
+          {SIDEBAR_CATEGORIES.map(({ value, label, icon }) => (
             <button
               key={value}
               className={`category-btn ${categoryFilter === value ? "active" : ""}`}
@@ -154,7 +177,7 @@ export function RightSidebar({
       <div className="sidebar-widget">
         <div className="sidebar-widget-title"><Filter size={14} /> Status</div>
         <div className="status-list">
-          {STATUSES.map(({ value, label }) => (
+          {SIDEBAR_STATUSES.map(({ value, label }) => (
             <button
               key={value}
               className={`status-filter-btn ${statusFilter === value ? "active" : ""}`}

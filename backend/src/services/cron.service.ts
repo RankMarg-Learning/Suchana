@@ -62,50 +62,63 @@ function deriveStatus(events: SlimEvent[], nowMs: number): ExamStatus {
 export class CronService {
 
     static async syncExamStatuses(): Promise<void> {
+        const BATCH_SIZE = 100;
         const nowMs = Date.now();
-        logger.info(`[CRON] Exam status sync started`);
+        logger.info(`[CRON] Exam status sync started (Batch Size: ${BATCH_SIZE})`);
 
-        const exams = await prisma.exam.findMany({
-            where: { isPublished: true },
-            select: {
-                id: true,
-                slug: true,
-                status: true,
-                lifecycleEvents: {
-                    select: { stage: true, stageOrder: true, startsAt: true, endsAt: true, isTBD: true },
-                    orderBy: { stageOrder: 'asc' },
+        let skip = 0;
+        let totalProcessed = 0;
+        const statusBuckets = new Map<ExamStatus, string[]>();
+        const auditLogs: string[] = [];
+
+        while (true) {
+            const batch = await prisma.exam.findMany({
+                where: { isPublished: true },
+                select: {
+                    id: true,
+                    slug: true,
+                    status: true,
+                    lifecycleEvents: {
+                        select: { stage: true, stageOrder: true, startsAt: true, endsAt: true, isTBD: true },
+                        orderBy: { stageOrder: 'asc' },
+                    },
                 },
-            },
-        });
+                skip,
+                take: BATCH_SIZE,
+            });
 
-        const buckets = new Map<string, string[]>();
-        const logLines: string[] = [];
+            if (batch.length === 0) break;
 
-        for (const exam of exams) {
-            const target = deriveStatus(exam.lifecycleEvents as SlimEvent[], nowMs);
-            if (target === exam.status) continue;
+            for (const exam of batch) {
+                const target = deriveStatus(exam.lifecycleEvents as SlimEvent[], nowMs);
+                if (target !== exam.status) {
+                    const ids = statusBuckets.get(target) ?? [];
+                    ids.push(exam.id);
+                    statusBuckets.set(target, ids);
+                    auditLogs.push(`  ${exam.slug}: ${exam.status} → ${target}`);
+                }
+            }
 
-            const ids = buckets.get(target) ?? [];
-            ids.push(exam.id);
-            buckets.set(target, ids);
-            logLines.push(`  ${exam.slug}: ${exam.status} → ${target}`);
+            totalProcessed += batch.length;
+            skip += BATCH_SIZE;
+
+            if (batch.length < BATCH_SIZE) break;
         }
 
-        if (buckets.size === 0) {
-            logger.info(`[CRON] All ${exams.length} exams already up-to-date.`);
+        if (statusBuckets.size === 0) {
+            logger.info(`[CRON] All ${totalProcessed} exams are up-to-date.`);
             return;
         }
 
-        await Promise.all(
-            Array.from(buckets.entries()).map(([status, ids]) =>
-                prisma.exam.updateMany({
-                    where: { id: { in: ids } },
-                    data: { status },
-                })
-            )
+        const updateOps = Array.from(statusBuckets.entries()).map(([status, ids]) =>
+            prisma.exam.updateMany({
+                where: { id: { in: ids } },
+                data: { status },
+            })
         );
 
-        const total = logLines.reduce((s, _, i, a) => i === 0 ? s + a.length : s, 0);
-        logger.info(`[CRON] Updated ${total}/${exams.length} exams:\n${logLines.join('\n')}`);
+        await Promise.all(updateOps);
+        logger.info(`[CRON] Updated ${auditLogs.length}/${totalProcessed} exams:\n${auditLogs.join('\n')}`);
     }
 }
+

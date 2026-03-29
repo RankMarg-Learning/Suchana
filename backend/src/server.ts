@@ -4,11 +4,9 @@ import { env } from './config/env';
 import { redis } from './config/redis';
 import { startNotificationWorker } from './workers/notification.worker';
 import { startCronWorker } from './workers/cron.worker';
-import { setupRepeatableJobs } from './queues/cron.queue';
 import { logger } from './utils/logger';
 
 let worker: ReturnType<typeof startNotificationWorker> | null = null;
-let cronWorker: ReturnType<typeof startCronWorker> | null = null;
 
 async function bootstrap(): Promise<void> {
     logger.info('🚀 Starting Government Exam Execution Platform Backend...');
@@ -22,9 +20,8 @@ async function bootstrap(): Promise<void> {
         // worker = startNotificationWorker();
         // logger.info('✅ Notification worker started');
 
-        // cronWorker = startCronWorker();
-        // await setupRepeatableJobs();
-        // logger.info('✅ Cron worker & repeatable jobs initialized');
+        startCronWorker();
+        logger.info('✅ Direct cron scheduler active');
     } catch (err) {
         logger.warn('⚠️ Redis connection failed or limit reached. Running without background workers/cache.', { 
             error: (err as Error).message 
@@ -46,7 +43,6 @@ async function bootstrap(): Promise<void> {
         server.close(async () => {
             try {
                 if (worker) await worker.close();
-                if (cronWorker) await cronWorker.close();
                 await redis.quit();
                 logger.info('✅ Graceful shutdown complete');
                 process.exit(0);
