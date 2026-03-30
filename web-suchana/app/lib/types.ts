@@ -119,6 +119,14 @@ export function cleanLabel(s: string): string {
   return s.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+export function slugToEnum(slug: string): string {
+  return slug.toUpperCase().replace(/-/g, "_");
+}
+
+export function enumToSlug(en: string): string {
+  return en.toLowerCase().replace(/_/g, "-");
+}
+
 /**
  * Removes HTML tags and trims whitespace. 
  * Useful for JSON-LD schema where HTML is either limited or not allowed.

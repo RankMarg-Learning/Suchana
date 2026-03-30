@@ -76,5 +76,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...examPages, ...seoPages];
+  const { EXAM_STATUSES, EXAM_CATEGORIES } = await import("./lib/enums");
+  const { enumToSlug } = await import("./lib/types");
+
+  const statusPages: MetadataRoute.Sitemap = EXAM_STATUSES.map((s) => ({
+    url: `${SITE_URL}/s/${enumToSlug(s)}`,
+    lastModified: now,
+    changeFrequency: "daily" as const,
+    priority: 0.7,
+  }));
+
+  const categoryPages: MetadataRoute.Sitemap = EXAM_CATEGORIES.map((c) => ({
+    url: `${SITE_URL}/c/${enumToSlug(c)}`,
+    lastModified: now,
+    changeFrequency: "daily" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticPages, ...examPages, ...seoPages, ...statusPages, ...categoryPages];
 }

@@ -8,7 +8,7 @@ import {
   Smartphone
 } from "lucide-react";
 import { SidebarAd } from "./AdUnits";
-import { Exam, STAGE_LABELS, cleanLabel } from "../lib/types";
+import { Exam, STAGE_LABELS, cleanLabel, enumToSlug } from "../lib/types";
 import { ExamCategory, ExamStatus } from "../lib/enums";
 
 const SIDEBAR_CATEGORIES = [
@@ -89,50 +89,35 @@ export function NotifyWidget() {
 export function LeftSidebar({
   categoryFilter, setCategoryFilter,
 }: {
-  categoryFilter: string; setCategoryFilter: (v: string) => void;
+  categoryFilter: string; setCategoryFilter?: (v: string) => void;
 }) {
   return (
     <aside className="sidebar-left" aria-label="Exam filters">
       <div className="sidebar-widget">
         <div className="sidebar-widget-title"><Layers size={14} /> Categories</div>
         <div className="category-list">
-          {SIDEBAR_CATEGORIES.map(({ value, label, icon }) => (
-            <button
-              key={value}
-              className={`category-btn ${categoryFilter === value ? "active" : ""}`}
-              onClick={() => setCategoryFilter(value)}
-              id={`cat-btn-${value.toLowerCase()}`}
-              aria-pressed={categoryFilter === value}
-            >
-              <span className="category-icon">{icon}</span>{label}
-            </button>
-          ))}
+          {SIDEBAR_CATEGORIES.map(({ value, label, icon }) => {
+            const href = value === "ALL" ? "/" : `/c/${enumToSlug(value)}`;
+            const isActive = categoryFilter === value;
+
+            return (
+              <Link
+                key={value}
+                href={href}
+                className={`category-btn ${isActive ? "active" : ""}`}
+                id={`cat-btn-${value.toLowerCase()}`}
+                aria-pressed={isActive}
+              >
+                <span className="category-icon">{icon}</span>{label}
+              </Link>
+            );
+          })}
         </div>
       </div>
 
 
 
       <SidebarAd id="sidebar-ad-left-1" />
-
-      <div className="sidebar-widget">
-        <div className="sidebar-widget-title"><BookOpen size={14} /> Quick Links</div>
-        <ul className="sidebar-links">
-          {[
-            { label: "UPSC 2025", href: "/exam/upsc-cse-2025" },
-            { label: "SSC CGL 2025", href: "/exam/ssc-cgl-2025" },
-            { label: "RRB NTPC 2025", href: "/exam/rrb-ntpc-2025" },
-            { label: "IBPS PO 2025", href: "/exam/ibps-po-2025" },
-            { label: "NDA/NA 2025", href: "/exam/nda-na-2025" },
-            { label: "CTET 2025", href: "/exam/cbse-ctet-2025" },
-          ].map(({ label, href }) => (
-            <li key={label}>
-              <Link href={href} className="sidebar-link">
-                <ArrowRight size={11} /> {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
 
       <SidebarAd id="sidebar-ad-left-2" tall />
     </aside>
@@ -144,11 +129,11 @@ export function LeftSidebar({
 export function RightSidebar({
   statusFilter, setStatusFilter,
 }: {
-  statusFilter: string; setStatusFilter: (v: string) => void;
+  statusFilter: string; setStatusFilter?: (v: string) => void;
 }) {
   return (
     <aside className="sidebar-right" aria-label="Exam alerts and trending">
-      <NotifyWidget />
+      {/* <NotifyWidget /> */}
       <SidebarAd id="sidebar-ad-right-1" />
 
       {/* <div className="sidebar-widget">
@@ -177,17 +162,22 @@ export function RightSidebar({
       <div className="sidebar-widget">
         <div className="sidebar-widget-title"><Filter size={14} /> Status</div>
         <div className="status-list">
-          {SIDEBAR_STATUSES.map(({ value, label }) => (
-            <button
-              key={value}
-              className={`status-filter-btn ${statusFilter === value ? "active" : ""}`}
-              onClick={() => setStatusFilter(value)}
-              id={`status-btn-${value.toLowerCase()}`}
-              aria-pressed={statusFilter === value}
-            >
-              {label}
-            </button>
-          ))}
+          {SIDEBAR_STATUSES.map(({ value, label }) => {
+            const href = value === "ALL" ? "/" : `/s/${enumToSlug(value)}`;
+            const isActive = statusFilter === value;
+
+            return (
+              <Link
+                key={value}
+                href={href}
+                className={`status-filter-btn ${isActive ? "active" : ""}`}
+                id={`status-btn-${value.toLowerCase()}`}
+                aria-pressed={isActive}
+              >
+                {label}
+              </Link>
+            );
+          })}
         </div>
       </div>
 
