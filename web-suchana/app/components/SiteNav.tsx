@@ -31,7 +31,7 @@ export default function SiteNav() {
         <div className="container navbar-inner">
           <a href="/" className="logo">
             <div className="">
-              <Image src={'/examsuchana-logoT.png'} height={40} width={40} alt="Exam Suchana" />
+              <Image src={'/examsuchana-logoT.png'} height={36} width={36} alt="Exam Suchana" />
             </div>
             <span className="logo-text">
               Exam <span>Suchana</span>

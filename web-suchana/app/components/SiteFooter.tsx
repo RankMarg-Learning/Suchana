@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Layers } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { EXAM_CATEGORIES, EXAM_STATUSES } from "../lib/enums";
+import { enumToSlug, cleanLabel, slugToEnum } from "../lib/types";
 
 export default function SiteFooter() {
   const [currentYear, setCurrentYear] = useState(2026);
@@ -29,27 +31,46 @@ export default function SiteFooter() {
             </p>
           </div>
 
-          <div>
-            <div className="footer-col-title">Exam Categories</div>
+          <div className="footer-col">
+            <div className="footer-col-title">By Category</div>
             <ul className="footer-links">
-              {["Civil Services", "SSC", "Railway", "Banking", "Defence", "Police", "Teaching"].map((cat) => (
-                <li key={cat}><a href="/#exams">{cat}</a></li>
+              {EXAM_CATEGORIES.slice(0, 10).map((cat) => (
+                <li key={cat}>
+                  <Link href={`/c/${enumToSlug(cat)}`}>{cleanLabel(cat)}</Link>
+                </li>
               ))}
             </ul>
           </div>
 
-          <div>
-            <div className="footer-col-title">Company</div>
+          <div className="footer-col">
+            <div className="footer-col-title">By Status</div>
             <ul className="footer-links">
-              <li><a href="/about">About Us</a></li>
-              <li><a href="/contact">Contact Us</a></li>
-              <li><a href="/privacy">Privacy Policy</a></li>
-              <li><a href="/terms">Terms & Conditions</a></li>
-              <li>
-                <a href="mailto:help@examsuchana.in">
-                  help@examsuchana.in
-                </a>
-              </li>
+              {EXAM_STATUSES.filter(s => s !== 'ARCHIVED' && s !== 'ACTIVE').map((status) => (
+                <li key={status}>
+                  <Link href={`/s/${enumToSlug(status)}`}>{cleanLabel(status)}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <div className="footer-col-title">By State</div>
+            <ul className="footer-links">
+              {["Delhi", "Uttar Pradesh", "Bihar", "Maharashtra", "Rajasthan", "Madhya Pradesh", "Haryana"].map((state) => (
+                <li key={state}>
+                  <Link href={`/state/${state.toLowerCase().replace(/ /g, "-")}`}>{state}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="footer-col">
+            <div className="footer-col-title">Legal</div>
+            <ul className="footer-links">
+              <li><Link href="/about">About Us</Link></li>
+              <li><Link href="/contact">Contact Us</Link></li>
+              <li><Link href="/privacy">Privacy Policy</Link></li>
+              <li><Link href="/terms">Terms & Conditions</Link></li>
             </ul>
           </div>
         </div>
