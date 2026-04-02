@@ -20,16 +20,39 @@ import SiteNav from './SiteNav';
 import SiteFooter from './SiteFooter';
 import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd, InFeedAd } from './AdUnits';
-import { Exam, SeoPage, cleanLabel, formatDate, getTotalVacancies, STATUS_LABELS } from '../lib/types';
+import { Exam, SeoPage, cleanLabel, formatDate, getTotalVacancies, STATUS_LABELS, getCategoryInfo } from '../lib/types';
 import { LifecycleStage } from '../lib/enums';
+import LatestArticlesSection from './LatestArticlesSection';
+import ArticleDetailClient from './ArticleDetailClient';
+
+import { useQuery } from '@tanstack/react-query';
+import { fetchSeoPages } from '../lib/api';
 
 interface Props {
   exam: Exam;
   seoPage: SeoPage;
 }
 
-export default function SeoExamPageLayout({ exam, seoPage }: Props) {
+export default function SeoExamPageLayout({ 
+  exam, 
+  seoPage
+}: Props) {
   const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
+
+  // Fetch Latest site-wide guides
+  const { data: latestArticles = [] } = useQuery({
+    queryKey: ['latest-guides'],
+    queryFn: () => fetchSeoPages(1, 5).then(res => res.pages ?? []),
+  });
+
+  // Fetch Related guides (same category)
+  const { data: relatedArticlesRaw = [] } = useQuery({
+    queryKey: ['related-guides', seoPage.category],
+    queryFn: () => seoPage.category ? fetchSeoPages(1, 5, seoPage.category).then(res => res.pages ?? []) : Promise.resolve([]),
+    enabled: !!seoPage.category,
+  });
+
+  const relatedArticles = (relatedArticlesRaw).filter((p: SeoPage) => p.id !== seoPage.id).slice(0, 4);
 
   const getLiveEvent = () => {
     if (!exam.lifecycleEvents) return null;
@@ -59,8 +82,8 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
   // Breadcrumbs
   const breadcrumbs = [
     { label: "Home", href: "/" },
-    { label: cleanLabel(exam.category), href: `/?category=${exam.category}` },
-    { label: exam.shortTitle || exam.title, href: `/${exam.slug}` },
+    { label: getCategoryInfo(exam.category).label, href: `/c/${getCategoryInfo(exam.category).slug}` },
+    { label: exam.shortTitle || exam.title, href: `/exam/${exam.slug}` },
     { label: seoPage.title, href: "" },
   ];
 
@@ -82,7 +105,6 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
 
   return (
     <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
-      <SiteNav />
 
       {/* Top Banner Ad */}
       <div className="leaderboard-wrap" style={{ paddingTop: 80 }}>
@@ -93,7 +115,7 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
         {/* ─── Left Sidebar ─── */}
         <aside className="sidebar-left">
           <div className="sidebar-widget">
-            <Link href={`/${exam.slug}`} className="back-btn" style={{ fontSize: '0.85rem' }}>
+            <Link href={`/exam/${exam.slug}`} className="back-btn" style={{ fontSize: '0.85rem' }}>
               <ChevronLeft size={16} /> Full Timeline
             </Link>
           </div>
@@ -106,44 +128,46 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
           {/* Breadcrumb */}
           <nav className="breadcrumb" aria-label="Breadcrumb">
             {breadcrumbs.map((crumb, i) => (
-              <span key={i} className="breadcrumb-item">
+              <div key={i} className="breadcrumb-item">
                 {i < breadcrumbs.length - 1 ? (
-                  <><Link href={crumb.href} className="breadcrumb-link">{crumb.label}</Link> <span className="breadcrumb-sep">/</span> </>
+                  <>
+                    <Link href={crumb.href} className="breadcrumb-link">{crumb.label}</Link>
+                    <ChevronRight size={12} className="breadcrumb-sep" />
+                  </>
                 ) : (
                   <span className="breadcrumb-current">{crumb.label}</span>
                 )}
-              </span>
+              </div>
             ))}
           </nav>
 
           <article className="seo-article-v2" itemScope itemType="https://schema.org/Article">
-            <header className="seo-header" style={{ marginBottom: 32 }}>
-              <div className="exam-detail-tags" style={{ marginBottom: 12 }}>
-                <span className={`exam-tag level-${(exam.examLevel ?? "national").toLowerCase()}`}>
-                  {cleanLabel(exam.examLevel)}
-                </span>
-                <span className={`exam-tag cat-${(exam.category ?? "").toLowerCase()}`}>
-                  {cleanLabel(exam.category)}
-                </span>
-              </div>
-
-              <h1 className="seo-h1" style={{
-                fontSize: 'clamp(1.8rem, 5vw, 2.5rem)',
-                fontWeight: 800,
-                lineHeight: 1.2,
-                marginBottom: '1rem',
+            <header className="article-header" style={{ marginBottom: 'clamp(24px, 5vh, 40px)' }}>
+              {seoPage.category && (
+                <div className="article-tag" style={{ marginBottom: 12 }}>
+                  <span className="exam-tag">{cleanLabel(seoPage.category)}</span>
+                </div>
+              )}
+              <h1 className="article-title" style={{
+                fontSize: 'clamp(1.75rem, 5vw, 2.8rem)',
+                fontWeight: 700,
+                lineHeight: 1.1,
+                marginBottom: '1.25rem',
                 color: 'var(--text-primary)'
               }}>
                 {seoPage.title}
               </h1>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-                <div className={`status-badge status-${exam.status}`}>
+              <div className="article-meta" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+                <div className={`status-badge status-${exam.status}`} style={{ fontSize: '0.8rem' }}>
                   <div className="status-dot" />
                   {statusLabel}
                 </div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                   By {exam.conductingBody}
+                </div>
+                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                  • {new Date(seoPage.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </div>
               </div>
 
@@ -152,26 +176,30 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
                 <div style={{
                   background: 'rgba(16, 185, 129, 0.08)',
                   border: '1px solid rgba(16, 185, 129, 0.2)',
-                  padding: 24,
-                  borderRadius: 20,
+                  padding: 'clamp(16px, 4vw, 24px)',
+                  borderRadius: 16,
                   marginBottom: 32,
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 16,
-                  flexWrap: 'wrap'
+                  flexDirection: 'column',
+                  gap: 16
                 }}>
-                  <div>
-                    <div style={{ color: 'var(--green)', fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>
-                      <span className="hero-badge-dot" style={{ display: 'inline-block', marginRight: 8 }} />
-                      Live Action Available
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                    <div style={{ color: 'var(--green)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>
+                      <span className="hero-badge-live-dot" style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', marginRight: 8 }} />
+                      Action Available
                     </div>
-                    <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    <div style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
                       {liveEvent.actionLabel || `Access ${cleanLabel(liveEvent.stage)} Portal`}
                     </div>
                   </div>
-                  <a href={liveEvent.actionUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ padding: '14px 28px' }}>
-                    Click Here to Open <ArrowRight size={18} />
+                  <a 
+                    href={liveEvent.actionUrl} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="btn btn-primary" 
+                    style={{ width: '100%', justifyContent: 'center', padding: '14px 20px', fontSize: '0.9rem' }}
+                  >
+                    Open Official Link <ArrowRight size={18} />
                   </a>
                 </div>
               )}
@@ -179,42 +207,21 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
 
             {/* Featured Image if available */}
             {seoPage.ogImage && (
-              <div style={{ marginBottom: 32, borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)' }}>
+              <div style={{ marginBottom: 32, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)' }}>
                 <img src={seoPage.ogImage} alt={seoPage.title} style={{ width: '100%', height: 'auto', display: 'block' }} />
               </div>
             )}
 
             {/* Main Content */}
-            <div className="seo-content" style={{ color: 'var(--text-secondary)', lineHeight: 1.8, fontSize: '1.1rem' }}>
+            <div className="seo-content" style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 'clamp(1.05rem, 2vw, 1.15rem)', marginBottom: 60 }}>
               <MarkdownRenderer content={seoPage.content} />
             </div>
 
-            {/* Stage Quick Navigation */}
-            {availableLinks.length > 0 && (
-              <div style={{ marginTop: 60, padding: 24, borderRadius: 16, background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}>
-                <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, color: 'var(--text-primary)' }}>
-                  Explore More for {exam.shortTitle || exam.title}
-                </h3>
-                <div style={{ display: 'grid', gridTemplateColumns: availableLinks.length > 1 ? '1fr 1fr' : '1fr', gap: 12 }}>
-                  {availableLinks.map((link) => (
-                    <Link
-                      key={link.slug}
-                      href={link.slug}
-                      className="official-link-btn"
-                      style={{ justifyContent: 'space-between', padding: '12px 16px' }}
-                    >
-                      <span>{link.label}</span>
-                      <ChevronRight size={14} />
-                    </Link>
-                  ))}
-                </div>
-
-                <div style={{ marginTop: 24, textAlign: 'center' }}>
-                  <Link href={`/exam/${exam.slug}`} className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }}>
-                    View Full Exam Timeline <ArrowRight size={16} />
-                  </Link>
-                </div>
-              </div>
+            {latestArticles.length > 0 && (
+              <LatestArticlesSection 
+                title="Latest Guides" 
+                articles={latestArticles} 
+              />
             )}
 
             {/* Inline Ad */}
@@ -226,13 +233,14 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
 
         {/* ─── Right Sidebar ─── */}
         <aside className="sidebar-right">
+          <SidebarAd id="seo-right-ad-1" tall />
+          
           {/* Exam Summary Widget */}
           <div className="sidebar-widget">
             <h3 className="widget-title" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
               Exam Overview
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-
               <div style={{ display: 'flex', gap: 12 }}>
                 <div style={{ background: 'var(--bg-secondary)', padding: 8, borderRadius: 8, height: 'fit-content' }}>
                   <Globe size={16} color="var(--accent-2)" />
@@ -261,7 +269,7 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
             )}
           </div>
 
-          <SidebarAd id="seo-right-ad-1" />
+          <SidebarAd id="seo-right-ad-2" />
 
           {/* App Download CTA */}
           <div className="app-download-widget">
@@ -277,11 +285,9 @@ export default function SeoExamPageLayout({ exam, seoPage }: Props) {
             </a>
           </div>
 
-          <SidebarAd id="seo-right-ad-2" tall />
+          <SidebarAd id="seo-right-ad-3" tall />
         </aside>
       </div>
-
-      <SiteFooter />
     </div>
   );
 }

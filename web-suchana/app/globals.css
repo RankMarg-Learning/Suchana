@@ -93,20 +93,15 @@ body::before {
   right: 0;
   z-index: 100;
   padding: 16px 0;
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid transparent;
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border);
   transition: all 0.2s;
 }
 
 .navbar.scrolled {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: var(--bg-primary);
   padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
 }
 
 .navbar-inner {
@@ -1639,18 +1634,53 @@ body::before {
 /* ─── Loading screen ─── */
 .loading-screen {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 400px;
+  min-height: 50vh;
+  gap: 20px;
+}
+
+.spinner-wrap {
+  position: relative;
+  width: 60px;
+  height: 60px;
+}
+
+.loader-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 40px;
+  background: var(--accent);
+  border-radius: 50%;
+  opacity: 0.15;
+  animation: pulse-out 1.5s ease-out infinite;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--border);
+  width: 100%;
+  height: 100%;
+  border: 3px solid rgba(var(--accent-rgb), 0.1);
   border-top-color: var(--accent);
   border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+  animation: spin 1s cubic-bezier(0.5, 0.1, 0.4, 0.9) infinite;
+}
+
+@keyframes pulse-out {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+.article-skeleton-item {
+  padding: 20px 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-skeleton-item:last-child {
+  border-bottom: none;
 }
 
 @keyframes spin {
@@ -2779,15 +2809,34 @@ body::before {
 @media (max-width: 960px) {
   .app-shell {
     grid-template-columns: 1fr;
-    padding: 0 20px 60px;
+    padding: 0 16px 60px;
   }
 
-  .sidebar-right {
+  .sidebar-left, .sidebar-right {
     display: none;
   }
 
   .feed-main {
-    padding: 24px 0;
+    padding: 16px 0;
+  }
+
+  .article-header {
+    margin-bottom: 24px;
+  }
+
+  .article-title {
+    margin-bottom: 1.5rem !important;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    word-wrap: break-word;
+  }
+
+  .article-list-item {
+    padding: 12px 0 !important;
+  }
+
+  .article-list-title {
+    font-size: 0.95rem !important;
   }
 }
 
@@ -2811,8 +2860,14 @@ body::before {
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 24px;
-  flex-wrap: nowrap;
-  gap: 32px;
+  flex-wrap: wrap; /* Optimized for responsive wrapping */
+  gap: 20px;
+}
+@media (max-width: 768px) {
+  .feed-title-row {
+    flex-direction: column;
+    gap: 16px;
+  }
 }
 
 .feed-title {
@@ -3513,6 +3568,84 @@ body::before {
 .status-pill-notification {
   background: rgba(139, 92, 246, 0.1);
   color: #A78BFA;
+}
+
+/* ─── Latest Intelligence List ─── */
+.latest-articles-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.article-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 8px;
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.article-list-item:hover {
+  background: var(--bg-secondary);
+  padding-left: 16px;
+}
+
+.article-list-item:last-child {
+  border-bottom: none;
+}
+
+.article-list-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.article-list-title {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 6px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+.article-list-item:hover .article-list-title {
+  color: var(--accent);
+}
+
+.article-list-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.article-list-tag {
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.article-list-date {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.5;
+}
+
+.article-list-arrow {
+  color: var(--text-muted);
+  opacity: 0;
+  transition: all 0.2s;
+  transform: translateX(-12px);
+}
+
+.article-list-item:hover .article-list-arrow {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* Key Dates Grid */
@@ -4385,31 +4518,52 @@ body::before {
 }
 
 .breadcrumb {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 24px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none; /* Hide scrollbar Firefox */
+  -ms-overflow-style: none; /* Hide IE */
+  padding-bottom: 4px; /* Room for swipe */
+}
+
+.breadcrumb::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+.breadcrumb-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 24px;
-  font-size: 0.85rem;
-  color: var(--text-muted);
+  flex-shrink: 0;
+  gap: 6px;
 }
 
 .breadcrumb-link {
   color: var(--text-muted);
   text-decoration: none;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
 }
 
 .breadcrumb-link:hover {
-  color: var(--accent-light);
+  color: var(--accent);
+}
+
+.breadcrumb-sep {
+  color: var(--border-dark);
+  flex-shrink: 0;
 }
 
 .breadcrumb-current {
   color: var(--text-secondary);
-  font-weight: 500;
-  max-width: 200px;
+  font-weight: 600;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-family: 'Space Grotesk', sans-serif;
 }
 
 /* ─── Programmatic SEO Content Styles ─── */

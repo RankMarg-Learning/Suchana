@@ -41,7 +41,7 @@ import {
   enumToSlug,
   CATEGORIES
 } from "@/app/lib/types";
-import { fetchSavedExams, toggleSavedExam } from "@/app/lib/api";
+import { fetchSavedExams, toggleSavedExam, fetchSeoPages } from "@/app/lib/api";
 import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
 import { LeftSidebar } from "@/app/components/Sidebars";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -259,6 +259,14 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["savedExams", userId] });
     },
+  });
+
+  const { data: latestArticles = [] } = useQuery({
+    queryKey: ["latestSeoPages"],
+    queryFn: async () => {
+      const { pages } = await fetchSeoPages(1, 5);
+      return pages;
+    }
   });
 
   useEffect(() => {
@@ -522,6 +530,33 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
               <ChevronLeft size={16} /> Back to All Careers
             </Link>
           </div>
+
+          {latestArticles.length > 0 && (
+            <section className="exam-detail-section" aria-labelledby="latest-articles-heading" style={{ marginTop: 64 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 id="latest-articles-heading" className="exam-detail-section-title" style={{ marginBottom: 0, fontSize: '18px' }}>
+                  Latest Articles
+                </h2>
+                <Link href="/articles" className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 700 }}>
+                  View All  <ArrowRight size={14} style={{ marginLeft: 6 }} />
+                </Link>
+              </div>
+              <div className="latest-articles-list">
+                {latestArticles.map(article => (
+                  <Link key={article.id} href={`/${article.slug}`} className="article-list-item">
+                    <div className="article-list-content">
+                      <h4 className="article-list-title">{article.title}</h4>
+                      <div className="article-list-meta">
+                        <span className="article-list-tag">{cleanLabel(article.category || "") || "Guide"}</span>
+                        <span className="article-list-date">{new Date(article.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                      </div>
+                    </div>
+                    <ArrowRight size={16} className="article-list-arrow" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
         </section>
 

@@ -8,7 +8,10 @@ const router = Router();
  * PUBLIC ROUTES (Used by Website Frontend)
  */
 // fetchAllSeoPageSlugs uses /api/v1/seo-pages
+// fetchAllSeoPageSlugs uses /api/v1/seo-pages
 router.get('/', SeoController.getAllSlugs);
+// Paginated list with filtering
+router.get('/list', SeoController.getAllPages);
 // fetchSeoPageBySlug uses /api/v1/seo-pages/:slug
 router.get('/:slug', SeoController.getPageBySlug);
 

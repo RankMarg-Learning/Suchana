@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ExamListingClient from '@/app/components/ExamListingClient';
-import { CATEGORIES, slugToEnum, enumToSlug, cleanLabel } from '@/app/lib/types';
+import { CATEGORIES, slugToEnum, enumToSlug, cleanLabel, getCategoryInfo } from '@/app/lib/types';
 import { EXAM_CATEGORIES } from '@/app/lib/enums';
 
 interface Props {
@@ -17,8 +17,7 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category: catSlug } = await params;
   const catEnum = slugToEnum(catSlug);
-  const cat = CATEGORIES.find(c => c.value === catEnum);
-  const label = cat?.label || cleanLabel(catEnum);
+  const { label } = getCategoryInfo(catEnum);
 
   if (!catEnum) return { title: 'Exams' };
 

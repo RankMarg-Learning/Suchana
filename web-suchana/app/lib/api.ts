@@ -82,6 +82,38 @@ export async function fetchSeoPageBySlug(slug: string): Promise<SeoPage | null> 
   }
 }
 
+export async function fetchSeoPages(
+  page = 1,
+  limit = 10,
+  category?: string,
+  search?: string
+): Promise<{ pages: SeoPage[]; total: number }> {
+  try {
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+    if (category && category !== "ALL") params.set("category", category);
+    if (search) params.set("search", search);
+
+    const res = await fetch(`${API_BASE}/seo-pages/list?${params}`, {
+      next: { revalidate: 600 },
+    });
+
+    if (!res.ok) return { pages: [], total: 0 };
+    
+    const data = await res.json();
+    const result = data.data ?? data;
+    
+    return {
+      pages: result.pages ?? [],
+      total: result.total ?? 0,
+    };
+  } catch (err) {
+    console.error("Error fetching SEO pages:", err);
+    return { pages: [], total: 0 };
+  }
+}
+
 export async function fetchAllSeoPageSlugs(): Promise<string[]> {
   try {
     const res = await fetch(`${API_BASE}/seo-pages?limit=1000`, {

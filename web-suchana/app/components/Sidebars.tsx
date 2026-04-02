@@ -87,9 +87,12 @@ export function NotifyWidget() {
 // ─── Left Sidebar ─────────────────────────────────────────────────────────────
 
 export function LeftSidebar({
-  categoryFilter, setCategoryFilter,
+  categoryFilter, setCategoryFilter, onCategoryChange, linkPrefix = "/c/"
 }: {
-  categoryFilter: string; setCategoryFilter?: (v: string) => void;
+  categoryFilter: string; 
+  setCategoryFilter?: (v: string) => void;
+  onCategoryChange?: (v: string) => void;
+  linkPrefix?: string;
 }) {
   return (
     <aside className="sidebar-left" aria-label="Exam filters">
@@ -97,8 +100,15 @@ export function LeftSidebar({
         <div className="sidebar-widget-title"><Layers size={14} /> Categories</div>
         <div className="category-list">
           {SIDEBAR_CATEGORIES.map(({ value, label, icon }) => {
-            const href = value === "ALL" ? "/" : `/c/${enumToSlug(value)}`;
             const isActive = categoryFilter === value;
+            const href = value === "ALL" ? "/" : `${linkPrefix}${enumToSlug(value)}`;
+
+            const handleClick = (e: React.MouseEvent) => {
+              if (onCategoryChange) {
+                e.preventDefault();
+                onCategoryChange(value);
+              }
+            };
 
             return (
               <Link
@@ -107,6 +117,7 @@ export function LeftSidebar({
                 className={`category-btn ${isActive ? "active" : ""}`}
                 id={`cat-btn-${value.toLowerCase()}`}
                 aria-pressed={isActive}
+                onClick={handleClick}
               >
                 <span className="category-icon">{icon}</span>{label}
               </Link>
@@ -127,9 +138,12 @@ export function LeftSidebar({
 // ─── Right Sidebar ─────────────────────────────────────────────────────────────
 
 export function RightSidebar({
-  statusFilter, setStatusFilter,
+  statusFilter = "ALL", setStatusFilter, onStatusChange, linkPrefix = "/s/"
 }: {
-  statusFilter: string; setStatusFilter?: (v: string) => void;
+  statusFilter?: string; 
+  setStatusFilter?: (v: string) => void;
+  onStatusChange?: (v: string) => void;
+  linkPrefix?: string;
 }) {
   return (
     <aside className="sidebar-right" aria-label="Exam alerts and trending">
@@ -163,8 +177,15 @@ export function RightSidebar({
         <div className="sidebar-widget-title"><Filter size={14} /> Status</div>
         <div className="status-list">
           {SIDEBAR_STATUSES.map(({ value, label }) => {
-            const href = value === "ALL" ? "/" : `/s/${enumToSlug(value)}`;
             const isActive = statusFilter === value;
+            const href = value === "ALL" ? "/" : `${linkPrefix}${enumToSlug(value)}`;
+
+            const handleClick = (e: React.MouseEvent) => {
+              if (onStatusChange) {
+                e.preventDefault();
+                onStatusChange(value);
+              }
+            };
 
             return (
               <Link
@@ -173,6 +194,7 @@ export function RightSidebar({
                 className={`status-filter-btn ${isActive ? "active" : ""}`}
                 id={`status-btn-${value.toLowerCase()}`}
                 aria-pressed={isActive}
+                onClick={handleClick}
               >
                 {label}
               </Link>

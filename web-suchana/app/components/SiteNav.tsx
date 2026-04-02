@@ -36,9 +36,9 @@ export default function SiteNav() {
 
           <ul className="nav-links">
             <li><a href="/#exams">Exams</a></li>
+            <li><a href="/articles">Guides</a></li>
             <li><a href="/about">About</a></li>
             <li><a href="/contact">Contact</a></li>
-            <li><a href="/privacy">Privacy</a></li>
           </ul>
 
           <div className="nav-cta">

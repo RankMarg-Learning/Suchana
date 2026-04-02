@@ -124,7 +124,17 @@ export function slugToEnum(slug: string): string {
 }
 
 export function enumToSlug(en: string): string {
+  if (!en) return "";
   return en.toLowerCase().replace(/_/g, "-");
+}
+
+export function getCategoryInfo(catValue: string) {
+  const cat = CATEGORIES.find(c => c.value === catValue);
+  return {
+    label: cat?.label || cleanLabel(catValue || ""),
+    icon: cat?.icon || "🏛️",
+    slug: enumToSlug(catValue || "")
+  };
 }
 
 /**
