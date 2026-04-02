@@ -248,12 +248,10 @@ function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamByS
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
   const exam = await fetchExamBySlug(slug);
-
   if (!exam) {
     notFound();
   }
 
-  // Fetch related exams for the client component
   const { fetchExamsFromAPI } = await import('@/app/lib/api');
   const { exams: relatedExams } = await fetchExamsFromAPI(1, 5, exam.category).catch(() => ({ exams: [] }));
   const filteredRelated = (relatedExams || []).filter(e => e.id !== exam.id).slice(0, 4);

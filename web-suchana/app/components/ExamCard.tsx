@@ -21,7 +21,7 @@ export function ExamListRow({ exam }: { exam: Exam }) {
       aria-label={`View ${exam.shortTitle ?? exam.title} details`}
     >
       <div className="exam-row-main">
-        <h2 className="exam-row-title">{exam.shortTitle ?? exam.title}</h2>
+        <h2 className="exam-row-title">{exam.title}</h2>
         <div className="exam-row-body">{cleanLabel(exam.category)}</div>
       </div>
 

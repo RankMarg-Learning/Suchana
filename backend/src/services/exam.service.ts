@@ -54,8 +54,8 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
                 take: limit,
                 orderBy: [
                     { isPublished: 'desc' },
-                    { publishedAt: 'desc' },
                     { updatedAt: 'desc' },
+                    { publishedAt: 'desc' },
                 ],
                 select: {
                     id: true,
@@ -65,13 +65,9 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
                     category: true,
                     conductingBody: true,
                     status: true,
-                    examLevel: true,
-                    state: true,
-                    totalVacancies: true,
                     isPublished: true,
                     publishedAt: true,
                     updatedAt: true,
-                    createdAt: true,
                 },
             }),
             prisma.exam.count({ where }),
@@ -99,7 +95,7 @@ export async function getExamById(id: string, bypassCache = false) {
                 },
                 seoPages: {
                     where: { isPublished: true },
-                    select: { slug: true, category: true }
+                    select: { slug: true, title: true }
                 }
             },
         });
@@ -123,7 +119,7 @@ export async function getExamBySlug(slug: string, bypassCache = false) {
                 },
                 seoPages: {
                     where: { isPublished: true },
-                    select: { slug: true, category: true }
+                    select: { slug: true, title: true }
                 }
             },
         });

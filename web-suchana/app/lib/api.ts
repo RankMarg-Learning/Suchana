@@ -30,7 +30,7 @@ export async function fetchExamsFromAPI(
   if (state && state !== "ALL") params.set("state", state);
 
   const res = await fetch(`${API_BASE}/exams?${params}`, {
-    next: { revalidate: 300 }, // 5 min cache
+    next: { revalidate: 300 },
   });
 
   if (!res.ok) {
