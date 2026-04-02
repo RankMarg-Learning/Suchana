@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { SITE_URL } from "./lib/api";
+import SiteNav from "./components/SiteNav";
+import SiteFooter from "./components/SiteFooter";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -178,7 +180,9 @@ export default function RootLayout({
         />
       </head>
       <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
+        <SiteNav />
         {children}
+        <SiteFooter />
         {process.env.NODE_ENV === "production" && (
           <>
             <Script async src="https://www.googletagmanager.com/gtag/js?id=G-1SHT5DRT85" />

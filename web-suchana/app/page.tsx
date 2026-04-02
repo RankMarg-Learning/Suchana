@@ -2,28 +2,21 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import SiteNav from "./components/SiteNav";
-import SiteFooter from "./components/SiteFooter";
 import {
-  Search, ChevronDown, ArrowRight,
-  MapPin, Info, RefreshCw, Zap, X,
+  Search, ChevronDown, 
+  Info, RefreshCw, Zap, X,
 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
-import { StatusBadge, ExamListRow, SkeletonRow } from "./components/ExamCard";
+import { ExamListRow, SkeletonRow } from "./components/ExamCard";
 import {
   Exam,
-  STATUS_LABELS, CATEGORIES,
-  cleanLabel,
+  CATEGORIES,
 } from "./lib/types";
-import { fetchExamsFromAPI, getPersonalizedExams } from "./lib/api";
+import { fetchExamsFromAPI } from "./lib/api";
 import { LeftSidebar, RightSidebar } from "./components/Sidebars";
 import { LeaderboardAd, InFeedAd } from "./components/AdUnits";
 import { ADS_CONFIG } from "./config/ads";
-
-
-
-
 
 export default function HomePage() {
   return (
@@ -37,13 +30,9 @@ function HomePageContent() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams?.get("search") || "";
 
-  const [now, setNow] = useState(0);
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    setNow(Date.now());
     setMounted(true);
-    const interval = setInterval(() => setNow(Date.now()), 60_000);
-    return () => clearInterval(interval);
   }, []);
 
   const [exams, setExams] = useState<Exam[]>([]);
@@ -70,20 +59,26 @@ function HomePageContent() {
         debouncedSearch || undefined
       );
 
-
-      if (reset) { setExams(result.exams ?? []); setPage(1); }
-      else { setExams((prev) => [...prev, ...(result.exams ?? [])]); }
+      if (reset) { 
+        setExams(result.exams ?? []); 
+        setPage(1); 
+      } else { 
+        setExams((prev) => [...prev, ...(result.exams ?? [])]); 
+      }
       setHasMore((result.exams ?? []).length === 10);
     } catch (err) {
       console.error("Failed to load exams:", err);
       if (reset) setExams([]);
       setHasMore(false);
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   }, [categoryFilter, statusFilter, debouncedSearch, page]);
 
-  useEffect(() => { loadExams(true); }, [categoryFilter, statusFilter, debouncedSearch]);
+  useEffect(() => { 
+    loadExams(true); 
+  }, [categoryFilter, statusFilter, debouncedSearch]);
 
-  // Insert in-feed ads based on global config
   const AD_FREQUENCY = ADS_CONFIG.inFeedAdFrequency;
   const feedItems: Array<{ type: "exam"; exam: Exam } | { type: "ad"; adIndex: number }> = [];
   exams.forEach((exam, i) => {
@@ -93,28 +88,22 @@ function HomePageContent() {
     }
   });
 
+  if (!mounted) return null;
+
   return (
-    <>
-      <SiteNav />
-
-
-
-
+    <main className="min-h-screen">
       {/* Leaderboard Ad (Top) */}
-      <div className="leaderboard-wrap">
+      <div className="leaderboard-wrap" style={{ marginTop: '20px' }}>
         <LeaderboardAd id="top-leaderboard-ad" />
       </div>
 
-      {/* ─── 3-column Shell ─── */}
       <div className="app-shell">
         <LeftSidebar
           categoryFilter={categoryFilter}
           setCategoryFilter={(v) => { setCategoryFilter(v); setPage(1); }}
         />
 
-        {/* ─── Center Feed ─── */}
-        <main className="feed-main" id="exams" aria-label="Government exam listings">
-          {/* Feed Header */}
+        <div className="feed-main" id="exams" aria-label="Government exam listings">
           <div className="feed-header">
             <div className="feed-title-row">
               <div>
@@ -133,7 +122,6 @@ function HomePageContent() {
               </div>
             </div>
 
-            {/* Search */}
             <div className="feed-search-wrap">
               <div className="search-bar" role="search">
                 <Search size={15} color="var(--text-muted)" />
@@ -156,10 +144,8 @@ function HomePageContent() {
             </div>
           </div>
 
-          {/* Mid feed ad */}
           <LeaderboardAd id="feed-mid-leaderboard" />
 
-          {/* Exam List */}
           {loading && exams.length === 0 ? (
             <div className="exam-list">
               {[1, 2, 3, 4].map((n) => <SkeletonRow key={n} />)}
@@ -190,18 +176,14 @@ function HomePageContent() {
               )}
             </>
           )}
-        </main>
+        </div>
 
         <RightSidebar statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
       </div>
 
-      {/* Leaderboard Ad (Bottom) */}
       <div className="leaderboard-wrap">
         <LeaderboardAd id="bottom-leaderboard-ad" />
       </div>
-
-      <div className="divider" />
-      <SiteFooter />
-    </>
+    </main>
   );
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Layers, Search, User, Bookmark } from "lucide-react";
-import Link from "next/link";
+import { Bell, Bookmark } from "lucide-react";
 import Image from "next/image";
 
 export default function SiteNav() {
@@ -11,7 +10,7 @@ export default function SiteNav() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
 
     if (typeof window !== "undefined") {
@@ -24,10 +23,7 @@ export default function SiteNav() {
 
   return (
     <>
-      <nav
-        className="navbar"
-        style={scrolled ? { boxShadow: "0 4px 30px rgba(0,0,0,0.5)" } : {}}
-      >
+      <nav className={`navbar ${scrolled ? "scrolled" : ""}`}>
         <div className="container navbar-inner">
           <a href="/" className="logo">
             <div className="">
@@ -49,7 +45,7 @@ export default function SiteNav() {
 
             {mounted && (
               userId ? (
-                <a href="/saved" className="btn btn-primary nav-action-btn saved-nav-btn">
+                <a href="/saved" className="btn nav-action-btn saved-nav-btn">
                   <Bookmark size={14} /> <span>My Saved</span>
                 </a>
               ) : (

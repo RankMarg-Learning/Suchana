@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import SiteNav from "@/app/components/SiteNav";
-import SiteFooter from "@/app/components/SiteFooter";
 import {
   Bell,
   BellRing,
@@ -11,7 +9,6 @@ import {
   FileText,
   Globe,
   Clock,
-  Target,
   MapPin,
   CheckCircle2,
   RefreshCw,
@@ -21,11 +18,8 @@ import {
   BookmarkCheck,
   ArrowRight,
   Info,
-  Zap,
-  TrendingUp,
   Smartphone,
   ClipboardList,
-  Contact,
   BookOpen,
   Key,
   Award,
@@ -41,11 +35,10 @@ import {
   Exam,
   LifecycleEvent,
   STATUS_LABELS,
-  STAGE_LABELS,
   cleanLabel,
   formatDate,
-  getStageState,
-  countdownStr,
+  enumToSlug,
+  CATEGORIES
 } from "@/app/lib/types";
 import { fetchSavedExams, toggleSavedExam } from "@/app/lib/api";
 import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
@@ -60,16 +53,6 @@ const STAGE_ICONS: Record<string, any> = {
   RESULT: Award,
   DOCUMENT_VERIFICATION: FolderCheck,
   JOINING: PartyPopper,
-};
-
-const EVENT_ICONS: Record<string, any> = {
-  RELEASE: FileText,
-  START: Clock,
-  END: XCircle,
-  CORRECTION: AlertCircle,
-  RESCHEDULED: RefreshCw,
-  CANCELLED: XCircle,
-  OTHER: Pin,
 };
 
 function getEventStatus(
@@ -188,8 +171,6 @@ function TimelineItem({
   );
 }
 
-// ─── Notify Widget ────────────────────────────────────────────────────────────
-
 function NotifyWidget({ examName }: { examName: string }) {
   const [state, setState] = useState<"idle" | "loading" | "done">("idle");
   const [email, setEmail] = useState("");
@@ -238,23 +219,8 @@ function NotifyWidget({ examName }: { examName: string }) {
   );
 }
 
-// ─── Main Client Component ────────────────────────────────────────────────────
-
 export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; relatedExams?: Exam[] }) {
   const [now, setNow] = useState(0);
-  // ... existing state ...
-
-  const handleWhatsAppShare = () => {
-    const text = `Check out ${exam.title} updates on Exam Suchana: ${window.location.href}`;
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
-  };
-
-  const handleTelegramShare = () => {
-    const text = `Check out ${exam.title} updates on Exam Suchana`;
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`, "_blank");
-  };
-
-  // ... rest of component ...
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -274,6 +240,16 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
 
     return () => clearInterval(interval);
   }, [exam.id]);
+
+  const handleWhatsAppShare = () => {
+    const text = `Check out ${exam.title} updates on Exam Suchana: ${window.location.href}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+  };
+
+  const handleTelegramShare = () => {
+    const text = `Check out ${exam.title} updates on Exam Suchana`;
+    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`, "_blank");
+  };
 
   const handleSaveToggle = async () => {
     const userId = typeof window !== "undefined" ? localStorage.getItem("@suchana_userId") : null;
@@ -304,7 +280,6 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
     }
   };
 
-  // Breadcrumb navigation
   const breadcrumbs = [
     { label: "Home", href: "/" },
     { label: cleanLabel(exam.category), href: `/?category=${exam.category}` },
@@ -312,32 +287,24 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
   ];
 
   return (
-    <>
-      <SiteNav />
-
+    <main className="min-h-screen">
       {/* Top leaderboard ad */}
       <div className="leaderboard-wrap" style={{ paddingTop: 80 }}>
         <LeaderboardAd id="exam-top-leaderboard" />
       </div>
 
       <div className="app-shell" style={{ paddingTop: 8 }}>
-        {/* ─── Left Sidebar (static links) ─── */}
         <aside className="sidebar-left">
-          {/* Back to listings */}
           <div className="sidebar-widget">
             <Link href="/" className="back-btn">
               <ChevronLeft size={16} /> All Exams
             </Link>
           </div>
-
           <SidebarAd id="detail-left-ad-1" />
           <SidebarAd id="detail-left-ad-2" tall />
         </aside>
 
-        {/* ─── Main Content ─── */}
-        <main className="feed-main" id="exam-detail" itemScope itemType="https://schema.org/Article">
-
-          {/* Breadcrumb */}
+        <section className="feed-main" id="exam-detail" itemScope itemType="https://schema.org/Article">
           <nav className="breadcrumb" aria-label="Breadcrumb">
             {breadcrumbs.map((crumb, i) => (
               <span key={i} className="breadcrumb-item">
@@ -350,30 +317,41 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             ))}
           </nav>
 
-          {/* Exam Header */}
           <header className="exam-detail-header">
             <div className="exam-detail-tags">
               <span className={`exam-tag level-${(exam.examLevel ?? "national").toLowerCase()}`}>
                 {cleanLabel(exam.examLevel)}
               </span>
-              <span className={`exam-tag cat-${(exam.category ?? "").toLowerCase()}`}>
-                {cleanLabel(exam.category)}
-              </span>
+              <Link 
+                href={`/c/${enumToSlug(exam.category)}`} 
+                className={`exam-tag cat-${(exam.category ?? "").toLowerCase()}`}
+                style={{ textDecoration: "none" }}
+              >
+                {CATEGORIES.find(c => c.value === exam.category)?.label || cleanLabel(exam.category)}
+              </Link>
               {exam.state && (
-                <span className="exam-tag">
+                <Link href={`/state/${exam.state}`} className="exam-tag">
                   <MapPin size={10} style={{ display: "inline", marginRight: 2 }} />{exam.state}
-                </span>
+                </Link>
               )}
             </div>
-
             <h1 className="exam-detail-title" itemProp="name">{exam.title}</h1>
-            <div className="exam-detail-body" itemProp="author">{exam.conductingBody}</div>
-
+            <Link 
+              href={`/conduct/${(exam.conductingBody || "ALL").toLowerCase().replace(/ /g, "-")}`} 
+              className="exam-detail-body" 
+              style={{ textDecoration: "none", display: "block" }}
+              itemProp="author"
+            >
+              {exam.conductingBody}
+            </Link>
             <div className="exam-detail-actions">
-              <div className={`status-badge status-${exam.status}`}>
+              <Link 
+                href={`/s/${enumToSlug(exam.status)}`} 
+                className={`status-badge status-${exam.status}`}
+              >
                 <div className="status-dot" />
                 {statusLabel}
-              </div>
+              </Link>
               <button className="detail-action-btn" onClick={handleShare} id="share-btn">
                 <Share2 size={14} /> {copied ? "Copied!" : "Share"}
               </button>
@@ -394,11 +372,8 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
                 {saved ? "Saved" : "Save"}
               </button>
             </div>
-
-
           </header>
 
-          {/* Full Timeline */}
           {sorted.length > 0 && (
             <section className="exam-detail-section" aria-labelledby="timeline-heading">
               <h2 id="timeline-heading" className="exam-detail-section-title">
@@ -423,13 +398,11 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             </section>
           )}
 
-          {/* Vacancies Section */}
           <section className="exam-detail-section" aria-labelledby="vac-heading">
             <h2 id="vac-heading" className="exam-detail-section-title">Vacancies</h2>
             <div className="fact-content"><MarkdownRenderer content={exam.totalVacancies ?? "TBA"} variant="fact" /></div>
           </section>
 
-          {/* Salary Section */}
           {exam.salary && (
             <section className="exam-detail-section" aria-labelledby="salary-heading">
               <h2 id="salary-heading" className="exam-detail-section-title">Salary</h2>
@@ -437,7 +410,6 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             </section>
           )}
 
-          {/* Eligibility Section */}
           <section className="exam-detail-section" aria-labelledby="elig-heading">
             <h2 id="elig-heading" className="exam-detail-section-title">Eligibility</h2>
             <div className="eligibility-container">
@@ -467,13 +439,11 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             </div>
           </section>
 
-          {/* Fee Section */}
           <section className="exam-detail-section" aria-labelledby="fee-heading">
             <h2 id="fee-heading" className="exam-detail-section-title">Application Fee</h2>
             <div className="fact-content"><MarkdownRenderer content={exam.applicationFee ?? "N/A"} variant="fact" /></div>
           </section>
 
-          {/* Additional Details */}
           {exam.additionalDetails && (
             <section className="exam-detail-section" aria-labelledby="add-heading">
               <h2 id="add-heading" className="exam-detail-section-title">Additional Details</h2>
@@ -481,7 +451,6 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             </section>
           )}
 
-          {/* Description */}
           {exam.description && (
             <section className="exam-detail-section" aria-labelledby="desc-heading" style={{ marginTop: 40, borderTop: '1px solid var(--border)', paddingTop: 40 }}>
               <h2 id="desc-heading" className="exam-detail-section-title">About this Exam</h2>
@@ -508,7 +477,6 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             </section>
           )}
 
-          {/* Official Links */}
           <section className="exam-detail-section" aria-labelledby="links-heading">
             <h2 id="links-heading" className="exam-detail-section-title">Official Resources</h2>
             <div className="official-links">
@@ -530,10 +498,8 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             </div>
           </section>
 
-          {/* Bottom Ad */}
           <div style={{ marginBottom: 24 }}><InFeedAd id="detail-inline-ad-3" index={2} /></div>
 
-          {/* Related Exams Section */}
           {relatedExams && relatedExams.length > 0 && (
             <section className="exam-detail-section" style={{ marginTop: 60, borderTop: '1px solid var(--border)', paddingTop: 40 }}>
               <h2 className="exam-detail-section-title">Related Exams</h2>
@@ -549,24 +515,17 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             </section>
           )}
 
-          {/* Back to listings */}
           <div style={{ marginTop: 32, marginBottom: 8 }}>
             <Link href="/" className="btn btn-ghost">
               <ChevronLeft size={16} /> Back to All Exams
             </Link>
           </div>
-        </main>
+        </section>
 
-        {/* ─── Right Sidebar ─── */}
         <aside className="sidebar-right">
           <NotifyWidget examName={exam.shortTitle ?? exam.title} />
           <SidebarAd id="detail-right-ad-1" />
-
-
-
           <SidebarAd id="detail-right-ad-2" />
-
-          {/* App Download */}
           <div className="app-download-widget">
             <div className="app-widget-icon">
               <Smartphone size={18} color="var(--accent-light)" />
@@ -578,7 +537,6 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             </a>
           </div>
 
-          {/* Telegram Channel CTA */}
           <div className="app-download-widget" style={{ background: 'linear-gradient(135deg, #0088cc 0%, #00aaff 100%)', border: 'none' }}>
             <div className="app-widget-icon" style={{ background: 'rgba(255,255,255,0.2)' }}>
               <Bell size={18} color="white" />
@@ -589,7 +547,6 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
               <ArrowRight size={14} /> Join Now
             </a>
           </div>
-
           <SidebarAd id="detail-right-ad-3" tall />
         </aside>
       </div>
@@ -597,9 +554,6 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
       <div className="leaderboard-wrap">
         <LeaderboardAd id="exam-bottom-leaderboard" />
       </div>
-
-      <div className="divider" />
-      <SiteFooter />
-    </>
+    </main>
   );
 }
