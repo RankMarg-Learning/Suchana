@@ -33,8 +33,8 @@ interface Props {
   seoPage: SeoPage;
 }
 
-export default function SeoExamPageLayout({ 
-  exam, 
+export default function SeoExamPageLayout({
+  exam,
   seoPage
 }: Props) {
   const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
@@ -192,11 +192,11 @@ export default function SeoExamPageLayout({
                       {liveEvent.actionLabel || `Access ${cleanLabel(liveEvent.stage)} Portal`}
                     </div>
                   </div>
-                  <a 
-                    href={liveEvent.actionUrl} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="btn btn-primary" 
+                  <a
+                    href={liveEvent.actionUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary"
                     style={{ width: '100%', justifyContent: 'center', padding: '14px 20px', fontSize: '0.9rem' }}
                   >
                     Open Official Link <ArrowRight size={18} />
@@ -218,9 +218,9 @@ export default function SeoExamPageLayout({
             </div>
 
             {latestArticles.length > 0 && (
-              <LatestArticlesSection 
-                title="Latest Guides" 
-                articles={latestArticles} 
+              <LatestArticlesSection
+                title="Latest Guides"
+                articles={latestArticles}
               />
             )}
 
@@ -234,7 +234,7 @@ export default function SeoExamPageLayout({
         {/* ─── Right Sidebar ─── */}
         <aside className="sidebar-right">
           <SidebarAd id="seo-right-ad-1" tall />
-          
+
           {/* Exam Summary Widget */}
           <div className="sidebar-widget">
             <h3 className="widget-title" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>

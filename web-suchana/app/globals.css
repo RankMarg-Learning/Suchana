@@ -1670,8 +1670,15 @@ body::before {
 }
 
 @keyframes pulse-out {
-  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.5; }
-  100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translate(-50%, -50%) scale(2);
+    opacity: 0;
+  }
 }
 
 .article-skeleton-item {
@@ -2812,7 +2819,8 @@ body::before {
     padding: 0 16px 60px;
   }
 
-  .sidebar-left, .sidebar-right {
+  .sidebar-left,
+  .sidebar-right {
     display: none;
   }
 
@@ -2860,9 +2868,11 @@ body::before {
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 24px;
-  flex-wrap: wrap; /* Optimized for responsive wrapping */
+  flex-wrap: wrap;
+  /* Optimized for responsive wrapping */
   gap: 20px;
 }
+
 @media (max-width: 768px) {
   .feed-title-row {
     flex-direction: column;
@@ -4526,13 +4536,17 @@ body::before {
   color: var(--text-muted);
   overflow-x: auto;
   white-space: nowrap;
-  scrollbar-width: none; /* Hide scrollbar Firefox */
-  -ms-overflow-style: none; /* Hide IE */
-  padding-bottom: 4px; /* Room for swipe */
+  scrollbar-width: none;
+  /* Hide scrollbar Firefox */
+  -ms-overflow-style: none;
+  /* Hide IE */
+  padding-bottom: 4px;
+  /* Room for swipe */
 }
 
 .breadcrumb::-webkit-scrollbar {
-  display: none; /* Hide scrollbar Chrome/Safari */
+  display: none;
+  /* Hide scrollbar Chrome/Safari */
 }
 
 .breadcrumb-item {
