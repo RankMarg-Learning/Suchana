@@ -39,7 +39,8 @@ import {
   cleanLabel,
   formatDate,
   enumToSlug,
-  CATEGORIES
+  CATEGORIES,
+  getCategoryInfo
 } from "@/app/lib/types";
 import { fetchSavedExams, toggleSavedExam, fetchSeoPages } from "@/app/lib/api";
 import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
@@ -281,10 +282,6 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
 
-  const handleTelegramShare = () => {
-    const text = `Check out ${exam.title} updates on Exam Suchana`;
-    window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`, "_blank");
-  };
 
   const handleSaveToggle = () => {
     if (!userId) {
@@ -309,11 +306,10 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
 
   const breadcrumbs = [
     { label: "Home", href: "/" },
-    { label: cleanLabel(exam.category), href: `/?category=${exam.category}` },
+    { label: cleanLabel(exam.category), href: `/c/${getCategoryInfo(exam.category).slug}` },
     { label: exam.shortTitle ?? exam.title, href: "" },
   ];
 
-  console.log(exam)
   return (
     <main className="min-h-screen">
       {/* Top leaderboard ad */}

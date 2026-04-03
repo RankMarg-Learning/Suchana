@@ -2394,6 +2394,7 @@ body::before {
   grid-template-columns: 260px 1fr 340px;
   gap: 0;
   max-width: 1540px;
+  width: 100%;
   margin: 0 auto;
   padding: 0 32px 80px;
   align-items: flex-start;
@@ -2411,6 +2412,7 @@ body::before {
 
 .feed-main {
   min-height: 100vh;
+  min-width: 0;
   padding: 24px 32px;
   border-left: 1px solid var(--border);
   border-right: 1px solid var(--border);
@@ -2930,7 +2932,6 @@ body::before {
   .app-shell {
     grid-template-columns: 1fr;
     padding: 0 16px 40px;
-    overflow-x: hidden;
   }
 
   /* Mobile Sidebar styling: horizontal scrolling pills */
@@ -3306,6 +3307,17 @@ body::before {
   font-weight: 600;
   transition: all 0.2s;
   padding: 4px 0;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .breadcrumb-link {
+    max-width: 110px;
+  }
 }
 
 .breadcrumb-link:hover {
@@ -3317,11 +3329,23 @@ body::before {
   margin: 0 10px;
   font-size: 14px;
   font-weight: 300;
+  flex-shrink: 0;
 }
 
 .breadcrumb-current {
   color: var(--text-primary);
   font-weight: 700;
+  max-width: 260px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
+@media (max-width: 768px) {
+  .breadcrumb-current {
+    max-width: 160px;
+  }
 }
 
 /* Exam Detail Header */
@@ -4257,6 +4281,54 @@ body::before {
   font-size: 14px;
   line-height: 1.6;
   color: var(--text-secondary);
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+.markdown-renderer img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+
+.markdown-renderer pre {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.markdown-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--accent) !important;
+  text-decoration: none !important;
+  font-weight: 600;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  border-bottom: 1.5px solid transparent;
+  padding: 0 4px;
+  margin: 0 2px;
+  border-radius: 4px;
+  white-space: normal;
+  line-height: inherit;
+}
+
+.markdown-link:hover {
+  color: var(--accent-light) !important;
+  background: rgba(124, 58, 237, 0.08);
+  border-bottom-color: var(--accent-light);
+}
+
+.markdown-link .link-icon {
+  opacity: 0.7;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.markdown-link:hover .link-icon {
+  transform: translate(2px, -2px);
+  opacity: 1;
 }
 
 .markdown-renderer p {
@@ -4525,59 +4597,6 @@ body::before {
   border-color: var(--accent-light) !important;
   transform: translateY(-4px);
   box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
-}
-
-.breadcrumb {
-  display: flex !important;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 24px;
-  font-size: 0.82rem;
-  color: var(--text-muted);
-  overflow-x: auto;
-  white-space: nowrap;
-  scrollbar-width: none;
-  /* Hide scrollbar Firefox */
-  -ms-overflow-style: none;
-  /* Hide IE */
-  padding-bottom: 4px;
-  /* Room for swipe */
-}
-
-.breadcrumb::-webkit-scrollbar {
-  display: none;
-  /* Hide scrollbar Chrome/Safari */
-}
-
-.breadcrumb-item {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  gap: 6px;
-}
-
-.breadcrumb-link {
-  color: var(--text-muted);
-  text-decoration: none;
-  transition: all 0.2s;
-  font-family: 'Space Grotesk', sans-serif;
-  font-weight: 500;
-}
-
-.breadcrumb-link:hover {
-  color: var(--accent);
-}
-
-.breadcrumb-sep {
-  color: var(--border-dark);
-  flex-shrink: 0;
-}
-
-.breadcrumb-current {
-  color: var(--text-secondary);
-  font-weight: 600;
-  white-space: nowrap;
-  font-family: 'Space Grotesk', sans-serif;
 }
 
 /* ─── Programmatic SEO Content Styles ─── */

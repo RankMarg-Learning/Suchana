@@ -14,7 +14,6 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// ─── SEO Helper Functions ──────────────────────────────────────────────────
 
 export async function generateStaticParams() {
   const slugs = await fetchAllSeoPageSlugs();
@@ -24,7 +23,6 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const page = await fetchSeoPageBySlug(slug);
-  console.log(page)
 
   if (page) {
     const canonical = page.canonicalUrl || `${SITE_URL}/${slug}`;

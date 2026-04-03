@@ -17,7 +17,6 @@ interface SummaryStatsProps {
 }
 
 export default function ExamSummaryStats({ exams, loading }: SummaryStatsProps) {
-    console.log(exams)
     const total = exams.length;
     const published = exams.filter(e => !!e.isPublished).length;
     const active = exams.filter(e => e.status === 'REGISTRATION_OPEN' || e.status === 'ACTIVE').length;

@@ -16,14 +16,11 @@ import {
   ExternalLink,
   ChevronRight
 } from 'lucide-react';
-import SiteNav from './SiteNav';
-import SiteFooter from './SiteFooter';
 import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd, InFeedAd } from './AdUnits';
-import { Exam, SeoPage, cleanLabel, formatDate, getTotalVacancies, STATUS_LABELS, getCategoryInfo } from '../lib/types';
+import { Exam, SeoPage, cleanLabel, STATUS_LABELS, getCategoryInfo } from '../lib/types';
 import { LifecycleStage } from '../lib/enums';
 import LatestArticlesSection from './LatestArticlesSection';
-import ArticleDetailClient from './ArticleDetailClient';
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeoPages } from '../lib/api';
@@ -39,20 +36,11 @@ export default function SeoExamPageLayout({
 }: Props) {
   const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
 
-  // Fetch Latest site-wide guides
   const { data: latestArticles = [] } = useQuery({
     queryKey: ['latest-guides'],
     queryFn: () => fetchSeoPages(1, 5).then(res => res.pages ?? []),
   });
 
-  // Fetch Related guides (same category)
-  const { data: relatedArticlesRaw = [] } = useQuery({
-    queryKey: ['related-guides', seoPage.category],
-    queryFn: () => seoPage.category ? fetchSeoPages(1, 5, seoPage.category).then(res => res.pages ?? []) : Promise.resolve([]),
-    enabled: !!seoPage.category,
-  });
-
-  const relatedArticles = (relatedArticlesRaw).filter((p: SeoPage) => p.id !== seoPage.id).slice(0, 4);
 
   const getLiveEvent = () => {
     if (!exam.lifecycleEvents) return null;
@@ -127,18 +115,20 @@ export default function SeoExamPageLayout({
         <main className="feed-main">
           {/* Breadcrumb */}
           <nav className="breadcrumb" aria-label="Breadcrumb">
-            {breadcrumbs.map((crumb, i) => (
-              <div key={i} className="breadcrumb-item">
-                {i < breadcrumbs.length - 1 ? (
-                  <>
-                    <Link href={crumb.href} className="breadcrumb-link">{crumb.label}</Link>
-                    <ChevronRight size={12} className="breadcrumb-sep" />
-                  </>
-                ) : (
-                  <span className="breadcrumb-current">{crumb.label}</span>
-                )}
-              </div>
-            ))}
+            <ol className="breadcrumb-list">
+              {breadcrumbs.map((crumb, i) => (
+                <li key={i} className="breadcrumb-item">
+                  {i < breadcrumbs.length - 1 ? (
+                    <>
+                      <Link href={crumb.href} className="breadcrumb-link">{crumb.label}</Link>
+                      <ChevronRight size={12} className="breadcrumb-sep" />
+                    </>
+                  ) : (
+                    <span className="breadcrumb-current" aria-current="page">{crumb.label}</span>
+                  )}
+                </li>
+              ))}
+            </ol>
           </nav>
 
           <article className="seo-article-v2" itemScope itemType="https://schema.org/Article">
