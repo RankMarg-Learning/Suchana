@@ -6,8 +6,6 @@ export const API_BASE =
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://examsuchana.in";
 
-
-
 // ─── API Functions ────────────────────────────────────────────────────────────
 
 export async function fetchExamsFromAPI(
@@ -17,7 +15,9 @@ export async function fetchExamsFromAPI(
   status?: string,
   search?: string,
   conductingBody?: string,
-  state?: string
+  state?: string,
+  startDate?: string,
+  endDate?: string
 ): Promise<{ exams: Exam[]; total: number }> {
   const params = new URLSearchParams();
   params.set("page", String(page));
@@ -28,6 +28,8 @@ export async function fetchExamsFromAPI(
   if (search) params.set("search", search);
   if (conductingBody && conductingBody !== "ALL") params.set("conductingBody", conductingBody);
   if (state && state !== "ALL") params.set("state", state);
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
 
   const res = await fetch(`${API_BASE}/exams?${params}`, {
     next: { revalidate: 300 },
@@ -66,8 +68,6 @@ export async function fetchExamBySlug(slug: string): Promise<Exam | null> {
 }
 
 // ─── SEO Pages API ────────────────────────────────────────────────────────────
-
-
 
 export async function fetchSeoPageBySlug(slug: string): Promise<SeoPage | null> {
   try {
@@ -226,4 +226,3 @@ export async function checkUserByPhone(phone: string): Promise<any> {
   const data = await res.json();
   return data;
 }
-

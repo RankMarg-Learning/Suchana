@@ -378,7 +378,7 @@ A: Always refer to ${wrap(exam.officialWebsite)} for the most authentic informat
             metaDescription: config.metaDescription,
             content: config.content.trim(),
             category: config.category,
-            isPublished: true,
+            isPublished: false,
             examId: exam.id,
           }
         });

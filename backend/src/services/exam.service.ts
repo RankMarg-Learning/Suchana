@@ -12,13 +12,14 @@ const EXAM_LIST_CACHE_KEY = 'exams:list';
 const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams:detail:${id}`;
 
 export async function listExams(query: ListExamQuery, bypassCache = false) {
-    const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state, lifecycleStage } = query;
+    const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state, lifecycleStage, startDate, endDate } = query;
     const cacheKey = `${EXAM_LIST_CACHE_KEY}:${JSON.stringify(query)}`;
 
     const fetchExams = async () => {
+        const statusFilter = status ? (status.includes(',') ? { in: status.split(',') as any } : status) : undefined;
         const where: Prisma.ExamWhereInput = {
             ...(category && { category }),
-            ...(status && { status }),
+            ...(statusFilter && { status: statusFilter }),
             ...(conductingBody && {
                 conductingBody: { contains: conductingBody, mode: 'insensitive' },
             }),
@@ -42,6 +43,12 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
                             { startsAt: { gte: new Date() } }
                         ]
                     }
+                }
+            }),
+            ...((startDate || endDate) && {
+                createdAt: {
+                    ...(startDate && { gte: new Date(startDate) }),
+                    ...(endDate && { lte: new Date(endDate) }),
                 }
             })
         };
@@ -146,6 +153,7 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
     const exam = await prisma.exam.create({
         data: {
             ...dto,
+            createdAt: dto.createdAt ? new Date(dto.createdAt) : undefined,
             qualificationCriteria: dto.qualificationCriteria,
             applicationFee: dto.applicationFee,
             totalVacancies: dto.totalVacancies,
@@ -169,8 +177,10 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
     const existing = await prisma.exam.findUnique({ where: { id } });
     if (!existing) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam "${id}" not found`);
 
+    const { createdAt, ...restDto } = dto;
     const data: Prisma.ExamUpdateInput = {
-        ...dto,
+        ...restDto,
+        ...(createdAt && { createdAt: new Date(createdAt) }),
         qualificationCriteria: dto.qualificationCriteria,
         applicationFee: dto.applicationFee,
         totalVacancies: dto.totalVacancies,

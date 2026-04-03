@@ -9,6 +9,7 @@ import { STATUS_LABELS, cleanLabel, formatDate, getTotalVacancies, SeoPage, stri
 import SeoExamPageLayout from '../components/SeoExamPageLayout';
 import LatestArticlesSection from '../components/LatestArticlesSection';
 import ArticleDetailClient from '../components/ArticleDetailClient';
+import ExamListingClient from '../components/ExamListingClient';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -22,6 +23,33 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+
+  if (slug === 'admit-card-released-today') {
+    return {
+      title: "Admit Cards Released Today | Exam Suchana",
+      description: "Check the latest government exam admit cards officially released today. Download your hall tickets directly.",
+      alternates: { canonical: `${SITE_URL}/${slug}` }
+    };
+  }
+
+  if (slug === 'upcoming-gov-exam-this-week') {
+    return {
+      title: "Upcoming Government Exams This Week | Exam Suchana",
+      description: "Browse the hottest upcoming government exam notifications and application deadlines this week.",
+      alternates: { canonical: `${SITE_URL}/${slug}` }
+    };
+  }
+
+  if (slug.startsWith('latest-exams-')) {
+    const rawDate = slug.replace('latest-exams-', '');
+    const formattedDate = rawDate.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    return {
+      title: `Latest Exams ${formattedDate} | Exam Suchana`,
+      description: `View a total aggregated list of the latest government exams for ${formattedDate}.`,
+      alternates: { canonical: `${SITE_URL}/${slug}` }
+    };
+  }
+
   const page = await fetchSeoPageBySlug(slug);
 
   if (page) {
@@ -118,6 +146,53 @@ function buildEventJsonLd(exam: any) {
 
 export default async function DynamicSlugPage({ params }: Props) {
   const { slug } = await params;
+
+  // 1. Intercept Special Temporal Exam Listings
+  if (slug === 'admit-card-released-today') {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    return (
+      <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
+        <ExamListingClient title="Admit Cards Released Today" status="ADMIT_CARD_OUT" startDate={startOfToday.toISOString()} />
+      </div>
+    );
+  }
+  
+  if (slug === 'upcoming-gov-exam-this-week') {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return (
+      <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
+        <ExamListingClient title="Upcoming Gov Exams This Week" status="NOTIFICATION,REGISTRATION_OPEN" startDate={weekAgo.toISOString()} />
+      </div>
+    );
+  }
+  
+  if (slug.startsWith('latest-exams-')) {
+    const rawDate = slug.replace('latest-exams-', '');
+    const formattedDate = rawDate.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    
+    try {
+      const targetMonthDate = new Date(`1 ${formattedDate}`);
+      if (!isNaN(targetMonthDate.getTime())) {
+        const startDate = targetMonthDate.toISOString();
+        targetMonthDate.setMonth(targetMonthDate.getMonth() + 1);
+        const endDate = targetMonthDate.toISOString();
+        
+        return (
+          <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
+            <ExamListingClient title={`Latest Exams ${formattedDate}`} startDate={startDate} endDate={endDate} />
+          </div>
+        );
+      }
+    } catch(e) {}
+    
+    return (
+      <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
+        <ExamListingClient title={`Latest Exams ${formattedDate}`} />
+      </div>
+    );
+  }
 
   const page = await fetchSeoPageBySlug(slug);
 

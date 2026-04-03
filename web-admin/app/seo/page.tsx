@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-    Search, 
-    Globe, 
-    Copy, 
+import {
+    Search,
+    Globe,
+    Copy,
     Check,
     Plus,
     Edit2,
@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { 
+import {
     AlertDialog,
     AlertDialogAction,
     AlertDialogCancel,
@@ -130,13 +130,13 @@ export default function SeoPagesPage() {
                     <div className="flex items-center gap-4 pt-4">
                         <div className="relative flex-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input 
-                                placeholder="Search articles..." 
+                            <Input
+                                placeholder="Search articles..."
                                 className="pl-9"
                                 value={search}
                                 onChange={(e) => {
                                     setSearch(e.target.value);
-                                    setPage(1); // Reset to first page on search
+                                    setPage(1);
                                 }}
                             />
                         </div>
@@ -248,7 +248,7 @@ export default function SeoPagesPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
+                        <AlertDialogAction
                             className="bg-destructive hover:bg-destructive/90"
                             onClick={() => deletingPage && deleteMutation.mutate(deletingPage.id!)}
                         >

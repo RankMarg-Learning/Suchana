@@ -17,9 +17,11 @@ interface Props {
   status?: string;
   conductingBody?: string;
   state?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
-export default function ExamListingClient({ title, category, status, conductingBody, state }: Props) {
+export default function ExamListingClient({ title, category, status, conductingBody, state, startDate, endDate }: Props) {
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -43,7 +45,9 @@ export default function ExamListingClient({ title, category, status, conductingB
         status,
         debouncedSearch || undefined,
         conductingBody,
-        state
+        state,
+        startDate,
+        endDate
       );
 
       if (reset) {
@@ -60,11 +64,11 @@ export default function ExamListingClient({ title, category, status, conductingB
     } finally {
       setLoading(false);
     }
-  }, [category, status, debouncedSearch, page, conductingBody, state]);
+  }, [category, status, debouncedSearch, page, conductingBody, state, startDate, endDate]);
 
   useEffect(() => {
     loadExams(true);
-  }, [category, status, debouncedSearch, conductingBody, state]);
+  }, [category, status, debouncedSearch, conductingBody, state, startDate, endDate]);
 
   const AD_FREQUENCY = ADS_CONFIG.inFeedAdFrequency;
   const feedItems: Array<{ type: "exam"; exam: Exam } | { type: "ad"; adIndex: number }> = [];

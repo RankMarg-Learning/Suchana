@@ -12,7 +12,8 @@ import {
     Layers,
     RefreshCw,
     MoreHorizontal,
-    Eye
+    Eye,
+    Link as LinkIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -97,20 +98,24 @@ export default function ExamsPage() {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [publishFilter, setPublishFilter] = useState('ALL');
     const [currentPage, setCurrentPage] = useState(1);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [deletingExam, setDeletingExam] = useState<Exam | null>(null);
     const [generatingSeoExam, setGeneratingSeoExam] = useState<Exam | null>(null);
     const [selectedCategories, setSelectedCategories] = useState<string[]>(SEO_CATEGORIES.map(c => c.id));
 
     // Main query for the paginated & filtered list
     const { data: response, isLoading, isRefetching } = useQuery({
-        queryKey: ['exams', currentPage, search, statusFilter, publishFilter],
+        queryKey: ['exams', currentPage, search, statusFilter, publishFilter, startDate, endDate],
         queryFn: () => examService.getAllExams({
             page: currentPage,
             limit: PAGE_SIZE,
             search: search || undefined,
             status: statusFilter === 'ALL' ? undefined : statusFilter,
             isPublished: publishFilter === 'PUBLISHED' ? 'true' : 
-                         publishFilter === 'UNPUBLISHED' ? 'false' : undefined
+                         publishFilter === 'UNPUBLISHED' ? 'false' : undefined,
+            startDate: startDate ? new Date(startDate).toISOString() : undefined,
+            endDate: endDate ? new Date(endDate).toISOString() : undefined
         }),
     });
 
@@ -239,6 +244,22 @@ export default function ExamsPage() {
                                 ))}
                             </SelectContent>
                         </Select>
+                        
+                        <div className="flex items-center gap-2">
+                             <Input 
+                                type="date"
+                                className="w-[140px]"
+                                value={startDate}
+                                onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                             />
+                             <span className="text-muted-foreground">-</span>
+                             <Input 
+                                type="date"
+                                className="w-[140px]"
+                                value={endDate}
+                                onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                             />
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -315,6 +336,18 @@ export default function ExamsPage() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-8 w-8" 
+                                                title="Copy Exam URL"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`https://examsuchana.in/exam/${exam.slug || exam.id}`);
+                                                    toast.success('Link copied to clipboard!');
+                                                }}
+                                            >
+                                                <LinkIcon className="h-4 w-4" />
+                                            </Button>
                                             <Button variant="ghost" size="icon" className="h-8 w-8" asChild title="Edit Exam">
                                                 <Link href={`/exam/${exam.slug || exam.id}/edit`}>
                                                     <Edit3 className="h-4 w-4" />
@@ -360,7 +393,7 @@ export default function ExamsPage() {
                                     <div className="flex flex-col items-center justify-center space-y-3 text-muted-foreground">
                                         <Search className="h-10 w-10 opacity-20" />
                                         <p className="text-sm font-medium">No results matched your filters</p>
-                                        <Button variant="outline" size="sm" onClick={() => { setSearch(''); setStatusFilter('ALL'); setPublishFilter('ALL'); }}>
+                                        <Button variant="outline" size="sm" onClick={() => { setSearch(''); setStatusFilter('ALL'); setPublishFilter('ALL'); setStartDate(''); setEndDate(''); }}>
                                             Clear Filters
                                         </Button>
                                     </div>

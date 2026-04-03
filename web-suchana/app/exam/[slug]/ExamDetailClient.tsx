@@ -86,11 +86,13 @@ function TimelineItem({
   isLast,
   now,
   nextEventStartsAt,
+  examSlug,
 }: {
   event: LifecycleEvent;
   isLast: boolean;
   now: number;
   nextEventStartsAt?: string | null;
+  examSlug: string;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const status = getEventStatus(event, now, nextEventStartsAt);
@@ -114,7 +116,11 @@ function TimelineItem({
       <div className="tl-content">
         <div className="tl-header">
           <div className="tl-title-group">
-            <h3 className="tl-event-title">{title}</h3>
+            <h3 className="tl-event-title">
+              <Link href={`/exam/${examSlug}/${enumToSlug(event.stage)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                {title}
+              </Link>
+            </h3>
             {event.stage && <div className="tl-stage-label" style={{ color: dotColor }}>{cleanLabel(event.stage)}</div>}
           </div>
           {status && (
@@ -410,6 +416,7 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
                     event={event}
                     isLast={i === sorted.length - 1}
                     now={mounted ? now : 0}
+                    examSlug={exam.slug}
                     nextEventStartsAt={
                       !event.endsAt && i < sorted.length - 1
                         ? sorted[i + 1].startsAt

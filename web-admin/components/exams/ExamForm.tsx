@@ -1,9 +1,9 @@
 'use client';
 
-import { 
-    ArrowLeft, 
-    Save, 
-    Loader2, 
+import {
+    ArrowLeft,
+    Save,
+    Loader2,
     Calendar as CalendarIcon,
     Globe
 } from 'lucide-react';
@@ -32,10 +32,10 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { 
+import {
     Popover,
     PopoverContent,
-    PopoverTrigger 
+    PopoverTrigger
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -67,6 +67,7 @@ const examSchema = z.object({
     status: z.string().min(1),
     isPublished: z.boolean(),
     publishedAt: z.string().nullable(),
+    createdAt: z.string().nullable(),
 });
 
 type ExamFormValues = z.infer<typeof examSchema>;
@@ -80,7 +81,7 @@ interface ExamFormProps {
 export default function ExamForm({ initialData = null, isEdit = false }: ExamFormProps) {
     const router = useRouter();
     const queryClient = useQueryClient();
-    
+
     const actualInitialData = (initialData as any)?.data && !(initialData as any).title ? (initialData as any).data : initialData;
 
     const {
@@ -111,6 +112,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
             status: actualInitialData?.status || 'NOTIFICATION',
             isPublished: actualInitialData?.isPublished ?? true,
             publishedAt: actualInitialData?.publishedAt || '',
+            createdAt: actualInitialData?.createdAt || '',
         }
     });
 
@@ -172,7 +174,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
 
                 <div className="flex items-center gap-3">
                     <div className="flex items-center space-x-2 mr-4">
-                        <Switch 
+                        <Switch
                             id="published"
                             checked={isPublished}
                             onCheckedChange={(checked) => setValue('isPublished', checked)}
@@ -223,45 +225,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Description & Qualification</CardTitle>
-                            <CardDescription>Detailed information about the recruitment process</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="description">Short Description</Label>
-                                    <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[150px]" />
-                                </div>
-                                {description && (
-                                    <div className="space-y-2 flex-1 flex flex-col">
-                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
-                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[190px] overflow-y-auto custom-scrollbar shadow-inner">
-                                            <MarkdownRenderer content={description} />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            <Separator />
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="qualificationCriteria">Qualification Criteria</Label>
-                                    <Textarea id="qualificationCriteria" {...register('qualificationCriteria')} placeholder="Educational and other eligibility requirements..." className="min-h-[120px]" />
-                                </div>
-                                {qualificationCriteria && (
-                                    <div className="space-y-2 flex-1 flex flex-col">
-                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
-                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[150px] overflow-y-auto custom-scrollbar shadow-inner">
-                                            <MarkdownRenderer content={qualificationCriteria} variant="fact" />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
 
                     <Card>
                         <CardHeader>
@@ -278,8 +242,53 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                             )}
                         </CardContent>
                     </Card>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Description & Qualification</CardTitle>
+                                <CardDescription>Detailed information about the recruitment process</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="description">Short Description</Label>
+                                    <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[150px]" />
+                                </div>
+                                {description && (
+                                    <div className="space-y-2 flex-1 flex flex-col">
+                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
+                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[190px] overflow-y-auto custom-scrollbar shadow-inner">
+                                            <MarkdownRenderer content={description} />
+                                        </div>
+                                    </div>
+                                )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Separator />
+
+
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Qualification Criteria</CardTitle>
+                                <CardDescription>Educational and other eligibility requirements...</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="qualificationCriteria">Qualification Criteria</Label>
+                                    <Textarea id="qualificationCriteria" {...register('qualificationCriteria')} placeholder="Educational and other eligibility requirements..." className="min-h-[120px]" />
+                                </div>
+                                {qualificationCriteria && (
+                                    <div className="space-y-2 flex-1 flex flex-col">
+                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
+                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[150px] overflow-y-auto custom-scrollbar shadow-inner">
+                                            <MarkdownRenderer content={qualificationCriteria} variant="fact" />
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Fees</CardTitle>
@@ -341,8 +350,8 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                                     name="examLevel"
                                     control={control}
                                     render={({ field }) => (
-                                        <Select 
-                                            value={field.value} 
+                                        <Select
+                                            value={field.value}
                                             onValueChange={(val) => {
                                                 field.onChange(val);
                                                 if (val !== 'STATE') setValue('state', null);
@@ -464,6 +473,39 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                                                 >
                                                     <CalendarIcon className="mr-2 h-4 w-4" />
                                                     {field.value ? format(new Date(field.value), "PPP") : <span>Pick a date</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value ? new Date(field.value) : undefined}
+                                                    onSelect={(date) => field.onChange(date?.toISOString() || null)}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Created / Listed At</Label>
+                                <Controller
+                                    name="createdAt"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {field.value ? format(new Date(field.value), "PPP") : <span>Original listing timestamp</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0" align="start">

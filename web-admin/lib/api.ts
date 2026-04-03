@@ -206,7 +206,7 @@ export interface SeoPage {
 }
 
 export const examService = {
-    getAllExams: async (params?: any): Promise<ApiResponse<Exam[]>> => {
+    getAllExams: async (params?: { page?: number, limit?: number, search?: string, status?: string, isPublished?: string, startDate?: string, endDate?: string }): Promise<ApiResponse<Exam[]>> => {
         const response = await apiClient.get('/exams', { params });
         return response.data;
     },
