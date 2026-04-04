@@ -33,6 +33,8 @@ import {
 } from "@/components/ui/select";
 import MarkdownRenderer from '../MarkdownRenderer';
 
+import ArticleViralShareDialog from './ArticleViralShareDialog';
+
 interface ArticleEditorProps {
     initialData?: Partial<SeoPage>;
     exams: Exam[];
@@ -129,6 +131,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
     }, [examUrlInput]); // omitting exams from deps so we dont loop
 
     const [isSlugLocked, setIsSlugLocked] = useState(!!initialData?.slug);
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
     const handleTitleChange = (newTitle: string) => {
         const updates: Partial<SeoPage> = { title: newTitle };
@@ -161,13 +164,26 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                         <p className="text-sm text-muted-foreground">Manage article content and SEO metadata</p>
                     </div>
                 </div>
-                <Button
-                    onClick={() => onSave(formData)}
-                    disabled={isSaving || !formData.slug || !formData.title || !formData.content}
-                >
-                    {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    Save Article
-                </Button>
+                <div className="flex items-center gap-3">
+                    {formData.slug && (
+                        <Button 
+                            type="button" 
+                            variant="outline"
+                            className="bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                            onClick={() => setIsShareDialogOpen(true)}
+                        >
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Viral Hub Strategy
+                        </Button>
+                    )}
+                    <Button
+                        onClick={() => onSave(formData)}
+                        disabled={isSaving || !formData.slug || !formData.title || !formData.content}
+                    >
+                        {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                        Save Article
+                    </Button>
+                </div>
             </div>
 
             <Tabs defaultValue="editor" className="w-full">
@@ -370,6 +386,14 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            <ArticleViralShareDialog 
+                isOpen={isShareDialogOpen}
+                onOpenChange={setIsShareDialogOpen}
+                formData={formData}
+                examTitle={resolvedExam?.title}
+                examShortTitle={resolvedExam?.shortTitle}
+            />
         </div>
     );
 }
