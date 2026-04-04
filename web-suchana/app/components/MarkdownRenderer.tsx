@@ -3,8 +3,8 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
-import { ExternalLink } from "lucide-react";
-import { formatDatesInText } from "@/app/lib/types";
+import { ExternalLink, Info, AlertTriangle, Lightbulb } from "lucide-react";
+import { formatDatesInText, generateHeadingId } from "@/app/lib/types";
 
 interface MarkdownRendererProps {
   content: string;
@@ -33,6 +33,35 @@ export default function MarkdownRenderer({
         remarkPlugins={[remarkGfm, remarkBreaks]}
         rehypePlugins={[rehypeRaw]}
         components={{
+          h2: ({ children }) => <h2 id={generateHeadingId(children)}>{children}</h2>,
+          h3: ({ children }) => <h3 id={generateHeadingId(children)}>{children}</h3>,
+          h4: ({ children }) => <h4 id={generateHeadingId(children)}>{children}</h4>,
+          blockquote: ({ children }) => {
+            // Check for special callout prefixes like [!IMPORTANT] or **Important:**
+            const firstChild = Array.isArray(children) ? children[0] : children;
+            const textContent = typeof firstChild === 'string' ? firstChild : '';
+            
+            let type: 'info' | 'warning' | 'tip' | 'default' = 'default';
+            let icon = null;
+            
+            if (textContent.includes('[!IMPORTANT]') || textContent.includes('Important:')) {
+              type = 'warning';
+              icon = <AlertTriangle size={18} />;
+            } else if (textContent.includes('[!TIP]') || textContent.includes('Tip:')) {
+              type = 'tip';
+              icon = <Lightbulb size={18} />;
+            } else if (textContent.includes('[!NOTE]') || textContent.includes('Note:')) {
+              type = 'info';
+              icon = <Info size={18} />;
+            }
+
+            return (
+              <div className={`callout-box callout-${type}`}>
+                {icon && <div className="callout-icon">{icon}</div>}
+                <div className="callout-content">{children}</div>
+              </div>
+            );
+          },
           table: ({ node, ...props }) => (
             <div className="table-responsive">
               <table {...props} />

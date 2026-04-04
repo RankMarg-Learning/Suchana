@@ -1,12 +1,9 @@
 "use client";
 
-import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeoPages } from '../lib/api';
 import LatestArticlesSection from './LatestArticlesSection';
 import { SeoPage } from '../lib/types';
-import SiteNav from './SiteNav';
-import SiteFooter from './SiteFooter';
 import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd } from './AdUnits';
 import { cleanLabel } from '../lib/types';

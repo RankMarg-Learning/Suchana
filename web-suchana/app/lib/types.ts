@@ -1,4 +1,5 @@
-// ─── Shared Types ─────────────────────────────────────────────────────────────
+import React from 'react';
+
 
 export interface LifecycleEvent {
   id: string;
@@ -138,6 +139,15 @@ export function slugify(text: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
+}
+
+export function generateHeadingId(children: React.ReactNode): string {
+  const text = typeof children === 'string'
+    ? children
+    : React.Children.toArray(children)
+      .map(child => (typeof child === 'string' || typeof child === 'number' ? child : ''))
+      .join('');
+  return slugify(text);
 }
 
 export function getCategoryInfo(catValue: string) {

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd, InFeedAd } from './AdUnits';
-import { Exam, SeoPage, cleanLabel, STATUS_LABELS, getCategoryInfo } from '../lib/types';
+import { Exam, SeoPage, cleanLabel, STATUS_LABELS, getCategoryInfo, enumToSlug } from '../lib/types';
 import { LifecycleStage } from '../lib/enums';
 import LatestArticlesSection from './LatestArticlesSection';
 
@@ -149,13 +149,14 @@ export default function SeoExamPageLayout({
               </h1>
 
               <div className="article-meta" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
-                <div className={`status-badge status-${exam.status}`} style={{ fontSize: '0.8rem' }}>
+                <Link
+                  href={`/s/${enumToSlug(exam.status)}`}
+                  className={`status-badge status-${exam.status}`}
+                >
                   <div className="status-dot" />
                   {statusLabel}
-                </div>
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  By {exam.conductingBody}
-                </div>
+                </Link>
+
                 <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                   • {new Date(seoPage.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
                 </div>
@@ -237,7 +238,18 @@ export default function SeoExamPageLayout({
                 </div>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Organization</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{exam.conductingBody}</div>
+                  <Link 
+                    href={`/conduct/${(exam.conductingBody || "ALL").toLowerCase().replace(/ /g, "-")}`}
+                    style={{ 
+                      color: 'var(--text-primary)', 
+                      textDecoration: 'none',
+                      transition: 'color 0.2s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
+                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+                  >
+                    <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{exam.conductingBody}</div>
+                  </Link>
                 </div>
               </div>
 
@@ -247,7 +259,22 @@ export default function SeoExamPageLayout({
                 </div>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Location</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{exam.state || 'India (National)'}</div>
+                  {exam.state ? (
+                    <Link 
+                      href={`/state/${exam.state.toLowerCase().replace(/ /g, "-")}`}
+                      style={{ 
+                        color: 'var(--text-primary)', 
+                        textDecoration: 'none',
+                        transition: 'color 0.2s',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
+                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
+                    >
+                      <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{exam.state}</div>
+                    </Link>
+                  ) : (
+                    <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>India (National)</div>
+                  )}
                 </div>
               </div>
             </div>
