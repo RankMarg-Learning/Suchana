@@ -30,6 +30,7 @@ import {
   Pin,
   UserSquare2,
   Layers,
+  Star,
 } from "lucide-react";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 import {
@@ -44,7 +45,6 @@ import {
 } from "@/app/lib/types";
 import { fetchSavedExams, toggleSavedExam, fetchSeoPages } from "@/app/lib/api";
 import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
-import { LeftSidebar } from "@/app/components/Sidebars";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 
@@ -384,6 +384,15 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
                 </Link>
 
                 <div className="exam-share-actions">
+                  <a
+                    href="https://www.google.com/preferences/source?q=examsuchana.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="detail-action-btn"
+                    title="Add as a preferred source on Google News"
+                  >
+                    <Star size={14} fill="currentColor" /> Follow on Google
+                  </a>
                   <button className="detail-action-btn" onClick={handleShare} id="share-btn">
                     <Share2 size={14} /> {copied ? "Copied!" : "Share"}
                   </button>
