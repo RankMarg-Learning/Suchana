@@ -186,7 +186,6 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
         totalVacancies: dto.totalVacancies,
         salary: dto.salary,
         additionalDetails: dto.additionalDetails,
-        // Auto-set publishedAt when first publish
         ...(dto.isPublished && !existing.isPublished && { publishedAt: new Date() }),
     };
 
