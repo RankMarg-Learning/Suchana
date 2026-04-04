@@ -28,17 +28,10 @@ export default function SiteFooter() {
                 </span>
               </Link>
               <p className="footer-brand-desc">
-                India&apos;s most structured government exam lifecycle tracker. 
+                India&apos;s most structured government exam lifecycle tracker.
                 Our platform provides millisecond-precise status updates for 500+ exams from 100+ conducting bodies.
               </p>
-              
-              <div className="footer-socials">
-                {['Twitter', 'Instagram', 'Telegram', 'Linkedin'].map(platform => (
-                  <a key={platform} href="#" className="social-link" title={platform}>
-                    <span className="social-icon-placeholder" />
-                  </a>
-                ))}
-              </div>
+
             </div>
 
             {/* ─── Column 2: By Category ─── */}
@@ -100,7 +93,7 @@ export default function SiteFooter() {
             </span>
           </div>
           <div className="footer-bottom-right">
-            <a href="#" className="back-to-top" onClick={(e) => { e.preventDefault(); window.scrollTo({top: 0, behavior: 'smooth'}); }}>
+            <a href="#" className="back-to-top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
               Back to Top &uarr;
             </a>
             <div className="footer-tagline">
@@ -110,7 +103,8 @@ export default function SiteFooter() {
         </div>
       </div>
 
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .footer-top-row {
           padding-bottom: 40px;
         }

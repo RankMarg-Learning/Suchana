@@ -41,7 +41,8 @@ import {
   formatDate,
   enumToSlug,
   CATEGORIES,
-  getCategoryInfo
+  getCategoryInfo,
+  slugify
 } from "@/app/lib/types";
 import { fetchSavedExams, toggleSavedExam, fetchSeoPages } from "@/app/lib/api";
 import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
@@ -360,7 +361,7 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
                   {CATEGORIES.find(c => c.value === exam.category)?.label || cleanLabel(exam.category)}
                 </Link>
                 {exam.state && (
-                  <Link href={`/state/${exam.state}`} className="exam-tag">
+                  <Link href={`/state/${slugify(exam.state)}`} className="exam-tag">
                     <MapPin size={10} style={{ display: "inline", marginRight: 2 }} />{exam.state}
                   </Link>
                 )}

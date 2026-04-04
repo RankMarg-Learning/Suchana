@@ -128,6 +128,18 @@ export function enumToSlug(en: string): string {
   return en.toLowerCase().replace(/_/g, "-");
 }
 
+export function unslugify(slug: string): string {
+  if (!slug) return "";
+  return decodeURIComponent(slug).replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
 export function getCategoryInfo(catValue: string) {
   const cat = CATEGORIES.find(c => c.value === catValue);
   return {
