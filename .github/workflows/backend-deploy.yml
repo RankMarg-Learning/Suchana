@@ -71,23 +71,14 @@ jobs:
           aws ssm send-command \
             --instance-ids "${{ secrets.EC2_INSTANCE_ID }}" \
             --document-name "AWS-RunShellScript" \
-            --comment "Deploy latest backend" \
-            --parameters commands="
-              echo '🚀 Pulling latest image' &&
-              docker pull $DOCKERHUB_REPO:latest &&
-
-              echo '🛑 Stopping old container' &&
-              docker stop rankmarg-backend || true &&
-              docker rm rankmarg-backend || true &&
-
-              echo '🟢 Starting new container' &&
-              docker run -d \
-                --name rankmarg-backend \
-                -p 3001:3001 \
-                --restart unless-stopped \
-                --env-file /home/ubuntu/.env \
-                $DOCKERHUB_REPO:latest &&
-
-              echo '🧹 Cleaning unused images' &&
-              docker image prune -f
-            "
+            --parameters '{"commands":[
+              "echo Updating image...",
+              "docker pull ${{ env.DOCKERHUB_REPO }}:latest",
+              "echo Stopping old container...",
+              "docker stop rankmarg-backend || true",
+              "docker rm rankmarg-backend || true",
+              "echo Starting new container...",
+              "docker run -d --name rankmarg-backend -p 3001:3001 --restart unless-stopped --env-file /home/ubuntu/.env ${{ env.DOCKERHUB_REPO }}:latest",
+              "echo Cleanup...",
+              "docker image prune -f"
+            ]}'
