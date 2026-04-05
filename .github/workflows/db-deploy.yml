@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "backend/**"
+      - "backend/prisma/**"
       - ".github/workflows/db-deploy.yml"
   pull_request:
     branches:
