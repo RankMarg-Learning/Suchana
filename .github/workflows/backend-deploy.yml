@@ -51,7 +51,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           provenance: false
 
-  deploy: 
+  deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
 
