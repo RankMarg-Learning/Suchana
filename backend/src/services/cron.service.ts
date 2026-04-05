@@ -1,5 +1,5 @@
 import prisma from '../config/database';
-import { ExamStatus, getStatusFromStage, getTerminalStatusFromStage } from '../constants/enums';
+import { ExamStatus, LifecycleStage, getStatusFromStage, getTerminalStatusFromStage } from '../constants/enums';
 import { logger } from '../utils/logger';
 
 const ARCHIVE_AFTER_MS = 14 * 24 * 60 * 60 * 1000;
@@ -32,7 +32,7 @@ function deriveStatus(events: SlimEvent[], nowMs: number): ExamStatus {
         if (!ev.startsAt) continue;
 
         const wStart = dayStart(ev.startsAt);
-        const wEnd   = dayEnd(ev.startsAt, ev.endsAt);
+        const wEnd = dayEnd(ev.startsAt, ev.endsAt);
 
         if (nowMs >= wStart && nowMs <= wEnd) {
             return getStatusFromStage(ev.stage) ?? ExamStatus.ACTIVE;
@@ -48,11 +48,17 @@ function deriveStatus(events: SlimEvent[], nowMs: number): ExamStatus {
 
     if (latestIdx === -1) return ExamStatus.NOTIFICATION;
 
-    const latest   = sorted[latestIdx];
-    const isLast   = latestIdx === sorted.length - 1;
-    const wEnd     = dayEnd(latest.startsAt!, latest.endsAt);
+    const latest = sorted[latestIdx];
+    const isLast = latestIdx === sorted.length - 1;
+    const wEnd = dayEnd(latest.startsAt!, latest.endsAt);
 
-    if (!isLast) return ExamStatus.ACTIVE;
+    if (!isLast) {
+        const next = sorted[latestIdx + 1];
+        if (next.stage === LifecycleStage.ADMIT_CARD) return ExamStatus.ADMIT_CARD_COMING_SOON;
+        if (next.stage === LifecycleStage.RESULT) return ExamStatus.RESULT_COMING_SOON;
+
+        return getTerminalStatusFromStage(latest.stage);
+    }
 
     if (nowMs - wEnd > ARCHIVE_AFTER_MS) return ExamStatus.ARCHIVED;
 

@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
-import SiteNav from "../components/SiteNav";
-import SiteFooter from "../components/SiteFooter";
+import { 
+  Users, Target, History, Heart, 
+  MapPin, CheckCircle2, Zap, Shield, 
+  Flag, Award, Clock
+} from "lucide-react";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "About Us — Exam Suchana",
@@ -10,332 +14,162 @@ export const metadata: Metadata = {
 
 export default function AboutPage() {
   return (
-    <>
-      <SiteNav />
-
-      <main style={{ paddingTop: 80 }}>
-        {/* ─── Hero ─── */}
-        <section
-          style={{
-            padding: "80px 0 64px",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <div
+    <main className="min-h-screen">
+      {/* ─── Hero ─── */}
+      <section className="section" style={{ paddingTop: '100px', paddingBottom: '80px', position: 'relative' }}>
+         <div
             style={{
               position: "absolute",
               inset: 0,
-              background:
-                "radial-gradient(ellipse 70% 60% at 50% -10%, rgba(124,58,237,0.18) 0%, transparent 70%)",
+              background: "radial-gradient(ellipse 70% 60% at 50% -10%, rgba(var(--accent-rgb), 0.15) 0%, transparent 70%)",
+              zIndex: 0
             }}
           />
-          <div className="container" style={{ position: "relative", zIndex: 1 }}>
-            <div className="section-label">Who We Are</div>
-            <h1 className="section-title" style={{ maxWidth: 700 }}>
-              Built for India&apos;s
-              <br />
-              <span
-                style={{
-                  background: "linear-gradient(135deg, #9b5cf6, #3b82f6)",
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  backgroundClip: "text",
-                }}
-              >
-                35 million aspirants
-              </span>
-            </h1>
-            <p className="section-desc">
-              Exam Suchana was born out of a simple frustration — government
-              exam information is fragmented, inconsistent, and hard to act on.
-              We built the platform we wished existed.
-            </p>
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="hero-badge">
+            <span className="hero-badge-dot" />
+            Our Vision
           </div>
-        </section>
+          <h1 className="section-title" style={{ maxWidth: '800px' }}>
+            Unifying India&apos;s fragmented <span className="text-accent">Exam Intelligence</span>
+          </h1>
+          <p className="section-desc" style={{ fontSize: '18px' }}>
+            Exam Suchana was born out of a simple frustration: government exam information is fragmented, inconsistent, and hard to act on. We built the high-precision platform we wished existed when we were aspirants.
+          </p>
+        </div>
+      </section>
 
-        {/* ─── Mission ─── */}
-        <section style={{ padding: "64px 0", background: "var(--bg-secondary)" }}>
-          <div className="container">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 60,
-                alignItems: "center",
-              }}
-            >
-              <div>
-                <div className="section-label">Our Mission</div>
-                <h2
-                  style={{
-                    fontFamily: "'Space Grotesk', sans-serif",
-                    fontSize: 36,
-                    fontWeight: 700,
-                    letterSpacing: -1,
-                    marginBottom: 20,
-                    color: "var(--text-primary)",
-                  }}
+      {/* ─── Impact Stats ─── */}
+      <section className="section bg-secondary">
+        <div className="container">
+          <div className="features-grid">
+            {[
+              { value: "1000+", label: "Exams Tracked", icon: <Award />, color: "var(--accent-light)" },
+              { value: "50K+", label: "Daily Aspirants", icon: <Users />, color: "#3b82f6" },
+              { value: "28", label: "States Covered", icon: <MapPin />, color: "#ef4444" },
+              { value: "0", label: "Missed Deadlines", icon: <Clock />, color: "#10b981" },
+            ].map((stat, i) => (
+              <div key={i} className="feature-card" style={{ textAlign: 'center', padding: '40px 24px' }}>
+                <div 
+                  className="feature-icon mx-auto" 
+                  style={{ background: `rgba(var(--accent-rgb), 0.08)`, color: stat.color, marginBottom: '20px' }}
                 >
-                  Zero missed deadlines for every aspirant
-                </h2>
-                <p
-                  style={{
-                    color: "var(--text-secondary)",
-                    fontSize: 16,
-                    lineHeight: 1.8,
-                    marginBottom: 20,
-                  }}
-                >
-                  Every year, thousands of candidates miss exam registrations
-                  not because they&apos;re unprepared — but because they
-                  couldn&apos;t track the lifecycle. We&apos;re here to fix
-                  that.
+                  {stat.icon}
+                </div>
+                <div style={{ fontSize: '32px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px', fontFamily: 'Space Grotesk' }}>
+                  {stat.value}
+                </div>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  {stat.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── Mission & Content ─── */}
+      <section className="section">
+        <div className="container">
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.2fr)', gap: '80px', alignItems: 'center' }} className="mobile-stack">
+            <div>
+              <div className="hero-badge">
+                <span className="hero-badge-dot" style={{ background: '#10b981' }} />
+                Operational Mission
+              </div>
+              <h2 className="section-title" style={{ fontSize: '32px', textAlign: 'left', margin: '20px 0' }}>
+                Zero missed deadlines for every <span className="text-accent">Indian Aspirant</span>
+              </h2>
+              <div style={{ color: 'var(--text-secondary)', fontSize: '16px', lineHeight: 1.8 }}>
+                <p style={{ marginBottom: '20px' }}>
+                  Every year, thousands of brilliant candidates miss exam registrations not because they&apos;re unprepared — but because the lifecycle information was hidden behind bureaucratic websites and complex PDF notifications.
                 </p>
-                <p
-                  style={{
-                    color: "var(--text-secondary)",
-                    fontSize: 16,
-                    lineHeight: 1.8,
-                  }}
-                >
-                  Exam Suchana provides a centralized, real-time, and
-                  structured view of every major government exam in India —
-                  from registration to final result — with personal
-                  notifications so no opportunity is ever missed.
+                <p>
+                  Exam Suchana provides a centralized, high-fidelity, and structured view of every major government exam in India. From the first notification to the final result declaration, we provide the military-grade tracking candidates need to succeed.
                 </p>
               </div>
-
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
-                  gap: 16,
-                }}
-              >
-                {[
-                  { value: "1000+", label: "Exams Tracked", icon: "🏛️" },
-                  { value: "50K+", label: "Active Users", icon: "👩‍💻" },
-                  { value: "28", label: "States Covered", icon: "🗺️" },
-                  { value: "0", label: "Missed Deadlines", icon: "⏱️" },
-                ].map(({ value, label, icon }) => (
-                  <div
-                    key={label}
-                    style={{
-                      background: "var(--bg-card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 20,
-                      padding: "24px 20px",
-                      textAlign: "center",
-                    }}
-                  >
-                    <div style={{ fontSize: 28, marginBottom: 8 }}>{icon}</div>
-                    <div
-                      style={{
-                        fontFamily: "'Space Grotesk', sans-serif",
-                        fontSize: 32,
-                        fontWeight: 800,
-                        color: "var(--accent-light)",
-                        marginBottom: 4,
-                      }}
-                    >
-                      {value}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 600,
-                        color: "var(--text-muted)",
-                        textTransform: "uppercase",
-                        letterSpacing: 0.5,
-                      }}
-                    >
-                      {label}
-                    </div>
-                  </div>
-                ))}
+              <div style={{ marginTop: '32px', display: 'flex', flexWrap: 'wrap', gap: '16px' }}>
+                <div className="status-badge status-ACTIVE">
+                  <CheckCircle2 size={14} /> High Precision Tracking
+                </div>
+                <div className="status-badge status-REGISTRATION_OPEN">
+                  <Zap size={14} /> Real-time Updates
+                </div>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ─── Story ─── */}
-        <section style={{ padding: "80px 0" }}>
-          <div className="container">
-            <div className="section-label">Our Story</div>
-            <h2
-              style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: 36,
-                fontWeight: 700,
-                letterSpacing: -1,
-                marginBottom: 32,
-                color: "var(--text-primary)",
-                maxWidth: 600,
-              }}
-            >
-              From chaos to clarity
-            </h2>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3, 1fr)",
-                gap: 20,
-              }}
-            >
-              {[
-                {
-                  year: "2023",
-                  title: "The Problem",
-                  desc: "Our founders — government exam aspirants themselves — spent hours across 10+ websites tracking exam dates, often missing windows due to scattered information.",
-                  color: "rgba(239,68,68,0.12)",
-                  accent: "#f87171",
-                },
-                {
-                  year: "2024",
-                  title: "The Build",
-                  desc: "We built the first version of Exam Suchana — a structured lifecycle tracker with push notifications. The response from aspirants was overwhelming.",
-                  color: "rgba(245,158,11,0.12)",
-                  accent: "#fbbf24",
-                },
-                {
-                  year: "2025",
-                  title: "Today",
-                  desc: "Exam Suchana now tracks 1000+ exams across all major boards — UPSC, SSC, Railway, Banking, and State PSCs — serving 50,000+ aspirants daily.",
-                  color: "rgba(16,185,129,0.12)",
-                  accent: "#10b981",
-                },
-              ].map(({ year, title, desc, color, accent }) => (
-                <div
-                  key={year}
-                  style={{
-                    background: "var(--bg-card)",
-                    border: "1px solid var(--border)",
-                    borderTop: `3px solid ${accent}`,
-                    borderRadius: 20,
-                    padding: 28,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "inline-block",
-                      padding: "4px 12px",
-                      borderRadius: 8,
-                      background: color,
-                      color: accent,
-                      fontSize: 12,
-                      fontWeight: 800,
-                      marginBottom: 16,
-                    }}
-                  >
-                    {year}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 18,
-                      fontWeight: 700,
-                      color: "var(--text-primary)",
-                      marginBottom: 12,
-                    }}
-                  >
-                    {title}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 14,
-                      color: "var(--text-secondary)",
-                      lineHeight: 1.7,
-                    }}
-                  >
-                    {desc}
-                  </div>
-                </div>
-              ))}
+            <div className="feature-card" style={{ padding: '0', overflow: 'hidden', border: 'none', background: 'transparent' }}>
+               <div className="notify-card" style={{ height: '100%', margin: 0 }}>
+                  <div className="notify-icon"><Shield size={32} /></div>
+                  <h3 className="notify-title">Data Integrity First</h3>
+                  <p className="notify-desc">
+                    Our team manually verifies every notification from official government gazettes to ensure you get 100% accurate information. No rumors, no fake news.
+                  </p>
+               </div>
             </div>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ─── Values ─── */}
-        <section style={{ padding: "64px 0 80px", background: "var(--bg-secondary)" }}>
-          <div className="container">
-            <div className="section-label">Our Values</div>
-            <h2
-              style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: 36,
-                fontWeight: 700,
-                letterSpacing: -1,
-                marginBottom: 40,
-                color: "var(--text-primary)",
-              }}
-            >
-              What drives us
-            </h2>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(4, 1fr)",
-                gap: 16,
-              }}
-            >
-              {[
-                { icon: "🎯", title: "Clarity First", desc: "We present exam data in the clearest, most structured way possible." },
-                { icon: "⚡", title: "Real-Time", desc: "Every lifecycle update is reflected instantly — no stale data." },
-                { icon: "🔐", title: "Privacy", desc: "We never sell or share your personal data. Ever." },
-                { icon: "🇮🇳", title: "Made for India", desc: "Built specifically for the Indian government exam ecosystem." },
-              ].map(({ icon, title, desc }) => (
-                <div
-                  key={title}
-                  style={{
-                    background: "var(--bg-card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 16,
-                    padding: 24,
-                    textAlign: "center",
-                  }}
-                >
-                  <div style={{ fontSize: 32, marginBottom: 12 }}>{icon}</div>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "var(--text-primary)", marginBottom: 8 }}>{title}</div>
-                  <div style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.6 }}>{desc}</div>
-                </div>
-              ))}
-            </div>
+      {/* ─── Values ─── */}
+      <section className="section bg-secondary">
+        <div className="container">
+          <div className="hero-badge mx-auto">
+            <span className="hero-badge-dot" style={{ background: 'var(--accent)' }} />
+            Core Principles
           </div>
-        </section>
+          <h2 className="section-title" style={{ marginBottom: '48px' }}>The values that <span className="text-accent">guide us</span></h2>
+          <div className="features-grid">
+            {[
+              { icon: <Target />, title: "Clarity First", desc: "We translate complex bureaucratic notifications into actionable timelines." },
+              { icon: <Zap />, title: "Instantaneous", desc: "Every lifecycle update is reflected the moment it's officially declared." },
+              { icon: <Shield />, title: "Strict Privacy", desc: "Your data is yours. We never share aspirant information with third parties." },
+              { icon: <Flag />, title: "Sovereign Focus", desc: "Exclusively built for the unique challenges of the Indian Exam ecosystem." },
+            ].map((value, i) => (
+              <div key={i} className="feature-card">
+                <div className="feature-icon" style={{ background: 'rgba(var(--accent-rgb), 0.08)', color: 'var(--accent)' }}>
+                  {value.icon}
+                </div>
+                <h3 className="feature-title">{value.title}</h3>
+                <p className="feature-desc">{value.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-        {/* ─── CTA ─── */}
-        <section style={{ padding: "80px 0" }}>
-          <div className="container" style={{ textAlign: "center" }}>
-            <h2
-              style={{
-                fontFamily: "'Space Grotesk', sans-serif",
-                fontSize: 36,
-                fontWeight: 700,
-                letterSpacing: -1,
-                marginBottom: 16,
-                color: "var(--text-primary)",
-              }}
-            >
-              Have questions?
-            </h2>
-            <p style={{ color: "var(--text-secondary)", marginBottom: 28, fontSize: 16 }}>
-              We&apos;d love to hear from you. Our team responds within 24 hours.
+      {/* ─── CTA ─── */}
+      <section className="section">
+        <div className="container" style={{ textAlign: "center" }}>
+          <div className="notify-card" style={{ background: 'var(--bg-card)', padding: '60px 40px' }}>
+            <h2 className="section-title" style={{ margin: '0 0 16px' }}>Have questions for us?</h2>
+            <p className="section-desc" style={{ marginBottom: '32px' }}>
+              We&apos;d love to hear from you. Our engineering and content teams are always open to feedback.
             </p>
-            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              <a href="/contact" className="btn btn-primary btn-lg">
-                Contact Us
-              </a>
+            <div style={{ display: "flex", gap: "16px", justifyContent: "center", flexWrap: "wrap" }}>
+              <Link href="/contact" className="btn btn-primary btn-lg">
+                Get in Touch
+              </Link>
               <a href="mailto:help@examsuchana.in" className="btn btn-ghost btn-lg">
-                ✉️ help@examsuchana.in
+                help@examsuchana.in
               </a>
             </div>
           </div>
-        </section>
-      </main>
-
-      <div className="divider" />
-      <SiteFooter />
-    </>
+        </div>
+      </section>
+      
+      {/* Mobile Stack Utility Helper */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 768px) {
+          .mobile-stack {
+            grid-template-columns: 1fr !important;
+            gap: 40px !important;
+          }
+          .mx-auto {
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+        }
+      `}} />
+    </main>
   );
 }

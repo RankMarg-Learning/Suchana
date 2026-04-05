@@ -90,19 +90,42 @@ export class SeoController {
       const page = parseInt(req.query.page as string) || 1;
       const limit = parseInt(req.query.limit as string) || 20;
       const skip = (page - 1) * limit;
+      const search = req.query.search as string;
+      const category = req.query.category as string;
+      const isAdmin = !!req.headers.authorization; // Simple check for now based on context
+
+      // Build where clause
+      const where: any = {
+        ...(isAdmin ? {} : { isPublished: true }),
+        ...(category ? { category } : {}),
+        ...(search ? {
+          OR: [
+            { title: { contains: search, mode: 'insensitive' } },
+            { slug: { contains: search, mode: 'insensitive' } }
+          ]
+        } : {})
+      };
 
       const [pages, total] = await Promise.all([
         prisma.seoPage.findMany({
+          where,
           skip,
           take: limit,
           orderBy: { updatedAt: 'desc' },
-          include: {
+          select: {
+            id: true,
+            title: true,
+            slug: true,
+            category: true,
+            isPublished: true,
+            updatedAt: true,
+            examId: true,
             exam: {
               select: { id: true, title: true, slug: true }
             }
           }
         }),
-        prisma.seoPage.count()
+        prisma.seoPage.count({ where })
       ]);
 
       sendSuccess(res, {

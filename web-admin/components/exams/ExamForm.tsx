@@ -1,11 +1,13 @@
 'use client';
 
-import { 
-    ArrowLeft, 
-    Save, 
-    Loader2, 
+import { useState } from 'react';
+import {
+    ArrowLeft,
+    Save,
+    Loader2,
     Calendar as CalendarIcon,
-    Globe
+    Globe,
+    Share2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -19,7 +21,7 @@ import { ApiResponse, Exam, examService } from '@/lib/api';
 import { toast } from 'sonner';
 
 // Shadcn UI
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,10 +34,10 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { 
+import {
     Popover,
     PopoverContent,
-    PopoverTrigger 
+    PopoverTrigger
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -43,10 +45,11 @@ import { Separator } from "@/components/ui/separator";
 
 import TimelineManager from './TimelineManager';
 import MarkdownRenderer from '../MarkdownRenderer';
-import { useForm, Controller, FieldValues } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import ViralShareDialog from './ViralShareDialog';
 
 const examSchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
@@ -67,6 +70,7 @@ const examSchema = z.object({
     status: z.string().min(1),
     isPublished: z.boolean(),
     publishedAt: z.string().nullable(),
+    createdAt: z.string().nullable(),
 });
 
 type ExamFormValues = z.infer<typeof examSchema>;
@@ -80,7 +84,7 @@ interface ExamFormProps {
 export default function ExamForm({ initialData = null, isEdit = false }: ExamFormProps) {
     const router = useRouter();
     const queryClient = useQueryClient();
-    
+
     const actualInitialData = (initialData as any)?.data && !(initialData as any).title ? (initialData as any).data : initialData;
 
     const {
@@ -88,6 +92,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
         handleSubmit,
         control,
         watch,
+        getValues,
         setValue,
         formState: { errors }
     } = useForm<ExamFormValues>({
@@ -111,6 +116,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
             status: actualInitialData?.status || 'NOTIFICATION',
             isPublished: actualInitialData?.isPublished ?? true,
             publishedAt: actualInitialData?.publishedAt || '',
+            createdAt: actualInitialData?.createdAt || '',
         }
     });
 
@@ -142,6 +148,9 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
     const isPublished = watch('isPublished');
     const examLevel = watch('examLevel');
 
+    // Sharing State
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+
     // Watch fields for markdown previews
     const description = watch('description');
     const qualificationCriteria = watch('qualificationCriteria');
@@ -159,7 +168,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 container mx-auto py-8">
             <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
-                    <Button variant="outline" size="icon" asChild>
+                    <Button variant="outline" size="icon" asChild type="button">
                         <Link href="/exams">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
@@ -171,8 +180,19 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {isEdit && (
+                        <Button 
+                            type="button" 
+                            variant="outline" 
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            onClick={() => setIsShareDialogOpen(true)}
+                        >
+                            <Share2 className="mr-2 h-4 w-4" />
+                            Share Strategy
+                        </Button>
+                    )}
                     <div className="flex items-center space-x-2 mr-4">
-                        <Switch 
+                        <Switch
                             id="published"
                             checked={isPublished}
                             onCheckedChange={(checked) => setValue('isPublished', checked)}
@@ -225,46 +245,6 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Description & Qualification</CardTitle>
-                            <CardDescription>Detailed information about the recruitment process</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="description">Short Description</Label>
-                                    <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[150px]" />
-                                </div>
-                                {description && (
-                                    <div className="space-y-2 flex-1 flex flex-col">
-                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
-                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[190px] overflow-y-auto custom-scrollbar shadow-inner">
-                                            <MarkdownRenderer content={description} />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            
-                            <Separator />
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="qualificationCriteria">Qualification Criteria</Label>
-                                    <Textarea id="qualificationCriteria" {...register('qualificationCriteria')} placeholder="Educational and other eligibility requirements..." className="min-h-[120px]" />
-                                </div>
-                                {qualificationCriteria && (
-                                    <div className="space-y-2 flex-1 flex flex-col">
-                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
-                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[150px] overflow-y-auto custom-scrollbar shadow-inner">
-                                            <MarkdownRenderer content={qualificationCriteria} variant="fact" />
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
                             <CardTitle>Exam Timeline</CardTitle>
                             <CardDescription>Manage application dates and exam schedule</CardDescription>
                         </CardHeader>
@@ -279,7 +259,51 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                         </CardContent>
                     </Card>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Description & Qualification</CardTitle>
+                                <CardDescription>Detailed information about the recruitment process</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="description">Short Description</Label>
+                                    <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[150px]" />
+                                </div>
+                                {description && (
+                                    <div className="space-y-2 flex-1 flex flex-col">
+                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
+                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[190px] overflow-y-auto custom-scrollbar shadow-inner">
+                                            <MarkdownRenderer content={description} />
+                                        </div>
+                                    </div>
+                                )}
+                                <Separator />
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Qualification Criteria</CardTitle>
+                                <CardDescription>Educational and other eligibility requirements...</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="qualificationCriteria">Qualification Criteria</Label>
+                                    <Textarea id="qualificationCriteria" {...register('qualificationCriteria')} placeholder="Educational and other eligibility requirements..." className="min-h-[120px]" />
+                                </div>
+                                {qualificationCriteria && (
+                                    <div className="space-y-2 flex-1 flex flex-col">
+                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
+                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[150px] overflow-y-auto custom-scrollbar shadow-inner">
+                                            <MarkdownRenderer content={qualificationCriteria} variant="fact" />
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <Card>
                             <CardHeader>
                                 <CardTitle>Fees</CardTitle>
@@ -341,8 +365,8 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                                     name="examLevel"
                                     control={control}
                                     render={({ field }) => (
-                                        <Select 
-                                            value={field.value} 
+                                        <Select
+                                            value={field.value}
                                             onValueChange={(val) => {
                                                 field.onChange(val);
                                                 if (val !== 'STATE') setValue('state', null);
@@ -478,10 +502,50 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                                     )}
                                 />
                             </div>
+
+                            <div className="space-y-2">
+                                <Label>Created / Listed At</Label>
+                                <Controller
+                                    name="createdAt"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Popover>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    className={cn(
+                                                        "w-full justify-start text-left font-normal",
+                                                        !field.value && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {field.value ? format(new Date(field.value), "PPP") : <span>Original listing timestamp</span>}
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={field.value ? new Date(field.value) : undefined}
+                                                    onSelect={(date) => field.onChange(date?.toISOString() || null)}
+                                                    initialFocus
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    )}
+                                />
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
             </div>
+
+            <ViralShareDialog 
+                isOpen={isShareDialogOpen} 
+                onOpenChange={setIsShareDialogOpen}
+                formData={getValues()}
+                initialData={actualInitialData}
+            />
         </form>
     );
 }

@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-    Search, 
-    Plus, 
-    ChevronLeft, 
+import {
+    Search,
+    Plus,
+    ChevronLeft,
     ChevronRight,
     Globe,
     Edit3,
@@ -12,7 +12,8 @@ import {
     Layers,
     RefreshCw,
     MoreHorizontal,
-    Eye
+    Eye,
+    Link as LinkIcon
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -97,20 +98,24 @@ export default function ExamsPage() {
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [publishFilter, setPublishFilter] = useState('ALL');
     const [currentPage, setCurrentPage] = useState(1);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [deletingExam, setDeletingExam] = useState<Exam | null>(null);
     const [generatingSeoExam, setGeneratingSeoExam] = useState<Exam | null>(null);
     const [selectedCategories, setSelectedCategories] = useState<string[]>(SEO_CATEGORIES.map(c => c.id));
 
     // Main query for the paginated & filtered list
     const { data: response, isLoading, isRefetching } = useQuery({
-        queryKey: ['exams', currentPage, search, statusFilter, publishFilter],
+        queryKey: ['exams', currentPage, search, statusFilter, publishFilter, startDate, endDate],
         queryFn: () => examService.getAllExams({
             page: currentPage,
             limit: PAGE_SIZE,
             search: search || undefined,
             status: statusFilter === 'ALL' ? undefined : statusFilter,
-            isPublished: publishFilter === 'PUBLISHED' ? 'true' : 
-                         publishFilter === 'UNPUBLISHED' ? 'false' : undefined
+            isPublished: publishFilter === 'PUBLISHED' ? 'true' :
+                publishFilter === 'UNPUBLISHED' ? 'false' : undefined,
+            startDate: startDate ? new Date(startDate).toISOString() : undefined,
+            endDate: endDate ? new Date(endDate).toISOString() : undefined
         }),
     });
 
@@ -124,12 +129,12 @@ export default function ExamsPage() {
         queryFn: () => examService.getAllExams({ limit: 1 }),
         staleTime: 60000,
     });
-    
+
     const globalCount = (globalResponse as any)?.meta?.total || 0;
 
     // Mutation for publish toggle
     const publishMutation = useMutation({
-        mutationFn: ({ id, isPublished }: { id: string, isPublished: boolean }) => 
+        mutationFn: ({ id, isPublished }: { id: string, isPublished: boolean }) =>
             examService.updateExam(id, { isPublished }),
         onSuccess: (_, variables) => {
             toast.success(`Exam ${variables.isPublished ? 'published' : 'unpublished'} successfully`);
@@ -150,7 +155,7 @@ export default function ExamsPage() {
     });
 
     const generateSeoMutation = useMutation({
-        mutationFn: ({ examId, categories }: { examId: string, categories: string[] }) => 
+        mutationFn: ({ examId, categories }: { examId: string, categories: string[] }) =>
             seoService.generateExamPages(examId, categories),
         onSuccess: (response) => {
             toast.success(`Generated ${response.data.generatedCount} SEO pages successfully`);
@@ -160,7 +165,7 @@ export default function ExamsPage() {
     });
 
     const getStatusVariant = (status: string) => {
-        switch(status) {
+        switch (status) {
             case 'ACTIVE':
             case 'REGISTRATION_OPEN':
                 return "default"; // emerald in our theme
@@ -184,9 +189,9 @@ export default function ExamsPage() {
                     <p className="text-muted-foreground mt-1 text-sm">Reviewing {globalCount} exam lifecycles and recruitment schedules.</p>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button 
-                        variant="outline" 
-                        onClick={() => queryClient.invalidateQueries({ queryKey: ['exams'] })} 
+                    <Button
+                        variant="outline"
+                        onClick={() => queryClient.invalidateQueries({ queryKey: ['exams'] })}
                         disabled={isLoading || isRefetching}
                     >
                         <RefreshCw className={cn("mr-2 h-4 w-4", isRefetching && "animate-spin")} />
@@ -207,8 +212,8 @@ export default function ExamsPage() {
                 <CardContent className="p-4 flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input 
-                            placeholder="Search title, authority or slug..." 
+                        <Input
+                            placeholder="Search title, authority or slug..."
                             className="pl-9"
                             value={search}
                             onChange={(e) => {
@@ -239,6 +244,22 @@ export default function ExamsPage() {
                                 ))}
                             </SelectContent>
                         </Select>
+
+                        <div className="flex items-center gap-2">
+                            <Input
+                                type="date"
+                                className="w-[140px]"
+                                value={startDate}
+                                onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                            />
+                            <span className="text-muted-foreground">-</span>
+                            <Input
+                                type="date"
+                                className="w-[140px]"
+                                value={endDate}
+                                onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                            />
+                        </div>
                     </div>
                 </CardContent>
             </Card>
@@ -276,8 +297,8 @@ export default function ExamsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col gap-0.5">
-                                            <Link 
-                                                href={`/exam/${exam.slug || exam.id}/edit`} 
+                                            <Link
+                                                href={`/exam/${exam.slug || exam.id}/edit`}
                                                 className="font-semibold text-slate-900 hover:text-primary transition-colors line-clamp-1"
                                             >
                                                 {exam.title}
@@ -300,9 +321,9 @@ export default function ExamsPage() {
                                         </Badge>
                                     </TableCell>
                                     <TableCell className="text-center">
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
                                             className={cn(
                                                 "h-8 w-8 rounded-full border transition-all",
                                                 exam.isPublished ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "text-muted-foreground/30 border-transparent"
@@ -315,6 +336,18 @@ export default function ExamsPage() {
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-8 w-8"
+                                                title="Copy Exam URL"
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(`https://examsuchana.in/exam/${exam.slug || exam.id}`);
+                                                    toast.success('Link copied to clipboard!');
+                                                }}
+                                            >
+                                                <LinkIcon className="h-4 w-4" />
+                                            </Button>
                                             <Button variant="ghost" size="icon" className="h-8 w-8" asChild title="Edit Exam">
                                                 <Link href={`/exam/${exam.slug || exam.id}/edit`}>
                                                     <Edit3 className="h-4 w-4" />
@@ -342,8 +375,8 @@ export default function ExamsPage() {
                                                         <Layers className="mr-2 h-4 w-4" /> Generate SEO
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem 
-                                                        className="text-destructive focus:text-destructive" 
+                                                    <DropdownMenuItem
+                                                        className="text-destructive focus:text-destructive"
                                                         onClick={() => setDeletingExam(exam)}
                                                     >
                                                         <Trash2 className="mr-2 h-4 w-4" /> Delete Exam
@@ -360,7 +393,7 @@ export default function ExamsPage() {
                                     <div className="flex flex-col items-center justify-center space-y-3 text-muted-foreground">
                                         <Search className="h-10 w-10 opacity-20" />
                                         <p className="text-sm font-medium">No results matched your filters</p>
-                                        <Button variant="outline" size="sm" onClick={() => { setSearch(''); setStatusFilter('ALL'); setPublishFilter('ALL'); }}>
+                                        <Button variant="outline" size="sm" onClick={() => { setSearch(''); setStatusFilter('ALL'); setPublishFilter('ALL'); setStartDate(''); setEndDate(''); }}>
                                             Clear Filters
                                         </Button>
                                     </div>
@@ -376,9 +409,9 @@ export default function ExamsPage() {
                         Showing {exams.length} of {totalCount} exams
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                             disabled={currentPage === 1 || isLoading}
                         >
@@ -406,9 +439,9 @@ export default function ExamsPage() {
                                 );
                             })}
                         </div>
-                        <Button 
-                            variant="outline" 
-                            size="sm" 
+                        <Button
+                            variant="outline"
+                            size="sm"
                             onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                             disabled={currentPage === totalPages || totalPages === 1 || isLoading}
                         >
@@ -446,7 +479,7 @@ export default function ExamsPage() {
                             Select the page categories you want to generate/update for <span className="font-bold text-slate-900">"{generatingSeoExam?.shortTitle || generatingSeoExam?.title}"</span>.
                         </DialogDescription>
                     </DialogHeader>
-                    
+
                     <div className="grid grid-cols-2 gap-4 py-4">
                         {SEO_CATEGORIES.map((cat) => (
                             <div key={cat.id} className="flex items-center space-x-2 border p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
@@ -456,10 +489,10 @@ export default function ExamsPage() {
                                     setSelectedCategories([...selectedCategories, cat.id]);
                                 }
                             }}>
-                                <Switch 
-                                    id={`cat-${cat.id}`} 
+                                <Switch
+                                    id={`cat-${cat.id}`}
                                     checked={selectedCategories.includes(cat.id)}
-                                    // onCheckedChange already handled by parent div click for better UX
+                                // onCheckedChange already handled by parent div click for better UX
                                 />
                                 <Label htmlFor={`cat-${cat.id}`} className="flex-1 cursor-pointer text-sm font-medium">
                                     {cat.label}
@@ -480,10 +513,10 @@ export default function ExamsPage() {
 
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setGeneratingSeoExam(null)}>Cancel</Button>
-                        <Button 
-                            onClick={() => generatingSeoExam && generateSeoMutation.mutate({ 
-                                examId: generatingSeoExam.id, 
-                                categories: selectedCategories 
+                        <Button
+                            onClick={() => generatingSeoExam && generateSeoMutation.mutate({
+                                examId: generatingSeoExam.id,
+                                categories: selectedCategories
                             })}
                             disabled={generateSeoMutation.isPending || selectedCategories.length === 0}
                         >

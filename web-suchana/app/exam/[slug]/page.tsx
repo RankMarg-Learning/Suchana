@@ -68,6 +68,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       url: canonicalUrl,
       title: `${title} Recruitment ${year} — Check Full Timeline & Details`,
+      images: [
+        {
+          url: `${SITE_URL}/exam-banner.png`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
       description,
       locale: "en_IN",
       siteName: "Exam Suchana",
@@ -78,6 +86,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
+      images: [
+        {
+          url: `${SITE_URL}/exam-banner.png`,
+          width: 1200,
+          height: 630,
+          alt: title,
+        },
+      ],
       title: `${title} — ${statusLabel} Updates`,
       description: `${vacancies} vacancies. ${deadline} Full timeline on Exam Suchana.`,
     },
@@ -112,9 +128,6 @@ function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
     validThrough: regEvent?.endsAt ?? undefined,
     datePosted: regEvent?.startsAt ?? new Date().toISOString(),
     url: canonicalUrl,
-    ...(exam.totalVacancies
-      ? { totalJobOpenings: parseInt(exam.totalVacancies) || undefined }
-      : {}),
     ...(exam.applicationFee
       ? {
         applicationContact: {
@@ -146,6 +159,7 @@ function buildEventJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamB
       "@id": `${SITE_URL}#organization`,
       name: exam.conductingBody,
       url: exam.officialWebsite,
+      logo: `${SITE_URL}/examsuchana-logoT.png`,
     },
     location: {
       "@type": "Place",
@@ -248,12 +262,10 @@ function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamByS
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
   const exam = await fetchExamBySlug(slug);
-
   if (!exam) {
     notFound();
   }
 
-  // Fetch related exams for the client component
   const { fetchExamsFromAPI } = await import('@/app/lib/api');
   const { exams: relatedExams } = await fetchExamsFromAPI(1, 5, exam.category).catch(() => ({ exams: [] }));
   const filteredRelated = (relatedExams || []).filter(e => e.id !== exam.id).slice(0, 4);

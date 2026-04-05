@@ -1,4 +1,4 @@
-import { Exam, STATUS_LABELS, cleanLabel } from "./types";
+import { Exam } from "./types";
 
 export type SeoType = "JOB" | "RESULT" | "ADMIT_CARD" | "SYLLABUS" | "SALARY" | "CUTOFF";
 
@@ -28,7 +28,7 @@ export function generateSeoTitle(exam: Exam, type: SeoType): string {
 export function generateSeoDescription(exam: Exam, type: SeoType): string {
   const title = exam.shortTitle || exam.title;
   const body = exam.conductingBody;
-  
+
   switch (type) {
     case "JOB":
       return `Apply online for ${title} Recruitment ${year()} announced by ${body}. Get full details on eligibility, total vacancies${exam.totalVacancies ? ` (${exam.totalVacancies})` : ""}, important dates, and how to apply.`;
@@ -48,5 +48,5 @@ export function generateSeoDescription(exam: Exam, type: SeoType): string {
 }
 
 function year() {
-    return new Date().getFullYear();
+  return new Date().getFullYear();
 }

@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Bell, Layers, Search, User, Bookmark } from "lucide-react";
-import Link from "next/link";
+import { Bell, Bookmark } from "lucide-react";
 import Image from "next/image";
 
 export default function SiteNav() {
@@ -11,7 +10,7 @@ export default function SiteNav() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll, { passive: true });
 
     if (typeof window !== "undefined") {
@@ -24,14 +23,11 @@ export default function SiteNav() {
 
   return (
     <>
-      <nav
-        className="navbar"
-        style={scrolled ? { boxShadow: "0 4px 30px rgba(0,0,0,0.5)" } : {}}
-      >
+      <nav className={`navbar ${scrolled ? "scrolled" : ""}`}>
         <div className="container navbar-inner">
           <a href="/" className="logo">
             <div className="">
-              <Image src={'/examsuchana-logoT.png'} height={40} width={40} alt="Exam Suchana" />
+              <Image src={'/examsuchana-logoT.png'} height={36} width={36} alt="Exam Suchana" />
             </div>
             <span className="logo-text">
               Exam <span>Suchana</span>
@@ -40,16 +36,16 @@ export default function SiteNav() {
 
           <ul className="nav-links">
             <li><a href="/#exams">Exams</a></li>
+            <li><a href="/articles">Guides</a></li>
             <li><a href="/about">About</a></li>
             <li><a href="/contact">Contact</a></li>
-            <li><a href="/privacy">Privacy</a></li>
           </ul>
 
           <div className="nav-cta">
 
             {mounted && (
               userId ? (
-                <a href="/saved" className="btn btn-primary nav-action-btn saved-nav-btn">
+                <a href="/saved" className="btn nav-action-btn saved-nav-btn">
                   <Bookmark size={14} /> <span>My Saved</span>
                 </a>
               ) : (

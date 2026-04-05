@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import SiteNav from "../components/SiteNav";
-import SiteFooter from "../components/SiteFooter";
+import { Shield, Book, Info, Lock, Eye, AlertTriangle, UserCheck, Accessibility, ExternalLink, RefreshCcw, Mail, Globe } from "lucide-react";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Exam Suchana",
@@ -10,294 +10,190 @@ export const metadata: Metadata = {
 
 const LAST_UPDATED = "24 March 2026";
 
+const SECTIONS = [
+  { id: "intro", label: "Introduction", icon: <Info size={16} /> },
+  { id: "info", label: "Data We Collect", icon: <Eye size={16} /> },
+  { id: "usage", label: "How We Use It", icon: <RefreshCcw size={16} /> },
+  { id: "disclaimer", label: "Critical Disclaimer", icon: <AlertTriangle size={16} /> },
+  { id: "sharing", label: "Data Sharing", icon: <Lock size={16} /> },
+  { id: "thirdparty", label: "Third-Party Tools", icon: <ExternalLink size={16} /> },
+  { id: "security", label: "Data Security", icon: <Shield size={16} /> },
+  { id: "rights", label: "User Rights", icon: <UserCheck size={16} /> },
+  { id: "contact", label: "Contact Us", icon: <Mail size={16} /> },
+];
+
 export default function PrivacyPage() {
-  const sections = [
-    { id: "intro", label: "1. Introduction" },
-    { id: "info", label: "2. Information We Collect" },
-    { id: "usage", label: "3. How We Use Information" },
-    { id: "disclaimer", label: "4. Government Data Disclaimer" },
-    { id: "sharing", label: "5. Data Sharing" },
-    { id: "thirdparty", label: "6. Third-Party Services" },
-    { id: "security", label: "7. Data Security" },
-    { id: "rights", label: "8. User Rights" },
-    { id: "children", label: "9. Children's Privacy" },
-    { id: "external", label: "10. External Links" },
-    { id: "changes", label: "11. Changes to Policy" },
-    { id: "contact", label: "12. Contact Information" },
-    { id: "transparency", label: "13. Source Transparency" },
-  ];
-
   return (
-    <>
-      <SiteNav />
-
-      <main style={{ paddingTop: 80 }}>
-        {/* Hero */}
-        <section
-          style={{
-            padding: "80px 0 48px",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <div
+    <main className="min-h-screen">
+      {/* ─── Hero ─── */}
+      <section className="section" style={{ paddingTop: '100px', paddingBottom: '60px', position: 'relative' }}>
+         <div
             style={{
               position: "absolute",
               inset: 0,
-              background:
-                "radial-gradient(ellipse 60% 50% at 50% -10%, rgba(59,130,246,0.12) 0%, transparent 70%)",
+              background: "radial-gradient(ellipse 70% 60% at 50% -10%, rgba(var(--accent-rgb), 0.12) 0%, transparent 70%)",
+              zIndex: 0
             }}
           />
-          <div className="container" style={{ position: "relative", zIndex: 1 }}>
-            <div className="section-label">Legal</div>
-            <h1 className="section-title">Privacy Policy</h1>
-            <p style={{ color: "var(--text-muted)", fontSize: 14 }}>
-              Last updated: {LAST_UPDATED}
-            </p>
+        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="hero-badge">
+            <span className="hero-badge-dot" />
+            Compliance & Privacy
           </div>
-        </section>
+          <h1 className="section-title">
+            Our commitment to <span className="text-accent">User Privacy</span>
+          </h1>
+          <p className="section-desc">
+            Last updated: <strong>{LAST_UPDATED}</strong>. We believe in total transparency regarding your data and how we handle government exam information.
+          </p>
+        </div>
+      </section>
 
-        {/* Body */}
-        <section style={{ padding: "0 0 100px" }}>
-          <div
-            className="container"
-            style={{ display: "grid", gridTemplateColumns: "260px 1fr", gap: 48, alignItems: "start" }}
-          >
-            {/* Sticky TOC */}
-            <aside
-              style={{
-                position: "sticky",
-                top: 96,
-                background: "var(--bg-card)",
-                border: "1px solid var(--border)",
-                borderRadius: 16,
-                padding: 20,
-              }}
-            >
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: 1, marginBottom: 14 }}>
-                Contents
+      {/* ─── Legal Content ─── */}
+      <section className="section" style={{ paddingTop: '20px', paddingBottom: '100px' }}>
+        <div className="container mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 260px) 1fr', gap: '60px', alignItems: 'start' }}>
+          
+          {/* Sticky Sidebar Navigation */}
+          <aside style={{ position: 'sticky', top: '100px', zIndex: 10 }}>
+            <div className="feature-card" style={{ padding: '24px', background: 'var(--bg-secondary)', border: 'none' }}>
+              <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>
+                Quick Navigation
               </div>
-              {sections.map(({ id, label }) => (
-                <a
-                  key={id}
-                  href={`#${id}`}
-                  style={{
-                    display: "block",
-                    fontSize: 13,
-                    color: "var(--text-secondary)",
-                    textDecoration: "none",
-                    padding: "8px 0",
-                    borderBottom: "1px solid var(--border)",
-                    transition: "color 0.2s",
-                  }}
-                >
-                  {label}
-                </a>
-              ))}
-            </aside>
-
-            {/* Content */}
-            <div className="legal-content">
-              <Section id="intro" title="1. Introduction">
-                <p>
-                  <strong>Exam Suchana</strong> is a private platform that aggregates publicly available government job information. Our mission is to provide candidates with a structured, actionable timeline of government exam lifecycles.
-                </p>
-                <p>
-                  Please note that Exam Suchana is an <strong>independent platform</strong> and is not associated with any government entity.
-                </p>
-              </Section>
-
-              <Section id="info" title="2. Information We Collect">
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 8 }}>A. Personal Information</h3>
-                <p>We collect personally identifiable information only when you voluntarily provide it. This may include:</p>
-                <ul>
-                  <li>Name</li>
-                  <li>Email address</li>
-                  <li>Phone number (for account creation or notifications)</li>
-                </ul>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 12 }}>B. Non-Personal Information</h3>
-                <p>To improve your experience, we may collect:</p>
-                <ul>
-                  <li>Device type and model</li>
-                  <li>Operating system version</li>
-                  <li>App usage data and feature interactions</li>
-                  <li>IP address</li>
-                </ul>
-                <h3 style={{ fontSize: 16, fontWeight: 700, color: "var(--text-primary)", marginTop: 12 }}>C. Automatically Collected Data</h3>
-                <p>Our systems automatically log certain data, including:</p>
-                <ul>
-                  <li>Log records and access times</li>
-                  <li>Crash reports for stability monitoring</li>
-                  <li>Analytics data (via Google Firebase and other providers)</li>
-                </ul>
-              </Section>
-
-              <Section id="usage" title="3. How We Use Information">
-                <p>We use the collected information for the following purposes:</p>
-                <ul>
-                  <li>To improve app performance and stability</li>
-                  <li>To personalize your user experience and exam preferences</li>
-                  <li>To analyze usage trends and optimize our content delivery</li>
-                  <li>To send push notifications for exam updates (if enabled)</li>
-                </ul>
-                <p style={{ fontStyle: "italic", color: "var(--text-muted)" }}>
-                  Important: Exam Suchana provides informational tracking only. We do not manage official job applications, guarantee results, or provide "official processing."
-                </p>
-              </Section>
-
-              <Section id="disclaimer" title="4. Government Data Disclaimer (CRITICAL)">
-                <div style={{ background: "rgba(239,68,68,0.05)", border: "1px solid rgba(239,68,68,0.2)", borderRadius: 12, padding: 20 }}>
-                  <p style={{ fontWeight: 700, color: "#ef4444", marginBottom: 12 }}>Mandatory Transparency Disclosure:</p>
-                  <ul style={{ color: "var(--text-primary)", fontWeight: 500 }}>
-                    <li style={{ marginBottom: 8 }}>Exam Suchana is <strong>not affiliated</strong> with any government organization.</li>
-                    <li style={{ marginBottom: 8 }}>The app only provides information aggregated from <strong>publicly available official government websites</strong> such as SSC, UPSC, Railway, IBPS, and others.</li>
-                    <li style={{ marginBottom: 8 }}>We do <strong>not represent</strong> any government entity and do not provide any government services or official forms.</li>
-                    <li style={{ marginBottom: 0 }}>Users are strongly advised to <strong>verify all information directly from official sources</strong> before taking any action.</li>
-                  </ul>
-                </div>
-              </Section>
-
-              <Section id="sharing" title="5. Data Sharing & Third Parties">
-                <p>
-                  <strong>We do NOT sell user data.</strong> We value your privacy and only share data in these cases:
-                </p>
-                <ul>
-                  <li><strong>Analytics Providers:</strong> We use Google Firebase and other tools to understand app performance.</li>
-                  <li><strong>Ad Networks:</strong> If ads are displayed, we may share anonymized IDs with ad partners.</li>
-                  <li><strong>Legal Compliance:</strong> If required by law or a valid government request.</li>
-                </ul>
-              </Section>
-
-              <Section id="thirdparty" title="6. Third-Party Services">
-                <p>We utilize the following third-party services to power our platform:</p>
-                <ul>
-                  <li>Google Analytics / Firebase (for app performance and usage tracking)</li>
-                  <li>AdMob (if advertisements are enabled)</li>
-                </ul>
-                <p>
-                  These third-party services may collect information as per their own privacy policies. We encourage you to review their policies respectively.
-                </p>
-              </Section>
-
-              <Section id="security" title="7. Data Security">
-                <p>
-                  We implement robust security measures to protect your information, including industry-standard encryption for data in transit and secure server architectures. While we strive to use commercially acceptable means to protect your data, no method of transmission over the internet is 100% secure.
-                </p>
-              </Section>
-
-              <Section id="rights" title="8. User Rights">
-                <p>As a user, you have the right to:</p>
-                <ul>
-                  <li>Request a copy of the data we have collected about you</li>
-                  <li>Request the <strong>deletion of your data</strong> from our systems</li>
-                  <li>Opt-out of non-essential data collection</li>
-                  <li>Contact us for any privacy-related queries</li>
-                </ul>
-              </Section>
-
-              <Section id="children" title="9. Children’s Privacy">
-                <p>
-                  This app is not intended for children under 13 years of age. We do not knowingly collect or solicit personal data from children. If we discover that we have collected data from a child under 13, we will delete it immediately.
-                </p>
-              </Section>
-
-              <Section id="external" title="10. External Links Disclaimer">
-                <p>
-                  Our app contains many links to external websites (official government portals). Exam Suchana is <strong>not responsible</strong> for the content, accuracy, or privacy practices of these external websites. We encourage users to read the privacy policies of any site they visit.
-                </p>
-              </Section>
-
-              <Section id="changes" title="11. Changes to Privacy Policy">
-                <p>
-                  We may update our Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. Significant changes will be announced within the app or via email.
-                </p>
-                <p><strong>Current Version Last Updated:</strong> {LAST_UPDATED}</p>
-              </Section>
-
-              <Section id="contact" title="12. Contact Information">
-                <p>If you have any questions, concerns, or requests regarding this policy, please reach out to us:</p>
-                <ContactBlock />
-              </Section>
-
-              <Section id="transparency" title="13. Source Transparency Statement">
-                <p>
-                  We are committed to accuracy and transparency. All job notifications, results, and exam updates provided in this app include references or direct links to <strong>official government sources</strong> wherever applicable, ensuring users can verify the information at the source.
-                </p>
-              </Section>
+              <nav style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {SECTIONS.map((section) => (
+                  <a 
+                    key={section.id} 
+                    href={`#${section.id}`}
+                    style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '10px', 
+                      fontSize: '13px', 
+                      color: 'var(--text-secondary)',
+                      textDecoration: 'none',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      transition: 'all 0.2s',
+                    }}
+                    className="sidebar-link"
+                  >
+                    {section.icon}
+                    {section.label}
+                  </a>
+                ))}
+              </nav>
             </div>
-          </div>
-        </section>
-      </main>
+          </aside>
 
-      <div className="divider" />
-      <SiteFooter />
-    </>
+          {/* Detailed Legal Content */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+            
+            <LegalSection id="intro" title="1. Operational Introduction">
+              <p>
+                <strong>Exam Suchana</strong> is an independent platform that aggregates publicly available notification data from various Indian government portals. Our mission is to transform fragmented administrative data into structured, actionable intelligence for aspirants.
+              </p>
+              <p>
+                As a user, you must understand that this platform is **not a government entity**. We are a third-party intelligence tool designed for tracking purposes only.
+              </p>
+            </LegalSection>
+
+            <LegalSection id="info" title="2. Information Architecture (Data We Collect)">
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>A. Personal Intelligence</h3>
+              <p>We only collect data that you explicitly provide to enhance your tracking experience:</p>
+              <ul style={{ paddingLeft: '20px', listStyleType: 'disc' }}>
+                <li>Name & Email (for notification delivery)</li>
+                <li>Phone number (optional for high-priority alerts)</li>
+                <li>Saved Exam Preferences</li>
+              </ul>
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px', marginTop: '16px' }}>B. System Logs</h3>
+              <p>To maintain platform uptime and security, we automatically log device models, OS versions, and anonymized access timestamps via secure server-side infrastructure.</p>
+            </LegalSection>
+
+            <LegalSection id="disclaimer" title="3. Mandatory Accountability Disclaimer">
+              <div className="feature-card" style={{ borderColor: 'rgba(var(--red-rgb, 239, 68, 68), 0.2)', background: 'rgba(var(--red-rgb, 239, 68, 68), 0.03)', padding: '24px' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <AlertTriangle color="#ef4444" size={20} style={{ flexShrink: 0 }} />
+                  <div>
+                    <h4 style={{ fontWeight: 800, color: '#ef4444', fontSize: '14px', textTransform: 'uppercase', marginBottom: '8px' }}>Critical Transparency Disclosure</h4>
+                    <p style={{ fontSize: '14px', color: 'var(--text-primary)', lineHeight: 1.6, fontWeight: 500 }}>
+                      Exam Suchana is not affiliated with the UPSC, SSC, IBPS, Railways, or any State PSC. All information is retrieved from official government gazettes and websites. However, we do not represent these entities. Users are legally required to verify all dates and links on official government portals before final submission.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </LegalSection>
+
+            <LegalSection id="usage" title="4. Deployment of Information">
+              <p>Data gathered via Exam Suchana is used for:</p>
+              <ul style={{ paddingLeft: '20px', listStyleType: 'disc' }}>
+                <li>Generating personalized exam schedules</li>
+                <li>Delivering millisecond-precise push notifications</li>
+                <li>Analyzing platform usage trends to prioritize future exam tracking</li>
+              </ul>
+            </LegalSection>
+
+            <LegalSection id="sharing" title="5. Strategic Data Security">
+              <p>
+                <strong>Zero Selling Policy:</strong> We do not sell, trade, or rent your personal information to third-party marketing companies. Your tracking data is used exclusively to improve your operational experience on Exam Suchana.
+              </p>
+              <p>
+                We utilize enterprise-grade encryption (TLS 1.3) for data in transit and ensure all user records are stored behind filtered VPC architectures.
+              </p>
+            </LegalSection>
+
+            <LegalSection id="rights" title="6. Aspirant Rights">
+              <p>Every user has the right to:</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '16px' }} className="mobile-stack">
+                <div className="feature-card" style={{ padding: '16px', fontSize: '13px' }}>
+                  <strong>Data Access:</strong> Request a complete record of your stored preferences.
+                </div>
+                <div className="feature-card" style={{ padding: '16px', fontSize: '13px' }}>
+                  <strong>Digital Erasure:</strong> Permanent deletion of your account and saved exam data.
+                </div>
+              </div>
+            </LegalSection>
+
+            <LegalSection id="contact" title="7. Legal & Privacy Contact">
+              <p>For any inquiries regarding data protection or rights, reach out to our compliance lead:</p>
+              <div className="feature-card" style={{ padding: '24px', background: 'var(--bg-secondary)', marginTop: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
+                  <Mail size={18} color="var(--accent)" />
+                  <a href="mailto:help@examsuchana.in" style={{ fontWeight: 700, color: 'var(--accent)', textDecoration: 'none' }}>help@examsuchana.in</a>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <Globe size={18} color="var(--accent)" />
+                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>examsuchana.in/privacy</span>
+                </div>
+              </div>
+            </LegalSection>
+          </div>
+        </div>
+      </section>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        .sidebar-link:hover {
+          background: rgba(var(--accent-rgb), 0.08) !important;
+          color: var(--accent) !important;
+        }
+        @media (max-width: 768px) {
+          .mobile-stack {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+        }
+      `}} />
+    </main>
   );
 }
 
-function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+function LegalSection({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
   return (
-    <div
-      id={id}
-      style={{
-        marginBottom: 40,
-        scrollMarginTop: 100,
-        paddingBottom: 40,
-        borderBottom: "1px solid var(--border)",
-      }}
-    >
-      <h2
-        style={{
-          fontFamily: "'Space Grotesk', sans-serif",
-          fontSize: 22,
-          fontWeight: 700,
-          color: "var(--text-primary)",
-          marginBottom: 16,
-        }}
-      >
+    <div id={id} style={{ scrollMarginTop: '120px' }}>
+      <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '20px', fontFamily: 'Space Grotesk' }}>
         {title}
       </h2>
-      <div
-        style={{
-          color: "var(--text-secondary)",
-          fontSize: 15,
-          lineHeight: 1.8,
-          display: "flex",
-          flexDirection: "column",
-          gap: 12,
-        }}
-      >
+      <div style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.8 }}>
         {children}
-      </div>
-    </div>
-  );
-}
-
-function ContactBlock() {
-  return (
-    <div
-      style={{
-        background: "var(--bg-card)",
-        border: "1px solid rgba(124,58,237,0.2)",
-        borderRadius: 16,
-        padding: 20,
-        marginTop: 8,
-      }}
-    >
-      <div style={{ fontWeight: 700, color: "var(--text-primary)", marginBottom: 8, fontSize: 16 }}>
-        Exam Suchana
-      </div>
-      <div style={{ fontSize: 14, color: "var(--text-secondary)", marginBottom: 6 }}>
-        📩{" "}
-        <a href="mailto:help@examsuchana.in" style={{ color: "var(--accent-light)" }}>
-          help@examsuchana.in
-        </a>
-      </div>
-      <div style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-        🌐{" "}
-        <a href="https://examsuchana.in" style={{ color: "var(--accent-light)" }}>
-          examsuchana.in
-        </a>
       </div>
     </div>
   );

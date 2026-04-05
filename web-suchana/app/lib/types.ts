@@ -1,4 +1,5 @@
-// ─── Shared Types ─────────────────────────────────────────────────────────────
+import React from 'react';
+
 
 export interface LifecycleEvent {
   id: string;
@@ -117,6 +118,45 @@ export function getTotalVacancies(v?: string): string {
 export function cleanLabel(s: string): string {
   if (!s) return s;
   return s.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function slugToEnum(slug: string): string {
+  return slug.toUpperCase().replace(/-/g, "_");
+}
+
+export function enumToSlug(en: string): string {
+  if (!en) return "";
+  return en.toLowerCase().replace(/_/g, "-");
+}
+
+export function unslugify(slug: string): string {
+  if (!slug) return "";
+  return decodeURIComponent(slug).replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+export function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+export function generateHeadingId(children: React.ReactNode): string {
+  const text = typeof children === 'string'
+    ? children
+    : React.Children.toArray(children)
+      .map(child => (typeof child === 'string' || typeof child === 'number' ? child : ''))
+      .join('');
+  return slugify(text);
+}
+
+export function getCategoryInfo(catValue: string) {
+  const cat = CATEGORIES.find(c => c.value === catValue);
+  return {
+    label: cat?.label || cleanLabel(catValue || ""),
+    icon: cat?.icon || "🏛️",
+    slug: enumToSlug(catValue || "")
+  };
 }
 
 /**

@@ -145,6 +145,10 @@ model Exam {
   @@index([status])
   @@index([isPublished, status])
   @@index([conductingBody])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([isPublished, updatedAt, publishedAt])
+  @@index([category, isPublished])
 }
 
 model LifecycleEvent {
@@ -165,10 +169,12 @@ model LifecycleEvent {
   startsAt            DateTime?
   sourceStagedEventId String?
   stageOrder          Int               @default(0)
+  examSlug            String?
   exam                Exam              @relation(fields: [examId], references: [id], onDelete: Cascade)
   notifications       NotificationLog[]
 
   @@index([examId, stageOrder])
+  @@index([examSlug, stage])
 }
 
 model PushToken {
@@ -282,4 +288,6 @@ model SeoPage {
   @@index([isPublished])
   @@index([category])
   @@index([examId])
+  @@index([createdAt])
+  @@index([category, isPublished])
 }

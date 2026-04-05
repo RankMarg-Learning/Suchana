@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    Calendar,
     Clock,
     Plus,
     Trash2,
@@ -204,28 +203,37 @@ export default function TimelineManager({ examId, initialEvents }: TimelineManag
                             </div>
                         </div>
 
+                        <div className="space-y-2">
+                            <Label>Trigger URL (Action Link)</Label>
+                            <Input
+                                value={newEvent.actionUrl || ''}
+                                onChange={(e) => setNewEvent({ ...newEvent, actionUrl: e.target.value })}
+                                placeholder="https://..."
+                            />
+                        </div>
+
                         {newEvent.description && (
                             <div className="space-y-2">
-                                 <Label>Description <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
-                                 <Textarea 
+                                <Label>Description <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
+                                <Textarea
                                     value={newEvent.description || ''}
                                     onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                                     placeholder="Details about this stage..."
                                     className="min-h-[80px] resize-y"
-                                 />
-                                 <div className="p-2 border rounded bg-muted/5 text-[11px] overflow-y-auto custom-scrollbar max-h-[120px] min-h-[100px]">
+                                />
+                                <div className="p-2 border rounded bg-muted/5 text-[11px] overflow-y-auto custom-scrollbar max-h-[120px] min-h-[100px]">
                                     <MarkdownRenderer content={newEvent.description} variant="fact" />
-                                 </div>
+                                </div>
                             </div>
                         )}
                         {!newEvent.description && (
                             <div className="space-y-2">
                                 <Label>Description <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
-                                <Textarea 
-                                   value={newEvent.description || ''}
-                                   onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
-                                   placeholder="Details about this stage..."
-                                   className="min-h-[80px] resize-y"
+                                <Textarea
+                                    value={newEvent.description || ''}
+                                    onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                                    placeholder="Details about this stage..."
+                                    className="min-h-[80px] resize-y"
                                 />
                             </div>
                         )}
@@ -323,7 +331,7 @@ function TimelineItem({ event, onUpdate, onDelete }: { event: LifecycleEvent, on
                 <div className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground">
                     <GripVertical className="w-5 h-5" />
                 </div>
-                
+
                 <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium text-sm truncate">{event.title}</h4>
@@ -419,18 +427,18 @@ function TimelineItem({ event, onUpdate, onDelete }: { event: LifecycleEvent, on
                     </div>
 
                     <div className="space-y-2">
-                         <Label>Description <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
-                         <Textarea 
+                        <Label>Description <span className="text-muted-foreground font-normal">(Markdown supported)</span></Label>
+                        <Textarea
                             value={editData.description || ''}
                             onChange={(e) => setEditData({ ...editData, description: e.target.value })}
                             placeholder="Details about this stage..."
                             className="min-h-[80px] resize-y"
-                         />
-                         {editData.description && (
-                             <div className="p-2 border rounded bg-muted/5 text-[11px] overflow-y-auto custom-scrollbar max-h-[120px] min-h-[100px]">
+                        />
+                        {editData.description && (
+                            <div className="p-2 border rounded bg-muted/5 text-[11px] overflow-y-auto custom-scrollbar max-h-[120px] min-h-[100px]">
                                 <MarkdownRenderer content={editData.description} variant="fact" />
-                             </div>
-                         )}
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -19,6 +19,7 @@ export const createExamSchema = z.object({
     notificationUrl: z.string().url().or(z.literal('')).optional().nullable(),
     status: z.nativeEnum(ExamStatus).default(ExamStatus.NOTIFICATION),
     isPublished: z.boolean().default(false),
+    createdAt: z.string().optional().nullable(),
 });
 
 export const updateExamSchema = createExamSchema.partial();
@@ -27,13 +28,15 @@ export const listExamQuerySchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(100).default(20),
     category: z.nativeEnum(ExamCategory).optional(),
-    status: z.nativeEnum(ExamStatus).optional(),
+    status: z.string().optional(),
     conductingBody: z.string().optional(),
     search: z.string().optional(),
     isPublished: z.string().transform((v) => v === 'true').pipe(z.boolean()).optional(),
     examLevel: z.nativeEnum(ExamLevel).optional(),
     state: z.string().optional(),
     lifecycleStage: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
 });
 
 export const examIdParamSchema = z.object({

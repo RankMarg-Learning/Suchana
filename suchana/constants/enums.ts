@@ -40,8 +40,12 @@ export const ExamStatus = {
     NOTIFICATION: 'NOTIFICATION',
     REGISTRATION_OPEN: 'REGISTRATION_OPEN',
     REGISTRATION_CLOSED: 'REGISTRATION_CLOSED',
+    ADMIT_CARD_COMING_SOON: 'ADMIT_CARD_COMING_SOON',
     ADMIT_CARD_OUT: 'ADMIT_CARD_OUT',
     EXAM_ONGOING: 'EXAM_ONGOING',
+    EXAM_COMPLETED: 'EXAM_COMPLETED',
+    ANSWER_KEY_OUT: 'ANSWER_KEY_OUT',
+    RESULT_COMING_SOON: 'RESULT_COMING_SOON',
     RESULT_DECLARED: 'RESULT_DECLARED',
     ARCHIVED: 'ARCHIVED',
     ACTIVE: 'ACTIVE',
@@ -50,14 +54,16 @@ export type ExamStatus = (typeof ExamStatus)[keyof typeof ExamStatus];
 export const EXAM_STATUSES = Object.values(ExamStatus);
 
 export const LifecycleStage = {
-    NOTIFICATION: 'NOTIFICATION',           // stageOrder: 10
-    REGISTRATION: 'REGISTRATION',           // stageOrder: 20
-    ADMIT_CARD: 'ADMIT_CARD',             // stageOrder: 30
-    EXAM: 'EXAM',                   // stageOrder: 40
-    ANSWER_KEY: 'ANSWER_KEY',             // stageOrder: 50
-    RESULT: 'RESULT',                 // stageOrder: 60
-    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',  // stageOrder: 70
-    JOINING: 'JOINING',                // stageOrder: 80
+    NOTIFICATION: 'NOTIFICATION',
+    REGISTRATION: 'REGISTRATION',
+    CORRECTION_WINDOW: 'CORRECTION_WINDOW',
+    ADMIT_CARD: 'ADMIT_CARD',
+    EXAM: 'EXAM',
+    EXAM_CITY: 'EXAM_CITY',
+    ANSWER_KEY: 'ANSWER_KEY',
+    RESULT: 'RESULT',
+    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',
+    JOINING: 'JOINING',
 } as const;
 export type LifecycleStage = (typeof LifecycleStage)[keyof typeof LifecycleStage];
 export const LIFECYCLE_STAGES = Object.values(LifecycleStage);
@@ -65,12 +71,14 @@ export const LIFECYCLE_STAGES = Object.values(LifecycleStage);
 export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
     NOTIFICATION: 10,
     REGISTRATION: 20,
-    ADMIT_CARD: 30,
-    EXAM: 40,
-    ANSWER_KEY: 50,
-    RESULT: 60,
-    DOCUMENT_VERIFICATION: 70,
-    JOINING: 80,
+    CORRECTION_WINDOW: 30,
+    ADMIT_CARD: 40,
+    EXAM: 50,
+    EXAM_CITY: 60,
+    ANSWER_KEY: 70,
+    RESULT: 80,
+    DOCUMENT_VERIFICATION: 90,
+    JOINING: 100,
 };
 
 

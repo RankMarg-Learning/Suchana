@@ -6,8 +6,6 @@ export const API_BASE =
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://examsuchana.in";
 
-
-
 // ─── API Functions ────────────────────────────────────────────────────────────
 
 export async function fetchExamsFromAPI(
@@ -15,20 +13,40 @@ export async function fetchExamsFromAPI(
   limit = 10,
   category?: string,
   status?: string,
-  search?: string
+  search?: string,
+  conductingBody?: string,
+  state?: string,
+  startDate?: string,
+  endDate?: string
 ): Promise<{ exams: Exam[]; total: number }> {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("limit", String(limit));
   params.set("isPublished", "true");
-  if (category) params.set("category", category);
-  if (status) params.set("status", status);
+  if (category && category !== "ALL") params.set("category", category);
+  if (status && status !== "ALL") params.set("status", status);
   if (search) params.set("search", search);
+  if (conductingBody && conductingBody !== "ALL") params.set("conductingBody", conductingBody);
+  if (state && state !== "ALL") params.set("state", state);
+  if (startDate) params.set("startDate", startDate);
+  if (endDate) params.set("endDate", endDate);
 
   const res = await fetch(`${API_BASE}/exams?${params}`, {
-    next: { revalidate: 300 }, // 5 min cache
+    next: { revalidate: 300 },
   });
-  if (!res.ok) throw new Error("API unavailable");
+
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => "Unknown error");
+    let errorMsg = errorText;
+    try {
+      const errorJson = JSON.parse(errorText);
+      errorMsg = errorJson.error?.message || errorJson.message || errorText;
+    } catch { /* not json */ }
+
+    console.error(`API Error on ${res.url}:`, errorMsg);
+    throw new Error(`API error (${res.status}): ${errorMsg}`);
+  }
+
   const data = await res.json();
   return {
     exams: data.data ?? data.exams ?? [],
@@ -51,8 +69,6 @@ export async function fetchExamBySlug(slug: string): Promise<Exam | null> {
 
 // ─── SEO Pages API ────────────────────────────────────────────────────────────
 
-
-
 export async function fetchSeoPageBySlug(slug: string): Promise<SeoPage | null> {
   try {
     const res = await fetch(`${API_BASE}/seo-pages/${slug}`, {
@@ -63,6 +79,38 @@ export async function fetchSeoPageBySlug(slug: string): Promise<SeoPage | null> 
     return json.data ?? json;
   } catch {
     return null;
+  }
+}
+
+export async function fetchSeoPages(
+  page = 1,
+  limit = 10,
+  category?: string,
+  search?: string
+): Promise<{ pages: SeoPage[]; total: number }> {
+  try {
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("limit", String(limit));
+    if (category && category !== "ALL") params.set("category", category);
+    if (search) params.set("search", search);
+
+    const res = await fetch(`${API_BASE}/seo-pages/list?${params}`, {
+      next: { revalidate: 600 },
+    });
+
+    if (!res.ok) return { pages: [], total: 0 };
+    
+    const data = await res.json();
+    const result = data.data ?? data;
+    
+    return {
+      pages: result.pages ?? [],
+      total: result.total ?? 0,
+    };
+  } catch (err) {
+    console.error("Error fetching SEO pages:", err);
+    return { pages: [], total: 0 };
   }
 }
 
@@ -178,4 +226,3 @@ export async function checkUserByPhone(phone: string): Promise<any> {
   const data = await res.json();
   return data;
 }
-

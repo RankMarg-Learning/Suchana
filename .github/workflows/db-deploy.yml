@@ -1,0 +1,62 @@
+name: Database Deploy
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/db-deploy.yml"
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+
+jobs:
+  database-migrate:
+    runs-on: ubuntu-latest
+    name: Deploy Database Migrations
+
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      # Step 3: Install Database Dependencies
+      - name: Install database dependencies
+        run: |
+          cd backend
+          npm ci
+
+      # Step 4: Generate Prisma Client
+      - name: Generate Prisma Client
+        run: |
+          cd backend
+          npx prisma generate
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Step 5: Run Database Migrations
+      - name: Deploy Prisma Migrations
+        run: |
+          cd backend
+          npx prisma migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # Step 6: Verify Migration Status
+      - name: Check Migration Status
+        run: |
+          cd backend
+          npx prisma migrate status
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

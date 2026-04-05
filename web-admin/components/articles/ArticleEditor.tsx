@@ -11,12 +11,10 @@ import {
     Link as LinkIcon,
     Globe,
     Tag,
-    Share2
+    Share2,
+    Check
 } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import TextareaAutosize from 'react-textarea-autosize';
-import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,7 +23,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
-import { SeoPage, Exam } from '@/lib/api';
+import { SeoPage, Exam, examService } from '@/lib/api';
 import {
     Select,
     SelectContent,
@@ -33,8 +31,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Separator } from '@/components/ui/separator';
 import MarkdownRenderer from '../MarkdownRenderer';
+
+import ArticleViralShareDialog from './ArticleViralShareDialog';
 
 interface ArticleEditorProps {
     initialData?: Partial<SeoPage>;
@@ -45,21 +44,94 @@ interface ArticleEditorProps {
 }
 
 export default function ArticleEditor({ initialData, exams, isSaving, onSave, title }: ArticleEditorProps) {
+    // 1. Resolve initial base mappings once efficiently
+    const base = initialData || {};
+    const extractedExamId = base.examId || (base as any).exam?.id || null;
+    const initialMatchingExam = exams.find(e => e.id === extractedExamId) || (base as any)?.exam || null;
 
-    const [formData, setFormData] = useState<Partial<SeoPage>>(initialData || {
-        slug: '',
-        title: '',
-        content: '',
-        metaTitle: '',
-        metaDescription: '',
-        keywords: [],
-        ogImage: '',
-        isPublished: true,
-        examId: null as any,
-        category: ''
-    });
+    // 2. Hydrate states
+    const [formData, setFormData] = useState<Partial<SeoPage>>(() => ({
+        slug: base.slug || '',
+        title: base.title || '',
+        content: base.content || '',
+        metaTitle: base.metaTitle || '',
+        metaDescription: base.metaDescription || '',
+        keywords: base.keywords || [],
+        ogImage: base.ogImage || '',
+        isPublished: base.isPublished ?? true,
+        examId: extractedExamId,
+        category: base.category || ''
+    }));
+
+    const [examUrlInput, setExamUrlInput] = useState(
+        initialMatchingExam?.slug ? `https://examsuchana.in/exam/${initialMatchingExam.slug}` : ''
+    );
+    const [resolvedExam, setResolvedExam] = useState<Exam | null>(initialMatchingExam);
+    
+    const [isValidatingExam, setIsValidatingExam] = useState(false);
+    const [validationError, setValidationError] = useState('');
+
+    React.useEffect(() => {
+        const timeout = setTimeout(async () => {
+            if (!examUrlInput) {
+                // Ignore clearing if initial setup
+                setResolvedExam(null);
+                setFormData(prev => ({ ...prev, examId: null as any }));
+                setValidationError('');
+                return;
+            }
+
+            let slugToLookup = examUrlInput.trim();
+            try {
+                const parsed = new URL(slugToLookup);
+                const parts = parsed.pathname.split('/').filter(Boolean);
+                slugToLookup = parts[parts.length - 1];
+            } catch {
+                const parts = slugToLookup.split('/').filter(Boolean);
+                slugToLookup = parts[parts.length - 1] || slugToLookup;
+            }
+
+            // check local fallbacks first
+            let localMatch = exams.find(e => e.slug === slugToLookup || e.id === slugToLookup);
+            if (localMatch) {
+                setResolvedExam(localMatch);
+                setFormData(prev => ({ ...prev, examId: localMatch.id }));
+                setValidationError('');
+                return;
+            }
+
+            // API lookup
+            setIsValidatingExam(true);
+            try {
+                const res = await examService.getExamBySlug(slugToLookup);
+                if (res?.success && res.data) {
+                    setResolvedExam(res.data);
+                    setFormData(prev => ({ ...prev, examId: res.data.id }));
+                    setValidationError('');
+                } else {
+                    const res2 = await examService.getExamById(slugToLookup).catch(() => null);
+                    if (res2?.success && res2.data) {
+                        setResolvedExam(res2.data);
+                        setFormData(prev => ({ ...prev, examId: res2.data.id }));
+                        setValidationError('');
+                    } else {
+                        throw new Error('Not found');
+                    }
+                }
+            } catch (err) {
+                 setResolvedExam(null);
+                 setFormData(prev => ({ ...prev, examId: null as any }));
+                 setValidationError('No matching exam found for this link.');
+            } finally {
+                 setIsValidatingExam(false);
+            }
+        }, 600);
+
+        return () => clearTimeout(timeout);
+    }, [examUrlInput]); // omitting exams from deps so we dont loop
 
     const [isSlugLocked, setIsSlugLocked] = useState(!!initialData?.slug);
+    const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
     const handleTitleChange = (newTitle: string) => {
         const updates: Partial<SeoPage> = { title: newTitle };
@@ -92,13 +164,26 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                         <p className="text-sm text-muted-foreground">Manage article content and SEO metadata</p>
                     </div>
                 </div>
-                <Button
-                    onClick={() => onSave(formData)}
-                    disabled={isSaving || !formData.slug || !formData.title || !formData.content}
-                >
-                    {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                    Save Article
-                </Button>
+                <div className="flex items-center gap-3">
+                    {formData.slug && (
+                        <Button 
+                            type="button" 
+                            variant="outline"
+                            className="bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
+                            onClick={() => setIsShareDialogOpen(true)}
+                        >
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Viral Hub Strategy
+                        </Button>
+                    )}
+                    <Button
+                        onClick={() => onSave(formData)}
+                        disabled={isSaving || !formData.slug || !formData.title || !formData.content}
+                    >
+                        {isSaving ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                        Save Article
+                    </Button>
+                </div>
             </div>
 
             <Tabs defaultValue="editor" className="w-full">
@@ -187,21 +272,32 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                         />
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="exam">Linked Exam</Label>
-                                        <Select
-                                            value={formData.examId || "none"}
-                                            onValueChange={(val) => setFormData({ ...formData, examId: val === "none" ? null : val })}
-                                        >
-                                            <SelectTrigger id="exam">
-                                                <SelectValue placeholder="Select Exam" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">Standalone Article</SelectItem>
-                                                {exams.map(exam => (
-                                                    <SelectItem key={exam.id} value={exam.id}>{exam.shortTitle || exam.title}</SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Label htmlFor="examUrl">Linked Exam (URL)</Label>
+                                        <Input
+                                            id="examUrl"
+                                            placeholder="https://examsuchana.in/exam/upsc-cse"
+                                            value={examUrlInput}
+                                            onChange={(e) => setExamUrlInput(e.target.value)}
+                                        />
+                                        {isValidatingExam ? (
+                                            <p className="text-xs text-blue-500 font-medium flex items-center">
+                                                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
+                                                Validating Exam Link...
+                                            </p>
+                                        ) : resolvedExam && formData.examId ? (
+                                            <p className="text-xs text-emerald-600 font-medium break-all flex items-center">
+                                                <Check className="w-3 h-3 mr-1 flex-shrink-0" />
+                                                Linked: {resolvedExam.title}
+                                            </p>
+                                        ) : validationError && examUrlInput ? (
+                                            <p className="text-xs text-destructive flex items-center">
+                                                {validationError}
+                                            </p>
+                                        ) : (
+                                            <p className="text-xs text-muted-foreground flex items-center">
+                                                Paste exam link to bind this article.
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="category">Article Category</Label>
@@ -290,6 +386,14 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                     </Card>
                 </TabsContent>
             </Tabs>
+
+            <ArticleViralShareDialog 
+                isOpen={isShareDialogOpen}
+                onOpenChange={setIsShareDialogOpen}
+                formData={formData}
+                examTitle={resolvedExam?.title}
+                examShortTitle={resolvedExam?.shortTitle}
+            />
         </div>
     );
 }

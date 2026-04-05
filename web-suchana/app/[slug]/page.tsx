@@ -1,19 +1,20 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { fetchSeoPageBySlug, fetchAllSeoPageSlugs, fetchExamBySlug, SITE_URL } from '@/app/lib/api';
+import { fetchSeoPageBySlug, fetchAllSeoPageSlugs, fetchExamBySlug, SITE_URL, fetchSeoPages } from '@/app/lib/api';
 import SiteNav from '../components/SiteNav';
 import SiteFooter from '../components/SiteFooter';
 import MarkdownRenderer from '../components/MarkdownRenderer';
-import { LeaderboardAd, InFeedAd } from '../components/AdUnits';
-import ExamDetailClient from "../exam/[slug]/ExamDetailClient";
+import { LeaderboardAd, InFeedAd, SidebarAd } from '../components/AdUnits';
 import { STATUS_LABELS, cleanLabel, formatDate, getTotalVacancies, SeoPage, stripHtml } from "@/app/lib/types";
 import SeoExamPageLayout from '../components/SeoExamPageLayout';
+import LatestArticlesSection from '../components/LatestArticlesSection';
+import ArticleDetailClient from '../components/ArticleDetailClient';
+import ExamListingClient from '../components/ExamListingClient';
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// ─── SEO Helper Functions ──────────────────────────────────────────────────
 
 export async function generateStaticParams() {
   const slugs = await fetchAllSeoPageSlugs();
@@ -22,6 +23,33 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
+
+  if (slug === 'admit-card-released-today') {
+    return {
+      title: "Admit Cards Released Today | Exam Suchana",
+      description: "Check the latest government exam admit cards officially released today. Download your hall tickets directly.",
+      alternates: { canonical: `${SITE_URL}/${slug}` }
+    };
+  }
+
+  if (slug === 'upcoming-gov-exam-this-week') {
+    return {
+      title: "Upcoming Government Exams This Week | Exam Suchana",
+      description: "Browse the hottest upcoming government exam notifications and application deadlines this week.",
+      alternates: { canonical: `${SITE_URL}/${slug}` }
+    };
+  }
+
+  if (slug.startsWith('latest-exams-')) {
+    const rawDate = slug.replace('latest-exams-', '');
+    const formattedDate = rawDate.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    return {
+      title: `Latest Exams ${formattedDate} | Exam Suchana`,
+      description: `View a total aggregated list of the latest government exams for ${formattedDate}.`,
+      alternates: { canonical: `${SITE_URL}/${slug}` }
+    };
+  }
+
   const page = await fetchSeoPageBySlug(slug);
 
   if (page) {
@@ -52,51 +80,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const exam = await fetchExamBySlug(slug);
-  if (exam) {
-    const year = new Date().getFullYear();
-    const title = exam.shortTitle ?? exam.title;
-    const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
-    const vacancies = getTotalVacancies(exam.totalVacancies);
-    const regEvent = exam.lifecycleEvents?.find((e) => e.stage === "REGISTRATION");
-    const deadline = regEvent?.endsAt ? `Registration deadline ${formatDate(regEvent.endsAt)}.` : "";
-
-    const seoTitle = `${title} Recruitment ${year}: Apply Online, Full Schedule, Vacancies & Eligibility`;
-    const description =
-      exam.description
-        ? `${exam.description.slice(0, 140)}... Status: ${statusLabel}. Vacancies: ${vacancies}. ${deadline} Get real-time updates on Exam Suchana.`
-        : `${title} official notification by ${exam.conductingBody}. Status: ${statusLabel}. ${vacancies !== "TBA" ? `${vacancies} vacancies.` : ""} ${deadline} Check syllabus, result & admit card.`;
-
-    return {
-      title: seoTitle,
-      description,
-      alternates: {
-        canonical: `${SITE_URL}/${slug}`,
-      },
-      openGraph: {
-        title: `${title} Recruitment ${year} — Check Full Timeline & Details`,
-        description,
-        url: `${SITE_URL}/${slug}`,
-        siteName: 'Exam Suchana',
-        type: 'article',
-        publishedTime: exam.createdAt,
-        section: cleanLabel(exam.category),
-        tags: [title, exam.conductingBody, cleanLabel(exam.category)],
-      },
-      twitter: {
-        card: "summary_large_image",
-        title: `${title} — ${statusLabel} Updates`,
-        description: `${vacancies} vacancies. ${deadline} Full timeline on Exam Suchana.`,
-      },
-    };
-  }
-
   return {
     title: 'Page Not Found | Exam Suchana',
   };
 }
 
-// ─── JSON-LD Builders ────────────────────────────────────────────────────────
 
 function buildBreadcrumbJsonLd(slug: string, title: string, parent?: { label: string; href: string }) {
   const items = [
@@ -159,7 +147,53 @@ function buildEventJsonLd(exam: any) {
 export default async function DynamicSlugPage({ params }: Props) {
   const { slug } = await params;
 
-  // 1. Check for SEO Page
+  // 1. Intercept Special Temporal Exam Listings
+  if (slug === 'admit-card-released-today') {
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    return (
+      <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
+        <ExamListingClient title="Admit Cards Released Today" status="ADMIT_CARD_OUT" startDate={startOfToday.toISOString()} />
+      </div>
+    );
+  }
+  
+  if (slug === 'upcoming-gov-exam-this-week') {
+    const weekAgo = new Date();
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    return (
+      <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
+        <ExamListingClient title="Upcoming Gov Exams This Week" status="NOTIFICATION,REGISTRATION_OPEN" startDate={weekAgo.toISOString()} />
+      </div>
+    );
+  }
+  
+  if (slug.startsWith('latest-exams-')) {
+    const rawDate = slug.replace('latest-exams-', '');
+    const formattedDate = rawDate.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+    
+    try {
+      const targetMonthDate = new Date(`1 ${formattedDate}`);
+      if (!isNaN(targetMonthDate.getTime())) {
+        const startDate = targetMonthDate.toISOString();
+        targetMonthDate.setMonth(targetMonthDate.getMonth() + 1);
+        const endDate = targetMonthDate.toISOString();
+        
+        return (
+          <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
+            <ExamListingClient title={`Latest Exams ${formattedDate}`} startDate={startDate} endDate={endDate} />
+          </div>
+        );
+      }
+    } catch(e) {}
+    
+    return (
+      <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
+        <ExamListingClient title={`Latest Exams ${formattedDate}`} />
+      </div>
+    );
+  }
+
   const page = await fetchSeoPageBySlug(slug);
 
   if (page) {
@@ -176,9 +210,9 @@ export default async function DynamicSlugPage({ params }: Props) {
           "author": { "@type": "Organization", "name": "Exam Suchana" }
         },
         buildBreadcrumbJsonLd(
-          page.slug, 
-          page.title, 
-          page.exam ? { label: page.exam.shortTitle || page.exam.title, href: `/${page.exam.slug}` } : undefined
+          page.slug,
+          page.title,
+          page.exam ? { label: page.exam.shortTitle || page.exam.title, href: `/exam/${page.exam.slug}` } : undefined
         ),
         page.exam ? buildJobPostingJsonLd(page.exam) : null,
         page.exam ? buildEventJsonLd(page.exam) : null,
@@ -201,58 +235,7 @@ export default async function DynamicSlugPage({ params }: Props) {
     }
 
     return (
-      <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
-        <SiteNav />
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-        <main className="seo-page-container" style={{ paddingTop: 100, paddingBottom: 100, paddingLeft: '1rem', paddingRight: '1rem' }}>
-          <div className="feed-main" style={{ margin: '0 auto', maxWidth: 800 }}>
-            <div className="leaderboard-wrap" style={{ marginBottom: 40 }}>
-              <LeaderboardAd id="seo-top-leaderboard" />
-            </div>
-            <article className="seo-article">
-              <h1 className="seo-h1" style={{ fontSize: 'clamp(1.8rem, 5vw, 3rem)', fontWeight: 800, marginBottom: '1.5rem', background: 'linear-gradient(to right, var(--text-primary), var(--accent-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-                {page.title}
-              </h1>
-              {page.ogImage && (
-                <div className="seo-featured-image" style={{ marginBottom: '2rem', borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.3)', border: '1px solid var(--border)' }}>
-                  <img src={page.ogImage} alt={page.title} style={{ width: '100%', height: 'auto', display: 'block' }} />
-                </div>
-              )}
-              <div className="seo-content" style={{ color: 'var(--text-secondary)', lineHeight: 1.8, fontSize: '1.15rem' }}>
-                <MarkdownRenderer content={page.content} />
-              </div>
-            </article>
-          </div>
-        </main>
-        <SiteFooter />
-      </div>
-    );
-  }
-
-  // 2. Fallback to standard Exam page
-  const exam = await fetchExamBySlug(slug);
-  if (exam) {
-    const { fetchExamsFromAPI } = await import('@/app/lib/api');
-    const { exams: relatedExams } = await fetchExamsFromAPI(1, 5, exam.category).catch(() => ({ exams: [] }));
-    const filteredRelated = (relatedExams || []).filter(e => e.id !== exam.id).slice(0, 4);
-
-    const jsonLd = {
-      "@context": "https://schema.org",
-      "@graph": [
-        buildJobPostingJsonLd(exam),
-        buildEventJsonLd(exam),
-        buildBreadcrumbJsonLd(exam.slug, exam.shortTitle || exam.title),
-      ].filter(Boolean)
-    };
-
-    return (
-      <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
-        <ExamDetailClient exam={exam} relatedExams={filteredRelated} />
-      </div>
+      <ArticleDetailClient page={page} articleJsonLd={jsonLd} />
     );
   }
 
