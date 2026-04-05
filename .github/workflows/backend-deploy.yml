@@ -69,11 +69,11 @@ jobs:
             sudo docker pull $DOCKERHUB_REPO:latest
 
             echo "Stopping old container..."
-            sudo docker stop rankmarg-backend || true
-            sudo docker rm rankmarg-backend || true
+            sudo docker stop suchana-backend || true
+            sudo docker rm suchana-backend || true
 
             echo "Starting new container..."
-            sudo docker run -d --name rankmarg-backend -p 3001:3001 --restart unless-stopped \
+            sudo docker run -d --name suchana-backend -p 3001:3001 --restart unless-stopped \
               --env-file /home/ubuntu/.env \
               $DOCKERHUB_REPO:latest
 
