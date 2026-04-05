@@ -1,4 +1,4 @@
-name: Backend CI/CD (Docker + AWS SSM)
+name: Backend CI/CD (Docker + AWS SSH)
 
 on:
   push:
@@ -51,35 +51,36 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           provenance: false
 
-    deploy:
-        needs: build-and-push
-        runs-on: ubuntu-latest
-        steps:
-          - name: SSH and deploy on EC2
-            uses: appleboy/ssh-action@v1.2.0
-            with:
-              host: ${{ secrets.EC2_HOST }}
-              username: ${{ secrets.EC2_USER }}
-              key: ${{ secrets.EC2_SSH_KEY }}
-              port: ${{ secrets.EC2_PORT || 22 }}
-              envs: DOCKERHUB_REPO
-              script: |
-                echo "Pulling latest image: $DOCKERHUB_REPO:latest"
-                sudo docker pull $DOCKERHUB_REPO:latest
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
 
-                echo "Stopping old container..."
-                sudo docker stop rankmarg-backend || true
-                sudo docker rm rankmarg-backend || true
+    steps:
+      - name: SSH and deploy on EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          envs: DOCKERHUB_REPO
+          script: |
+            echo "Pulling latest image: $DOCKERHUB_REPO:latest"
+            sudo docker pull $DOCKERHUB_REPO:latest
 
-                echo "Starting new container..."
-                sudo docker run -d --name rankmarg-backend -p 3001:3001 --restart unless-stopped \
-                  --env-file /home/ubuntu/.env \
-                  $DOCKERHUB_REPO:latest
+            echo "Stopping old container..."
+            sudo docker stop rankmarg-backend || true
+            sudo docker rm rankmarg-backend || true
 
-                echo "Cleaning up old images..."
-                sudo docker image prune -f
+            echo "Starting new container..."
+            sudo docker run -d --name rankmarg-backend -p 3001:3001 --restart unless-stopped \
+              --env-file /home/ubuntu/.env \
+              $DOCKERHUB_REPO:latest
 
-                echo "Restarting Nginx..."
-                sudo systemctl restart nginx || true
+            echo "Cleaning up old images..."
+            sudo docker image prune -f
 
-                echo "🚀 Deployment successful!"
+            echo "Restarting Nginx..."
+            sudo systemctl restart nginx || true
+
+            echo "🚀 Deployment successful!"
