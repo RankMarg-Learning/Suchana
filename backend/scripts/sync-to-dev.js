@@ -11,8 +11,8 @@ const { PrismaClient } = require('@prisma/client');
  */
 
 async function main() {
-  const sourceUrl = "postgresql://postgres.xuaiuzgswcdeeghsjnsz:@niketsudke0M@aws-1-ap-south-1.pooler.supabase.com:5432/postgres";
-  const destUrl = "postgresql://neondb_owner:npg_bFrO3CE6gWwA@ep-little-leaf-a101oxa9-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require";
+  const sourceUrl = ""
+  const destUrl = "";
 
   if (!sourceUrl || !destUrl) {
     console.error('❌ Error: Please provide both SOURCE_DATABASE_URL and DEV_DATABASE_URL');
