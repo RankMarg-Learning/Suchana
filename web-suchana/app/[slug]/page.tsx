@@ -66,7 +66,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description,
         url: canonical,
         siteName: 'Exam Suchana',
-        images: page.ogImage ? [{ url: page.ogImage }] : undefined,
+        images: page.ogImage ? [{ url: page.ogImage }] : [
+          {
+            url: `${SITE_URL}/og-image.png`,
+            width: 1200,
+            height: 630,
+            alt: page.metaTitle,
+          },
+        ],
         type: 'article',
         publishedTime: page.createdAt,
         modifiedTime: page.updatedAt,
@@ -157,7 +164,7 @@ export default async function DynamicSlugPage({ params }: Props) {
       </div>
     );
   }
-  
+
   if (slug === 'upcoming-gov-exam-this-week') {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
@@ -167,26 +174,26 @@ export default async function DynamicSlugPage({ params }: Props) {
       </div>
     );
   }
-  
+
   if (slug.startsWith('latest-exams-')) {
     const rawDate = slug.replace('latest-exams-', '');
     const formattedDate = rawDate.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-    
+
     try {
       const targetMonthDate = new Date(`1 ${formattedDate}`);
       if (!isNaN(targetMonthDate.getTime())) {
         const startDate = targetMonthDate.toISOString();
         targetMonthDate.setMonth(targetMonthDate.getMonth() + 1);
         const endDate = targetMonthDate.toISOString();
-        
+
         return (
           <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
             <ExamListingClient title={`Latest Exams ${formattedDate}`} startDate={startDate} endDate={endDate} />
           </div>
         );
       }
-    } catch(e) {}
-    
+    } catch (e) { }
+
     return (
       <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
         <ExamListingClient title={`Latest Exams ${formattedDate}`} />
