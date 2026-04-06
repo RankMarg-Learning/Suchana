@@ -3452,6 +3452,22 @@ body::before {
   color: white !important;
 }
 
+
+@media (max-width: 640px) {
+  .exam-share-actions {
+    gap: 6px;
+  }
+  
+  .detail-action-btn .btn-label {
+    display: none;
+  }
+  
+  .detail-action-btn {
+    padding: 8px;
+    justify-content: center;
+  }
+}
+
 /* Sections */
 .exam-detail-section {
   margin-bottom: 48px;

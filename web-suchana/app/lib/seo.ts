@@ -1,52 +1,75 @@
-import { Exam } from "./types";
+import { Exam, stripMarkdown } from "./types";
 
 export type SeoType = "JOB" | "RESULT" | "ADMIT_CARD" | "SYLLABUS" | "SALARY" | "CUTOFF";
 
-export function generateSeoTitle(exam: Exam, type: SeoType): string {
-  const year = new Date().getFullYear();
-  const title = exam.shortTitle || exam.title;
-  const vacancies = exam.totalVacancies && exam.totalVacancies !== "TBA" ? ` (${exam.totalVacancies} Posts)` : "";
+export function generateSeoTitle(exam: Exam, type: SeoType | string): string {
+  const currentYear = new Date().getFullYear();
+  const title = exam.title;
 
+  const hasYear = /202\d/.test(title);
+  const yearPart = hasYear ? "" : ` ${currentYear}`;
+
+  let baseTitle = "";
   switch (type) {
+    case "REGISTRATION_OPEN":
     case "JOB":
-      return `${title} Recruitment ${year} Notification OUT — Apply Online Now${vacancies}`;
+      baseTitle = `${title} Recruitment${yearPart} — Apply Online, Check Details`;
+      break;
+    case "RESULT_DECLARED":
     case "RESULT":
-      return `${title} Result ${year} Declared — Check Merit List & Score Card`;
+      baseTitle = `${title} Result${yearPart} (Released) — Download Merit List`;
+      break;
+    case "ADMIT_CARD_OUT":
     case "ADMIT_CARD":
-      return `${title} Admit Card ${year} Download Link — Hall Ticket Released`;
+      baseTitle = `${title} Admit Card${yearPart} OUT — Direct Download Link`;
+      break;
     case "SYLLABUS":
-      return `${title} Syllabus ${year} PDF Download — Exam Pattern & Selection Process`;
+      baseTitle = `${title} Syllabus${yearPart} PDF — Exam Pattern & Selection`;
+      break;
     case "SALARY":
-      return `${title} Salary ${year} — Job Profile, Pay Scale & Allowances`;
+      baseTitle = `${title} Salary${yearPart} — Pay Scale & Monthly In-hand`;
+      break;
     case "CUTOFF":
-      return `${title} Cut Off 2025-26 — Expected & Previous Year Cutoff Marks`;
+      baseTitle = `${title} Cut Off Marks — Expected & Previous Year`;
+      break;
+    case "NOTIFICATION":
+      baseTitle = `${title} Official Notification PDF — Key Dates & Details`;
+      break;
     default:
-      return `${title} Recruitment ${year} — Latest Updates & Notification`;
+      baseTitle = `${title}${yearPart}: Apply Online, Dates & Result Status`;
   }
+
+  return `${baseTitle}`;
 }
 
-export function generateSeoDescription(exam: Exam, type: SeoType): string {
+export function generateSeoDescription(exam: Exam, type: SeoType | string): string {
+  const currentYear = new Date().getFullYear();
   const title = exam.shortTitle || exam.title;
+  const hasYear = /202\d/.test(title);
+  const yearStr = hasYear ? "" : ` ${currentYear}`;
+
   const body = exam.conductingBody;
+  const vacancies = exam.totalVacancies && exam.totalVacancies !== "TBA" ? ` with ${exam.totalVacancies} vacancies.` : ".";
 
   switch (type) {
+    case "REGISTRATION_OPEN":
     case "JOB":
-      return `Apply online for ${title} Recruitment ${year()} announced by ${body}. Get full details on eligibility, total vacancies${exam.totalVacancies ? ` (${exam.totalVacancies})` : ""}, important dates, and how to apply.`;
+      return `Apply for ${title} Recruitment ${yearStr} by ${body} ${stripMarkdown(vacancies)} Check eligibility criteria, age limit, and salary. Get the direct application link and official notification PDF.`;
+    case "RESULT_DECLARED":
     case "RESULT":
-      return `${title} Result ${year()} has been declared by ${body}. Direct link to check your result, merit list, and selection status. Check ${title} score card here.`;
+      return `${title} Result${yearStr} is officially OUT. Download the merit list and check category-wise cut off marks declared by ${body}. Direct official links to check result inside.`;
+    case "ADMIT_CARD_OUT":
     case "ADMIT_CARD":
-      return `Download ${title} Admit Card ${year()} for ${body} examination. Direct official link to download hall ticket and check exam center instructions.`;
+      return `Download your ${title} Admit Card ${yearStr} for the upcoming ${body} exam. Check your exam center, reporting time, and important instructions. Official download link available.`;
     case "SYLLABUS":
-      return `Check updated ${title} Syllabus ${year()} and Exam Pattern. Download PDF for ${body} selection process, marking scheme, and subject-wise topics.`;
+      return `Detailed ${title} Syllabus ${yearStr} and latest Exam Pattern. Download the official PDF for ${body} selection process, marking scheme, and subject-wise topics for preparation.`;
     case "SALARY":
-      return `What is the salary of ${title}? Check latest pay scale, in-hand salary, allowances, and career growth for ${title} recruitment by ${body}.`;
+      return `What is the salary for ${title}? Check latest 7th Pay Commission pay scale, allowances, and monthly in-hand salary for ${title} recruitment by ${body}.`;
     case "CUTOFF":
-      return `${title} Expected Cut Off Marks ${year()} and last year's official cutoff. Category-wise cutoff for UR, OBC, SC, ST, and EWS candidates.`;
+      return `${title} Expected Cut Off Marks and official previous year cutoff data for UR, OBC, SC, ST, and EWS candidates. Check ${body} selection benchmarks here.`;
+    case "NOTIFICATION":
+      return `${title} Official Notification PDF is available now. Check detailed eligibility, important dates, and ${stripMarkdown(vacancies)} vacancies announced by ${body}.`;
     default:
-      return `Latest updates and real-time notification for ${title} by ${body}. Check all details on one page.`;
+      return `Get real-time updates for ${title}${yearStr} recruitment by ${body}. Check application status, syllabus, admit card, and result dates on Exam Suchana — the fastest update portal.`;
   }
-}
-
-function year() {
-  return new Date().getFullYear();
 }

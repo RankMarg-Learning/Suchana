@@ -172,6 +172,21 @@ export function stripHtml(html: string | null | undefined): string {
     .trim();
 }
 
+
+export function stripMarkdown(md: string | null | undefined): string {
+  if (!md) return "";
+  return md
+    .replace(/!\[.*?\]\(.*?\)/g, "") // Images
+    .replace(/\[(.*?)\]\(.*?\)/g, "$1") // Links [text](url) -> text
+    .replace(/#{1,6}\s+/g, "") // Headers
+    .replace(/[*_~`>]/g, "") // Bold, italic, strikethrough, code, quotes
+    .replace(/^[*-+]\s+/gm, "") // List items
+    .replace(/^\d+\.\s+/gm, "") // Numbered list items
+    .replace(/\n+/g, " ") // Newlines to spaces
+    .replace(/\s+/g, " ") // Collapse whitespace
+    .trim();
+}
+
 export function getStageState(event: LifecycleEvent, now: number): "done" | "active" | "upcoming" {
   const start = event.startsAt ? new Date(event.startsAt).getTime() : null;
   const end = event.endsAt ? new Date(event.endsAt).getTime() : null;

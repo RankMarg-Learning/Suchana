@@ -8,6 +8,7 @@ import {
   getTotalVacancies,
   stripHtml,
 } from "@/app/lib/types";
+import { generateSeoTitle, generateSeoDescription } from "@/app/lib/seo";
 import ExamDetailClient from "./ExamDetailClient";
 
 interface Props {
@@ -33,69 +34,58 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const year = new Date().getFullYear();
-  const title = exam.shortTitle ?? exam.title;
-  const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
-  const vacancies = getTotalVacancies(exam.totalVacancies);
-  const regEvent = exam.lifecycleEvents?.find((e) => e.stage === "REGISTRATION");
-  const deadline = regEvent?.endsAt ? `Registration deadline ${formatDate(regEvent.endsAt)}.` : "";
-
-  const seoTitle = `${title} Recruitment ${year}: Apply Online, Full Schedule, Vacancies & Eligibility`;
-  const description =
-    exam.description
-      ? `${exam.description.slice(0, 140)}... Status: ${statusLabel}. Vacancies: ${vacancies}. ${deadline} Get real-time updates on Exam Suchana.`
-      : `${title} official notification by ${exam.conductingBody}. Status: ${statusLabel}. ${vacancies !== "TBA" ? `${vacancies} vacancies.` : ""} ${deadline} Check syllabus, result & admit card.`;
+  const title = exam.title;
+  const seoTitle = generateSeoTitle(exam, exam.status);
+  const seoDescription = generateSeoDescription(exam, exam.status);
 
   const canonicalUrl = `${SITE_URL}/exam/${slug}`;
 
   return {
     title: seoTitle,
-    description,
+    description: seoDescription,
     keywords: [
       title,
+      exam.shortTitle,
       exam.conductingBody,
       `${title} ${year}`,
+      `${title} recruitment`,
+      `${title} notification pdf`,
       `${title} apply online`,
       `${title} admit card download`,
-      `${title} result date`,
+      `${title} result link`,
       `${title} syllabus pdf`,
       "government jobs",
+      "sarkari naukri",
       "sarkari results",
-    ].filter(Boolean),
+    ].filter((k): k is string => !!k),
     alternates: {
       canonical: canonicalUrl,
     },
     openGraph: {
       type: "article",
       url: canonicalUrl,
-      title: `${title} Recruitment ${year} — Check Full Timeline & Details`,
+      title: seoTitle,
       images: [
         {
-          url: `${SITE_URL}/exam-banner.png`,
+          url: `${SITE_URL}/og-image.png`,
           width: 1200,
           height: 630,
           alt: title,
         },
       ],
-      description,
+      description: seoDescription,
       locale: "en_IN",
       siteName: "Exam Suchana",
-      publishedTime: new Date().toISOString(),
-      modifiedTime: new Date().toISOString(),
+      publishedTime: exam.createdAt || new Date().toISOString(),
+      modifiedTime: exam.updatedAt || new Date().toISOString(),
       section: cleanLabel(exam.category),
-      tags: [title, exam.conductingBody, cleanLabel(exam.category)],
+      tags: [title, exam.conductingBody, cleanLabel(exam.category)].filter(Boolean),
     },
     twitter: {
       card: "summary_large_image",
-      images: [
-        {
-          url: `${SITE_URL}/exam-banner.png`,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
-      title: `${title} — ${statusLabel} Updates`,
-      description: `${vacancies} vacancies. ${deadline} Full timeline on Exam Suchana.`,
+      title: seoTitle,
+      description: seoDescription,
+      images: [`${SITE_URL}/exam-banner.png`],
     },
   };
 }
@@ -115,6 +105,12 @@ function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
       "@id": `${SITE_URL}#organization`,
       name: exam.conductingBody || "Government Agency",
       url: exam.officialWebsite || SITE_URL,
+      logo: `${SITE_URL}/examsuchana-logoT.png`,
+    },
+    identifier: {
+      "@type": "PropertyValue",
+      name: exam.conductingBody,
+      value: exam.slug,
     },
     jobLocation: {
       "@type": "Place",
