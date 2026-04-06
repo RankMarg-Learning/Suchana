@@ -12,35 +12,43 @@ const inter = Inter({
   display: "swap",
 });
 
+const currentYear = new Date().getFullYear();
+const nextYear = currentYear + 1;
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Exam Suchana — Government Exam Notifications & Lifecycle Tracker",
+    default: `Sarkari Result ${currentYear} — Latest Govt Jobs, Exam Notifications & Tracker | Exam Suchana`,
     template: "%s | Exam Suchana",
   },
   description:
-    "Track every stage of 1000+ Indian government exams — registration dates, admit cards, exam dates, answer keys and results — all in one place. Never miss a sarkari naukri deadline.",
+    `Track 1000+ Indian Government Exams: GPSC, UPSC, SSC, IBPS, Railways & Defence. Get real-time updates on registration dates, admit cards, syllables, and results with direct official links for ${currentYear}-${nextYear}.`,
   keywords: [
+    "Exam Suchana",
     "government exam notifications",
-    "sarkari naukri 2025",
-    "UPSC CSE 2025",
-    "SSC CGL 2025",
-    "RRB NTPC 2025",
-    "IBPS PO 2025",
-    "exam registration dates",
-    "admit card download",
-    "exam result notification",
-    "government job alerts",
-    "sarkari exam calendar",
-    "India government exam tracker",
-    "suchana",
-    "exam suchana",
-    "exam timeline",
-    "banking exam 2025",
-    "railway exam 2025",
-    "defence exam 2025",
-    "UPSC exam date",
-    "SSC exam date",
+    "sarkari naukri total updates",
+    `UPSC CSE ${currentYear} tracker`,
+    `SSC CGL ${currentYear} notifications`,
+    `RRB NTPC ${currentYear} updates`,
+    `IBPS PO ${currentYear} dates`,
+    `SBI PO notification ${currentYear}`,
+    `Sarkari Result ${currentYear}`,
+    "Sarkari Naukri Notification",
+    `Govt Job Bharti ${currentYear}`,
+    "Exam Pariksha Updates",
+    "Direct Official Apply Link",
+    "Admit Card Download Link",
+    "Result Kab Aayega",
+    "CBT Exam Schedule",
+    "State Govt Jobs India",
+    "UPSC Syllabus PDF Download",
+    "SSC Exam Calendar",
+    "Banking Job Alerts",
+    "Railway Recruitment Board Updates",
+    `Defense Job Bharti ${currentYear}`,
+    `Police Recruitment ${currentYear} India`,
+    "Exam Suchana Official Website",
+    "Govt Job Life Cycle Tracker"
   ],
   authors: [{ name: "Exam Suchana", url: SITE_URL }],
   creator: "Exam Suchana",
@@ -63,15 +71,15 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: SITE_URL,
     siteName: "Exam Suchana",
-    title: "Exam Suchana — Government Exam Notifications & Lifecycle Tracker",
+    title: "Exam Suchana — Get Direct Official Links for Govt Exams",
     description:
-      "Never miss a government exam deadline. Get registration dates, admit card alerts, exam schedules and result notifications for UPSC, SSC, Railway, Banking and more.",
+      "Tracking UPSC, SSC, Banking, Railway & State Govt exams? Get real-time alerts for apply links, admit cards, and merit lists only on Exam Suchana.",
     images: [
       {
         url: `${SITE_URL}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: "Exam Suchana — Government Exam Tracker",
+        alt: "Exam Suchana — Real-time Govt Exam Tracker",
       },
     ],
   },
@@ -79,9 +87,9 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@ExamSuchana",
     creator: "@ExamSuchana",
-    title: "Exam Suchana — Government Exam Notifications",
+    title: "Exam Suchana — Fast Govt Exam Alerts",
     description:
-      "Track UPSC, SSC, Railway, Banking exam timelines in one place. Get instant alerts for registration, admit cards & results.",
+      "UPSC, SSC, Railway, Banking. Real-time lifecycle tracking from Notification to Result. Direct official links included.",
     images: [`${SITE_URL}/og-image.png`],
   },
   alternates: {
@@ -125,7 +133,7 @@ const websiteJsonLd = {
   alternateName: "ExamSuchana",
   url: SITE_URL,
   description:
-    "India's most comprehensive government exam lifecycle tracker. Track registration, admit card, exam date, and results for UPSC, SSC, Railway, Banking and more.",
+    `India's most comprehensive government exam lifecycle tracker. Track registration, admit card, exam date, and results for UPSC, SSC, Railway, Banking and more in ${currentYear}.`,
   potentialAction: {
     "@type": "SearchAction",
     target: {

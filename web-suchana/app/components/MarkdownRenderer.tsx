@@ -67,6 +67,7 @@ export default function MarkdownRenderer({
               <table {...props} />
             </div>
           ),
+          hr: () => <hr className="markdown-hr" />,
           a: ({ node, href, children, ...props }) => {
             const isInternal = href?.startsWith('/') || href?.startsWith('#');
             return (

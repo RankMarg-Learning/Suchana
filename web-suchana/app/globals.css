@@ -4821,3 +4821,27 @@ body::before {
   border-color: var(--border);
   color: var(--text-secondary);
 }
+
+.markdown-hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border), var(--border-strong), var(--border), transparent);
+  margin: 48px auto;
+  width: 90%;
+  position: relative;
+  overflow: visible;
+  opacity: 0.8;
+}
+
+.markdown-hr::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--bg-primary);
+  padding: 0 20px;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 6px;
+  line-height: 1;
+}
