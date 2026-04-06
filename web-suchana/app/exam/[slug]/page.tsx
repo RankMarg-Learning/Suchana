@@ -67,7 +67,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: seoTitle,
       images: [
         {
-          url: `${SITE_URL}/exam-banner.png`,
+          url: `${SITE_URL}/og-image.png`,
           width: 1200,
           height: 630,
           alt: title,
