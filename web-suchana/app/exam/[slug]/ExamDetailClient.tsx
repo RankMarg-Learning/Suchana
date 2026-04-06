@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Bell,
@@ -42,7 +42,8 @@ import {
   enumToSlug,
   CATEGORIES,
   getCategoryInfo,
-  slugify
+  slugify,
+  stripMarkdown
 } from "@/app/lib/types";
 import { fetchSavedExams, toggleSavedExam, fetchSeoPages } from "@/app/lib/api";
 import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
@@ -147,7 +148,7 @@ function TimelineItem({
               <MarkdownRenderer content={event.description} className="tl-markdown" variant="fact" />
             ) : (
               <div className="tl-notes-preview">
-                {event.description.replace(/[#*`\n]/g, ' ').substring(0, 100)}
+                {stripMarkdown(event.description).substring(0, 100)}
                 {event.description.length > 100 && "..."}
               </div>
             )}
@@ -197,18 +198,18 @@ function NotifyWidget({ examName }: { examName: string }) {
   };
 
   return (
-    <div className="notify-widget">
+    <div className="notify-widget" style={{ marginBottom: 24, border: '1px solid var(--accent-light)', background: 'rgba(124, 58, 237, 0.02)' }}>
       <div className="notify-widget-header">
-        <div className="notify-widget-icon"><BellRing size={18} color="var(--accent-light)" /></div>
+        <div className="notify-widget-icon" style={{ background: 'var(--accent-light)' }}><Bell size={18} color="white" strokeWidth={2.5} /></div>
         <div>
-          <div className="notify-widget-title">Get Alerts</div>
-          <div className="notify-widget-sub">For {examName}</div>
+          <div className="notify-widget-title" style={{ fontWeight: 800 }}>Get Live Alerts</div>
+          <div className="notify-widget-sub" style={{ fontSize: '11px', fontWeight: 600 }}>Never miss an update for {examName}</div>
         </div>
       </div>
       {state === "done" ? (
-        <div className="notify-widget-success">
+        <div className="notify-widget-success" style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px' }}>
           <CheckCircle2 size={20} color="var(--green)" />
-          <div>Alerts enabled! 🎉</div>
+          <div style={{ fontWeight: 700, color: 'var(--green)' }}>You're all set! ✅</div>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="notify-widget-form">
@@ -219,10 +220,11 @@ function NotifyWidget({ examName }: { examName: string }) {
             onChange={(e) => setEmail(e.target.value)}
             className="notify-widget-input"
             required
+            style={{ borderRadius: '10px', fontSize: '13px' }}
           />
-          <button type="submit" className="notify-widget-btn" disabled={state === "loading"}>
-            {state === "loading" ? <RefreshCw size={14} className="spin-icon" /> : <Bell size={14} />}
-            {state === "loading" ? "Setting up..." : "Enable Alerts"}
+          <button type="submit" className="btn btn-primary" style={{ width: '100%', borderRadius: '10px', padding: '12px', fontSize: '13px', justifyContent: 'center' }} disabled={state === "loading"}>
+            {state === "loading" ? <RefreshCw size={14} className="spin-icon" /> : <BellRing size={14} />}
+            {state === "loading" ? "Activating..." : "Subscribe for Alerts"}
           </button>
         </form>
       )}
@@ -502,7 +504,7 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
                   <MarkdownRenderer content={exam.description} />
                 ) : (
                   <div className="description-preview">
-                    {exam.description.replace(/[#*`\n]/g, ' ').substring(0, 300)}
+                    {stripMarkdown(exam.description).substring(0, 300)}
                     {exam.description.length > 300 && "..."}
                   </div>
                 )}
@@ -574,7 +576,6 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
         </section>
 
         <aside className="sidebar-right">
-          {/* <NotifyWidget examName={exam.shortTitle ?? exam.title} /> */}
           <div className="app-download-widget" style={{ background: 'linear-gradient(135deg, #0088cc 0%, #00aaff 100%)', border: 'none' }}>
             <div className="app-widget-icon" style={{ background: 'rgba(255,255,255,0.2)' }}>
               <Bell size={18} color="white" />
