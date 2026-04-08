@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ExamCategory, ExamLevel, ExamStatus, LifecycleStage } from '../constants/enums';
+import { ExamCategory, ExamLevel, ExamStatus, LifecycleStage, SeoPageCategory } from '../constants/enums';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'hPUeHHWNwlnK8gWi5WWwhAGBq7OxHmHcRYOCCLka3bWodhIf1dba';
@@ -198,7 +198,7 @@ export interface SeoPage {
     ogImage?: string;
     canonicalUrl?: string;
     isPublished: boolean;
-    category?: string;
+    category?: SeoPageCategory;
     createdAt: string;
     updatedAt: string;
     examId?: string | null;

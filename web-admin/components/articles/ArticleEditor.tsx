@@ -12,7 +12,9 @@ import {
     Globe,
     Tag,
     Share2,
-    Check
+    Check,
+    ChevronsUpDown,
+    Search
 } from 'lucide-react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
@@ -24,6 +26,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { SeoPage, Exam, examService } from '@/lib/api';
+import { SeoPageCategory } from '../../constants/enums';
 import {
     Select,
     SelectContent,
@@ -31,6 +34,14 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
+
 import MarkdownRenderer from '../MarkdownRenderer';
 
 import ArticleViralShareDialog from './ArticleViralShareDialog';
@@ -42,6 +53,42 @@ interface ArticleEditorProps {
     onSave: (data: Partial<SeoPage>) => void;
     title: string;
 }
+
+const ARTICLE_CATEGORIES: { value: SeoPageCategory; label: string }[] = [
+    { value: 'NOTIFICATION', label: 'Notification' },
+    { value: 'ADMIT_CARD', label: 'Admit Card' },
+    { value: 'RESULT', label: 'Result' },
+    { value: 'ANSWER_KEY', label: 'Answer Key' },
+    { value: 'CUTOFF', label: 'Cut Off' },
+    { value: 'SYLLABUS', label: 'Syllabus' },
+    { value: 'EXAM_PATTERN', label: 'Exam Pattern' },
+    { value: 'ELIGIBILITY', label: 'Eligibility' },
+    { value: 'SALARY', label: 'Salary & Job Profile' },
+    { value: 'VACANCY', label: 'Vacancy Details' },
+    { value: 'APPLICATION_FORM', label: 'Application Form' },
+    { value: 'BOOKS', label: 'Best Books' },
+    { value: 'PREPARATION_STRATEGY', label: 'Preparation Strategy' },
+    { value: 'PREVIOUS_YEAR_PAPER', label: 'Previous Year Paper' },
+    { value: 'MOCK_TEST', label: 'Mock Test' },
+    { value: 'ANALYSIS', label: 'Exam Analysis' },
+    { value: 'COUNSELLING', label: 'Counselling' },
+    { value: 'DOCUMENT_VERIFICATION', label: 'Document Verification' },
+    { value: 'MERIT_LIST', label: 'Merit List' },
+    { value: 'SCORECARD', label: 'Scorecard' },
+    { value: 'IMPORTANT_DATES', label: 'Important Dates' },
+    { value: 'SELECTION_PROCESS', label: 'Selection Process' },
+    { value: 'AGE_LIMIT', label: 'Age Limit' },
+    { value: 'APPLICATION_FEE', label: 'Application Fee' },
+    { value: 'STATE_EXAMS', label: 'State Exams' },
+    { value: 'CENTRAL_EXAMS', label: 'Central Exams' },
+    { value: 'CURRENT_AFFAIRS', label: 'Current Affairs' },
+    { value: 'GK_STATIC', label: 'Static GK' },
+    { value: 'TOOL', label: 'Utility Tool' },
+    { value: 'COMPARISON', label: 'Comparison' },
+    { value: 'GUIDE', label: 'Complete Guide' },
+    { value: 'OTHERS', label: 'Others' },
+];
+
 
 export default function ArticleEditor({ initialData, exams, isSaving, onSave, title }: ArticleEditorProps) {
     // 1. Resolve initial base mappings once efficiently
@@ -60,7 +107,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
         ogImage: base.ogImage || '',
         isPublished: base.isPublished ?? true,
         examId: extractedExamId,
-        category: base.category || ''
+        category: base.category || 'OTHERS' as any
     }));
 
     const [examUrlInput, setExamUrlInput] = useState(
@@ -71,7 +118,35 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
     const [isValidatingExam, setIsValidatingExam] = useState(false);
     const [validationError, setValidationError] = useState('');
 
+    // 3. Sync state when initialData arrives or changes
     React.useEffect(() => {
+        if (initialData) {
+            const exId = initialData.examId || (initialData as any).exam?.id || null;
+            setFormData({
+                slug: initialData.slug || '',
+                title: initialData.title || '',
+                content: initialData.content || '',
+                metaTitle: initialData.metaTitle || '',
+                metaDescription: initialData.metaDescription || '',
+                keywords: initialData.keywords || [],
+                ogImage: initialData.ogImage || '',
+                isPublished: initialData.isPublished ?? true,
+                examId: exId,
+                category: initialData.category || 'OTHERS' as any
+            });
+            setIsSlugLocked(!!initialData.slug);
+
+            const matchingExam = exams.find(e => e.id === exId) || (initialData as any).exam || null;
+
+            if (matchingExam) {
+                setResolvedExam(matchingExam);
+                setExamUrlInput(matchingExam.slug ? `https://examsuchana.in/exam/${matchingExam.slug}` : '');
+            }
+        }
+    }, [initialData?.id, exams]);
+
+    React.useEffect(() => {
+
         const timeout = setTimeout(async () => {
             if (!examUrlInput) {
                 // Ignore clearing if initial setup
@@ -132,6 +207,15 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
 
     const [isSlugLocked, setIsSlugLocked] = useState(!!initialData?.slug);
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+    
+    const [categorySearch, setCategorySearch] = useState('');
+    const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
+
+    const filteredCategories = ARTICLE_CATEGORIES.filter(cat => 
+        cat.label.toLowerCase().includes(categorySearch.toLowerCase()) ||
+        cat.value.toLowerCase().includes(categorySearch.toLowerCase())
+    );
+
 
     const handleTitleChange = (newTitle: string) => {
         const updates: Partial<SeoPage> = { title: newTitle };
@@ -301,29 +385,65 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="category">Article Category</Label>
-                                        <Select
-                                            value={formData.category || "OTHERS"}
-                                            onValueChange={(val) => setFormData({ ...formData, category: val })}
-                                        >
-                                            <SelectTrigger id="category">
-                                                <SelectValue placeholder="Select Category" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="NOTIFICATION">Notification PDF</SelectItem>
-                                                <SelectItem value="VACANCIES">Vacancy Details</SelectItem>
-                                                <SelectItem value="ELIGIBILITY">Eligibility Criteria</SelectItem>
-                                                <SelectItem value="SALARY">Salary & Job Profile</SelectItem>
-                                                <SelectItem value="SYLLABUS">Syllabus & Pattern</SelectItem>
-                                                <SelectItem value="SELECTION_PROCESS">Selection Process</SelectItem>
-                                                <SelectItem value="ADMIT_CARD">Admit Card</SelectItem>
-                                                <SelectItem value="RESULTS">Results</SelectItem>
-                                                <SelectItem value="CUT_OFF">Cut Off Marks</SelectItem>
-                                                <SelectItem value="ANSWER_KEY">Answer Key</SelectItem>
-                                                <SelectItem value="STAGES">Timeline Stages</SelectItem>
-                                                <SelectItem value="OTHERS">Others</SelectItem>
-                                            </SelectContent>
-                                        </Select>
+                                        <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
+                                            <PopoverTrigger asChild>
+                                                <Button
+                                                    variant="outline"
+                                                    role="combobox"
+                                                    aria-expanded={isCategoryPopoverOpen}
+                                                    className="w-full justify-between font-normal h-10 px-3 hover:bg-background"
+                                                >
+                                                    <span className="truncate">
+                                                        {formData.category
+                                                            ? (ARTICLE_CATEGORIES.find((cat) => cat.value === formData.category)?.label || 
+                                                               ARTICLE_CATEGORIES.find((cat) => cat.value.toUpperCase() === String(formData.category).toUpperCase())?.label || 
+                                                               formData.category)
+                                                            : "Select Category"}
+                                                    </span>
+                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[300px] p-0 shadow-2xl border-border" align="start">
+                                                <div className="flex items-center border-b px-3 py-2 bg-muted/30">
+                                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
+                                                    <input
+                                                        placeholder="Search sections..."
+                                                        className="flex h-8 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                                                        value={categorySearch}
+                                                        onChange={(e) => setCategorySearch(e.target.value)}
+                                                    />
+                                                </div>
+                                                <ScrollArea className="h-[300px] py-1">
+                                                    {filteredCategories.length === 0 ? (
+                                                        <p className="p-4 text-xs text-center text-muted-foreground">No category found.</p>
+                                                    ) : (
+                                                        <div className="px-1">
+                                                            {filteredCategories.map((cat) => (
+                                                                <button
+                                                                    key={cat.value}
+                                                                    className={cn(
+                                                                        "relative flex w-full cursor-default select-none items-center rounded-sm py-2 px-3 text-sm outline-none hover:bg-accent hover:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50 transition-colors",
+                                                                        formData.category === cat.value && "bg-accent/50 font-medium text-primary"
+                                                                    )}
+                                                                    onClick={() => {
+                                                                        setFormData({ ...formData, category: cat.value });
+                                                                        setIsCategoryPopoverOpen(false);
+                                                                        setCategorySearch('');
+                                                                    }}
+                                                                >
+                                                                    {cat.label}
+                                                                    {formData.category === cat.value && (
+                                                                        <Check className="ml-auto h-4 w-4 opacity-100 text-primary" />
+                                                                    )}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </ScrollArea>
+                                            </PopoverContent>
+                                        </Popover>
                                     </div>
+
                                 </CardContent>
                             </Card>
 

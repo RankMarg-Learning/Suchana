@@ -135,3 +135,42 @@ export const getTerminalStatusFromStage = (stage: string): ExamStatus => {
     // Everything else that ends last → ACTIVE (e.g. exam day was last listed event)
     return ExamStatus.ACTIVE;
 };
+
+export const SeoPageCategory = {
+    NOTIFICATION: 'NOTIFICATION',
+    ADMIT_CARD: 'ADMIT_CARD',
+    RESULT: 'RESULT',
+    ANSWER_KEY: 'ANSWER_KEY',
+    CUTOFF: 'CUTOFF',
+    SYLLABUS: 'SYLLABUS',
+    EXAM_PATTERN: 'EXAM_PATTERN',
+    ELIGIBILITY: 'ELIGIBILITY',
+    SALARY: 'SALARY',
+    VACANCY: 'VACANCY',
+    APPLICATION_FORM: 'APPLICATION_FORM',
+    BOOKS: 'BOOKS',
+    PREPARATION_STRATEGY: 'PREPARATION_STRATEGY',
+    PREVIOUS_YEAR_PAPER: 'PREVIOUS_YEAR_PAPER',
+    MOCK_TEST: 'MOCK_TEST',
+    ANALYSIS: 'ANALYSIS',
+    COUNSELLING: 'COUNSELLING',
+    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',
+    MERIT_LIST: 'MERIT_LIST',
+    SCORECARD: 'SCORECARD',
+    IMPORTANT_DATES: 'IMPORTANT_DATES',
+    SELECTION_PROCESS: 'SELECTION_PROCESS',
+    AGE_LIMIT: 'AGE_LIMIT',
+    APPLICATION_FEE: 'APPLICATION_FEE',
+    STATE_EXAMS: 'STATE_EXAMS',
+    CENTRAL_EXAMS: 'CENTRAL_EXAMS',
+    CURRENT_AFFAIRS: 'CURRENT_AFFAIRS',
+    GK_STATIC: 'GK_STATIC',
+    TOOL: 'TOOL',
+    COMPARISON: 'COMPARISON',
+    GUIDE: 'GUIDE',
+    OTHERS: 'OTHERS',
+} as const;
+
+export type SeoPageCategory = (typeof SeoPageCategory)[keyof typeof SeoPageCategory];
+export const SEO_PAGE_CATEGORIES = Object.values(SeoPageCategory);
+
