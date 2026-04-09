@@ -184,7 +184,7 @@ export default function ExamsPage() {
     };
 
     return (
-        <div className="space-y-6 container mx-auto py-8">
+        <div className="space-y-6 container mx-auto py-2">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -206,13 +206,9 @@ export default function ExamsPage() {
                     </Button>
                 </div>
             </div>
-
-            {/* Stats Summary */}
-            <SummaryStats exams={exams} loading={isLoading} />
-
             {/* Filter Bar */}
             <Card className="border shadow-sm">
-                <CardContent className="p-4 flex flex-col md:flex-row gap-4">
+                <CardContent className="p-2 flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
