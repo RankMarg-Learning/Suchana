@@ -69,6 +69,7 @@ const examSchema = z.object({
     additionalDetails: z.string().nullable(),
     status: z.string().min(1),
     isPublished: z.boolean(),
+    isTrending: z.boolean(),
     publishedAt: z.string().nullable(),
     createdAt: z.string().nullable(),
 });
@@ -115,6 +116,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
             additionalDetails: actualInitialData?.additionalDetails || '',
             status: actualInitialData?.status || 'NOTIFICATION',
             isPublished: actualInitialData?.isPublished ?? true,
+            isTrending: actualInitialData?.isTrending ?? false,
             publishedAt: actualInitialData?.publishedAt || '',
             createdAt: actualInitialData?.createdAt || '',
         }
@@ -146,6 +148,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
     });
 
     const isPublished = watch('isPublished');
+    const isTrending = watch('isTrending');
     const examLevel = watch('examLevel');
 
     // Sharing State
@@ -191,6 +194,15 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                             Share Strategy
                         </Button>
                     )}
+                    <div className="flex items-center space-x-2 mr-2">
+                        <Switch
+                            id="trending"
+                            checked={isTrending}
+                            onCheckedChange={(checked) => setValue('isTrending', checked)}
+                            className="data-[state=checked]:bg-amber-500"
+                        />
+                        <Label htmlFor="trending" className="text-amber-700 font-medium">Trending</Label>
+                    </div>
                     <div className="flex items-center space-x-2 mr-4">
                         <Switch
                             id="published"

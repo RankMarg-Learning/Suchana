@@ -106,6 +106,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
         keywords: base.keywords || [],
         ogImage: base.ogImage || '',
         isPublished: base.isPublished ?? true,
+        isTrending: base.isTrending ?? false,
         examId: extractedExamId,
         category: base.category || 'OTHERS' as any
     }));
@@ -131,6 +132,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                 keywords: initialData.keywords || [],
                 ogImage: initialData.ogImage || '',
                 isPublished: initialData.isPublished ?? true,
+                isTrending: initialData.isTrending ?? false,
                 examId: exId,
                 category: initialData.category || 'OTHERS' as any
             });
@@ -353,6 +355,18 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                             id="published"
                                             checked={formData.isPublished}
                                             onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked })}
+                                        />
+                                    </div>
+                                    <div className="flex items-center justify-between space-x-2">
+                                        <div className="flex flex-col gap-0.5">
+                                            <Label htmlFor="trending">Trending</Label>
+                                            <span className="text-[10px] text-muted-foreground font-normal">Show in trending hub</span>
+                                        </div>
+                                        <Switch
+                                            id="trending"
+                                            checked={formData.isTrending}
+                                            onCheckedChange={(checked) => setFormData({ ...formData, isTrending: checked })}
+                                            className="data-[state=checked]:bg-amber-500"
                                         />
                                     </div>
                                     <div className="space-y-2">

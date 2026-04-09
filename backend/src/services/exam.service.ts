@@ -12,7 +12,7 @@ const EXAM_LIST_CACHE_KEY = 'exams:list';
 const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams:detail:${id}`;
 
 export async function listExams(query: ListExamQuery, bypassCache = false) {
-    const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state, lifecycleStage, startDate, endDate } = query;
+    const { page, limit, category, status, conductingBody, search, isPublished, isTrending, examLevel, state, lifecycleStage, startDate, endDate } = query;
     const cacheKey = `${EXAM_LIST_CACHE_KEY}:${JSON.stringify(query)}`;
 
     const fetchExams = async () => {
@@ -24,6 +24,7 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
                 conductingBody: { contains: conductingBody, mode: 'insensitive' },
             }),
             ...(isPublished !== undefined && { isPublished }),
+            ...(isTrending !== undefined && { isTrending }),
             ...(examLevel && { examLevel }),
             ...(state && { state: { contains: state, mode: 'insensitive' } }),
             ...(search && {
@@ -73,6 +74,7 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
                     conductingBody: true,
                     status: true,
                     isPublished: true,
+                    isTrending: true,
                     publishedAt: true,
                     updatedAt: true,
                 },
@@ -216,6 +218,7 @@ export async function deleteExam(id: string, adminId: string) {
 }
 
 // ─── Get Saved Exams ─────────────────────────────────────────
+// ─── Get Saved Exams ─────────────────────────────────────────
 export async function getSavedExams(userId: string) {
     const user = await prisma.user.findUnique({
         where: { id: userId },
@@ -246,6 +249,70 @@ export async function getSavedExams(userId: string) {
         }
     });
     return exams;
+}
+
+export async function getTrendingContent() {
+    const fetchTrending = async () => {
+        const [trendingExams, trendingArticles] = await Promise.all([
+            prisma.exam.findMany({
+                where: { isPublished: true, isTrending: true } as any,
+                take: 10,
+                orderBy: { updatedAt: 'desc' },
+                select: {
+                    id: true, title: true, shortTitle: true, slug: true,
+                    category: true, conductingBody: true, status: true,
+                    updatedAt: true,
+                }
+            }),
+            prisma.seoPage.findMany({
+                where: { isPublished: true, isTrending: true } as any,
+                take: 10,
+                orderBy: { updatedAt: 'desc' },
+                select: {
+                    id: true, title: true, slug: true, category: true,
+                    createdAt: true, examId: true
+                }
+            })
+        ]);
+
+        // Fallback for exams if not enough trending items
+        let finalExams: any[] = trendingExams;
+        if (finalExams.length < 3) {
+            const recentExams = await prisma.exam.findMany({
+                where: { isPublished: true, id: { notIn: trendingExams.map(e => e.id) } },
+                take: 5 - finalExams.length,
+                orderBy: { updatedAt: 'desc' },
+                select: {
+                    id: true, title: true, shortTitle: true, slug: true,
+                    category: true, conductingBody: true, status: true,
+                    updatedAt: true,
+                }
+            });
+            finalExams = [...finalExams, ...recentExams];
+        }
+
+        // Fallback for articles
+        let finalArticles: any[] = trendingArticles;
+        if (finalArticles.length < 5) {
+            const recentArticles = await prisma.seoPage.findMany({
+                where: { isPublished: true, id: { notIn: trendingArticles.map(a => a.id) } },
+                take: 8 - finalArticles.length,
+                orderBy: { createdAt: 'desc' },
+                select: {
+                    id: true, title: true, slug: true, category: true,
+                    createdAt: true, examId: true
+                }
+            });
+            finalArticles = [...finalArticles, ...recentArticles];
+        }
+
+        return {
+            exams: finalExams,
+            articles: finalArticles
+        };
+    };
+
+    return cacheService.getOrSet('content:trending', env.CACHE_TTL_EXAM_LIST, fetchTrending);
 }
 
 logger.info(`Exam service loaded`);

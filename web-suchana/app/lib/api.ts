@@ -8,6 +8,20 @@ export const SITE_URL =
 
 // ─── API Functions ────────────────────────────────────────────────────────────
 
+export async function fetchTrendingContent(): Promise<{ exams: Exam[]; articles: SeoPage[] }> {
+  try {
+    const res = await fetch(`${API_BASE}/exams/trending`, {
+      next: { revalidate: 600 },
+    });
+    if (!res.ok) return { exams: [], articles: [] };
+    const json = await res.json();
+    return json.data ?? { exams: [], articles: [] };
+  } catch (err) {
+    console.error("Error fetching trending content:", err);
+    return { exams: [], articles: [] };
+  }
+}
+
 export async function fetchExamsFromAPI(
   page = 1,
   limit = 10,

@@ -19,6 +19,7 @@ export const createExamSchema = z.object({
     notificationUrl: z.string().url().or(z.literal('')).optional().nullable(),
     status: z.nativeEnum(ExamStatus).default(ExamStatus.NOTIFICATION),
     isPublished: z.boolean().default(false),
+    isTrending: z.boolean().default(false),
     createdAt: z.string().optional().nullable(),
 });
 
@@ -32,6 +33,7 @@ export const listExamQuerySchema = z.object({
     conductingBody: z.string().optional(),
     search: z.string().optional(),
     isPublished: z.string().transform((v) => v === 'true').pipe(z.boolean()).optional(),
+    isTrending: z.string().transform((v) => v === 'true').pipe(z.boolean()).optional(),
     examLevel: z.nativeEnum(ExamLevel).optional(),
     state: z.string().optional(),
     lifecycleStage: z.string().optional(),

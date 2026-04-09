@@ -82,3 +82,12 @@ export async function sendManualNotification(req: Request, res: Response, next: 
         next(err);
     }
 }
+
+export async function getTrendingContent(req: Request, res: Response, next: NextFunction) {
+    try {
+        const content = await examService.getTrendingContent();
+        sendSuccess(res, content);
+    } catch (err) {
+        next(err);
+    }
+}

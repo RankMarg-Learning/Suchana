@@ -54,12 +54,19 @@ export default function SeoPagesPage() {
     const [search, setSearch] = useState('');
     const [page, setPage] = useState(1);
     const [limit] = useState(20);
+    const [trendingFilter, setTrendingFilter] = useState('ALL');
     const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
     const [deletingPage, setDeletingPage] = useState<SeoPage | null>(null);
 
     const { data: response, isLoading, refetch, isRefetching } = useQuery({
-        queryKey: ['seo-pages-admin', page, search],
-        queryFn: () => seoService.getAllPages({ page, limit, search }),
+        queryKey: ['seo-pages-admin', page, search, trendingFilter],
+        queryFn: () => seoService.getAllPages({ 
+            page, 
+            limit, 
+            search,
+            isTrending: trendingFilter === 'TRENDING' ? 'true' :
+                        trendingFilter === 'NORMAL' ? 'false' : undefined
+        }),
     });
 
     const pagesResult = response?.data;
@@ -140,6 +147,19 @@ export default function SeoPagesPage() {
                                 }}
                             />
                         </div>
+                        
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Filter:</span>
+                            <select 
+                                value={trendingFilter} 
+                                onChange={(e) => { setTrendingFilter(e.target.value); setPage(1); }}
+                                className="h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            >
+                                <option value="ALL">All Articles</option>
+                                <option value="TRENDING">Trending Only</option>
+                                <option value="NORMAL">Regular Only</option>
+                            </select>
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -168,7 +188,14 @@ export default function SeoPagesPage() {
                                 pages.map((pageItem: SeoPage) => (
                                     <TableRow key={pageItem.id}>
                                         <TableCell className="font-medium truncate max-w-[280px]" title={pageItem.title}>
-                                            {pageItem.title}
+                                            <div className="flex items-center gap-2">
+                                                <span className="truncate">{pageItem.title}</span>
+                                                {pageItem.isTrending && (
+                                                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 text-[10px] h-4 px-1 py-0 uppercase tracking-wider font-bold shrink-0">
+                                                        Trending
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell className="text-muted-foreground truncate max-w-[180px]" title={pageItem.slug}>
                                             /{pageItem.slug}
@@ -188,6 +215,21 @@ export default function SeoPagesPage() {
                                                 </Button>
                                                 <Button variant="ghost" size="icon" onClick={() => router.push(`/article/${pageItem.slug}/edit`)}>
                                                     <Edit2 className="h-4 w-4" />
+                                                </Button>
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="icon" 
+                                                    onClick={() => {
+                                                        seoService.updatePage(pageItem.id!, { isTrending: !pageItem.isTrending })
+                                                            .then(() => {
+                                                                toast.success(`Article marked as ${!pageItem.isTrending ? 'trending' : 'normal'}`);
+                                                                queryClient.invalidateQueries({ queryKey: ['seo-pages-admin'] });
+                                                            })
+                                                            .catch(() => toast.error('Failed to update trending status'));
+                                                    }}
+                                                    title={pageItem.isTrending ? "Remove from Trending" : "Mark as Trending"}
+                                                >
+                                                    <RefreshCw className={cn("h-4 w-4", pageItem.isTrending ? "text-amber-500" : "text-muted-foreground")} />
                                                 </Button>
                                                 <Button variant="ghost" size="icon" onClick={() => setDeletingPage(pageItem)}>
                                                     <Trash2 className="h-4 w-4 text-destructive" />

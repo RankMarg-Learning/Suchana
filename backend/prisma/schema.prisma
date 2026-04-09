@@ -136,6 +136,7 @@ model Exam {
   additionalDetails     String?
   salary                String?
   age                   String?
+  isTrending            Boolean          @default(false)
   lifecycleEvents       LifecycleEvent[]
   seoPages              SeoPage[]
 
@@ -149,6 +150,8 @@ model Exam {
   @@index([updatedAt])
   @@index([isPublished, updatedAt, publishedAt])
   @@index([category, isPublished])
+  @@index([isTrending])
+  @@index([isPublished, isTrending])
 }
 
 model LifecycleEvent {
@@ -278,6 +281,7 @@ model SeoPage {
   ogImage         String?
   canonicalUrl    String?
   isPublished     Boolean  @default(true)
+  isTrending      Boolean  @default(false)
   category        String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -286,8 +290,10 @@ model SeoPage {
 
   @@index([slug])
   @@index([isPublished])
+  @@index([isTrending])
   @@index([category])
   @@index([examId])
   @@index([createdAt])
   @@index([category, isPublished])
+  @@index([isPublished, isTrending])
 }

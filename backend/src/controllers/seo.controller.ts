@@ -25,6 +25,7 @@ export class SeoController {
           canonicalUrl: true,
           category: true,
           isPublished: true,
+          isTrending: true,
           createdAt: true,
           updatedAt: true,
           exam: {
@@ -98,6 +99,8 @@ export class SeoController {
       const where: any = {
         ...(isAdmin ? {} : { isPublished: true }),
         ...(category ? { category } : {}),
+        ...(req.query.isTrending === 'true' ? { isTrending: true } : 
+           req.query.isTrending === 'false' ? { isTrending: false } : {}),
         ...(search ? {
           OR: [
             { title: { contains: search, mode: 'insensitive' } },
@@ -118,6 +121,7 @@ export class SeoController {
             slug: true,
             category: true,
             isPublished: true,
+            isTrending: true,
             updatedAt: true,
             examId: true,
             exam: {

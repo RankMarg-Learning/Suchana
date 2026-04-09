@@ -24,6 +24,7 @@ export interface Exam {
     notificationUrl?: string | null;
     createdBy: string;
     isPublished: boolean;
+    isTrending: boolean;
     publishedAt?: string | null;
     createdAt: string;
     updatedAt: string;
@@ -198,6 +199,7 @@ export interface SeoPage {
     ogImage?: string;
     canonicalUrl?: string;
     isPublished: boolean;
+    isTrending: boolean;
     category?: SeoPageCategory;
     createdAt: string;
     updatedAt: string;
@@ -206,7 +208,7 @@ export interface SeoPage {
 }
 
 export const examService = {
-    getAllExams: async (params?: { page?: number, limit?: number, search?: string, status?: string, isPublished?: string, startDate?: string, endDate?: string }): Promise<ApiResponse<Exam[]>> => {
+    getAllExams: async (params?: { page?: number, limit?: number, search?: string, status?: string, isPublished?: string, isTrending?: string, startDate?: string, endDate?: string }): Promise<ApiResponse<Exam[]>> => {
         const response = await apiClient.get('/exams', { params });
         return response.data;
     },

@@ -165,7 +165,7 @@ function TimelineItem({
             {now === 0 ? (
               <div className="tl-action-btn disabled">Checking...</div>
             ) : status?.isCompleted ? (
-              <div className="tl-action-btn disabled" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>Closed / Result Out</div>
+              <div className="tl-action-btn disabled" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>Closed</div>
             ) : (
               <a
                 href={event.actionUrl}
@@ -439,12 +439,12 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
               </div>
             </section>
           )}
-
-          <section className="exam-detail-section" aria-labelledby="vac-heading">
-            <h2 id="vac-heading" className="exam-detail-section-title">Vacancies</h2>
-            <div className="fact-content"><MarkdownRenderer content={exam.totalVacancies ?? "TBA"} variant="fact" /></div>
-          </section>
-
+          {exam.totalVacancies && (
+            <section className="exam-detail-section" aria-labelledby="vac-heading">
+              <h2 id="vac-heading" className="exam-detail-section-title">Vacancies</h2>
+              <div className="fact-content"><MarkdownRenderer content={exam.totalVacancies ?? "TBA"} variant="fact" /></div>
+            </section>
+          )}
           {exam.salary && (
             <section className="exam-detail-section" aria-labelledby="salary-heading">
               <h2 id="salary-heading" className="exam-detail-section-title">Salary</h2>
@@ -481,13 +481,15 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
             </div>
           </section>
 
-          <section className="exam-detail-section" aria-labelledby="fee-heading">
-            <h2 id="fee-heading" className="exam-detail-section-title">
-              <Calendar size={18} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
-              Application Fee
-            </h2>
-            <div className="fact-content"><MarkdownRenderer content={exam.applicationFee ?? "N/A"} variant="fact" /></div>
-          </section>
+          {exam.applicationFee && (
+            <section className="exam-detail-section" aria-labelledby="fee-heading">
+              <h2 id="fee-heading" className="exam-detail-section-title">
+                <Calendar size={18} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
+                Application Fee
+              </h2>
+              <div className="fact-content"><MarkdownRenderer content={exam.applicationFee ?? "N/A"} variant="fact" /></div>
+            </section>
+          )}
 
           {exam.additionalDetails && (
             <section className="exam-detail-section" aria-labelledby="add-heading">
