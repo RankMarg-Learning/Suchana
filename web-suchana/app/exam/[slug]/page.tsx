@@ -65,14 +65,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       url: canonicalUrl,
       title: seoTitle,
-      images: [
-        {
-          url: `${SITE_URL}/og-image.png`,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
       description: seoDescription,
       locale: "en_IN",
       siteName: "Exam Suchana",
@@ -85,7 +77,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: seoTitle,
       description: seoDescription,
-      images: [`${SITE_URL}/exam-banner.png`],
     },
   };
 }

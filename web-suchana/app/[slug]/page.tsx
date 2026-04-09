@@ -66,14 +66,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description,
         url: canonical,
         siteName: 'Exam Suchana',
-        images: page.ogImage ? [{ url: page.ogImage }] : [
-          {
-            url: `${SITE_URL}/og-image.png`,
-            width: 1200,
-            height: 630,
-            alt: page.metaTitle,
-          },
-        ],
+        ...(page.ogImage ? { images: [{ url: page.ogImage }] } : {}),
         type: 'article',
         publishedTime: page.createdAt,
         modifiedTime: page.updatedAt,
@@ -82,7 +75,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         card: 'summary_large_image',
         title: page.metaTitle || page.title,
         description,
-        images: page.ogImage ? [page.ogImage] : undefined,
+        ...(page.ogImage ? { images: [page.ogImage] } : {}),
       },
     };
   }

@@ -70,7 +70,7 @@ export default function SiteNav() {
                 </div>
               </div>
             </li>
-            
+
             <li className="has-dropdown">
               <button className="dropdown-trigger">
                 States <ChevronDown size={14} />
@@ -86,7 +86,6 @@ export default function SiteNav() {
               </div>
             </li>
 
-            <li><Link href="/articles">Guides</Link></li>
             <li><Link href="/about">About</Link></li>
           </ul>
 
@@ -102,9 +101,9 @@ export default function SiteNav() {
                 </Link>
               )
             )}
-            
-            <button 
-              className="mobile-toggle" 
+
+            <button
+              className="mobile-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               aria-label="Toggle menu"
             >
@@ -115,38 +114,37 @@ export default function SiteNav() {
 
         {/* Mobile Menu Overlay */}
         <div className={`mobile-overlay ${mobileMenuOpen ? 'open' : ''}`}>
-           <div className="mobile-inner">
-              <div className="mobile-section">
-                <span className="mobile-section-title">Quick Access</span>
-                <Link href="/#exams" onClick={() => setMobileMenuOpen(false)}>Live Tracker</Link>
-                <Link href="/articles" onClick={() => setMobileMenuOpen(false)}>Exam Guides</Link>
-                <Link href="/about" onClick={() => setMobileMenuOpen(false)}>About Intelligence</Link>
-              </div>
-              
-              <div className="mobile-section">
-                <span className="mobile-section-title">Popular Categories</span>
-                {EXAM_CATEGORIES.slice(0, 5).map(cat => (
-                  <Link key={cat} href={`/c/${enumToSlug(cat)}`} onClick={() => setMobileMenuOpen(false)}>
-                    {cleanLabel(cat)}
-                  </Link>
-                ))}
-              </div>
+          <div className="mobile-inner">
+            <div className="mobile-section">
+              <span className="mobile-section-title">Quick Access</span>
+              <Link href="/#exams" onClick={() => setMobileMenuOpen(false)}>Live Tracker</Link>
+              <Link href="/about" onClick={() => setMobileMenuOpen(false)}>About Intelligence</Link>
+            </div>
 
-              <div className="mobile-section">
-                <span className="mobile-section-title">State Exams</span>
-                {navStates.slice(0, 4).map(state => (
-                  <Link key={state} href={`/state/${state.toLowerCase().replace(/ /g, "-")}`} onClick={() => setMobileMenuOpen(false)}>
-                    {state}
-                  </Link>
-                ))}
-              </div>
-
-              <div className="mobile-cta">
-                <Link href="/onboarding" className="btn-modern btn-primary-modern w-full" onClick={() => setMobileMenuOpen(false)}>
-                  <Bell size={16} /> Subscribe to Alerts
+            <div className="mobile-section">
+              <span className="mobile-section-title">Popular Categories</span>
+              {EXAM_CATEGORIES.slice(0, 5).map(cat => (
+                <Link key={cat} href={`/c/${enumToSlug(cat)}`} onClick={() => setMobileMenuOpen(false)}>
+                  {cleanLabel(cat)}
                 </Link>
-              </div>
-           </div>
+              ))}
+            </div>
+
+            <div className="mobile-section">
+              <span className="mobile-section-title">State Exams</span>
+              {navStates.slice(0, 4).map(state => (
+                <Link key={state} href={`/state/${state.toLowerCase().replace(/ /g, "-")}`} onClick={() => setMobileMenuOpen(false)}>
+                  {state}
+                </Link>
+              ))}
+            </div>
+
+            <div className="mobile-cta">
+              <Link href="/onboarding" className="btn-modern btn-primary-modern w-full" onClick={() => setMobileMenuOpen(false)}>
+                <Bell size={16} /> Subscribe to Alerts
+              </Link>
+            </div>
+          </div>
         </div>
       </nav>
 
