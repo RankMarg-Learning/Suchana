@@ -24,8 +24,6 @@ export default function HomePage() {
 
   const trendingExams = trendingData?.exams || [];
 
-  if (!mounted) return null;
-
   return (
     <main className="min-h-screen">
       {/* 1. Hero Section */}
@@ -149,7 +147,7 @@ export default function HomePage() {
         }
 
         .hero-title-modern {
-          font-family: 'Space Grotesk', sans-serif;
+          font-family: var(--font-space-grotesk), sans-serif;
           font-size: 56px;
           font-weight: 800;
           line-height: 1.1;
