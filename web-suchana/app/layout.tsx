@@ -18,11 +18,11 @@ const nextYear = currentYear + 1;
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `Sarkari Result ${currentYear} — Latest Govt Jobs, Exam Notifications & Tracker | Exam Suchana`,
-    template: "%s | Exam Suchana",
+    default: `Exam Suchana — Sarkari Result ${currentYear} | Latest Govt Jobs & Tracker`,
+    template: `%s | Exam Suchana`,
   },
   description:
-    `Track 1000+ Indian Government Exams: GPSC, UPSC, SSC, IBPS, Railways & Defence. Get real-time updates on registration dates, admit cards, syllables, and results with direct official links for ${currentYear}-${nextYear}.`,
+    `Get real-time updates for latest government jobs, exam notifications, admit cards, and results. Track every government exam lifecycle with precision on Exam Suchana — India's Official Exam Tracker.`,
   keywords: [
     "Exam Suchana",
     "government exam notifications",
