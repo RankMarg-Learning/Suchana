@@ -6,12 +6,27 @@ import { Search, Loader2, ArrowRight, Book, AlertCircle, X, Flame } from "lucide
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { fetchSeoPages } from "../lib/api";
 import { cleanLabel } from "../lib/types";
-import { LeaderboardAd, SidebarAd } from "../components/AdUnits";
+import { LeaderboardAd, SidebarAd } from "./AdUnits";
+import { SeoPageCategory } from "../lib/enums";
 
-export default function BooksClient() {
+interface CategoryFeedClientProps {
+  category: SeoPageCategory;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  trendingTitle: string;
+  searchPlaceholder: string;
+}
+
+export default function CategoryFeedClient({
+  category,
+  title,
+  subtitle,
+  icon,
+  trendingTitle,
+  searchPlaceholder
+}: CategoryFeedClientProps) {
   const [mounted, setMounted] = useState(false);
-  // Fix the category to BOOKS so it only pulls book related pages.
-  const category = "BOOKS";
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const loadMoreRef = useRef<HTMLDivElement>(null);
@@ -44,7 +59,7 @@ export default function BooksClient() {
   });
 
   const { data: trendingData, isFetching: isFetchingTrending } = useQuery({
-    queryKey: ["trending-books", category],
+    queryKey: ["trending-articles", category],
     queryFn: () => fetchSeoPages(1, 4, category, undefined, true),
   });
   const trendingArticles = trendingData?.pages ?? [];
@@ -95,24 +110,24 @@ export default function BooksClient() {
   return (
     <main className="min-h-screen">
       <div className="leaderboard-wrap" style={{ marginTop: '20px' }}>
-        <LeaderboardAd id="books-top-leaderboard" />
+        <LeaderboardAd id={`${category.toLowerCase()}-top-leaderboard`} />
       </div>
 
       <div className="app-shell">
         <aside className="sidebar-left">
-          <SidebarAd id="books-left-ad-1" tall />
-          <SidebarAd id="books-left-ad-2" />
+          <SidebarAd id={`${category.toLowerCase()}-left-ad-1`} tall />
+          <SidebarAd id={`${category.toLowerCase()}-left-ad-2`} />
         </aside>
 
         <section className="feed-main" id="articles-feed">
           <div className="feed-header" style={{ borderBottom: '1px solid var(--border-light)', paddingBottom: '24px' }}>
             <div className="feed-title-row" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{ background: 'var(--accent)', padding: '12px', borderRadius: '12px', color: 'white' }}>
-                <Book size={28} />
+                {icon}
               </div>
               <div>
-                <h1 className="feed-title" style={{ fontSize: '28px' }}>Recommended Books</h1>
-                <p className="feed-subtitle" style={{ fontSize: '15px' }}>Best study material and resources.</p>
+                <h1 className="feed-title" style={{ fontSize: '28px' }}>{title}</h1>
+                <p className="feed-subtitle" style={{ fontSize: '15px' }}>{subtitle}</p>
               </div>
             </div>
 
@@ -122,7 +137,7 @@ export default function BooksClient() {
                 <input
                   type="text"
                   className="search-input"
-                  placeholder="Search book resources..."
+                  placeholder={searchPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   style={{ fontSize: '15px', background: 'transparent' }}
@@ -140,7 +155,7 @@ export default function BooksClient() {
             <div className="trending-section" style={{ padding: '24px 0', borderBottom: '1px solid var(--border-light)' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                 <Flame size={20} color="#ff4500" />
-                <h3 style={{ fontSize: '18px', fontWeight: '700' }}>Trending Books</h3>
+                <h3 style={{ fontSize: '18px', fontWeight: '700' }}>{trendingTitle}</h3>
               </div>
               <div className="trending-scroll" style={{ display: 'flex', overflowX: 'auto', gap: '16px', paddingBottom: '12px', scrollSnapType: 'x mandatory' }}>
                 {trendingArticles.map(article => (
@@ -173,7 +188,7 @@ export default function BooksClient() {
           ) : allArticles.length === 0 ? (
             <div className="empty-state">
               <AlertCircle size={48} className="empty-icon" />
-              <h3>No books resources found</h3>
+              <h3>No resources found</h3>
               <p>Try adjusting your search query.</p>
               <button className="btn btn-primary" onClick={() => { setSearch(""); }}>
                 Clear Search
@@ -184,11 +199,8 @@ export default function BooksClient() {
               {allArticles.map(article => (
                 <Link key={article.id} href={`/${article.slug}`} className="article-list-item" style={{ background: 'var(--bg-card)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border-light)' }}>
                   <div className="article-list-content">
-                    <h4 className="article-list-title" style={{ fontSize: '18px', marginBottom: '8px' }}>{article.title}</h4>
+                    <h4 className="article-list-title" style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', display: '-webkit-box', WebkitLineClamp: 1, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: '1.4' }}>{article.title}</h4>
                     <div className="article-list-meta" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <span className="article-list-tag" style={{ background: 'var(--bg-subtle)', color: 'var(--accent)', padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold' }}>
-                        Book Collection
-                      </span>
                       {article.updatedAt && (
                         <span className="article-list-date" style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                           Updated {new Date(article.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
@@ -209,23 +221,23 @@ export default function BooksClient() {
               <div className="article-skeleton-list" style={{ marginTop: '0' }}>
                 {[1, 2, 3].map(i => (
                   <div key={i} className="article-skeleton-item">
-                     <div className="skeleton" style={{ height: '24px', width: '70%', borderRadius: '4px', marginBottom: '12px' }} />
-                     <div className="skeleton" style={{ height: '14px', width: '40%', borderRadius: '4px' }} />
+                    <div className="skeleton" style={{ height: '24px', width: '70%', borderRadius: '4px', marginBottom: '12px' }} />
+                    <div className="skeleton" style={{ height: '14px', width: '40%', borderRadius: '4px' }} />
                   </div>
                 ))}
               </div>
             )}
             {!hasNextPage && allArticles.length > 0 && (
               <div className="no-more-footer" style={{ textAlign: 'center', margin: '40px 0', color: 'var(--text-muted)', fontSize: '14px' }}>
-                <span className="no-more-text">End of Books</span>
+                <span className="no-more-text">End of Articles</span>
               </div>
             )}
           </div>
         </section>
 
         <aside className="sidebar-right">
-          <SidebarAd id="books-right-ad-1" />
-          <SidebarAd id="books-right-ad-2" tall />
+          <SidebarAd id={`${category.toLowerCase()}-right-ad-1`} />
+          <SidebarAd id={`${category.toLowerCase()}-right-ad-2`} tall />
         </aside>
       </div>
     </main>

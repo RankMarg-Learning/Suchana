@@ -16,13 +16,12 @@ export default function SiteNav() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Initial check for scroll
     setScrolled(window.scrollY > 10);
 
     const onScroll = () => {
       setScrolled(window.scrollY > 10);
     };
-    
+
     window.addEventListener("scroll", onScroll, { passive: true });
 
     if (typeof window !== "undefined") {
@@ -33,7 +32,6 @@ export default function SiteNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Helper to check if link is active
   const isActive = (path: string) => pathname === path;
   const isCategoryActive = (slug: string) => pathname === `/c/${slug}`;
   const isStatusActive = (slug: string) => pathname === `/s/${slug}`;
@@ -108,6 +106,17 @@ export default function SiteNav() {
               </div>
             </li>
 
+            <li className="has-dropdown">
+              <button className="dropdown-trigger">
+                Resources <ChevronDown size={14} />
+              </button>
+              <div className="dropdown-menu single-col">
+                <Link href="/topic/current-affairs" className={`dropdown-item ${isActive('/topic/current-affairs') ? "active" : ""}`}>Current Affairs</Link>
+                <Link href="/topic/books" className={`dropdown-item ${isActive('/topic/books') ? "active" : ""}`}>Best Books</Link>
+                <Link href="/topic/syllabus" className={`dropdown-item ${isActive('/topic/syllabus') ? "active" : ""}`}>Syllabus</Link>
+              </div>
+            </li>
+
             <li className={isActive('/about') ? "active" : ""}><Link href="/about">About</Link></li>
           </ul>
 
@@ -142,12 +151,6 @@ export default function SiteNav() {
         {/* Mobile Menu Overlay */}
         <div className={`mobile-overlay ${mobileMenuOpen ? 'open' : ''}`}>
           <div className="mobile-inner">
-            <div className="mobile-section">
-              <span className="mobile-section-title">Quick Access</span>
-              <Link href="/#exams" onClick={() => setMobileMenuOpen(false)}>Live Tracker</Link>
-              <Link href="/about" onClick={() => setMobileMenuOpen(false)}>About Intelligence</Link>
-            </div>
-
             <div className="mobile-section">
               <span className="mobile-section-title">Popular Categories</span>
               {EXAM_CATEGORIES.slice(0, 5).map(cat => (

@@ -6,7 +6,7 @@ import { AppError } from '../middleware/errorHandler';
 import { env } from '../config/env';
 import type { CreateExamDto, UpdateExamDto, ListExamQuery } from '../schemas/exam.schema';
 import { logger } from '../utils/logger';
-import { SeoService } from './seo.service';
+import { ExamStatus } from '../constants/enums';
 
 const EXAM_LIST_CACHE_KEY = 'exams:list';
 const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams:detail:${id}`;
@@ -93,7 +93,6 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
     return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_LIST, fetchExams);
 }
 
-// ─── Get By ID ───────────────────────────────────────────────
 export async function getExamById(id: string, bypassCache = false) {
     const fetchExam = async () => {
         const exam = await prisma.exam.findUnique({
@@ -168,7 +167,10 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
     });
 
 
-    await cacheService.delPattern('exams:list:*');
+    await Promise.all([
+        cacheService.delPattern('exams:list:*'),
+        cacheService.del('content:trending')
+    ]);
 
     logger.info(`Exam created: ${exam.id} by admin ${adminId}`);
 
@@ -197,6 +199,7 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),
         cacheService.del(`exams:slug:${existing.slug}`),
         cacheService.delPattern('exams:list:*'),
+        cacheService.del('content:trending'),
     ]);
 
     return updated;
@@ -213,6 +216,7 @@ export async function deleteExam(id: string, adminId: string) {
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),
         cacheService.del(`exams:slug:${existing.slug}`),
         cacheService.delPattern('exams:list:*'),
+        cacheService.del('content:trending'),
     ]);
     logger.info(`Exam deleted: ${id} by admin ${adminId}`);
 }
@@ -253,34 +257,29 @@ export async function getSavedExams(userId: string) {
 
 export async function getTrendingContent() {
     const fetchTrending = async () => {
-        const [trendingExams, trendingArticles] = await Promise.all([
-            prisma.exam.findMany({
-                where: { isPublished: true, isTrending: true } as any,
-                take: 10,
-                orderBy: { updatedAt: 'desc' },
-                select: {
-                    id: true, title: true, shortTitle: true, slug: true,
-                    category: true, conductingBody: true, status: true,
-                    updatedAt: true,
-                }
-            }),
-            prisma.seoPage.findMany({
-                where: { isPublished: true, isTrending: true } as any,
-                take: 10,
-                orderBy: { updatedAt: 'desc' },
-                select: {
-                    id: true, title: true, slug: true, category: true,
-                    createdAt: true, examId: true
-                }
-            })
-        ]);
+        const trendingExams = await prisma.exam.findMany({
+            where: { isPublished: true, isTrending: true },
+            take: 10,
+            orderBy: { updatedAt: 'desc' },
+            select: {
+                id: true, title: true, shortTitle: true, slug: true,
+                category: true, conductingBody: true, status: true,
+                updatedAt: true,
+            }
+        });
 
-        // Fallback for exams if not enough trending items
-        let finalExams: any[] = trendingExams;
-        if (finalExams.length < 3) {
-            const recentExams = await prisma.exam.findMany({
-                where: { isPublished: true, id: { notIn: trendingExams.map(e => e.id) } },
-                take: 5 - finalExams.length,
+        let finalExams = [...trendingExams];
+
+        if (finalExams.length < 10) {
+            const resultExams = await prisma.exam.findMany({
+                where: {
+                    isPublished: true,
+                    status: {
+                        in: [ExamStatus.NOTIFICATION, ExamStatus.REGISTRATION_OPEN, ExamStatus.ADMIT_CARD_OUT]
+                    },
+                    id: { notIn: finalExams.map(e => e.id) }
+                },
+                take: 10 - finalExams.length,
                 orderBy: { updatedAt: 'desc' },
                 select: {
                     id: true, title: true, shortTitle: true, slug: true,
@@ -288,27 +287,11 @@ export async function getTrendingContent() {
                     updatedAt: true,
                 }
             });
-            finalExams = [...finalExams, ...recentExams];
-        }
-
-        // Fallback for articles
-        let finalArticles: any[] = trendingArticles;
-        if (finalArticles.length < 5) {
-            const recentArticles = await prisma.seoPage.findMany({
-                where: { isPublished: true, id: { notIn: trendingArticles.map(a => a.id) } },
-                take: 8 - finalArticles.length,
-                orderBy: { createdAt: 'desc' },
-                select: {
-                    id: true, title: true, slug: true, category: true,
-                    createdAt: true, examId: true
-                }
-            });
-            finalArticles = [...finalArticles, ...recentArticles];
+            finalExams = [...finalExams, ...resultExams];
         }
 
         return {
-            exams: finalExams,
-            articles: finalArticles
+            exams: finalExams
         };
     };
 
