@@ -109,12 +109,8 @@ function TimelineItem({
   const title = event.title || event.label || cleanLabel(event.stage);
 
   return (
-    <div className="tl-item" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-      {position !== undefined && <meta itemProp="position" content={position.toString()} />}
-      <div itemProp="item" itemScope itemType="https://schema.org/Event" style={{ display: "contents" }}>
-        <meta itemProp="name" content={title} />
-        {event.startsAt && <meta itemProp="startDate" content={event.startsAt} />}
-        
+    <div className="tl-item">
+      <div style={{ display: "contents" }}>
         <div className="tl-connector">
           <div className="tl-dot-wrap" style={{ borderColor: dotColor }}>
             <IconComponent size={18} color={dotColor} strokeWidth={2.5} />
@@ -446,8 +442,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                 <Calendar size={18} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
                 Complete Exam Timeline
               </h2>
-              <div className="tl-container" itemScope itemType="https://schema.org/ItemList">
-                <meta itemProp="name" content="Exam Lifecycle Timeline" />
+              <div className="tl-container">
                 {sorted.map((event, i) => {
                   const nextEventWithDate = sorted.slice(i + 1).find(e => e.startsAt);
                   return (
