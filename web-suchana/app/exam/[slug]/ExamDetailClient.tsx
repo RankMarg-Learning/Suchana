@@ -89,13 +89,16 @@ function TimelineItem({
   now,
   nextEventStartsAt,
   examSlug,
+  position
 }: {
   event: LifecycleEvent;
   isLast: boolean;
   now: number;
   nextEventStartsAt?: string | null;
   examSlug: string;
+  position?: number;
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const status = getEventStatus(event, now, nextEventStartsAt);
   const dotColor = status?.color ?? "#6B7280";
 
@@ -106,65 +109,85 @@ function TimelineItem({
   const title = event.title || event.label || cleanLabel(event.stage);
 
   return (
-    <div className="tl-item">
-      <div className="tl-connector">
-        <div className="tl-dot-wrap" style={{ borderColor: dotColor }}>
-          <IconComponent size={18} color={dotColor} strokeWidth={2.5} />
-        </div>
-        {!isLast && <div className="tl-line" />}
-      </div>
-
-      <div className="tl-content">
-        <div className="tl-header">
-          <div className="tl-title-group">
-            <h3 className="tl-event-title">
-              <Link href={`/exam/${examSlug}/${enumToSlug(event.stage)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                {title}
-              </Link>
-            </h3>
-            {event.stage && <div className="tl-stage-label" style={{ color: dotColor }}>{cleanLabel(event.stage)}</div>}
+    <div className="tl-item" itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+      {position !== undefined && <meta itemProp="position" content={position.toString()} />}
+      <div itemProp="item" itemScope itemType="https://schema.org/Event" style={{ display: "contents" }}>
+        <meta itemProp="name" content={title} />
+        {event.startsAt && <meta itemProp="startDate" content={event.startsAt} />}
+        
+        <div className="tl-connector">
+          <div className="tl-dot-wrap" style={{ borderColor: dotColor }}>
+            <IconComponent size={18} color={dotColor} strokeWidth={2.5} />
           </div>
-          {status && (
-            <div className="tl-status-badge" style={{ borderColor: status.color, color: status.color }}>
-              {status.label}
+          {!isLast && <div className="tl-line" />}
+        </div>
+
+        <div className="tl-content">
+          <div className="tl-header">
+            <div className="tl-title-group">
+              <h3 className="tl-event-title">
+                <Link href={`/exam/${examSlug}/${enumToSlug(event.stage)}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  {title}
+                </Link>
+              </h3>
+              {event.stage && <div className="tl-stage-label" style={{ color: dotColor }}>{cleanLabel(event.stage)}</div>}
             </div>
-          )}
-          {!status && now === 0 && (
-            <div className="tl-status-badge skeleton-badge" style={{ opacity: 0.5 }}>---</div>
-          )}
-        </div>
-
-        <div className="tl-dates-row">
-          <Calendar size={13} />
-          {formatDate(event.startsAt)}
-          {event.endsAt ? ` – ${formatDate(event.endsAt)}` : ''}
-          {event.isTBD && " (TBA)"}
-        </div>
-
-        {event.description && (
-          <div className="tl-description-container">
-            <MarkdownRenderer content={event.description} className="tl-markdown" variant="fact" />
-          </div>
-        )}
-
-        {event.actionUrl && (
-          <div className="tl-footer">
-            {now === 0 ? (
-              <div className="tl-action-btn disabled">Checking...</div>
-            ) : status?.isCompleted ? (
-              <div className="tl-action-btn disabled" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>Closed</div>
-            ) : (
-              <a
-                href={event.actionUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="tl-action-btn active"
-              >
-                {event.actionLabel || "Open Links"} <ArrowRight size={14} />
-              </a>
+            {status && (
+              <div className="tl-status-badge" style={{ borderColor: status.color, color: status.color }}>
+                {status.label}
+              </div>
+            )}
+            {!status && now === 0 && (
+              <div className="tl-status-badge skeleton-badge" style={{ opacity: 0.5 }}>---</div>
             )}
           </div>
-        )}
+
+          <div className="tl-dates-row">
+            <Calendar size={13} />
+            {formatDate(event.startsAt)}
+            {event.endsAt ? ` – ${formatDate(event.endsAt)}` : ''}
+            {event.isTBD && " (TBA)"}
+          </div>
+
+          {event.description && (
+            <div className="tl-description-container">
+              <div
+                style={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: isExpanded ? "unset" : 3,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden"
+                }}
+              >
+                <MarkdownRenderer content={event.description} className="tl-markdown" variant="fact" />
+              </div>
+              {event.description.length > 100 && (
+                <button onClick={() => setIsExpanded(!isExpanded)} className="tl-more-btn" style={{ marginTop: 8 }}>
+                  {isExpanded ? "Show less" : "Read more"}
+                </button>
+              )}
+            </div>
+          )}
+
+          {event.actionUrl && (
+            <div className="tl-footer">
+              {now === 0 ? (
+                <div className="tl-action-btn disabled">Checking...</div>
+              ) : status?.isCompleted ? (
+                <div className="tl-action-btn disabled" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border)' }}>Closed</div>
+              ) : (
+                <a
+                  href={event.actionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="tl-action-btn active"
+                >
+                  {event.actionLabel || "Open Links"} <ArrowRight size={14} />
+                </a>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -233,6 +256,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
   const [now, setNow] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   const queryClient = useQueryClient();
   const userId = typeof window !== "undefined" ? localStorage.getItem("@suchana_userId") : null;
@@ -427,20 +451,15 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                 {sorted.map((event, i) => {
                   const nextEventWithDate = sorted.slice(i + 1).find(e => e.startsAt);
                   return (
-                    <div key={event.id} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
-                      <meta itemProp="position" content={(i + 1).toString()} />
-                      <div itemProp="item" itemScope itemType="https://schema.org/Event">
-                        <meta itemProp="name" content={event.title} />
-                        {event.startsAt && <meta itemProp="startDate" content={event.startsAt} />}
-                        <TimelineItem
-                          event={event}
-                          isLast={i === sorted.length - 1}
-                          now={mounted ? now : 0}
-                          examSlug={exam.slug}
-                          nextEventStartsAt={!event.endsAt ? (nextEventWithDate?.startsAt ?? null) : null}
-                        />
-                      </div>
-                    </div>
+                    <TimelineItem
+                      key={event.id}
+                      event={event}
+                      position={i + 1}
+                      isLast={i === sorted.length - 1}
+                      now={mounted ? now : 0}
+                      examSlug={exam.slug}
+                      nextEventStartsAt={!event.endsAt ? (nextEventWithDate?.startsAt ?? null) : null}
+                    />
                   );
                 })}
               </div>
@@ -509,7 +528,25 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
             <section className="exam-detail-section" aria-labelledby="desc-heading">
               <h2 id="desc-heading" className="exam-detail-section-title">About this Exam</h2>
               <div className="exam-detail-desc" itemProp="description">
-                <MarkdownRenderer content={exam.description} />
+                <div
+                  style={{
+                    display: "-webkit-box",
+                    WebkitLineClamp: isDescExpanded ? "unset" : 8,
+                    WebkitBoxOrient: "vertical",
+                    overflow: "hidden"
+                  }}
+                >
+                  <MarkdownRenderer content={exam.description} />
+                </div>
+                {exam.description.length > 300 && (
+                  <button
+                    onClick={() => setIsDescExpanded(!isDescExpanded)}
+                    className="tl-more-btn"
+                    style={{ marginTop: 12 }}
+                  >
+                    {isDescExpanded ? "Show less" : "Read more"}
+                  </button>
+                )}
               </div>
             </section>
           )}
