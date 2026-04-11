@@ -96,7 +96,6 @@ function TimelineItem({
   nextEventStartsAt?: string | null;
   examSlug: string;
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const status = getEventStatus(event, now, nextEventStartsAt);
   const dotColor = status?.color ?? "#6B7280";
 
@@ -143,20 +142,8 @@ function TimelineItem({
         </div>
 
         {event.description && (
-          <div className="">
-            {isExpanded ? (
-              <MarkdownRenderer content={event.description} className="tl-markdown" variant="fact" />
-            ) : (
-              <div className="tl-notes-preview">
-                {stripMarkdown(event.description).substring(0, 100)}
-                {event.description.length > 100 && "..."}
-              </div>
-            )}
-            {event.description.length > 100 && (
-              <button onClick={() => setIsExpanded(!isExpanded)} className="tl-more-btn">
-                {isExpanded ? "Show less" : "Read more"}
-              </button>
-            )}
+          <div className="tl-description-container">
+            <MarkdownRenderer content={event.description} className="tl-markdown" variant="fact" />
           </div>
         )}
 
@@ -246,7 +233,6 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
   const [now, setNow] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   const queryClient = useQueryClient();
   const userId = typeof window !== "undefined" ? localStorage.getItem("@suchana_userId") : null;
@@ -313,7 +299,9 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
     toggleMutation.mutate();
   };
 
-  const sorted = (exam.lifecycleEvents ?? []).sort((a, b) => (b.stageOrder ?? 0) - (a.stageOrder ?? 0));
+  const sorted = (exam.lifecycleEvents ?? [])
+    .filter(e => e.startsAt || e.endsAt || e.actionUrl || e.description || e.isTBD)
+    .sort((a, b) => (a.stageOrder ?? 0) - (b.stageOrder ?? 0));
   const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
 
   const handleShare = async () => {
@@ -434,21 +422,27 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                 <Calendar size={18} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
                 Complete Exam Timeline
               </h2>
-              <div className="tl-container">
-                {sorted.map((event, i) => (
-                  <TimelineItem
-                    key={event.id}
-                    event={event}
-                    isLast={i === sorted.length - 1}
-                    now={mounted ? now : 0}
-                    examSlug={exam.slug}
-                    nextEventStartsAt={
-                      !event.endsAt && i > 0
-                        ? sorted[i - 1].startsAt
-                        : null
-                    }
-                  />
-                ))}
+              <div className="tl-container" itemScope itemType="https://schema.org/ItemList">
+                <meta itemProp="name" content="Exam Lifecycle Timeline" />
+                {sorted.map((event, i) => {
+                  const nextEventWithDate = sorted.slice(i + 1).find(e => e.startsAt);
+                  return (
+                    <div key={event.id} itemProp="itemListElement" itemScope itemType="https://schema.org/ListItem">
+                      <meta itemProp="position" content={(i + 1).toString()} />
+                      <div itemProp="item" itemScope itemType="https://schema.org/Event">
+                        <meta itemProp="name" content={event.title} />
+                        {event.startsAt && <meta itemProp="startDate" content={event.startsAt} />}
+                        <TimelineItem
+                          event={event}
+                          isLast={i === sorted.length - 1}
+                          now={mounted ? now : 0}
+                          examSlug={exam.slug}
+                          nextEventStartsAt={!event.endsAt ? (nextEventWithDate?.startsAt ?? null) : null}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}
@@ -515,24 +509,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
             <section className="exam-detail-section" aria-labelledby="desc-heading">
               <h2 id="desc-heading" className="exam-detail-section-title">About this Exam</h2>
               <div className="exam-detail-desc" itemProp="description">
-                {isDescExpanded ? (
-                  <MarkdownRenderer content={exam.description} />
-                ) : (
-                  <div className="description-preview">
-                    {stripMarkdown(exam.description).substring(0, 300)}
-                    {exam.description.length > 300 && "..."}
-                  </div>
-                )}
-
-                {exam.description.length > 300 && (
-                  <button
-                    onClick={() => setIsDescExpanded(!isDescExpanded)}
-                    className="tl-more-btn"
-                    style={{ marginTop: 12 }}
-                  >
-                    {isDescExpanded ? "Show less" : "Read more"}
-                  </button>
-                )}
+                <MarkdownRenderer content={exam.description} />
               </div>
             </section>
           )}
