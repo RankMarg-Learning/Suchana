@@ -68,7 +68,10 @@ CURRENT YEAR: ${this.CURRENT_YEAR}
 - Just look the source url and important dates and according to that build events. and sometime some stage available b/w two event but we  haven't url's and dates according to that stage then set isTBD:true, startsAt:null, endsAt:null, title:"<Stage> (To Be Announced)"
 - Look Some Exam has more than 1 stage exam conducted create this flow by looking the important dates and urls e.g Tier I and Tier II (names of stage according to source)
 - Don't Miss any stage if source has mention and Lifecycle Stage Enums has that stage then add it. and if not their detail will add close stage event description in proper
-- According to Stage functionality if they have more link add this in stage description in md code, e.g([List I ](url1))
+- STRICT ENUM: The \`stage\` property MUST be chosen exactly from the provided "Lifecyle stage" enum list. DO NOT invent new stage names.
+- PRIMARY LINK: Every event should have its primary specific link (if available, e.g., apply link for REGISTRATION or download link for ADMIT_CARD) placed in \`actionUrl\` with a suitable succinct \`actionLabel\`.
+- ADDITIONAL LINKS: If an event has multiple links, place the main one in \`actionUrl\` and add the remaining links in the \`description\` field using markdown format (e.g., \`[List 1](url1)\`).
+- NO REPETITION: Do NOT repeat details in the event \`description\` that are represented by \`startsAt\`/\`endsAt\` or global fields (like fees/eligibility). Keep it concise.
 
 **R2 - STAGE ORDER** :
 By looking exam process from internet and source dates set stageOrder. and make sure stageOrder is always increasing.(10,20,30..)
@@ -84,6 +87,7 @@ By looking exam process from internet and source dates set stageOrder. and make 
 
 **R4 — MARKDOWN FIELDS**
 - Use **bold** and - bullets  and md tables according to source data for: age, totalVacancies, applicationFee, qualificationCriteria, salary, additionalDetails, description.
+- DO NOT prefix or start the data with the field's title (e.g., do NOT start \`qualificationCriteria\` with "**Eligibility Criteria**", do NOT start \`age\` with "**Age Limit**"). Output ONLY the content.
 - Keep values exactly as source text — only reformat, never invent.
 - Markdown should be SEO-friendly.
 
@@ -109,7 +113,7 @@ OUTPUT: Return only valid JSON — no markdown fences, no extra keys.
 {
   "title": "string (Dynamic SEO Title)",
   "shortTitle": "string (Format: Exam Name Year)",
-  "description": "string (markdown, SEO-friendly)|null",
+  "description": "string (markdown, SEO-friendly)|null -> about exam in short",
   "conductingBody": "string|null",
   "category": "enum|null",
   "status": "enum|null",
@@ -128,10 +132,10 @@ OUTPUT: Return only valid JSON — no markdown fences, no extra keys.
   "aiNotes": null,
   "events": [
     {
-      "stage": "enum",
+      "stage": "string (MUST be one of Lifecycle stage ENUM exactly)",
       "stageOrder": "number",
       "title": "string",
-      "description": "string (SEO)",
+      "description": "string (SEO) -> Data which is not shore in this json event but imp, if not then empty string",
       "startsAt": "ISO8601|null",
       "endsAt": "ISO8601|null",
       "isTBD": "boolean",

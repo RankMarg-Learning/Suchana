@@ -184,9 +184,9 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
 
                 <div className="flex items-center gap-3">
                     {isEdit && (
-                        <Button 
-                            type="button" 
-                            variant="outline" 
+                        <Button
+                            type="button"
+                            variant="outline"
                             className="text-blue-600 border-blue-200 hover:bg-blue-50"
                             onClick={() => setIsShareDialogOpen(true)}
                         >
@@ -274,25 +274,18 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Description & Qualification</CardTitle>
-                                <CardDescription>Detailed information about the recruitment process</CardDescription>
+                                <CardTitle>Fees</CardTitle>
                             </CardHeader>
-                            <CardContent className="space-y-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="description">Short Description</Label>
-                                    <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[150px]" />
-                                </div>
-                                {description && (
-                                    <div className="space-y-2 flex-1 flex flex-col">
-                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
-                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[190px] overflow-y-auto custom-scrollbar shadow-inner">
-                                            <MarkdownRenderer content={description} />
-                                        </div>
+                            <CardContent className="space-y-4">
+                                <Textarea {...register('applicationFee')} placeholder="Fee details..." className="min-h-[100px] resize-y" />
+                                {applicationFee && (
+                                    <div className="p-3 border rounded-md bg-muted/5 text-xs overflow-y-auto custom-scrollbar max-h-[150px] min-h-[125px]">
+                                        <MarkdownRenderer content={applicationFee} variant="fact" />
                                     </div>
                                 )}
-                                <Separator />
                             </CardContent>
                         </Card>
+
                         <Card>
                             <CardHeader>
                                 <CardTitle>Qualification Criteria</CardTitle>
@@ -318,15 +311,23 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         <Card>
                             <CardHeader>
-                                <CardTitle>Fees</CardTitle>
+                                <CardTitle>Description & Qualification</CardTitle>
+                                <CardDescription>Detailed information about the recruitment process</CardDescription>
                             </CardHeader>
-                            <CardContent className="space-y-4">
-                                <Textarea {...register('applicationFee')} placeholder="Fee details..." className="min-h-[100px] resize-y" />
-                                {applicationFee && (
-                                    <div className="p-3 border rounded-md bg-muted/5 text-xs overflow-y-auto custom-scrollbar max-h-[150px] min-h-[125px]">
-                                        <MarkdownRenderer content={applicationFee} variant="fact" />
+                            <CardContent className="space-y-6">
+                                <div className="space-y-2">
+                                    <Label htmlFor="description">Short Description</Label>
+                                    <Textarea id="description" {...register('description')} placeholder="Summarize the exam..." className="min-h-[150px]" />
+                                </div>
+                                {description && (
+                                    <div className="space-y-2 flex-1 flex flex-col">
+                                        <Label className="text-muted-foreground flex items-center gap-2">Preview <div className="h-px flex-1 bg-border/50" /></Label>
+                                        <div className="p-4 border rounded-md bg-muted/5 flex-1 min-h-[190px] overflow-y-auto custom-scrollbar shadow-inner">
+                                            <MarkdownRenderer content={description} />
+                                        </div>
                                     </div>
                                 )}
+                                <Separator />
                             </CardContent>
                         </Card>
                         <Card>
@@ -552,8 +553,8 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                 </div>
             </div>
 
-            <ViralShareDialog 
-                isOpen={isShareDialogOpen} 
+            <ViralShareDialog
+                isOpen={isShareDialogOpen}
                 onOpenChange={setIsShareDialogOpen}
                 formData={getValues()}
                 initialData={actualInitialData}

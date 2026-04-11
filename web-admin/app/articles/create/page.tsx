@@ -28,8 +28,8 @@ export default function CreateArticlePage() {
     });
 
     return (
-        <div className="container mx-auto py-8 max-w-7xl h-full min-h-screen">
-            <ArticleEditor 
+        <div className="container mx-auto py-0 max-w-7xl h-full min-h-screen">
+            <ArticleEditor
                 title="Create New Knowledge Article"
                 exams={examsResponse?.data || []}
                 isSaving={createMutation.isPending}

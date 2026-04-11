@@ -3,12 +3,12 @@ import { ExamCategory, ExamStatus, ExamLevel } from '../constants/enums';
 
 export const createExamSchema = z.object({
     title: z.string().min(5, 'Title must be at least 5 characters').max(200),
-    shortTitle: z.string().min(2).max(50),
+    shortTitle: z.string().min(2),
     description: z.string().optional().nullable(),
     category: z.nativeEnum(ExamCategory),
     examLevel: z.nativeEnum(ExamLevel).default(ExamLevel.NATIONAL),
     state: z.string().max(50).optional().nullable(),
-    conductingBody: z.string().min(2).max(100),
+    conductingBody: z.string().min(2),
     age: z.string().optional().nullable(),
     qualificationCriteria: z.string().optional().nullable(),
     totalVacancies: z.string().optional().nullable(),

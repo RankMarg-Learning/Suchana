@@ -115,7 +115,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
         initialMatchingExam?.slug ? `https://examsuchana.in/exam/${initialMatchingExam.slug}` : ''
     );
     const [resolvedExam, setResolvedExam] = useState<Exam | null>(initialMatchingExam);
-    
+
     const [isValidatingExam, setIsValidatingExam] = useState(false);
     const [validationError, setValidationError] = useState('');
 
@@ -196,11 +196,11 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                     }
                 }
             } catch (err) {
-                 setResolvedExam(null);
-                 setFormData(prev => ({ ...prev, examId: null as any }));
-                 setValidationError('No matching exam found for this link.');
+                setResolvedExam(null);
+                setFormData(prev => ({ ...prev, examId: null as any }));
+                setValidationError('No matching exam found for this link.');
             } finally {
-                 setIsValidatingExam(false);
+                setIsValidatingExam(false);
             }
         }, 600);
 
@@ -209,11 +209,11 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
 
     const [isSlugLocked, setIsSlugLocked] = useState(!!initialData?.slug);
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-    
+
     const [categorySearch, setCategorySearch] = useState('');
     const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
 
-    const filteredCategories = ARTICLE_CATEGORIES.filter(cat => 
+    const filteredCategories = ARTICLE_CATEGORIES.filter(cat =>
         cat.label.toLowerCase().includes(categorySearch.toLowerCase()) ||
         cat.value.toLowerCase().includes(categorySearch.toLowerCase())
     );
@@ -252,8 +252,8 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                 </div>
                 <div className="flex items-center gap-3">
                     {formData.slug && (
-                        <Button 
-                            type="button" 
+                        <Button
+                            type="button"
                             variant="outline"
                             className="bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100"
                             onClick={() => setIsShareDialogOpen(true)}
@@ -346,6 +346,50 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                         <div className="space-y-6">
                             <Card>
                                 <CardHeader>
+                                    <CardTitle>SEO Metadata</CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="metaTitle">Meta Title</Label>
+                                        <Input
+                                            id="metaTitle"
+                                            placeholder="Search results title"
+                                            value={formData.metaTitle || ''}
+                                            onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="metaDescription">Meta Description</Label>
+                                        <Textarea
+                                            id="metaDescription"
+                                            className="h-24"
+                                            placeholder="Search results description"
+                                            value={formData.metaDescription || ''}
+                                            onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="keywords">Keywords</Label>
+                                        <Input
+                                            id="keywords"
+                                            placeholder="Comma separated"
+                                            defaultValue={formData.keywords?.join(', ')}
+                                            onChange={(e) => handleKeywordChange(e.target.value)}
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="ogImage">OG Image URL</Label>
+                                        <Input
+                                            id="ogImage"
+                                            placeholder="https://-image-url"
+                                            value={formData.ogImage || ''}
+                                            onChange={(e) => setFormData({ ...formData, ogImage: e.target.value })}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>
+                            <Card>
+                                <CardHeader>
                                     <CardTitle>Status & Publishing</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
@@ -409,9 +453,9 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                                 >
                                                     <span className="truncate">
                                                         {formData.category
-                                                            ? (ARTICLE_CATEGORIES.find((cat) => cat.value === formData.category)?.label || 
-                                                               ARTICLE_CATEGORIES.find((cat) => cat.value.toUpperCase() === String(formData.category).toUpperCase())?.label || 
-                                                               formData.category)
+                                                            ? (ARTICLE_CATEGORIES.find((cat) => cat.value === formData.category)?.label ||
+                                                                ARTICLE_CATEGORIES.find((cat) => cat.value.toUpperCase() === String(formData.category).toUpperCase())?.label ||
+                                                                formData.category)
                                                             : "Select Category"}
                                                     </span>
                                                     <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -461,50 +505,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                 </CardContent>
                             </Card>
 
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle>SEO Metadata</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="metaTitle">Meta Title</Label>
-                                        <Input
-                                            id="metaTitle"
-                                            placeholder="Search results title"
-                                            value={formData.metaTitle || ''}
-                                            onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="metaDescription">Meta Description</Label>
-                                        <Textarea
-                                            id="metaDescription"
-                                            className="h-24"
-                                            placeholder="Search results description"
-                                            value={formData.metaDescription || ''}
-                                            onChange={(e) => setFormData({ ...formData, metaDescription: e.target.value })}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="keywords">Keywords</Label>
-                                        <Input
-                                            id="keywords"
-                                            placeholder="Comma separated"
-                                            defaultValue={formData.keywords?.join(', ')}
-                                            onChange={(e) => handleKeywordChange(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Label htmlFor="ogImage">OG Image URL</Label>
-                                        <Input
-                                            id="ogImage"
-                                            placeholder="https://-image-url"
-                                            value={formData.ogImage || ''}
-                                            onChange={(e) => setFormData({ ...formData, ogImage: e.target.value })}
-                                        />
-                                    </div>
-                                </CardContent>
-                            </Card>
+
                         </div>
                     </div>
                 </TabsContent>
@@ -521,7 +522,7 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                 </TabsContent>
             </Tabs>
 
-            <ArticleViralShareDialog 
+            <ArticleViralShareDialog
                 isOpen={isShareDialogOpen}
                 onOpenChange={setIsShareDialogOpen}
                 formData={formData}

@@ -79,7 +79,7 @@ export default function EditArticlePage() {
     }
 
     return (
-        <div className="container mx-auto py-8 max-w-7xl h-full min-h-screen">
+        <div className="container mx-auto py-0 max-w-7xl h-full min-h-screen">
             <ArticleEditor
                 title={`Edit Article: ${pageResponse.data.title}`}
                 initialData={pageResponse.data}

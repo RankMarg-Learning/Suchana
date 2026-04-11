@@ -5,17 +5,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { seoService } from '@/lib/api';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { 
-    ChevronLeft, 
-    Edit3, 
-    ExternalLink, 
-    Globe, 
-    Calendar, 
-    Clock, 
+import {
+    ChevronLeft,
+    Edit3,
+    ExternalLink,
+    Globe,
+    Calendar,
+    Clock,
     Tag,
     Share2,
     Layout,
-    RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +22,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
-import { cn } from '@/lib/utils';
 
 export default function ViewArticlePage() {
     const params = useParams();
@@ -90,9 +88,9 @@ export default function ViewArticlePage() {
                     </div>
                 </div>
                 <div className="flex items-center gap-3">
-                    <Button 
-                        variant="outline" 
-                        size="lg" 
+                    <Button
+                        variant="outline"
+                        size="lg"
                         className="rounded-2xl h-14 px-8 border-slate-200 font-bold uppercase tracking-widest text-[11px] shadow-sm hover:bg-indigo-50 hover:text-indigo-600 transition-all"
                         onClick={() => window.open(`https://examsuchana.in/${page.slug}`, '_blank')}
                     >
@@ -100,7 +98,7 @@ export default function ViewArticlePage() {
                         Live Site
                     </Button>
                     <Link href={`/article/${slug}/edit`}>
-                        <Button 
+                        <Button
                             className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl h-14 px-12 font-bold uppercase tracking-widest text-[11px] shadow-lg shadow-indigo-500/20"
                         >
                             <Edit3 className="w-4 h-4 mr-2" />
@@ -178,7 +176,7 @@ export default function ViewArticlePage() {
                                                 <p className="text-[10px] font-black text-indigo-600 uppercase tracking-widest mb-0.5">Linked Exam</p>
                                                 <p className="text-xs font-bold text-slate-900 line-clamp-1">{(page.exam as any).shortTitle || (page.exam as any).title}</p>
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={() => router.push(`/exam/${(page.exam as any).slug}/edit`)}
                                                 className="p-2.5 bg-white text-indigo-600 rounded-xl shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
                                             >

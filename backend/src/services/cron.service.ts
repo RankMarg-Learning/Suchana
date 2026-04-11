@@ -65,9 +65,9 @@ function deriveStatus(events: SlimEvent[], nowMs: number): ExamStatus {
     return getTerminalStatusFromStage(latest.stage);
 }
 
-function generateDynamicTitle(shortTitle: string, status: ExamStatus): string {
+function generateDynamicTitle(shortTitle: string, status: ExamStatus, examYear?: number | null): string {
     const yearMatch = shortTitle.match(/\b(20\d{2})\b/);
-    const year = yearMatch ? yearMatch[1] : '';
+    const year = examYear?.toString() || (yearMatch ? yearMatch[1] : '');
     const name = shortTitle.replace(/\b20\d{2}\b/, '').replace(/\s+/g, ' ').trim();
     const yearSuffix = year ? ` ${year}` : '';
 
@@ -121,7 +121,7 @@ export class CronService {
             for (const exam of batch) {
                 const target = deriveStatus(exam.lifecycleEvents as SlimEvent[], nowMs);
                 if (target !== exam.status) {
-                    const newTitle = generateDynamicTitle(exam.shortTitle, target as ExamStatus);
+                    const newTitle = generateDynamicTitle(exam.shortTitle, target as ExamStatus, (exam as any).examYear);
                     updates.push({
                         id: exam.id,
                         status: target as ExamStatus,
