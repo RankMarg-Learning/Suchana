@@ -76,7 +76,11 @@ export function errorHandler(
             sendError(res, 404, 'NOT_FOUND', 'Record not found');
             return;
         }
-        sendError(res, 400, 'DATABASE_ERROR', 'Database constraint violation', {
+        if (err.code === 'P2022') {
+            sendError(res, 500, 'DATABASE_SCHEMA_ERROR', 'A column is missing in the database schema. Please run database migrations.');
+            return;
+        }
+        sendError(res, 400, 'DATABASE_ERROR', 'A database error occurred', {
             prismaCode: err.code,
         });
         return;
