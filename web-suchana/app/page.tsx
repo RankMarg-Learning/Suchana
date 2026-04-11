@@ -40,7 +40,7 @@ export default function HomePage() {
               Real-time Exam Tracker
             </div>
             <h1 className="hero-title-modern animate-slide-up" style={{ fontSize: '36px', marginBottom: '12px' }}>
-              India's Premier <span className="gradient-text">Government Exam</span> Discovery
+              India's  <span className="gradient-text">Government Exam</span> Discovery
             </h1>
             <p className="hero-desc-modern animate-slide-up delay-100" style={{ fontSize: '15px', marginBottom: '24px', maxWidth: '600px' }}>
               Track 1000+ exams across UPSC, SSC, Banking & Railways.

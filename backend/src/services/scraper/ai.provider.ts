@@ -93,8 +93,9 @@ By looking exam process from internet and source dates set stageOrder. and make 
 - Never invent data not present in source
 
 
-**R6 — LOCAL EXAMS** (district/city level)
-Omit state field. Include only NOTIFICATION and REGISTRATION events.
+**R7 — SHORT TITLE FORMAT (CRITICAL)**
+- \`shortTitle\` must follow format: "[Known Exam Name] [year]" (e.g., "Indian Navy MR Musician 2026", "SSC GD Constable 2025").
+
 
 ---
 
@@ -106,8 +107,8 @@ ${text}
 OUTPUT: Return only valid JSON — no markdown fences, no extra keys.
 
 {
-  "title": "string",
-  "shortTitle": "string|null",
+  "title": "string (Dynamic SEO Title)",
+  "shortTitle": "string (Format: Exam Name Year)",
   "description": "string (markdown, SEO-friendly)|null",
   "conductingBody": "string|null",
   "category": "enum|null",

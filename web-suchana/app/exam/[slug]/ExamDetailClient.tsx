@@ -45,7 +45,7 @@ import {
   slugify,
   stripMarkdown
 } from "@/app/lib/types";
-import { fetchSavedExams, toggleSavedExam, fetchSeoPages } from "@/app/lib/api";
+import { fetchSavedExams, toggleSavedExam, fetchSeoPages, fetchExamBySlug, fetchExamsFromAPI } from "@/app/lib/api";
 import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -232,7 +232,17 @@ function NotifyWidget({ examName }: { examName: string }) {
   );
 }
 
-export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; relatedExams?: Exam[] }) {
+export default function ExamDetailClient({ slug, category }: { slug: string; category: string }) {
+  const { data: exam } = useQuery({
+    queryKey: ["exam", slug],
+    queryFn: () => fetchExamBySlug(slug),
+  });
+
+  const { data: relatedExams = [] } = useQuery({
+    queryKey: ["relatedExams", category],
+    queryFn: () => fetchExamsFromAPI(1, 4, category).then(r => r.exams.filter(e => e.id !== exam?.id).slice(0, 4)),
+  });
+
   const [now, setNow] = useState(0);
   const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -246,6 +256,9 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
     queryFn: () => (userId ? fetchSavedExams(userId) : Promise.resolve([])),
     enabled: !!userId,
   });
+
+  if (!exam) return null;
+
   const isSaved = savedExams.some((e: any) => e.id === exam.id);
 
   const toggleMutation = useMutation({
@@ -300,7 +313,7 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
     toggleMutation.mutate();
   };
 
-  const sorted = (exam.lifecycleEvents ?? []).sort((a, b) => (a.stageOrder ?? 0) - (b.stageOrder ?? 0));
+  const sorted = (exam.lifecycleEvents ?? []).sort((a, b) => (b.stageOrder ?? 0) - (a.stageOrder ?? 0));
   const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
 
   const handleShare = async () => {
@@ -430,8 +443,8 @@ export default function ExamDetailClient({ exam, relatedExams }: { exam: Exam; r
                     now={mounted ? now : 0}
                     examSlug={exam.slug}
                     nextEventStartsAt={
-                      !event.endsAt && i < sorted.length - 1
-                        ? sorted[i + 1].startsAt
+                      !event.endsAt && i > 0
+                        ? sorted[i - 1].startsAt
                         : null
                     }
                   />

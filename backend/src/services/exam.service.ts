@@ -99,7 +99,7 @@ export async function getExamById(id: string, bypassCache = false) {
             where: { id },
             include: {
                 lifecycleEvents: {
-                    orderBy: { startsAt: 'asc' },
+                    orderBy: { stageOrder: 'desc' },
                 },
                 seoPages: {
                     where: { isPublished: true },
@@ -123,7 +123,7 @@ export async function getExamBySlug(slug: string, bypassCache = false) {
             where: { slug },
             include: {
                 lifecycleEvents: {
-                    orderBy: { startsAt: 'asc' },
+                    orderBy: { stageOrder: 'desc' },
                 },
                 seoPages: {
                     where: { isPublished: true },
