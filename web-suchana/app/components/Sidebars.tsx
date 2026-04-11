@@ -138,38 +138,53 @@ export function LeftSidebar({
 // ─── Right Sidebar ─────────────────────────────────────────────────────────────
 
 export function RightSidebar({
-  statusFilter = "ALL", setStatusFilter, onStatusChange, linkPrefix = "/s/"
+  statusFilter = "ALL", setStatusFilter, onStatusChange, linkPrefix = "/s/",
+  trendingExams = [], trendingArticles = []
 }: {
   statusFilter?: string; 
   setStatusFilter?: (v: string) => void;
   onStatusChange?: (v: string) => void;
   linkPrefix?: string;
+  trendingExams?: any[];
+  trendingArticles?: any[];
 }) {
   return (
     <aside className="sidebar-right" aria-label="Exam alerts and trending">
       {/* <NotifyWidget /> */}
       <SidebarAd id="sidebar-ad-right-1" />
 
-      {/* <div className="sidebar-widget">
-        <div className="sidebar-widget-title"><TrendingUp size={14} /> Trending Now</div>
-        <div className="trending-list">
-          {[
-            { name: "UPSC CSE 2025", tag: "🟢 Registration Open", href: "/exam/upsc-cse-2025", color: "#10b981" },
-            { name: "RRB NTPC 2025", tag: "🟣 Admit Card Out", href: "/exam/rrb-ntpc-2025", color: "#a78bfa" },
-            { name: "SSC CGL 2025", tag: "🟡 Upcoming", href: "/exam/ssc-cgl-2025", color: "#fbbf24" },
-            { name: "IBPS PO 2025", tag: "🔵 Result Declared", href: "/exam/ibps-po-2025", color: "#60a5fa" },
-            { name: "NDA/NA 2025", tag: "🟢 Registration Open", href: "/exam/nda-na-2025", color: "#10b981" },
-          ].map((ex, i) => (
-            <Link key={ex.name} href={ex.href} className="trending-item" style={{ textDecoration: "none" }}>
-              <div className="trending-rank" style={{ color: i === 0 ? "#f59e0b" : "var(--text-muted)" }}>{i + 1}</div>
-              <div className="trending-info">
-                <div className="trending-name">{ex.name}</div>
-                <div className="trending-tag" style={{ color: ex.color }}>{ex.tag}</div>
-              </div>
-            </Link>
-          ))}
+      {trendingExams && trendingExams.length > 0 && (
+        <div className="sidebar-widget">
+          <div className="sidebar-widget-title"><TrendingUp size={14} /> Trending Updates</div>
+          <div className="trending-list">
+            {trendingExams.slice(0, 5).map((ex, i) => (
+              <Link key={ex.id} href={`/exam/${ex.slug}`} className="trending-item" style={{ textDecoration: "none" }}>
+                <div className="trending-rank" style={{ color: i === 0 ? "#f59e0b" : "var(--text-muted)" }}>{i + 1}</div>
+                <div className="trending-info">
+                  <div className="trending-name">{ex.shortTitle || ex.title}</div>
+                  <div className="trending-tag" style={{ color: "var(--accent)" }}>{cleanLabel(ex.status)}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div> */}
+      )}
+
+      {trendingArticles && trendingArticles.length > 0 && (
+        <div className="sidebar-widget">
+          <div className="sidebar-widget-title"><BookOpen size={14} /> Top Guides & News</div>
+          <div className="trending-list">
+            {trendingArticles.slice(0, 4).map((art, i) => (
+              <Link key={art.id} href={`/${art.slug}`} className="trending-item" style={{ textDecoration: "none" }}>
+                <div className="trending-info" style={{ marginLeft: 0 }}>
+                  <div className="trending-name" style={{ WebkitLineClamp: 2, display: '-webkit-box', WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{art.title}</div>
+                  <div className="trending-tag" style={{ color: "var(--text-muted)" }}>{new Date(art.createdAt).toLocaleDateString()}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <SidebarAd id="sidebar-ad-right-2" />
 

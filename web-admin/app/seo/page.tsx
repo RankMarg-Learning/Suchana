@@ -13,13 +13,16 @@ import {
     Eye,
     RefreshCw,
     ChevronLeft,
-    ChevronRight
+    ChevronRight,
+    ChevronsUpDown
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { seoService, SeoPage } from '@/lib/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useSearchParams, usePathname } from 'next/navigation';
+import { SEO_PAGE_CATEGORIES } from '@/constants/enums';
 
 // Shadcn UI
 import {
@@ -45,21 +48,69 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const BASE_URL = 'https://examsuchana.in';
 
 export default function SeoPagesPage() {
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const queryClient = useQueryClient();
-    const [search, setSearch] = useState('');
-    const [page, setPage] = useState(1);
-    const [limit] = useState(20);
+
+    // Filters from URL
+    const search = searchParams.get('search') || '';
+    const category = searchParams.get('category') || 'ALL';
+    const trendingFilter = searchParams.get('trending') || 'ALL';
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = 20;
+
     const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
     const [deletingPage, setDeletingPage] = useState<SeoPage | null>(null);
 
+    // Combobox State
+    const [categorySearch, setCategorySearch] = useState('');
+    const [isCategoryPopoverOpen, setIsCategoryPopoverOpen] = useState(false);
+
+    const filteredCategories = SEO_PAGE_CATEGORIES.filter(cat =>
+        cat.toLowerCase().includes(categorySearch.toLowerCase())
+    );
+
+    // Update URL helper
+    const updateQuery = (updates: Record<string, string | null>) => {
+        const params = new URLSearchParams(searchParams.toString());
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === null || value === 'ALL' || (key === 'page' && value === '1')) {
+                params.delete(key);
+            } else {
+                params.set(key, value);
+            }
+        });
+        router.push(`${pathname}?${params.toString()}`);
+    };
+
     const { data: response, isLoading, refetch, isRefetching } = useQuery({
-        queryKey: ['seo-pages-admin', page, search],
-        queryFn: () => seoService.getAllPages({ page, limit, search }),
+        queryKey: ['seo-pages-admin', page, search, category, trendingFilter],
+        queryFn: () => seoService.getAllPages({
+            page,
+            limit,
+            search: search || undefined,
+            category: category === 'ALL' ? undefined : category,
+            isTrending: trendingFilter === 'TRENDING' ? 'true' :
+                trendingFilter === 'NORMAL' ? 'false' : undefined
+        }),
     });
 
     const pagesResult = response?.data;
@@ -86,7 +137,7 @@ export default function SeoPagesPage() {
     };
 
     return (
-        <div className="space-y-6 container mx-auto py-8">
+        <div className="space-y-6 container mx-auto py-2">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold tracking-tight">Articles</h1>
@@ -103,26 +154,6 @@ export default function SeoPagesPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardDescription>Total Articles</CardDescription>
-                        <CardTitle className="text-2xl">{totalCount}</CardTitle>
-                    </CardHeader>
-                </Card>
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardDescription>Page Results</CardDescription>
-                        <CardTitle className="text-2xl">{pages.length}</CardTitle>
-                    </CardHeader>
-                </Card>
-                <Card>
-                    <CardHeader className="pb-2">
-                        <CardDescription>Current Page</CardDescription>
-                        <CardTitle className="text-2xl">{page} / {totalPages || 1}</CardTitle>
-                    </CardHeader>
-                </Card>
-            </div>
 
             <Card>
                 <CardHeader>
@@ -134,11 +165,96 @@ export default function SeoPagesPage() {
                                 placeholder="Search articles..."
                                 className="pl-9"
                                 value={search}
-                                onChange={(e) => {
-                                    setSearch(e.target.value);
-                                    setPage(1);
-                                }}
+                                onChange={(e) => updateQuery({ search: e.target.value, page: '1' })}
                             />
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Category:</span>
+                            <Popover open={isCategoryPopoverOpen} onOpenChange={setIsCategoryPopoverOpen}>
+                                <PopoverTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        role="combobox"
+                                        aria-expanded={isCategoryPopoverOpen}
+                                        className="w-[220px] justify-between font-normal h-9 px-3"
+                                    >
+                                        <span className="truncate">
+                                            {category === 'ALL'
+                                                ? "All Categories"
+                                                : category.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')}
+                                        </span>
+                                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                                    </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-[220px] p-0 shadow-2xl" align="start">
+                                    <div className="flex items-center border-b px-3 py-2">
+                                        <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
+                                        <input
+                                            placeholder="Search categories..."
+                                            className="flex h-8 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
+                                            value={categorySearch}
+                                            onChange={(e) => setCategorySearch(e.target.value)}
+                                        />
+                                    </div>
+                                    <ScrollArea className="h-[250px] py-1">
+                                        <div className="px-1">
+                                            <button
+                                                className={cn(
+                                                    "relative flex w-full cursor-default select-none items-center rounded-sm py-2 px-3 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors",
+                                                    category === 'ALL' && "bg-accent/50 font-medium text-primary"
+                                                )}
+                                                onClick={() => {
+                                                    updateQuery({ category: 'ALL', page: '1' });
+                                                    setIsCategoryPopoverOpen(false);
+                                                    setCategorySearch('');
+                                                }}
+                                            >
+                                                All Categories
+                                                {category === 'ALL' && <Check className="ml-auto h-4 w-4 opacity-100 text-primary" />}
+                                            </button>
+
+                                            {filteredCategories.map((cat) => (
+                                                <button
+                                                    key={cat}
+                                                    className={cn(
+                                                        "relative flex w-full cursor-default select-none items-center rounded-sm py-2 px-3 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors",
+                                                        category === cat && "bg-accent/50 font-medium text-primary"
+                                                    )}
+                                                    onClick={() => {
+                                                        updateQuery({ category: cat, page: '1' });
+                                                        setIsCategoryPopoverOpen(false);
+                                                        setCategorySearch('');
+                                                    }}
+                                                >
+                                                    {cat.split('_').map(word => word.charAt(0) + word.slice(1).toLowerCase()).join(' ')}
+                                                    {category === cat && <Check className="ml-auto h-4 w-4 opacity-100 text-primary" />}
+                                                </button>
+                                            ))}
+                                            {filteredCategories.length === 0 && (
+                                                <p className="p-4 text-xs text-center text-muted-foreground">No matches.</p>
+                                            )}
+                                        </div>
+                                    </ScrollArea>
+                                </PopoverContent>
+                            </Popover>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Status:</span>
+                            <Select
+                                value={trendingFilter}
+                                onValueChange={(val) => updateQuery({ trending: val, page: '1' })}
+                            >
+                                <SelectTrigger className="w-[140px] h-9">
+                                    <SelectValue placeholder="All Articles" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="ALL">All Articles</SelectItem>
+                                    <SelectItem value="TRENDING">Trending Only</SelectItem>
+                                    <SelectItem value="NORMAL">Regular Only</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
                 </CardHeader>
@@ -168,7 +284,14 @@ export default function SeoPagesPage() {
                                 pages.map((pageItem: SeoPage) => (
                                     <TableRow key={pageItem.id}>
                                         <TableCell className="font-medium truncate max-w-[280px]" title={pageItem.title}>
-                                            {pageItem.title}
+                                            <div className="flex items-center gap-2">
+                                                <span className="truncate">{pageItem.title}</span>
+                                                {pageItem.isTrending && (
+                                                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 text-[10px] h-4 px-1 py-0 uppercase tracking-wider font-bold shrink-0">
+                                                        Trending
+                                                    </Badge>
+                                                )}
+                                            </div>
                                         </TableCell>
                                         <TableCell className="text-muted-foreground truncate max-w-[180px]" title={pageItem.slug}>
                                             /{pageItem.slug}
@@ -188,6 +311,21 @@ export default function SeoPagesPage() {
                                                 </Button>
                                                 <Button variant="ghost" size="icon" onClick={() => router.push(`/article/${pageItem.slug}/edit`)}>
                                                     <Edit2 className="h-4 w-4" />
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    onClick={() => {
+                                                        seoService.updatePage(pageItem.id!, { isTrending: !pageItem.isTrending })
+                                                            .then(() => {
+                                                                toast.success(`Article marked as ${!pageItem.isTrending ? 'trending' : 'normal'}`);
+                                                                queryClient.invalidateQueries({ queryKey: ['seo-pages-admin'] });
+                                                            })
+                                                            .catch(() => toast.error('Failed to update trending status'));
+                                                    }}
+                                                    title={pageItem.isTrending ? "Remove from Trending" : "Mark as Trending"}
+                                                >
+                                                    <RefreshCw className={cn("h-4 w-4", pageItem.isTrending ? "text-amber-500" : "text-muted-foreground")} />
                                                 </Button>
                                                 <Button variant="ghost" size="icon" onClick={() => setDeletingPage(pageItem)}>
                                                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -215,7 +353,7 @@ export default function SeoPagesPage() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                                onClick={() => updateQuery({ page: (page - 1).toString() })}
                                 disabled={page === 1 || isLoading}
                             >
                                 <ChevronLeft className="h-4 w-4 mr-2" />
@@ -227,7 +365,7 @@ export default function SeoPagesPage() {
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                                onClick={() => updateQuery({ page: (page + 1).toString() })}
                                 disabled={page === totalPages || totalPages === 0 || isLoading}
                             >
                                 Next

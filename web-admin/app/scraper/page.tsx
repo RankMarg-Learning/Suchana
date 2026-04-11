@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { EXAM_CATEGORIES } from '@/constants/enums';
 
 export default function ScraperPage() {
     const [jobs, setJobs] = useState<ScrapeJob[]>([]);
@@ -256,7 +257,7 @@ export default function ScraperPage() {
                                                     </TooltipTrigger>
                                                     <TooltipContent>Run scraper manually</TooltipContent>
                                                 </Tooltip>
-                                                
+
                                                 <Button size="sm" variant="ghost" className="h-8 w-8 p-0" asChild>
                                                     <a href={source.url} target="_blank" rel="noopener noreferrer">
                                                         <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
@@ -336,9 +337,9 @@ export default function ScraperPage() {
                             {loading ? (
                                 Array(3).fill(0).map((_, i) => <div key={i} className="h-12 bg-muted/50 rounded-lg animate-pulse" />)
                             ) : stagedExams.length > 0 ? stagedExams.map(staged => (
-                                <Link 
-                                    key={staged.id} 
-                                    href={`/review?id=${staged.id}`} 
+                                <Link
+                                    key={staged.id}
+                                    href={`/review?id=${staged.id}`}
                                     className="block p-3 rounded-lg border bg-background hover:border-primary/50 hover:shadow-sm transition-all group"
                                 >
                                     <div className="flex items-center justify-between">
@@ -530,8 +531,8 @@ function SourceModal({ source, isOpen, onClose, onSave }: { source: ScrapeSource
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {categories.map(cat => (
-                                        <SelectItem key={cat.id} value={cat.id} className="text-sm">{cat.label}</SelectItem>
+                                    {EXAM_CATEGORIES.map(cat => (
+                                        <SelectItem key={cat} value={cat} className="text-sm">{cat}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>

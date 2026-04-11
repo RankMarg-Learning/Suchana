@@ -78,6 +78,7 @@ model StagedExam {
   additionalDetails     String?
   salary                String?
   age                   String?
+  examYear              Int?
   scrapeJob             ScrapeJob              @relation(fields: [scrapeJobId], references: [id], onDelete: Cascade)
   stagedEvents          StagedLifecycleEvent[]
 
@@ -89,6 +90,7 @@ model StagedExam {
   @@index([deduplicationKey])
   @@index([contentHash])
   @@index([isDuplicate, reviewStatus])
+  @@index([examYear])
 }
 
 model StagedLifecycleEvent {
@@ -136,6 +138,8 @@ model Exam {
   additionalDetails     String?
   salary                String?
   age                   String?
+  examYear              Int?
+  isTrending            Boolean          @default(false)
   lifecycleEvents       LifecycleEvent[]
   seoPages              SeoPage[]
 
@@ -149,6 +153,9 @@ model Exam {
   @@index([updatedAt])
   @@index([isPublished, updatedAt, publishedAt])
   @@index([category, isPublished])
+  @@index([isTrending])
+  @@index([isPublished, isTrending])
+  @@index([examYear])
 }
 
 model LifecycleEvent {
@@ -278,6 +285,7 @@ model SeoPage {
   ogImage         String?
   canonicalUrl    String?
   isPublished     Boolean  @default(true)
+  isTrending      Boolean  @default(false)
   category        String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -286,8 +294,10 @@ model SeoPage {
 
   @@index([slug])
   @@index([isPublished])
+  @@index([isTrending])
   @@index([category])
   @@index([examId])
   @@index([createdAt])
   @@index([category, isPublished])
+  @@index([isPublished, isTrending])
 }

@@ -62,10 +62,15 @@ export const STATUS_LABELS: Record<string, string> = {
   NOTIFICATION: "Notification",
   REGISTRATION_OPEN: "Registration Open",
   REGISTRATION_CLOSED: "Registration Closed",
+  ADMIT_CARD_COMING_SOON: "Admit Card Coming Soon",
   ADMIT_CARD_OUT: "Admit Card Out",
   EXAM_ONGOING: "Exam Ongoing",
+  EXAM_COMPLETED: "Exam Completed",
+  ANSWER_KEY_OUT: "Answer Key Out",
+  RESULT_COMING_SOON: "Result Coming Soon",
   RESULT_DECLARED: "Result Declared",
   ARCHIVED: "Archived",
+  ACTIVE: "Active Updates",
 };
 
 export const STAGE_LABELS: Record<string, string> = {

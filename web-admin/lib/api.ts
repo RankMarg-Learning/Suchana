@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ExamCategory, ExamLevel, ExamStatus, LifecycleStage } from '../constants/enums';
+import { ExamCategory, ExamLevel, ExamStatus, LifecycleStage, SeoPageCategory } from '../constants/enums';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 const API_KEY = process.env.NEXT_PUBLIC_API_KEY || 'hPUeHHWNwlnK8gWi5WWwhAGBq7OxHmHcRYOCCLka3bWodhIf1dba';
@@ -24,6 +24,7 @@ export interface Exam {
     notificationUrl?: string | null;
     createdBy: string;
     isPublished: boolean;
+    isTrending: boolean;
     publishedAt?: string | null;
     createdAt: string;
     updatedAt: string;
@@ -198,7 +199,8 @@ export interface SeoPage {
     ogImage?: string;
     canonicalUrl?: string;
     isPublished: boolean;
-    category?: string;
+    isTrending: boolean;
+    category?: SeoPageCategory;
     createdAt: string;
     updatedAt: string;
     examId?: string | null;
@@ -206,7 +208,7 @@ export interface SeoPage {
 }
 
 export const examService = {
-    getAllExams: async (params?: { page?: number, limit?: number, search?: string, status?: string, isPublished?: string, startDate?: string, endDate?: string }): Promise<ApiResponse<Exam[]>> => {
+    getAllExams: async (params?: { page?: number, limit?: number, search?: string, status?: string, isPublished?: string, isTrending?: string, startDate?: string, endDate?: string }): Promise<ApiResponse<Exam[]>> => {
         const response = await apiClient.get('/exams', { params });
         return response.data;
     },

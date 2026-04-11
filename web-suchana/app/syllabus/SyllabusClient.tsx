@@ -27,6 +27,7 @@ export default function SyllabusClient({ initialPages, initialTotal }: Props) {
 
   const loadData = useCallback(async (reset: boolean, pageNo?: number) => {
     setLoading(true);
+    if (reset) setPagesList([]);
     const reqPage = reset ? 1 : (pageNo ?? page);
     try {
       const result = await fetchSeoPages(reqPage, 10, 'SYLLABUS', debouncedSearch || undefined);
@@ -78,7 +79,7 @@ export default function SyllabusClient({ initialPages, initialTotal }: Props) {
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: 'var(--accent-glow)', color: 'var(--accent)', borderRadius: 20, fontSize: '0.85rem', fontWeight: 700, marginBottom: 16 }}>
                <BookOpen size={16} /> Syllabus & Pattern
             </div>
-            <h1 style={{ fontSize: 'clamp(2rem, 5vw, 2.8rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1, marginBottom: 16, fontFamily: "'Space Grotesk', sans-serif" }}>
+            <h1 style={{ fontSize: 'clamp(2rem, 5vw, 2.8rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1, marginBottom: 16, fontFamily: "var(--font-space-grotesk), sans-serif" }}>
               Official Syllabus Centre
             </h1>
             <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: 600 }}>

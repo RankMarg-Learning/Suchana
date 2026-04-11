@@ -1,11 +1,8 @@
 import { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
-import { fetchExamBySlug, SITE_URL, fetchAllExamSlugs, fetchExamsFromAPI } from "@/app/lib/api";
+import { notFound } from "next/navigation";
+import { fetchExamBySlug, SITE_URL, fetchAllExamSlugs } from "@/app/lib/api";
 import {
-  STATUS_LABELS,
   cleanLabel,
-  formatDate,
-  getTotalVacancies,
   stripHtml,
 } from "@/app/lib/types";
 import { generateSeoTitle, generateSeoDescription } from "@/app/lib/seo";
@@ -13,12 +10,6 @@ import ExamDetailClient from "./ExamDetailClient";
 
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-
-export async function generateStaticParams() {
-  const slugs = await fetchAllExamSlugs();
-  return slugs.map((slug) => ({ slug }));
 }
 
 
@@ -57,6 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       "government jobs",
       "sarkari naukri",
       "sarkari results",
+      "goverment jobs"
     ].filter((k): k is string => !!k),
     alternates: {
       canonical: canonicalUrl,
@@ -65,14 +57,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       url: canonicalUrl,
       title: seoTitle,
-      images: [
-        {
-          url: `${SITE_URL}/og-image.png`,
-          width: 1200,
-          height: 630,
-          alt: title,
-        },
-      ],
       description: seoDescription,
       locale: "en_IN",
       siteName: "Exam Suchana",
@@ -85,7 +69,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       card: "summary_large_image",
       title: seoTitle,
       description: seoDescription,
-      images: [`${SITE_URL}/exam-banner.png`],
     },
   };
 }
@@ -122,7 +105,8 @@ function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
     },
     employmentType: "FULL_TIME",
     validThrough: regEvent?.endsAt ?? undefined,
-    datePosted: regEvent?.startsAt ?? new Date().toISOString(),
+    datePosted: regEvent?.startsAt ?? exam.createdAt ?? new Date().toISOString(),
+    dateModified: exam.updatedAt ?? new Date().toISOString(),
     url: canonicalUrl,
     ...(exam.applicationFee
       ? {
@@ -255,20 +239,57 @@ function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamByS
 
 
 
+function buildWebPageJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
+  const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
+  return {
+    "@type": "WebPage",
+    "@id": `${canonicalUrl}#webpage`,
+    url: canonicalUrl,
+    name: exam.title,
+    datePublished: exam.createdAt,
+    dateModified: exam.updatedAt,
+    breadcrumb: { "@id": `${canonicalUrl}#breadcrumb` },
+    inLanguage: "en-IN",
+    potentialAction: [
+      {
+        "@type": "ReadAction",
+        target: [canonicalUrl]
+      }
+    ]
+  };
+}
+
+
+import getQueryClient from "@/app/lib/getQueryClient";
+import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { fetchExamsFromAPI } from "@/app/lib/api";
+
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
   const exam = await fetchExamBySlug(slug);
+  
   if (!exam) {
     notFound();
   }
 
-  const { fetchExamsFromAPI } = await import('@/app/lib/api');
-  const { exams: relatedExams } = await fetchExamsFromAPI(1, 5, exam.category).catch(() => ({ exams: [] }));
-  const filteredRelated = (relatedExams || []).filter(e => e.id !== exam.id).slice(0, 4);
+  const queryClient = getQueryClient();
+
+  // Prefetch main exam
+  await queryClient.prefetchQuery({
+    queryKey: ["exam", slug],
+    queryFn: () => fetchExamBySlug(slug),
+  });
+
+  // Prefetch related exams
+  await queryClient.prefetchQuery({
+    queryKey: ["relatedExams", exam.category],
+    queryFn: () => fetchExamsFromAPI(1, 4, exam.category).then(r => r.exams.filter(e => e.id !== exam.id).slice(0, 4)),
+  });
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [
+      buildWebPageJsonLd(exam),
       buildJobPostingJsonLd(exam),
       buildEventJsonLd(exam),
       buildBreadcrumbJsonLd(exam),
@@ -282,7 +303,9 @@ export default async function ExamDetailPage({ params }: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <ExamDetailClient exam={exam} relatedExams={filteredRelated} />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <ExamDetailClient slug={slug} category={exam.category} />
+      </HydrationBoundary>
     </div>
   );
 }

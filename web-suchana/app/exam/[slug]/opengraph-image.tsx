@@ -1,111 +1,65 @@
+/** @format */
+
 import { ImageResponse } from 'next/og';
 import { fetchExamBySlug } from '@/app/lib/api';
+import { STATUS_LABELS } from '@/app/lib/types';
 
-// Route segment config
 export const runtime = 'edge';
-
-// Image metadata
-export const alt = 'Exam Suchana - Government Exam Tracker';
-export const size = {
-  width: 1200,
-  height: 630,
-};
-
+export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
-export default async function Image({ params }: { params: { slug: string } }) {
+// REDESIGNED STATUS THEMES
+const THEMES: Record<string, { main: string; bg: string; accent: string }> = {
+  NOTIFICATION: { main: '#6366f1', bg: '#0f172a', accent: '#4338ca' },
+  REGISTRATION_OPEN: { main: '#10b981', bg: '#064e3b', accent: '#059669' },
+  ADMIT_CARD_OUT: { main: '#0ea5e9', bg: '#0c4a6e', accent: '#0284c7' },
+  RESULT_DECLARED: { main: '#f59e0b', bg: '#451a03', accent: '#d97706' },
+  EXAM_DATE_ANNOUNCED: { main: '#f43f5e', bg: '#4c0519', accent: '#e11d48' },
+  ANSWER_KEY_OUT: { main: '#8b5cf6', bg: '#2e1065', accent: '#7c3aed' },
+};
+
+export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const exam = await fetchExamBySlug(slug);
+  const exam = await fetchExamBySlug(slug).catch(() => null);
 
-  if (!exam) {
-    return new ImageResponse(
-      (
-        <div
-          style={{
-            height: '100%',
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            backgroundColor: '#ffffff',
-            backgroundImage: 'radial-gradient(circle at 25px 25px, #f1f5f9 2%, transparent 0%), radial-gradient(circle at 75px 75px, #f1f5f9 2%, transparent 0%)',
-            backgroundSize: '100px 100px',
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-             <div style={{ padding: '8px 16px', backgroundColor: '#7c3aed', color: 'white', borderRadius: 8, fontSize: 32, fontWeight: 'bold' }}>
-                Suchana
-             </div>
-          </div>
-          <div style={{ fontSize: 48, fontWeight: 'bold', color: '#0f172a' }}>Exam Not Found</div>
-        </div>
-      ),
-      { ...size }
-    );
-  }
-
-  const statusLabel = exam.status.replace(/_/g, ' ');
-  const subtitle = exam.conductingBody || 'Government Recruitment';
+  const title = (exam?.shortTitle || exam?.title || slug.replace(/-/g, ' ')).toUpperCase();
+  const status = exam?.status || 'NOTIFICATION';
+  const theme = THEMES[status] || THEMES.NOTIFICATION;
+  const statusLabel = STATUS_LABELS[status as keyof typeof STATUS_LABELS] || status;
 
   return new ImageResponse(
     (
-      <div
-        style={{
-          height: '100%',
-          width: '100%',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          justifyContent: 'space-between',
-          backgroundColor: '#ffffff',
-          backgroundImage: 'radial-gradient(circle at 25px 25px, #f1f5f9 2%, transparent 0%), radial-gradient(circle at 75px 75px, #f1f5f9 2%, transparent 0%)',
-          backgroundSize: '100px 100px',
-          padding: '80px',
-          border: '1px solid #7c3aed',
-        }}
-      >
-        <div style={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-          {/* Header Branding */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 40 }}>
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <div style={{ width: 40, height: 40, backgroundColor: '#7c3aed', borderRadius: 8, marginRight: 12 }} />
-              <div style={{ fontSize: 32, fontWeight: 'bold', color: '#1e293b', letterSpacing: '-0.02em' }}>Exam Suchana</div>
-            </div>
-            <div style={{ padding: '8px 20px', backgroundColor: '#f5f3ff', color: '#7c3aed', borderRadius: 100, fontSize: 20, fontWeight: 600, border: '1px solid #ddd6fe' }}>
-              RECRUITMENT HUB
-            </div>
-          </div>
+      <div style={{ height: '100%', width: '100%', display: 'flex', flexDirection: 'column', backgroundColor: theme.bg, position: 'relative', overflow: 'hidden' }}>
 
-          {/* Main Title Area */}
-          <div style={{ display: 'flex', flexDirection: 'column', marginTop: 20 }}>
-            <div style={{ fontSize: 24, fontWeight: 500, color: '#64748b', marginBottom: 8, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              {subtitle}
-            </div>
-            <div style={{ fontSize: 72, fontWeight: 800, color: '#0f172a', lineHeight: 1.1, marginBottom: 20, maxWidth: '900px' }}>
-              {exam.shortTitle || exam.title}
-            </div>
-          </div>
+        {/* DESIGN ACCENTS */}
+        <div style={{ position: 'absolute', top: -100, right: -100, width: 400, height: 400, borderRadius: 200, background: `radial-gradient(circle, ${theme.main}44 0%, transparent 70%)` }} />
+        <div style={{ position: 'absolute', bottom: -150, left: -150, width: 500, height: 500, borderRadius: 250, background: `radial-gradient(circle, ${theme.main}33 0%, transparent 70%)` }} />
+
+        {/* STATUS TOP BAR */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: theme.main, padding: '16px 0', width: '100%', borderBottom: '4px solid rgba(255,255,255,0.2)' }}>
+          <span style={{ color: 'white', fontSize: 26, fontWeight: 900, letterSpacing: '0.2em' }}>
+            {statusLabel.toUpperCase()}
+          </span>
         </div>
 
-        {/* Footer Area with Badges */}
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: 16 }}>
-            <div style={{ padding: '16px 32px', backgroundColor: '#0f172a', color: 'white', borderRadius: 12, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ fontSize: 14, color: '#94a3b8', textTransform: 'uppercase', marginBottom: 4, fontWeight: 600 }}>CURRENT STATUS</div>
-              <div style={{ fontSize: 28, fontWeight: 'bold' }}>{statusLabel}</div>
-            </div>
-            {exam.totalVacancies && (
-               <div style={{ padding: '16px 32px', backgroundColor: '#ffffff', color: '#0f172a', borderRadius: 12, display: 'flex', flexDirection: 'column', border: '1px solid #e2e8f0' }}>
-               <div style={{ fontSize: 14, color: '#64748b', textTransform: 'uppercase', marginBottom: 4, fontWeight: 600 }}>VACANCIES</div>
-               <div style={{ fontSize: 28, fontWeight: 'bold' }}>{exam.totalVacancies.replace(/[^\d+]/g, '') || 'Details Inside'}</div>
-             </div>
-            )}
+        {/* MAIN INFO SECTION */}
+        <div style={{ display: 'flex', flexDirection: 'column', padding: '60px 80px', flex: 1, justifyContent: 'center' }}>
+
+          <div style={{ color: theme.main, fontSize: 28, fontWeight: 800, marginBottom: 12, display: 'flex' }}>
+            {exam?.conductingBody?.toUpperCase() || 'OFFICIAL EXAM ALERT'}
           </div>
-          
-          <div style={{ fontSize: 20, color: '#64748b', fontWeight: 500 }}>
-            examsuchana.in
+
+          <div style={{ fontSize: 94, fontWeight: 900, color: 'white', lineHeight: 0.9, letterSpacing: '-0.06em', marginBottom: 40, display: 'flex' }}>
+            {title}
           </div>
+
+
+        </div>
+
+        {/* BRAND FOOTER */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 80px 40px', zIndex: 10 }}>
+
+          <span style={{ color: '#94a3b8', fontSize: 24, fontWeight: 600 }}>www.examsuchana.in</span>
         </div>
       </div>
     ),

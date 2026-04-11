@@ -65,6 +65,28 @@ function deriveStatus(events: SlimEvent[], nowMs: number): ExamStatus {
     return getTerminalStatusFromStage(latest.stage);
 }
 
+function generateDynamicTitle(shortTitle: string, status: ExamStatus, examYear?: number | null): string {
+    const yearMatch = shortTitle.match(/\b(20\d{2})\b/);
+    const year = examYear?.toString() || (yearMatch ? yearMatch[1] : '');
+    const name = shortTitle.replace(/\b20\d{2}\b/, '').replace(/\s+/g, ' ').trim();
+    const yearSuffix = year ? ` ${year}` : '';
+
+    switch (status) {
+        case ExamStatus.REGISTRATION_OPEN:
+            const recruitmentLabel = name.toLowerCase().includes('recruitment') ? '' : ' Recruitment';
+            return `${name}${recruitmentLabel}${yearSuffix} – Apply Online`.trim();
+        case ExamStatus.ADMIT_CARD_OUT:
+            return `${name} Admit Card${yearSuffix} OUT`.trim();
+        case ExamStatus.RESULT_DECLARED:
+            return `${name} Result${yearSuffix} OUT – Check Scorecard`.trim();
+        case ExamStatus.ANSWER_KEY_OUT:
+            return `${name} Answer Key${yearSuffix} OUT`.trim();
+        default:
+            const defaultLabel = name.toLowerCase().includes('recruitment') ? '' : ' Recruitment';
+            return `${name}${defaultLabel}${yearSuffix}`.trim();
+    }
+}
+
 export class CronService {
 
     static async syncExamStatuses(): Promise<void> {
@@ -74,7 +96,7 @@ export class CronService {
 
         let skip = 0;
         let totalProcessed = 0;
-        const statusBuckets = new Map<ExamStatus, string[]>();
+        const updates: { id: string; status: ExamStatus; title: string }[] = [];
         const auditLogs: string[] = [];
 
         while (true) {
@@ -83,6 +105,7 @@ export class CronService {
                 select: {
                     id: true,
                     slug: true,
+                    shortTitle: true,
                     status: true,
                     lifecycleEvents: {
                         select: { stage: true, stageOrder: true, startsAt: true, endsAt: true, isTBD: true },
@@ -98,10 +121,13 @@ export class CronService {
             for (const exam of batch) {
                 const target = deriveStatus(exam.lifecycleEvents as SlimEvent[], nowMs);
                 if (target !== exam.status) {
-                    const ids = statusBuckets.get(target) ?? [];
-                    ids.push(exam.id);
-                    statusBuckets.set(target, ids);
-                    auditLogs.push(`  ${exam.slug}: ${exam.status} → ${target}`);
+                    const newTitle = generateDynamicTitle(exam.shortTitle, target as ExamStatus, (exam as any).examYear);
+                    updates.push({
+                        id: exam.id,
+                        status: target as ExamStatus,
+                        title: newTitle
+                    });
+                    auditLogs.push(`  ${exam.slug}: ${exam.status} → ${target} | title: ${newTitle}`);
                 }
             }
 
@@ -111,20 +137,23 @@ export class CronService {
             if (batch.length < BATCH_SIZE) break;
         }
 
-        if (statusBuckets.size === 0) {
+        if (updates.length === 0) {
             logger.info(`[CRON] All ${totalProcessed} exams are up-to-date.`);
             return;
         }
 
-        const updateOps = Array.from(statusBuckets.entries()).map(([status, ids]) =>
-            prisma.exam.updateMany({
-                where: { id: { in: ids } },
-                data: { status },
-            })
-        );
+        // Apply updates in transactions
+        const CHUNK_SIZE = 50;
+        for (let i = 0; i < updates.length; i += CHUNK_SIZE) {
+            const chunk = updates.slice(i, i + CHUNK_SIZE);
+            await prisma.$transaction(
+                chunk.map(u => prisma.exam.update({
+                    where: { id: u.id },
+                    data: { status: u.status, title: u.title }
+                }))
+            );
+        }
 
-        await Promise.all(updateOps);
-        logger.info(`[CRON] Updated ${auditLogs.length}/${totalProcessed} exams:\n${auditLogs.join('\n')}`);
+        logger.info(`[CRON] Updated ${updates.length}/${totalProcessed} exams:\n${auditLogs.join('\n')}`);
     }
 }
-

@@ -1,75 +1,55 @@
+import { ExamStatus } from "./enums";
 import { Exam, stripMarkdown } from "./types";
 
-export type SeoType = "JOB" | "RESULT" | "ADMIT_CARD" | "SYLLABUS" | "SALARY" | "CUTOFF";
 
-export function generateSeoTitle(exam: Exam, type: SeoType | string): string {
-  const currentYear = new Date().getFullYear();
-  const title = exam.title;
+export function generateSeoTitle(exam: Exam, type: ExamStatus | string): string {
+  const base = exam.shortTitle || exam.title;
+  const yearMatch = base.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
+  const name = base.replace(/\b20\d{2}\b/, '').replace(/\s+/g, ' ').trim();
+  const recruitmentLabel = name.toLowerCase().includes('recruitment') ? '' : ' Recruitment';
 
-  const hasYear = /202\d/.test(title);
-  const yearPart = hasYear ? "" : ` ${currentYear}`;
+  const yearStr = ` ${year}`;
 
-  let baseTitle = "";
   switch (type) {
-    case "REGISTRATION_OPEN":
-    case "JOB":
-      baseTitle = `${title} Recruitment${yearPart} — Apply Online, Check Details`;
-      break;
-    case "RESULT_DECLARED":
-    case "RESULT":
-      baseTitle = `${title} Result${yearPart} (Released) — Download Merit List`;
-      break;
-    case "ADMIT_CARD_OUT":
-    case "ADMIT_CARD":
-      baseTitle = `${title} Admit Card${yearPart} OUT — Direct Download Link`;
-      break;
-    case "SYLLABUS":
-      baseTitle = `${title} Syllabus${yearPart} PDF — Exam Pattern & Selection`;
-      break;
-    case "SALARY":
-      baseTitle = `${title} Salary${yearPart} — Pay Scale & Monthly In-hand`;
-      break;
-    case "CUTOFF":
-      baseTitle = `${title} Cut Off Marks — Expected & Previous Year`;
-      break;
-    case "NOTIFICATION":
-      baseTitle = `${title} Official Notification PDF — Key Dates & Details`;
-      break;
+    case ExamStatus.REGISTRATION_OPEN:
+      return `${name}${recruitmentLabel}${yearStr} — Apply Online, Check Details`;
+    case ExamStatus.RESULT_DECLARED:
+      return `${name} Result${yearStr} OUT — Check Scorecard`;
+    case ExamStatus.ADMIT_CARD_OUT:
+      return `${name} Admit Card${yearStr} OUT — Download Link`;
+    case ExamStatus.ANSWER_KEY_OUT:
+      return `${name} Answer Key${yearStr} OUT — Check/Download`;
+    case ExamStatus.NOTIFICATION:
+      return `${name} Notification PDF${yearStr} — Key Dates & Details`;
     default:
-      baseTitle = `${title}${yearPart}: Apply Online, Dates & Result Status`;
+      return `${name}${recruitmentLabel}${yearStr} — Details, Dates & Result`;
   }
-
-  return `${baseTitle}`;
 }
 
-export function generateSeoDescription(exam: Exam, type: SeoType | string): string {
-  const currentYear = new Date().getFullYear();
-  const title = exam.shortTitle || exam.title;
-  const hasYear = /202\d/.test(title);
-  const yearStr = hasYear ? "" : ` ${currentYear}`;
+export function generateSeoDescription(exam: Exam, type: ExamStatus | string): string {
+  const base = exam.shortTitle || exam.title;
+  const yearMatch = base.match(/\b(20\d{2})\b/);
+  const year = yearMatch ? yearMatch[1] : new Date().getFullYear().toString();
+  const name = base.replace(/\b20\d{2}\b/, '').replace(/\s+/g, ' ').trim();
+  const recruitmentLabel = name.toLowerCase().includes('recruitment') ? '' : ' Recruitment';
 
+  const displayTitle = `${name}${recruitmentLabel} ${year}`.trim();
   const body = exam.conductingBody;
   const vacancies = exam.totalVacancies && exam.totalVacancies !== "TBA" ? ` with ${exam.totalVacancies} vacancies.` : ".";
 
   switch (type) {
-    case "REGISTRATION_OPEN":
-    case "JOB":
-      return `Apply for ${title} Recruitment ${yearStr} by ${body} ${stripMarkdown(vacancies)} Check eligibility criteria, age limit, and salary. Get the direct application link and official notification PDF.`;
-    case "RESULT_DECLARED":
-    case "RESULT":
-      return `${title} Result${yearStr} is officially OUT. Download the merit list and check category-wise cut off marks declared by ${body}. Direct official links to check result inside.`;
-    case "ADMIT_CARD_OUT":
-    case "ADMIT_CARD":
-      return `Download your ${title} Admit Card ${yearStr} for the upcoming ${body} exam. Check your exam center, reporting time, and important instructions. Official download link available.`;
-    case "SYLLABUS":
-      return `Detailed ${title} Syllabus ${yearStr} and latest Exam Pattern. Download the official PDF for ${body} selection process, marking scheme, and subject-wise topics for preparation.`;
-    case "SALARY":
-      return `What is the salary for ${title}? Check latest 7th Pay Commission pay scale, allowances, and monthly in-hand salary for ${title} recruitment by ${body}.`;
-    case "CUTOFF":
-      return `${title} Expected Cut Off Marks and official previous year cutoff data for UR, OBC, SC, ST, and EWS candidates. Check ${body} selection benchmarks here.`;
-    case "NOTIFICATION":
-      return `${title} Official Notification PDF is available now. Check detailed eligibility, important dates, and ${stripMarkdown(vacancies)} vacancies announced by ${body}.`;
+    case ExamStatus.REGISTRATION_OPEN:
+      return `Apply for ${displayTitle} by ${body} ${stripMarkdown(vacancies)} Check eligibility criteria, age limit, and salary. Get the direct application link and official notification PDF.`;
+    case ExamStatus.RESULT_DECLARED:
+      return `${name} Result ${year} is officially OUT. Download the merit list and check category-wise cut off marks declared by ${body}. Direct official links to check result inside.`;
+    case ExamStatus.ADMIT_CARD_OUT:
+      return `Download your ${name} Admit Card ${year} for the upcoming ${body} exam. Check your exam center, reporting time, and important instructions. Official download link available.`;
+    case ExamStatus.ANSWER_KEY_OUT:
+      return `Detailed ${name} Answer Key ${year} and latest Exam Pattern. Download the official PDF for ${body} selection process, marking scheme, and subject-wise topics for preparation.`;
+    case ExamStatus.NOTIFICATION:
+      return `${displayTitle} Official Notification PDF is available now. Check detailed eligibility, important dates, and ${stripMarkdown(vacancies)} vacancies announced by ${body}.`;
     default:
-      return `Get real-time updates for ${title}${yearStr} recruitment by ${body}. Check application status, syllabus, admit card, and result dates on Exam Suchana — the fastest update portal.`;
+      return `Get real-time updates for ${displayTitle} by ${body}. Check application status, syllabus, admit card, and result dates on Exam Suchana — the fastest update portal.`;
   }
 }

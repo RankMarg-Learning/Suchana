@@ -6,13 +6,13 @@ import { AppError } from '../middleware/errorHandler';
 import { env } from '../config/env';
 import type { CreateExamDto, UpdateExamDto, ListExamQuery } from '../schemas/exam.schema';
 import { logger } from '../utils/logger';
-import { SeoService } from './seo.service';
+import { ExamStatus } from '../constants/enums';
 
 const EXAM_LIST_CACHE_KEY = 'exams:list';
 const EXAM_DETAIL_CACHE_KEY = (id: string) => `exams:detail:${id}`;
 
 export async function listExams(query: ListExamQuery, bypassCache = false) {
-    const { page, limit, category, status, conductingBody, search, isPublished, examLevel, state, lifecycleStage, startDate, endDate } = query;
+    const { page, limit, category, status, conductingBody, search, isPublished, isTrending, examLevel, state, lifecycleStage, startDate, endDate } = query;
     const cacheKey = `${EXAM_LIST_CACHE_KEY}:${JSON.stringify(query)}`;
 
     const fetchExams = async () => {
@@ -24,6 +24,7 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
                 conductingBody: { contains: conductingBody, mode: 'insensitive' },
             }),
             ...(isPublished !== undefined && { isPublished }),
+            ...(isTrending !== undefined && { isTrending }),
             ...(examLevel && { examLevel }),
             ...(state && { state: { contains: state, mode: 'insensitive' } }),
             ...(search && {
@@ -73,6 +74,7 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
                     conductingBody: true,
                     status: true,
                     isPublished: true,
+                    isTrending: true,
                     publishedAt: true,
                     updatedAt: true,
                 },
@@ -91,14 +93,13 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
     return cacheService.getOrSet(cacheKey, env.CACHE_TTL_EXAM_LIST, fetchExams);
 }
 
-// ─── Get By ID ───────────────────────────────────────────────
 export async function getExamById(id: string, bypassCache = false) {
     const fetchExam = async () => {
         const exam = await prisma.exam.findUnique({
             where: { id },
             include: {
                 lifecycleEvents: {
-                    orderBy: { startsAt: 'asc' },
+                    orderBy: { stageOrder: 'desc' },
                 },
                 seoPages: {
                     where: { isPublished: true },
@@ -122,7 +123,7 @@ export async function getExamBySlug(slug: string, bypassCache = false) {
             where: { slug },
             include: {
                 lifecycleEvents: {
-                    orderBy: { startsAt: 'asc' },
+                    orderBy: { stageOrder: 'desc' },
                 },
                 seoPages: {
                     where: { isPublished: true },
@@ -166,7 +167,10 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
     });
 
 
-    await cacheService.delPattern('exams:list:*');
+    await Promise.all([
+        cacheService.delPattern('exams:list:*'),
+        cacheService.del('content:trending')
+    ]);
 
     logger.info(`Exam created: ${exam.id} by admin ${adminId}`);
 
@@ -195,6 +199,7 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),
         cacheService.del(`exams:slug:${existing.slug}`),
         cacheService.delPattern('exams:list:*'),
+        cacheService.del('content:trending'),
     ]);
 
     return updated;
@@ -211,10 +216,12 @@ export async function deleteExam(id: string, adminId: string) {
         cacheService.del(EXAM_DETAIL_CACHE_KEY(id)),
         cacheService.del(`exams:slug:${existing.slug}`),
         cacheService.delPattern('exams:list:*'),
+        cacheService.del('content:trending'),
     ]);
     logger.info(`Exam deleted: ${id} by admin ${adminId}`);
 }
 
+// ─── Get Saved Exams ─────────────────────────────────────────
 // ─── Get Saved Exams ─────────────────────────────────────────
 export async function getSavedExams(userId: string) {
     const user = await prisma.user.findUnique({
@@ -246,6 +253,49 @@ export async function getSavedExams(userId: string) {
         }
     });
     return exams;
+}
+
+export async function getTrendingContent() {
+    const fetchTrending = async () => {
+        const trendingExams = await prisma.exam.findMany({
+            where: { isPublished: true, isTrending: true },
+            take: 10,
+            orderBy: { updatedAt: 'desc' },
+            select: {
+                id: true, title: true, shortTitle: true, slug: true,
+                category: true, conductingBody: true, status: true,
+                updatedAt: true,
+            }
+        });
+
+        let finalExams = [...trendingExams];
+
+        if (finalExams.length < 10) {
+            const resultExams = await prisma.exam.findMany({
+                where: {
+                    isPublished: true,
+                    status: {
+                        in: [ExamStatus.NOTIFICATION, ExamStatus.REGISTRATION_OPEN, ExamStatus.ADMIT_CARD_OUT]
+                    },
+                    id: { notIn: finalExams.map(e => e.id) }
+                },
+                take: 10 - finalExams.length,
+                orderBy: { updatedAt: 'desc' },
+                select: {
+                    id: true, title: true, shortTitle: true, slug: true,
+                    category: true, conductingBody: true, status: true,
+                    updatedAt: true,
+                }
+            });
+            finalExams = [...finalExams, ...resultExams];
+        }
+
+        return {
+            exams: finalExams
+        };
+    };
+
+    return cacheService.getOrSet('content:trending', env.CACHE_TTL_EXAM_LIST, fetchTrending);
 }
 
 logger.info(`Exam service loaded`);

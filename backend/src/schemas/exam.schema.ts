@@ -3,12 +3,12 @@ import { ExamCategory, ExamStatus, ExamLevel } from '../constants/enums';
 
 export const createExamSchema = z.object({
     title: z.string().min(5, 'Title must be at least 5 characters').max(200),
-    shortTitle: z.string().min(2).max(50),
+    shortTitle: z.string().min(2),
     description: z.string().optional().nullable(),
     category: z.nativeEnum(ExamCategory),
     examLevel: z.nativeEnum(ExamLevel).default(ExamLevel.NATIONAL),
     state: z.string().max(50).optional().nullable(),
-    conductingBody: z.string().min(2).max(100),
+    conductingBody: z.string().min(2),
     age: z.string().optional().nullable(),
     qualificationCriteria: z.string().optional().nullable(),
     totalVacancies: z.string().optional().nullable(),
@@ -19,6 +19,7 @@ export const createExamSchema = z.object({
     notificationUrl: z.string().url().or(z.literal('')).optional().nullable(),
     status: z.nativeEnum(ExamStatus).default(ExamStatus.NOTIFICATION),
     isPublished: z.boolean().default(false),
+    isTrending: z.boolean().default(false),
     createdAt: z.string().optional().nullable(),
 });
 
@@ -32,6 +33,7 @@ export const listExamQuerySchema = z.object({
     conductingBody: z.string().optional(),
     search: z.string().optional(),
     isPublished: z.string().transform((v) => v === 'true').pipe(z.boolean()).optional(),
+    isTrending: z.string().transform((v) => v === 'true').pipe(z.boolean()).optional(),
     examLevel: z.nativeEnum(ExamLevel).optional(),
     state: z.string().optional(),
     lifecycleStage: z.string().optional(),

@@ -19,17 +19,18 @@ export default function SiteFooter() {
           <div className="footer-grid">
             {/* ─── Brand & Summary ─── */}
             <div className="footer-brand">
-              <Link href="/" className="logo">
-                <div className="logo-icon-wrapper">
-                  <Image src={'/examsuchana-logoT.png'} height={44} width={44} alt="Exam Suchana" priority />
+              <Link href="/" className="logo-footer">
+                <div className="logo-icon-footer">
+                  <Image src={'/examsuchana-logoT.png'} height={40} width={40} alt="Exam Suchana" priority />
                 </div>
-                <span className="logo-text">
-                  Exam <span>Suchana</span>
-                </span>
+                <div className="logo-text-footer">
+                  <span className="brand-primary">Exam</span>
+                  <span className="brand-secondary">Suchana</span>
+                </div>
               </Link>
               <p className="footer-brand-desc">
                 India&apos;s most structured government exam lifecycle tracker.
-                Our platform provides millisecond-precise status updates for 500+ exams from 100+ conducting bodies.
+                Real-time status updates for 500+ exams from 100+ official agencies.
               </p>
 
             </div>
@@ -160,6 +161,67 @@ export default function SiteFooter() {
         .footer-tagline {
           font-weight: 500;
           font-size: 13px;
+        }
+        .logo-footer {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          text-decoration: none;
+          margin-bottom: 20px;
+        }
+        .logo-icon-footer {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: #fff;
+          border-radius: 10px;
+          padding: 4px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .logo-text-footer {
+          display: flex;
+          flex-direction: column;
+          line-height: 1;
+        }
+        .brand-primary {
+          font-size: 20px;
+          font-weight: 800;
+          color: var(--text-primary);
+          letter-spacing: -0.5px;
+        }
+        .brand-secondary {
+          font-size: 16px;
+          font-weight: 600;
+          color: var(--accent);
+          margin-top: 2px;
+        }
+        .footer-brand-desc {
+          font-size: 14px;
+          line-height: 1.6;
+          color: var(--text-muted);
+          max-width: 320px;
+          margin-bottom: 24px;
+        }
+        .footer-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 6px 14px;
+          background: rgba(var(--accent-rgb), 0.04);
+          border: 1px solid rgba(var(--accent-rgb), 0.1);
+          border-radius: 100px;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--accent);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .badge-dot {
+          width: 5px;
+          height: 5px;
+          background: var(--accent);
+          border-radius: 50%;
+          box-shadow: 0 0 8px var(--accent);
         }
       `}} />
     </footer>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { SITE_URL } from "./lib/api";
@@ -12,17 +12,23 @@ const inter = Inter({
   display: "swap",
 });
 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+});
+
 const currentYear = new Date().getFullYear();
 const nextYear = currentYear + 1;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: `Sarkari Result ${currentYear} — Latest Govt Jobs, Exam Notifications & Tracker | Exam Suchana`,
-    template: "%s | Exam Suchana",
+    default: `Exam Suchana — Sarkari Result ${currentYear} | Latest Govt Jobs & Tracker`,
+    template: `%s | Exam Suchana`,
   },
   description:
-    `Track 1000+ Indian Government Exams: GPSC, UPSC, SSC, IBPS, Railways & Defence. Get real-time updates on registration dates, admit cards, syllables, and results with direct official links for ${currentYear}-${nextYear}.`,
+    `Get real-time updates for latest government jobs, exam notifications, admit cards, and results. Track every government exam lifecycle with precision on Exam Suchana — India's Official Exam Tracker.`,
   keywords: [
     "Exam Suchana",
     "government exam notifications",
@@ -171,12 +177,6 @@ export default function RootLayout({
   return (
     <html lang="en-IN" suppressHydrationWarning>
       <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
         <meta name="theme-color" content="#7c3aed" />
 
         {/* JSON-LD Structured Data */}
@@ -189,7 +189,7 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
       </head>
-      <body className={`${inter.variable} antialiased`} suppressHydrationWarning>
+      <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}>
         <Providers>
           <SiteNav />
           {children}

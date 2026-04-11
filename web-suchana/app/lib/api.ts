@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { Exam, LifecycleEvent, SeoPage } from "./types";
 
 export const API_BASE =
@@ -7,6 +8,20 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL || "https://examsuchana.in";
 
 // ─── API Functions ────────────────────────────────────────────────────────────
+
+export async function fetchTrendingContent(): Promise<{ exams: Exam[]; articles: SeoPage[] }> {
+  try {
+    const res = await fetch(`${API_BASE}/exams/trending`, {
+      next: { revalidate: 600 },
+    });
+    if (!res.ok) return { exams: [], articles: [] };
+    const json = await res.json();
+    return json.data ?? { exams: [], articles: [] };
+  } catch (err) {
+    console.error("Error fetching trending content:", err);
+    return { exams: [], articles: [] };
+  }
+}
 
 export async function fetchExamsFromAPI(
   page = 1,
@@ -54,7 +69,8 @@ export async function fetchExamsFromAPI(
   };
 }
 
-export async function fetchExamBySlug(slug: string): Promise<Exam | null> {
+
+export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null> => {
   try {
     const res = await fetch(`${API_BASE}/exams/slug/${slug}`, {
       next: { revalidate: 300 },
@@ -65,11 +81,11 @@ export async function fetchExamBySlug(slug: string): Promise<Exam | null> {
   } catch {
     return null;
   }
-}
+});
 
 // ─── SEO Pages API ────────────────────────────────────────────────────────────
 
-export async function fetchSeoPageBySlug(slug: string): Promise<SeoPage | null> {
+export const fetchSeoPageBySlug = cache(async (slug: string): Promise<SeoPage | null> => {
   try {
     const res = await fetch(`${API_BASE}/seo-pages/${slug}`, {
       next: { revalidate: 3600 }, // ISR: 1 hour
@@ -80,13 +96,14 @@ export async function fetchSeoPageBySlug(slug: string): Promise<SeoPage | null> 
   } catch {
     return null;
   }
-}
+});
 
 export async function fetchSeoPages(
   page = 1,
   limit = 10,
   category?: string,
-  search?: string
+  search?: string,
+  isTrending?: boolean
 ): Promise<{ pages: SeoPage[]; total: number }> {
   try {
     const params = new URLSearchParams();
@@ -94,6 +111,7 @@ export async function fetchSeoPages(
     params.set("limit", String(limit));
     if (category && category !== "ALL") params.set("category", category);
     if (search) params.set("search", search);
+    if (isTrending !== undefined) params.set("isTrending", String(isTrending));
 
     const res = await fetch(`${API_BASE}/seo-pages/list?${params}`, {
       next: { revalidate: 600 },

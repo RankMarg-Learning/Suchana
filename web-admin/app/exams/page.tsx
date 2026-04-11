@@ -97,6 +97,7 @@ export default function ExamsPage() {
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('ALL');
     const [publishFilter, setPublishFilter] = useState('ALL');
+    const [trendingFilter, setTrendingFilter] = useState('ALL');
     const [currentPage, setCurrentPage] = useState(1);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -114,6 +115,8 @@ export default function ExamsPage() {
             status: statusFilter === 'ALL' ? undefined : statusFilter,
             isPublished: publishFilter === 'PUBLISHED' ? 'true' :
                 publishFilter === 'UNPUBLISHED' ? 'false' : undefined,
+            isTrending: trendingFilter === 'TRENDING' ? 'true' :
+                trendingFilter === 'NORMAL' ? 'false' : undefined,
             startDate: startDate ? new Date(startDate).toISOString() : undefined,
             endDate: endDate ? new Date(endDate).toISOString() : undefined
         }),
@@ -181,7 +184,7 @@ export default function ExamsPage() {
     };
 
     return (
-        <div className="space-y-6 container mx-auto py-8">
+        <div className="space-y-6 container mx-auto py-2">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
@@ -203,13 +206,9 @@ export default function ExamsPage() {
                     </Button>
                 </div>
             </div>
-
-            {/* Stats Summary */}
-            <SummaryStats exams={exams} loading={isLoading} />
-
             {/* Filter Bar */}
             <Card className="border shadow-sm">
-                <CardContent className="p-4 flex flex-col md:flex-row gap-4">
+                <CardContent className="p-2 flex flex-col md:flex-row gap-4">
                     <div className="relative flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
@@ -231,6 +230,16 @@ export default function ExamsPage() {
                                 <SelectItem value="ALL">All Visibility</SelectItem>
                                 <SelectItem value="PUBLISHED">Published</SelectItem>
                                 <SelectItem value="UNPUBLISHED">Unpublished</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <Select value={trendingFilter} onValueChange={(val) => { setTrendingFilter(val); setCurrentPage(1); }}>
+                            <SelectTrigger className="w-[140px]">
+                                <SelectValue placeholder="Trending" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">All Content</SelectItem>
+                                <SelectItem value="TRENDING">Trending Only</SelectItem>
+                                <SelectItem value="NORMAL">Regular Only</SelectItem>
                             </SelectContent>
                         </Select>
                         <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
@@ -297,12 +306,19 @@ export default function ExamsPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex flex-col gap-0.5">
-                                            <Link
-                                                href={`/exam/${exam.slug || exam.id}/edit`}
-                                                className="font-semibold text-slate-900 hover:text-primary transition-colors line-clamp-1"
-                                            >
-                                                {exam.title}
-                                            </Link>
+                                            <div className="flex items-center gap-2">
+                                                <Link
+                                                    href={`/exam/${exam.slug || exam.id}/edit`}
+                                                    className="font-semibold text-slate-900 hover:text-primary transition-colors line-clamp-1"
+                                                >
+                                                    {exam.title}
+                                                </Link>
+                                                {exam.isTrending && (
+                                                    <Badge variant="outline" className="bg-amber-50 text-amber-600 border-amber-200 text-[10px] h-4 px-1 py-0 uppercase tracking-wider font-bold">
+                                                        Trending
+                                                    </Badge>
+                                                )}
+                                            </div>
                                             <span className="text-xs text-muted-foreground font-medium">
                                                 {exam.conductingBody}
                                             </span>
@@ -373,6 +389,16 @@ export default function ExamsPage() {
                                                         setSelectedCategories(SEO_CATEGORIES.map(c => c.id));
                                                     }}>
                                                         <Layers className="mr-2 h-4 w-4" /> Generate SEO
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => {
+                                                        examService.updateExam(exam.id, { isTrending: !exam.isTrending })
+                                                            .then(() => {
+                                                                toast.success(`Exam marked as ${!exam.isTrending ? 'trending' : 'normal'}`);
+                                                                queryClient.invalidateQueries({ queryKey: ['exams'] });
+                                                            })
+                                                            .catch(() => toast.error('Failed to update trending status'));
+                                                    }}>
+                                                        <RefreshCw className="mr-2 h-4 w-4" /> {exam.isTrending ? 'Remove Trending' : 'Mark Trending'}
                                                     </DropdownMenuItem>
                                                     <DropdownMenuSeparator />
                                                     <DropdownMenuItem

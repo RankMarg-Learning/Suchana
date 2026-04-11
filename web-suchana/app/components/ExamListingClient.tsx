@@ -36,6 +36,7 @@ export default function ExamListingClient({ title, category, status, conductingB
 
   const loadExams = useCallback(async (reset: boolean, pageNo?: number) => {
     setLoading(true);
+    if (reset) setExams([]); // Clear stale data to show skeletons
     const reqPage = reset ? 1 : (pageNo ?? page);
     try {
       const result = await fetchExamsFromAPI(

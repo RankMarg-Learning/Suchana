@@ -24,6 +24,7 @@ export class AIProvider {
 
   static async extractExamData(plaintext: string, url: string, hintCategory?: string): Promise<AiStructuredExam | null> {
     const prompt = this.buildPrompt(plaintext, url, hintCategory);
+    console.log(prompt)
     const openai = this.getClient();
 
     try {
@@ -51,57 +52,54 @@ export class AIProvider {
 HINT CATEGORY: ${hintCategory ?? 'auto-detect'}
 CURRENT YEAR: ${this.CURRENT_YEAR}
 
-## SCOPE
-Only CENTRAL exams and STATE Grade-A exams.
+## ENUMS (strict — no other values accepted)
+- Exam category: ${EXAM_CATEGORIES.join(' | ')}
+- Exam status: ${EXAM_STATUSES.join(' | ')}
+- Exam level: NATIONAL | STATE | DISTRICT
+- Lifecyle stage: ${LIFECYCLE_STAGES.join(' | ')}
 
 ## RULES
 
-**R1 — MANDATORY STAGES** (always include, even without a date):
-NOTIFICATION, REGISTRATION, ADMIT_CARD, EXAM, RESULT
-→ If date is missing: set isTBD:true, startsAt:null, endsAt:null, title:"<Stage> (To Be Announced)"
+**R0 - USE OF SOURCE DATA** :
+- Try to use more source data for this data struture.
 
-**R2 — OPTIONAL STAGES** (include ONLY if explicitly mentioned in source):
-ANSWER_KEY, DOCUMENT_VERIFICATION, JOINING
-→ Never add TBD placeholders for these.
+**R1 — STAGE EVENT BUILD** :
+- Look about exam and source Important dates and urls to build events.
+- Just look the source url and important dates and according to that build events. and sometime some stage available b/w two event but we  haven't url's and dates according to that stage then set isTBD:true, startsAt:null, endsAt:null, title:"<Stage> (To Be Announced)"
+- Look Some Exam has more than 1 stage exam conducted create this flow by looking the important dates and urls e.g Tier I and Tier II (names of stage according to source)
+- Don't Miss any stage if source has mention and Lifecycle Stage Enums has that stage then add it. and if not their detail will add close stage event description in proper
+- STRICT ENUM: The \`stage\` property MUST be chosen exactly from the provided "Lifecyle stage" enum list. DO NOT invent new stage names.
+- PRIMARY LINK: Every event should have its primary specific link (if available, e.g., apply link for REGISTRATION or download link for ADMIT_CARD) placed in \`actionUrl\` with a suitable succinct \`actionLabel\`.
+- ADDITIONAL LINKS: If an event has multiple links, place the main one in \`actionUrl\` and add the remaining links in the \`description\` field using markdown format (e.g., \`[List 1](url1)\`).
+- NO REPETITION: Do NOT repeat details in the event \`description\` that are represented by \`startsAt\`/\`endsAt\` or global fields (like fees/eligibility). Keep it concise.
 
-**R3 — EXAM PHASES & MULTIPLE POSTS**
-Each phase (Prelims, Mains, Interview) and distinct post (e.g., Officer Scale-I, Office Assistant) gets its OWN set of events if dates differ.
-NOTIFICATION and REGISTRATION are usually shared — create only ONE each unless explicitly separate.
-Label all events with the phase/post name in the title (e.g., "Office Assistant Pre Exam", "Officer Scale-I Admit Card").
-Assign stageOrder strictly by chronological date.
+**R2 - STAGE ORDER** :
+By looking exam process from internet and source dates set stageOrder. and make sure stageOrder is always increasing.(10,20,30..)
 
-Example chronological order:
-10=Notification, 20=Registration, 30=Pre Admit Card (Assistant), 40=Pre Exam (Assistant),
-50=Pre Admit Card (Scale-I), 60=Pre Exam (Scale-I), 70=Pre Result (Assistant), ...
 
-**R4 — DATES & RANGES (CRITICAL)**
+**R3 — DATES & RANGES (CRITICAL)**
 - Format: ISO8601 (YYYY-MM-DDTHH:mm:ss.000Z)
-- Missing year → use CURRENT_YEAR; if month already passed and context is future → CURRENT_YEAR+1
 - isTBD:true only if explicitly stated (TBA) or mandatory stage has no date. Month/Year only (e.g., "Nov 2025") -> set startsAt=1st of month.
 - Start & End Dates: "Apply Start Date" and "Last Date" MUST map to \`startsAt\` and \`endsAt\` respectively of a SINGLE event (e.g., REGISTRATION).
 - Date Ranges / Multiple Dates: For "22 - 23 Nov" or "06, 07, 13 & 14 Dec", set \`startsAt\` = First Date, \`endsAt\` = Last Date.
 - Minor Dates: Fee payment, error correction, and application printing dates should be appended to the corresponding event (like REGISTRATION) description, do NOT create standalone events for them.
 
-**R5 — ENUMS** (strict — no other values accepted)
-- category: ${EXAM_CATEGORIES.join(' | ')}
-- status: ${EXAM_STATUSES.join(' | ')}
-- examLevel: NATIONAL | STATE | DISTRICT
-- stage: ${LIFECYCLE_STAGES.join(' | ')}
 
-**R6 — MARKDOWN FIELDS**
-Use **bold** and - bullets for: age, totalVacancies, applicationFee, qualificationCriteria, salary, additionalDetails, description.
-Keep values exactly as source text — only reformat, never invent.
+**R4 — MARKDOWN FIELDS**
+- Use **bold** and - bullets  and md tables according to source data for: age, totalVacancies, applicationFee, qualificationCriteria, salary, additionalDetails, description.
+- DO NOT prefix or start the data with the field's title (e.g., do NOT start \`qualificationCriteria\` with "**Eligibility Criteria**", do NOT start \`age\` with "**Age Limit**"). Output ONLY the content.
+- Keep values exactly as source text — only reformat, never invent.
+- Markdown should be SEO-friendly.
 
-**R7 — MISSING DATA**
+**R5 — MISSING DATA**
 - Missing scalar → null (not "null", not "N/A")
 - Missing array → []
 - Never invent data not present in source
 
-**R8 — LINKS**
-Extract official URLs only. No third-party, coaching, or news site links.
 
-**R9 — LOCAL EXAMS** (district/city level)
-Omit state field. Include only NOTIFICATION and REGISTRATION events.
+**R7 — SHORT TITLE FORMAT (CRITICAL)**
+- \`shortTitle\` must follow format: "[Known Exam Name] [year]" (e.g., "Indian Navy MR Musician 2026", "SSC GD Constable 2025").
+
 
 ---
 
@@ -113,9 +111,9 @@ ${text}
 OUTPUT: Return only valid JSON — no markdown fences, no extra keys.
 
 {
-  "title": "string",
-  "shortTitle": "string|null",
-  "description": "string (markdown, SEO-friendly)|null",
+  "title": "string (Dynamic SEO Title)",
+  "shortTitle": "string (Format: Exam Name Year)",
+  "description": "string (markdown, SEO-friendly)|null -> about exam in short",
   "conductingBody": "string|null",
   "category": "enum|null",
   "status": "enum|null",
@@ -134,10 +132,10 @@ OUTPUT: Return only valid JSON — no markdown fences, no extra keys.
   "aiNotes": null,
   "events": [
     {
-      "stage": "enum",
+      "stage": "string (MUST be one of Lifecycle stage ENUM exactly)",
       "stageOrder": "number",
       "title": "string",
-      "description": "string (SEO)",
+      "description": "string (SEO) -> Data which is not shore in this json event but imp, if not then empty string",
       "startsAt": "ISO8601|null",
       "endsAt": "ISO8601|null",
       "isTBD": "boolean",
