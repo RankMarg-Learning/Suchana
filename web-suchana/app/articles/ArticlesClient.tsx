@@ -7,8 +7,11 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { fetchSeoPages } from "../lib/api";
 import { cleanLabel } from "../lib/types";
 import { LeaderboardAd, SidebarAd } from "../components/AdUnits";
+import { trackFunnelStep } from "../lib/telemetry";
+import { useScrollTracking } from "../hooks/useScrollTracking";
 
 export default function ArticlesClient() {
+  useScrollTracking("articles_list");
   const [mounted, setMounted] = useState(false);
   const [category, setCategory] = useState("ALL");
   const [search, setSearch] = useState("");
@@ -150,7 +153,16 @@ export default function ArticlesClient() {
           ) : (
             <div className="latest-articles-list" style={{ marginTop: '20px' }}>
               {allArticles.map(article => (
-                <Link key={article.id} href={`/${article.slug}`} className="article-list-item">
+                <Link 
+                  key={article.id} 
+                  href={`/${article.slug}`} 
+                  className="article-list-item"
+                  onClick={() => trackFunnelStep('article_discovery_click', {
+                    article_id: article.id,
+                    article_slug: article.slug,
+                    article_title: article.title
+                  })}
+                >
                   <div className="article-list-content">
                     <h4 className="article-list-title">{article.title}</h4>
                     <div className="article-list-meta">

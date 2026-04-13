@@ -8,8 +8,11 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { ExamListRow, SkeletonRow } from "./components/ExamCard";
 import { fetchTrendingContent } from "./lib/api";
+import { trackFunnelStep } from "./lib/telemetry";
+import { useScrollTracking } from "./hooks/useScrollTracking";
 
 export default function HomePage() {
+  useScrollTracking("homepage");
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
@@ -46,13 +49,13 @@ export default function HomePage() {
               Track 1000+ exams across UPSC, SSC, Banking & Railways.
             </p>
             <div className="hero-action-buttons animate-slide-up delay-200" style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '16px' }}>
-              <Link href="/latest-jobs" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '100px', fontSize: '15px', fontWeight: 700, textDecoration: 'none', border: '1px solid #bfdbfe', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.1)' }}>
+              <Link href="/latest-jobs" onClick={() => trackFunnelStep('hero_cta_click', { cta: 'latest_jobs' })} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#eff6ff', color: '#2563eb', borderRadius: '100px', fontSize: '15px', fontWeight: 700, textDecoration: 'none', border: '1px solid #bfdbfe', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(37, 99, 235, 0.1)' }}>
                 <Bell size={18} /> Latest Jobs
               </Link>
-              <Link href="/s/admit-card-out" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#fff7ed', color: '#ea580c', borderRadius: '100px', fontSize: '15px', fontWeight: 700, textDecoration: 'none', border: '1px solid #fed7aa', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(234, 88, 12, 0.1)' }}>
+              <Link href="/s/admit-card-out" onClick={() => trackFunnelStep('hero_cta_click', { cta: 'admit_cards' })} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#fff7ed', color: '#ea580c', borderRadius: '100px', fontSize: '15px', fontWeight: 700, textDecoration: 'none', border: '1px solid #fed7aa', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(234, 88, 12, 0.1)' }}>
                 <Zap size={18} /> Admit Cards
               </Link>
-              <Link href="/s/result-declared" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#ecfdf5', color: '#059669', borderRadius: '100px', fontSize: '15px', fontWeight: 700, textDecoration: 'none', border: '1px solid #a7f3d0', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(5, 150, 105, 0.1)' }}>
+              <Link href="/s/result-declared" onClick={() => trackFunnelStep('hero_cta_click', { cta: 'results' })} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 24px', backgroundColor: '#ecfdf5', color: '#059669', borderRadius: '100px', fontSize: '15px', fontWeight: 700, textDecoration: 'none', border: '1px solid #a7f3d0', transition: 'all 0.2s', boxShadow: '0 4px 12px rgba(5, 150, 105, 0.1)' }}>
                 <Award size={18} /> Results
               </Link>
             </div>

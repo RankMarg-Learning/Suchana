@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Exam, STATUS_LABELS, cleanLabel } from "../lib/types";
+import { trackFunnelStep } from "../lib/telemetry";
 
 export function StatusBadge({ status }: { status: string }) {
   return (
@@ -19,6 +20,11 @@ export function ExamListRow({ exam }: { exam: Exam }) {
       href={`/exam/${exam.slug}`}
       className="exam-list-row compact-row"
       aria-label={`View ${exam.shortTitle ?? exam.title} details`}
+      onClick={() => trackFunnelStep('exam_discovery_click', { 
+        exam_id: exam.id, 
+        exam_slug: exam.slug,
+        exam_title: exam.shortTitle || exam.title 
+      })}
     >
       <div className="exam-row-main">
         <h2 className="exam-row-title">{exam.title}</h2>

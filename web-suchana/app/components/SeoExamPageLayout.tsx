@@ -24,6 +24,8 @@ import LatestArticlesSection from './LatestArticlesSection';
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeoPages } from '../lib/api';
+import { trackFunnelStep, trackConversion } from '../lib/telemetry';
+import { useScrollTracking } from '../hooks/useScrollTracking';
 
 interface Props {
   exam: Exam;
@@ -34,6 +36,7 @@ export default function SeoExamPageLayout({
   exam,
   seoPage
 }: Props) {
+  useScrollTracking(`seo_article:${seoPage.slug}`);
   const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
 
   const { data: latestArticles = [] } = useQuery({
@@ -103,7 +106,15 @@ export default function SeoExamPageLayout({
         {/* ─── Left Sidebar ─── */}
         <aside className="sidebar-left">
           <div className="sidebar-widget">
-            <Link href={`/exam/${exam.slug}`} className="back-btn" style={{ fontSize: '0.85rem' }}>
+            <Link 
+              href={`/exam/${exam.slug}`} 
+              className="back-btn" 
+              style={{ fontSize: '0.85rem' }}
+              onClick={() => trackFunnelStep('article_to_timeline_click', {
+                article_slug: seoPage.slug,
+                exam_slug: exam.slug
+              })}
+            >
               <ChevronLeft size={16} /> Full Timeline
             </Link>
           </div>
@@ -189,6 +200,11 @@ export default function SeoExamPageLayout({
                     rel="noopener noreferrer"
                     className="btn btn-primary"
                     style={{ width: '100%', justifyContent: 'center', padding: '14px 20px', fontSize: '0.9rem' }}
+                    onClick={() => trackConversion('article_live_action_click', {
+                      article_slug: seoPage.slug,
+                      exam_slug: exam.slug,
+                      url: liveEvent.actionUrl
+                    })}
                   >
                     Open Official Link <ArrowRight size={18} />
                   </a>
@@ -280,7 +296,17 @@ export default function SeoExamPageLayout({
             </div>
 
             {exam.officialWebsite && (
-              <a href={exam.officialWebsite} target="_blank" rel="noopener noreferrer" className="btn btn-ghost" style={{ width: '100%', marginTop: 20, justifyContent: 'center', fontSize: '0.8rem' }}>
+              <a 
+                href={exam.officialWebsite} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="btn btn-ghost" 
+                style={{ width: '100%', marginTop: 20, justifyContent: 'center', fontSize: '0.8rem' }}
+                onClick={() => trackConversion('article_official_site_click', {
+                  article_slug: seoPage.slug,
+                  exam_slug: exam.slug
+                })}
+              >
                 <ExternalLink size={14} /> Visit Official Site
               </a>
             )}
