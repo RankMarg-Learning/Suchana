@@ -22,7 +22,9 @@ import {
     ExternalLink as LinkIcon2,
     Check,
     ChevronsUpDown,
-    Share2
+    Share2,
+    BookOpen,
+    LayoutGrid
 } from 'lucide-react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
@@ -468,6 +470,26 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                                                 </Button>
                                                             </TooltipTrigger>
                                                             <TooltipContent>Insert Timeline Link</TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 hover:text-amber-800" onClick={() => insertTemplate('\n[BOOK: Book Title | https://image-url.jpg | https://buy-url.com]')}>
+                                                                    <BookOpen className="w-3 h-3" />
+                                                                    BOOKS
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert Topper Recommended Book</TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-800" onClick={() => insertTemplate('\n[BOOKGRID: Book 1 | Img1 | Link1 ; Book 2 | Img2 | Link2 ; Book 3 | Img3 | Link3]')}>
+                                                                    <LayoutGrid className="w-3 h-3" />
+                                                                    MINI GRID
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert Compact 3-Book Grid</TooltipContent>
                                                         </Tooltip>
                                                     </div>
 

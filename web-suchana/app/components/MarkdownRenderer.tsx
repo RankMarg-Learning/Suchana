@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
-import { ExternalLink, Info, AlertTriangle, Lightbulb, ArrowRight, Send, Calendar, MessageCircle } from "lucide-react";
+import { ExternalLink, Info, AlertTriangle, Lightbulb, ArrowRight, Send, Calendar, MessageCircle, BookOpen } from "lucide-react";
 import { formatDatesInText, generateHeadingId } from "@/app/lib/types";
 
 interface MarkdownRendererProps {
@@ -35,6 +35,16 @@ export default function MarkdownRenderer({
     // 4. WhatsApp: [WHATSAPP: Label | URL]
     final = final.replace(/\[WHATSAPP:\s*(.*?)\s*\|\s*(.*?)\s*\]/gi, '<div data-custom="whatsapp" data-label="$1" data-url="$2"></div>');
 
+    // 5. Book: [BOOK: Title | Image | URL]
+    final = final.replace(/\[BOOK:\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\]/gi, '<div data-custom="book" data-label="$1" data-image="$2" data-url="$3"></div>');
+
+    // 6. Mini Book Grid: [BOOKGRID: Title1|Img1|URL1 ; Title2|Img2|URL2 ; Title3|Img3|URL3]
+    final = final.replace(/\[BOOKGRID:\s*(.*?)\s*\]/gi, (match, content) => {
+      // Clean the content to be passed as an attribute
+      const encoded = content.replace(/"/g, '&quot;');
+      return `<div data-custom="book-grid" data-books="${encoded}"></div>`;
+    });
+
     return formatDatesInText(final, includeTime);
   }, [content, includeTime]);
 
@@ -53,6 +63,7 @@ export default function MarkdownRenderer({
             const custom = props['data-custom'];
             const label = props['data-label'];
             const url = props['data-url'];
+            const image = props['data-image'];
             
             if (custom === 'read-more') {
               return (
@@ -91,6 +102,60 @@ export default function MarkdownRenderer({
                   <div className="callout-content">
                     <a href={url}>{label}</a>
                   </div>
+                </div>
+              );
+            }
+            if (custom === 'book') {
+              return (
+                <div className="book-card-container">
+                  <div className="book-card">
+                    <div className="book-badge">Topper Recommended</div>
+                    <div className="book-image">
+                      <img src={image} alt={label} loading="lazy" />
+                    </div>
+                    <div className="book-info">
+                      <h4 className="book-title">{label}</h4>
+                      <a href={url} target="_blank" rel="noopener noreferrer" className="book-buy-btn">
+                        <BookOpen size={14} className="mr-1" />
+                        See Book
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            if (custom === 'book-grid') {
+              const booksRaw = props['data-books'] || "";
+              const books = booksRaw.split(';').map((b: string) => b.trim()).filter(Boolean);
+              
+              return (
+                <div className="mini-book-grid">
+                  {books.map((bookStr: string, idx: number) => {
+                    const parts = bookStr.split('|').map(s => s.trim());
+                    if (parts.length < 3) return null;
+                    
+                    // The last two are always URL and Image
+                    const bUrl = parts.pop();
+                    const bImage = parts.pop();
+                    const bTitle = parts.join(' | '); // Keep any extra pipes in title
+                    
+                    if (!bTitle || !bImage || !bUrl) return null;
+                    
+                    return (
+                      <div key={idx} className="mini-book-card">
+                        <div className="mini-book-badge">Topper Recommended</div>
+                        <div className="mini-book-image-container">
+                          <img src={bImage} alt={bTitle} loading="lazy" />
+                        </div>
+                        <div className="mini-book-info-container">
+                          <h5 className="mini-book-card-title" title={bTitle}>{bTitle}</h5>
+                          <a href={bUrl} target="_blank" rel="noopener noreferrer" className="mini-book-card-link">
+                            See Book
+                          </a>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               );
             }
