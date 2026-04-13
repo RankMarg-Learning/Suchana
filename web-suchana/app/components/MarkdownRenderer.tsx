@@ -3,7 +3,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
-import { ExternalLink, Info, AlertTriangle, Lightbulb } from "lucide-react";
+import { ExternalLink, Info, AlertTriangle, Lightbulb, ArrowRight, Send, Calendar, MessageCircle } from "lucide-react";
 import { formatDatesInText, generateHeadingId } from "@/app/lib/types";
 
 interface MarkdownRendererProps {
@@ -21,8 +21,21 @@ export default function MarkdownRenderer({
 }: MarkdownRendererProps) {
   const processedContent = useMemo(() => {
     if (!content) return "";
-    const unescaped = content.replace(/\\n/g, "\n");
-    return formatDatesInText(unescaped, includeTime);
+    let final = content.replace(/\\n/g, "\n");
+    
+    // 1. Timeline: [TIMELINE: Label | URL]
+    final = final.replace(/\[TIMELINE:\s*(.*?)\s*\|\s*(.*?)\s*\]/gi, '<div data-custom="timeline" data-label="$1" data-url="$2"></div>');
+    
+    // 2. Read More: [READMORE: Label | URL]
+    final = final.replace(/\[READMORE:\s*(.*?)\s*\|\s*(.*?)\s*\]/gi, '<div data-custom="read-more" data-label="$1" data-url="$2"></div>');
+    
+    // 3. Telegram: [TELEGRAM: Label | URL]
+    final = final.replace(/\[TELEGRAM:\s*(.*?)\s*\|\s*(.*?)\s*\]/gi, '<div data-custom="telegram" data-label="$1" data-url="$2"></div>');
+
+    // 4. WhatsApp: [WHATSAPP: Label | URL]
+    final = final.replace(/\[WHATSAPP:\s*(.*?)\s*\|\s*(.*?)\s*\]/gi, '<div data-custom="whatsapp" data-label="$1" data-url="$2"></div>');
+
+    return formatDatesInText(final, includeTime);
   }, [content, includeTime]);
 
   if (!content) return null;
@@ -36,31 +49,52 @@ export default function MarkdownRenderer({
           h2: ({ children }) => <h2 id={generateHeadingId(children)}>{children}</h2>,
           h3: ({ children }) => <h3 id={generateHeadingId(children)}>{children}</h3>,
           h4: ({ children }) => <h4 id={generateHeadingId(children)}>{children}</h4>,
-          blockquote: ({ children }) => {
-            // Check for special callout prefixes like [!IMPORTANT] or **Important:**
-            const firstChild = Array.isArray(children) ? children[0] : children;
-            const textContent = typeof firstChild === 'string' ? firstChild : '';
+          div: ({ node, ...props }: any) => {
+            const custom = props['data-custom'];
+            const label = props['data-label'];
+            const url = props['data-url'];
             
-            let type: 'info' | 'warning' | 'tip' | 'default' = 'default';
-            let icon = null;
-            
-            if (textContent.includes('[!IMPORTANT]') || textContent.includes('Important:')) {
-              type = 'warning';
-              icon = <AlertTriangle size={18} />;
-            } else if (textContent.includes('[!TIP]') || textContent.includes('Tip:')) {
-              type = 'tip';
-              icon = <Lightbulb size={18} />;
-            } else if (textContent.includes('[!NOTE]') || textContent.includes('Note:')) {
-              type = 'info';
-              icon = <Info size={18} />;
+            if (custom === 'read-more') {
+              return (
+                <div className="callout-box callout-related">
+                  <div className="callout-icon"><ArrowRight size={18} /></div>
+                  <div className="callout-content">
+                    <a href={url}>{label}</a>
+                  </div>
+                </div>
+              );
             }
-
-            return (
-              <div className={`callout-box callout-${type}`}>
-                {icon && <div className="callout-icon">{icon}</div>}
-                <div className="callout-content">{children}</div>
-              </div>
-            );
+            if (custom === 'telegram') {
+              return (
+                <div className="callout-box callout-telegram">
+                  <div className="callout-icon"><Send size={18} /></div>
+                  <div className="callout-content">
+                    <a href={url} target="_blank" rel="noopener noreferrer">{label}</a>
+                  </div>
+                </div>
+              );
+            }
+            if (custom === 'whatsapp') {
+              return (
+                <div className="callout-box callout-whatsapp">
+                  <div className="callout-icon"><MessageCircle size={18} /></div>
+                  <div className="callout-content">
+                    <a href={url} target="_blank" rel="noopener noreferrer">{label}</a>
+                  </div>
+                </div>
+              );
+            }
+            if (custom === 'timeline') {
+              return (
+                <div className="callout-box callout-timeline">
+                  <div className="callout-icon"><Calendar size={18} /></div>
+                  <div className="callout-content">
+                    <a href={url}>{label}</a>
+                  </div>
+                </div>
+              );
+            }
+            return <div {...props} />;
           },
           table: ({ node, ...props }) => (
             <div className="table-responsive">

@@ -5014,7 +5014,7 @@ body::before {
 }
 
 .callout-content {
-  font-size: 0.95rem;
+  font-size: inherit;
   line-height: 1.6;
 }
 
@@ -5059,6 +5059,90 @@ body::before {
   background: var(--bg-secondary);
   border-color: var(--border);
   color: var(--text-secondary);
+}
+
+.callout-box {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  margin: 1.25rem 0;
+  border-radius: 4px;
+  background: transparent;
+  border-left: 2px solid var(--accent);
+  transition: all 0.2s ease;
+}
+
+.callout-box:hover {
+  background: rgba(124, 58, 237, 0.03);
+  padding-left: 1rem;
+}
+
+.callout-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--accent);
+  opacity: 0.7;
+}
+
+.callout-content {
+  flex-grow: 1;
+}
+
+.callout-content a {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: underline !important;
+  text-decoration-color: rgba(124, 58, 237, 0.3) !important;
+  text-underline-offset: 4px;
+  font-size: 0.9375rem;
+  display: inline;
+  transition: all 0.2s ease;
+}
+
+.callout-box:hover .callout-content a {
+  color: var(--accent);
+  text-decoration-color: var(--accent) !important;
+}
+
+/* Variant Specifics */
+.callout-related { border-left-color: var(--accent); }
+.callout-related:hover .callout-content a {
+  color: var(--accent);
+  text-decoration-color: var(--accent) !important;
+}
+
+.callout-telegram { border-left-color: #0088cc; }
+.callout-telegram .callout-icon { color: #0088cc; }
+.callout-telegram:hover .callout-content a { 
+  color: #0088cc; 
+  text-decoration-color: #0088cc !important;
+}
+
+.callout-whatsapp { border-left-color: #25d366; }
+.callout-whatsapp .callout-icon { color: #25d366; }
+.callout-whatsapp:hover .callout-content a { 
+  color: #25d366; 
+  text-decoration-color: #25d366 !important;
+}
+
+.callout-timeline { border-left-color: var(--accent); }
+.callout-timeline:hover .callout-content a {
+  color: var(--accent);
+  text-decoration-color: var(--accent) !important;
+}
+
+.callout-related a {
+  color: inherit !important;
+  text-decoration: none !important;
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.callout-related a:hover {
+  border-bottom-color: var(--accent);
 }
 
 .markdown-hr {
