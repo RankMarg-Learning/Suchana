@@ -11,8 +11,8 @@ const { PrismaClient } = require('@prisma/client');
  */
 
 async function main() {
-  const sourceUrl = ""
-  const destUrl = "";
+  const sourceUrl = process.env.PROD_DATABASE_URL
+  const destUrl = process.env.DATABASE_URL
 
   if (!sourceUrl || !destUrl) {
     console.error('❌ Error: Please provide both SOURCE_DATABASE_URL and DEV_DATABASE_URL');

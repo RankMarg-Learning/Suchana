@@ -168,52 +168,55 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
     };
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 container mx-auto py-8">
-            <div className="flex items-center justify-between gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 container mx-auto py-4 md:py-8">
+            <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b pb-6">
                 <div className="flex items-center gap-4">
-                    <Button variant="outline" size="icon" asChild type="button">
+                    <Button variant="outline" size="icon" asChild type="button" className="shrink-0">
                         <Link href="/exams">
                             <ArrowLeft className="h-4 w-4" />
                         </Link>
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold">{isEdit ? 'Edit Exam' : 'Create New Exam'}</h1>
-                        <p className="text-sm text-muted-foreground">Manage exam details and recruitment lifecycle</p>
+                        <h1 className="text-xl md:text-2xl font-bold line-clamp-1">{isEdit ? 'Edit Exam' : 'Create New Exam'}</h1>
+                        <p className="text-xs md:text-sm text-muted-foreground">Manage exam details and recruitment lifecycle</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3">
                     {isEdit && (
                         <Button
                             type="button"
                             variant="outline"
-                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            size="sm"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50 h-9"
                             onClick={() => setIsShareDialogOpen(true)}
                         >
                             <Share2 className="mr-2 h-4 w-4" />
-                            Share Strategy
+                            <span className="hidden xs:inline">Share Strategy</span>
+                            <span className="xs:hidden">Share</span>
                         </Button>
                     )}
-                    <div className="flex items-center space-x-2 mr-2">
+                    <div className="flex items-center space-x-2 bg-amber-50 px-2 py-1.5 rounded-lg border border-amber-100">
                         <Switch
                             id="trending"
                             checked={isTrending}
                             onCheckedChange={(checked) => setValue('isTrending', checked)}
-                            className="data-[state=checked]:bg-amber-500"
+                            className="data-[state=checked]:bg-amber-500 scale-75 md:scale-100"
                         />
-                        <Label htmlFor="trending" className="text-amber-700 font-medium">Trending</Label>
+                        <Label htmlFor="trending" className="text-amber-700 font-bold text-[10px] md:text-xs uppercase tracking-tight">Trending</Label>
                     </div>
-                    <div className="flex items-center space-x-2 mr-4">
+                    <div className="flex items-center space-x-2 bg-slate-50 px-2 py-1.5 rounded-lg border border-slate-200">
                         <Switch
                             id="published"
                             checked={isPublished}
                             onCheckedChange={(checked) => setValue('isPublished', checked)}
+                            className="scale-75 md:scale-100"
                         />
-                        <Label htmlFor="published">{isPublished ? 'Published' : 'Draft'}</Label>
+                        <Label htmlFor="published" className="text-slate-600 font-bold text-[10px] md:text-xs uppercase tracking-tight">{isPublished ? 'Published' : 'Draft'}</Label>
                     </div>
-                    <Button type="submit" disabled={mutation.isPending}>
+                    <Button type="submit" disabled={mutation.isPending} size="sm" className="h-9 px-4">
                         {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        Save Exam
+                        Save <span className="hidden sm:inline ml-1">Exam</span>
                     </Button>
                 </div>
             </div>

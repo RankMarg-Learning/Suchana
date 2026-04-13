@@ -186,34 +186,37 @@ export default function ExamsPage() {
     return (
         <div className="space-y-6 container mx-auto py-2">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight text-slate-900">Exams</h1>
-                    <p className="text-muted-foreground mt-1 text-sm">Reviewing {globalCount} exam lifecycles and recruitment schedules.</p>
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900">Exams</h1>
+                    <p className="text-muted-foreground mt-1 text-xs md:text-sm">Reviewing {globalCount} exam lifecycles and recruitment schedules.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3">
                     <Button
                         variant="outline"
+                        size="sm"
+                        className="md:h-10 md:px-4"
                         onClick={() => queryClient.invalidateQueries({ queryKey: ['exams'] })}
                         disabled={isLoading || isRefetching}
                     >
                         <RefreshCw className={cn("mr-2 h-4 w-4", isRefetching && "animate-spin")} />
-                        Refresh
+                        <span className="hidden xs:inline">Refresh</span>
                     </Button>
-                    <Button onClick={() => router.push('/exams/create')}>
+                    <Button size="sm" className="md:h-10 md:px-4" onClick={() => router.push('/exams/create')}>
                         <Plus className="mr-2 h-4 w-4" />
-                        Create Exam
+                        New Exam
                     </Button>
                 </div>
             </div>
+
             {/* Filter Bar */}
             <Card className="border shadow-sm">
-                <CardContent className="p-2 flex flex-col md:flex-row gap-4">
-                    <div className="relative flex-1">
+                <CardContent className="p-3 space-y-4">
+                    <div className="relative w-full">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input
                             placeholder="Search title, authority or slug..."
-                            className="pl-9"
+                            className="pl-9 w-full"
                             value={search}
                             onChange={(e) => {
                                 setSearch(e.target.value);
@@ -221,9 +224,10 @@ export default function ExamsPage() {
                             }}
                         />
                     </div>
-                    <div className="flex gap-3">
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                         <Select value={publishFilter} onValueChange={(val) => { setPublishFilter(val); setCurrentPage(1); }}>
-                            <SelectTrigger className="w-[160px]">
+                            <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Visibility" />
                             </SelectTrigger>
                             <SelectContent>
@@ -232,8 +236,9 @@ export default function ExamsPage() {
                                 <SelectItem value="UNPUBLISHED">Unpublished</SelectItem>
                             </SelectContent>
                         </Select>
+
                         <Select value={trendingFilter} onValueChange={(val) => { setTrendingFilter(val); setCurrentPage(1); }}>
-                            <SelectTrigger className="w-[140px]">
+                            <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Trending" />
                             </SelectTrigger>
                             <SelectContent>
@@ -242,8 +247,9 @@ export default function ExamsPage() {
                                 <SelectItem value="NORMAL">Regular Only</SelectItem>
                             </SelectContent>
                         </Select>
+
                         <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
-                            <SelectTrigger className="w-[180px]">
+                            <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Status" />
                             </SelectTrigger>
                             <SelectContent>
@@ -254,21 +260,19 @@ export default function ExamsPage() {
                             </SelectContent>
                         </Select>
 
-                        <div className="flex items-center gap-2">
-                            <Input
-                                type="date"
-                                className="w-[140px]"
-                                value={startDate}
-                                onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
-                            />
-                            <span className="text-muted-foreground">-</span>
-                            <Input
-                                type="date"
-                                className="w-[140px]"
-                                value={endDate}
-                                onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
-                            />
-                        </div>
+                        <Input
+                            type="date"
+                            className="w-full"
+                            value={startDate}
+                            onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                        />
+                        
+                        <Input
+                            type="date"
+                            className="w-full"
+                            value={endDate}
+                            onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                        />
                     </div>
                 </CardContent>
             </Card>
@@ -351,7 +355,7 @@ export default function ExamsPage() {
                                         </Button>
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div className="flex items-center justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"

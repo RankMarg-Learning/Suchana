@@ -81,10 +81,10 @@ export default function DashboardPage() {
     return (
         <div className="container mx-auto py-8 space-y-8 max-w-7xl">
             {/* Simple Header */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b pb-6">
                 <div>
-                    <h1 className="text-3xl font-bold tracking-tight">Intelligence Dashboard</h1>
-                    <p className="text-muted-foreground mt-1">
+                    <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Intelligence Dashboard</h1>
+                    <p className="text-muted-foreground mt-1 text-xs md:text-sm">
                         Monitor system health, pipeline activity, and exam lifecycle events.
                     </p>
                 </div>
@@ -95,8 +95,8 @@ export default function DashboardPage() {
                         onClick={handleRefresh}
                         disabled={isRefetching}
                     >
-                        <RefreshCw className={cn("w-4 h-4 mr-2", isRefetching && "animate-spin")} />
-                        Refresh
+                        <RefreshCw className={cn("w-4 h-4", isRefetching && "animate-spin")} />
+                        <span className="hidden xs:inline ml-2">Refresh</span>
                     </Button>
                     <Button size="sm" asChild>
                         <Link href="/exams/create">New Exam</Link>

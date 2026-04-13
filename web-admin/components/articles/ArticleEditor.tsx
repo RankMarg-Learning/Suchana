@@ -8,16 +8,33 @@ import {
     Code,
     RefreshCw,
     ImageIcon,
-    Link as LinkIcon,
-    Globe,
-    Tag,
-    Share2,
+    Search,
+    Bold,
+    Italic,
+    List,
+    Heading1,
+    Heading2,
+    Heading3,
+    MessageCircle,
+    Send,
+    Calendar,
+    ArrowRightCircle,
+    ExternalLink as LinkIcon2,
     Check,
     ChevronsUpDown,
-    Search
+    Share2,
+    BookOpen,
+    LayoutGrid
 } from 'lucide-react';
 import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -219,6 +236,32 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
     );
 
 
+    const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+    const insertTemplate = (template: string) => {
+        const textarea = textareaRef.current;
+        if (!textarea) {
+            setFormData(prev => ({ ...prev, content: (prev.content || '') + '\n' + template }));
+            return;
+        }
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const text = formData.content || '';
+        const before = text.substring(0, start);
+        const after = text.substring(end);
+
+        const newContent = before + template + after;
+        setFormData(prev => ({ ...prev, content: newContent }));
+
+        // Give focus back and set cursor
+        setTimeout(() => {
+            textarea.focus();
+            const newPos = start + template.length;
+            textarea.setSelectionRange(newPos, newPos);
+        }, 10);
+    };
+
     const handleTitleChange = (newTitle: string) => {
         const updates: Partial<SeoPage> = { title: newTitle };
         if (!isSlugLocked) {
@@ -324,19 +367,162 @@ export default function ArticleEditor({ initialData, exams, isSaving, onSave, ti
                                                 type="button"
                                                 title={isSlugLocked ? "Unlock to auto-generate from title" : "Lock to prevent auto-changes"}
                                             >
-                                                {isSlugLocked ? <LinkIcon className="w-4 h-4 text-muted-foreground" /> : <RefreshCw className="w-4 h-4 text-blue-500" />}
+                                                {isSlugLocked ? <LinkIcon2 className="w-4 h-4 text-muted-foreground" /> : <RefreshCw className="w-4 h-4 text-blue-500" />}
                                             </Button>
                                         </div>
                                     </div>
                                     <div className="space-y-2">
-                                        <Label htmlFor="content">Content (Markdown)</Label>
-                                        <TextareaAutosize
-                                            id="content"
-                                            placeholder="Write your content here..."
-                                            className="min-h-[400px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 resize-none"
-                                            value={formData.content}
-                                            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                                        />
+                                        <div className="flex items-center justify-between">
+                                            <Label htmlFor="content">Content (Markdown)</Label>
+                                            <div className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">MODERN EDITOR</div>
+                                        </div>
+
+                                        <div className="border rounded-md overflow-hidden bg-muted/50">
+                                            {/* Editor Toolbar */}
+                                            <TooltipProvider delayDuration={400}>
+                                                <div className="flex flex-wrap items-center gap-1 p-1 bg-background border-b shadow-sm">
+                                                    <div className="flex items-center gap-0.5 px-1 mr-1">
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertTemplate('**Bold Text**')}>
+                                                                    <Bold className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Bold (**text**)</TooltipContent>
+                                                        </Tooltip>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertTemplate('*Italic Text*')}>
+                                                                    <Italic className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Italic (*text*)</TooltipContent>
+                                                        </Tooltip>
+                                                    </div>
+
+                                                    <Separator orientation="vertical" className="h-6 mx-0.5" />
+
+                                                    <div className="flex items-center gap-0.5 px-1">
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertTemplate('\n# Heading 1')}>
+                                                                    <Heading1 className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>H1</TooltipContent>
+                                                        </Tooltip>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertTemplate('\n## Heading 2')}>
+                                                                    <Heading2 className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>H2</TooltipContent>
+                                                        </Tooltip>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertTemplate('\n### Heading 3')}>
+                                                                    <Heading3 className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>H3</TooltipContent>
+                                                        </Tooltip>
+                                                    </div>
+
+                                                    <Separator orientation="vertical" className="h-6 mx-0.5" />
+
+                                                    <div className="flex items-center gap-1 px-2 border-x">
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800" onClick={() => insertTemplate('\n[READMORE: Label Name | /slug-url]')}>
+                                                                    <ArrowRightCircle className="w-3 h-3" />
+                                                                    READ MORE
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert Related Article Link</TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800" onClick={() => insertTemplate('\n[WHATSAPP: Join WhatsApp Group | https://whatsapp.com/...]')}>
+                                                                    <MessageCircle className="w-3 h-3" />
+                                                                    WHATSAPP
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert WhatsApp Invite</TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 hover:text-blue-800" onClick={() => insertTemplate('\n[TELEGRAM: Join Telegram Channel | https://t.me/...]')}>
+                                                                    <Send className="w-3 h-3" />
+                                                                    TELEGRAM
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert Telegram Link</TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100 hover:text-purple-800" onClick={() => insertTemplate('\n[TIMELINE: View Full Timeline | /timeline-url]')}>
+                                                                    <Calendar className="w-3 h-3" />
+                                                                    TIMELINE
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert Timeline Link</TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100 hover:text-amber-800" onClick={() => insertTemplate('\n[BOOK: Book Title | https://image-url.jpg | https://buy-url.com]')}>
+                                                                    <BookOpen className="w-3 h-3" />
+                                                                    BOOKS
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert Topper Recommended Book</TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-800" onClick={() => insertTemplate('\n[BOOKGRID: Book 1 | Img1 | Link1 ; Book 2 | Img2 | Link2 ; Book 3 | Img3 | Link3]')}>
+                                                                    <LayoutGrid className="w-3 h-3" />
+                                                                    MINI GRID
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert Compact 3-Book Grid</TooltipContent>
+                                                        </Tooltip>
+                                                    </div>
+
+                                                    <div className="flex items-center gap-0.5 px-1 ml-auto">
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertTemplate('\n- List item')}>
+                                                                    <List className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Bullet List</TooltipContent>
+                                                        </Tooltip>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertTemplate('[Link Text](https://...)')}>
+                                                                    <LinkIcon2 className="w-4 h-4" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>External Link</TooltipContent>
+                                                        </Tooltip>
+                                                    </div>
+                                                </div>
+                                            </TooltipProvider>
+
+                                            <Textarea
+                                                id="content"
+                                                ref={textareaRef}
+                                                placeholder="Write your content here..."
+                                                className="min-h-[600px] w-full bg-transparent px-4 py-3 text-[15px] leading-relaxed shadow-none border-none focus-visible:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 resize-none font-mono"
+                                                value={formData.content}
+                                                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
                                 </CardContent>
                             </Card>
