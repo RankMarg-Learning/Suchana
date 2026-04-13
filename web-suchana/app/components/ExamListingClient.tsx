@@ -10,6 +10,8 @@ import { LeftSidebar, RightSidebar } from "./Sidebars";
 import { LeaderboardAd, InFeedAd } from "./AdUnits";
 import { ADS_CONFIG } from "../config/ads";
 import { ExamListRow, SkeletonRow } from "./ExamCard";
+import { trackFunnelStep } from "../lib/telemetry";
+import { useScrollTracking } from "../hooks/useScrollTracking";
 
 interface Props {
   title: string;
@@ -22,6 +24,7 @@ interface Props {
 }
 
 export default function ExamListingClient({ title, category, status, conductingBody, state, startDate, endDate }: Props) {
+  useScrollTracking(`list:${title}`);
   const [exams, setExams] = useState<Exam[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -30,9 +33,14 @@ export default function ExamListingClient({ title, category, status, conductingB
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(searchQuery), 400);
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+      if (searchQuery) {
+        trackFunnelStep('discovery_search', { query: searchQuery, context: title });
+      }
+    }, 800);
     return () => clearTimeout(t);
-  }, [searchQuery]);
+  }, [searchQuery, title]);
 
   const loadExams = useCallback(async (reset: boolean, pageNo?: number) => {
     setLoading(true);
@@ -156,7 +164,11 @@ export default function ExamListingClient({ title, category, status, conductingB
                   <div className="load-more-wrap">
                     <button
                       className="btn btn-ghost btn-lg"
-                      onClick={() => { setPage(p => p + 1); loadExams(false, page + 1); }}
+                      onClick={() => { 
+                        trackFunnelStep('discovery_load_more', { page: page + 1, context: title });
+                        setPage(p => p + 1); 
+                        loadExams(false, page + 1); 
+                      }}
                       disabled={loading}
                     >
                       {loading ? <><RefreshCw size={15} className="spin-icon" /> Loading...</> : <><ChevronDown size={15} /> Load More</>}

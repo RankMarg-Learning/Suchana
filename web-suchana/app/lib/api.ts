@@ -153,18 +153,10 @@ export async function fetchAllSeoPageSlugs(): Promise<string[]> {
 
 export async function fetchAllExamSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/exams?limit=100`, {
-      cache: 'no-store'
-    });
-    if (!res.ok) {
-      console.error(`Failed to fetch exam slugs: ${res.status}`);
-      return [];
-    }
-    const data = await res.json();
-    const items = data.data ?? data.exams ?? [];
-    return items.map((e: any) => e.slug).filter(Boolean);
-  } catch (err) {
-    console.error("Error fetching exam slugs:", err);
+    const response = await fetch(`${API_BASE}/exams?limit=1000`, { cache: 'no-store' });
+    const result = await response.json();
+    return (result.data || result.exams || []).map((exam: any) => exam.slug);
+  } catch (error) {
     return [];
   }
 }

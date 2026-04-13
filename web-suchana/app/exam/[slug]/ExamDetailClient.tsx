@@ -48,6 +48,8 @@ import {
 import { fetchSavedExams, toggleSavedExam, fetchSeoPages, fetchExamBySlug, fetchExamsFromAPI } from "@/app/lib/api";
 import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { trackFunnelStep, trackConversion } from "@/app/lib/telemetry";
+import { useScrollTracking } from "@/app/hooks/useScrollTracking";
 
 
 const STAGE_ICONS: Record<string, any> = {
@@ -177,6 +179,11 @@ function TimelineItem({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="tl-action-btn active"
+                  onClick={() => trackFunnelStep('timeline_action_click', {
+                    exam_slug: examSlug,
+                    stage: event.stage,
+                    url: event.actionUrl
+                  })}
                 >
                   {event.actionLabel || "Open Links"} <ArrowRight size={14} />
                 </a>
@@ -244,6 +251,8 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
     queryFn: () => fetchExamBySlug(slug),
   });
 
+  useScrollTracking(`exam_detail:${slug}`);
+
   const { data: relatedExams = [] } = useQuery({
     queryKey: ["relatedExams", category],
     queryFn: () => fetchExamsFromAPI(1, 4, category).then(r => r.exams.filter(e => e.id !== exam?.id).slice(0, 4)),
@@ -306,6 +315,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
   }, []);
 
   const handleWhatsAppShare = () => {
+    trackFunnelStep('share_whatsapp', { exam_slug: exam.slug });
     const text = `Check out ${exam.title} updates on Exam Suchana: ${window.location.href}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
   };
@@ -316,6 +326,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
       alert("Please set up your profile on the app to save exams.");
       return;
     }
+    trackFunnelStep(isSaved ? 'unsave_exam' : 'save_exam', { exam_slug: exam.slug });
     toggleMutation.mutate();
   };
 
@@ -325,6 +336,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
   const statusLabel = STATUS_LABELS[exam.status] ?? cleanLabel(exam.status);
 
   const handleShare = async () => {
+    trackFunnelStep('share_native', { exam_slug: exam.slug });
     if (navigator.share) {
       await navigator.share({ title: document.title, url: window.location.href });
     } else {
@@ -550,12 +562,24 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
             <h2 id="links-heading" className="exam-detail-section-title">Official Resources</h2>
             <div className="official-links">
               {exam.officialWebsite && (
-                <a href={exam.officialWebsite} target="_blank" rel="noopener noreferrer" className="official-link-btn">
+                <a 
+                  href={exam.officialWebsite} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="official-link-btn"
+                  onClick={() => trackConversion('official_website_click', { exam_slug: exam.slug })}
+                >
                   <Globe size={16} /> Official Website
                 </a>
               )}
               {exam.notificationUrl && (
-                <a href={exam.notificationUrl} target="_blank" rel="noopener noreferrer" className="official-link-btn primary">
+                <a 
+                  href={exam.notificationUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="official-link-btn primary"
+                  onClick={() => trackConversion('official_notification_click', { exam_slug: exam.slug })}
+                >
                   <FileText size={16} /> Official Notification
                 </a>
               )}
@@ -606,7 +630,14 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
             </div>
             <div className="app-widget-title" style={{ color: 'white' }}>Join Telegram</div>
             <div className="app-widget-sub" style={{ color: 'rgba(255,255,255,0.9)' }}>Get the fastest exam notifications directly on your phone.</div>
-            <a href="https://t.me/examsuchana" target="_blank" rel="noopener noreferrer" className="app-widget-btn" style={{ background: 'white', color: '#0088cc' }}>
+            <a 
+              href="https://t.me/examsuchana" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="app-widget-btn" 
+              style={{ background: 'white', color: '#0088cc' }}
+              onClick={() => trackConversion('telegram_join_click', { source: 'sidebar_widget' })}
+            >
               <ArrowRight size={14} /> Join Now
             </a>
           </div>
@@ -637,7 +668,14 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
             </div>
             <div className="app-widget-title">Get the App</div>
             <div className="app-widget-sub">Push notifications for every exam update. Never miss a deadline.</div>
-            <a href="https://play.google.com/store" target="_blank" rel="noopener noreferrer" className="app-widget-btn" id="detail-app-download">
+            <a 
+              href="https://play.google.com/store" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="app-widget-btn" 
+              id="detail-app-download"
+              onClick={() => trackConversion('app_download_click', { source: 'sidebar_widget' })}
+            >
               <ArrowRight size={14} /> Download Free
             </a>
           </div>

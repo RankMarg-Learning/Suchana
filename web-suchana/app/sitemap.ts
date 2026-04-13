@@ -7,10 +7,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [examSlugs, seoSlugs, examsResponse] = await Promise.all([
     fetchAllExamSlugs(),
     fetchAllSeoPageSlugs(),
-    fetch(`${API_BASE}/exams?limit=200`, { cache: 'no-store' }).then(res => res.json()).catch(() => ({ data: [] }))
+    fetch(`${API_BASE}/exams?limit=1000`, { cache: 'no-store' }).then(res => res.json()).catch(() => ({ data: [] }))
   ]);
 
-  const exams = examsResponse.data || examsResponse.exams || [];
+  const exams = Array.isArray(examsResponse.data) ? examsResponse.data : (examsResponse.exams || []);
   const now = new Date().toISOString();
 
   const staticPages: MetadataRoute.Sitemap = [

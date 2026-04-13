@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { SeoPage, cleanLabel } from '../lib/types';
+import { trackFunnelStep } from '../lib/telemetry';
 
 interface Props {
   title: string;
@@ -39,6 +40,11 @@ export default function LatestArticlesSection({ title, articles, viewAllHref = "
               padding: isSidebar ? '12px 0' : 'clamp(12px, 2vh, 16px) 0',
               borderBottom: (isSidebar && idx === articles.length - 1) ? 'none' : '1px solid var(--border)'
             }}
+            onClick={() => trackFunnelStep('article_crosslink_click', {
+              article_slug: article.slug,
+              article_title: article.title,
+              context: title
+            })}
           >
             <div className="article-list-content">
               <h4 className="article-list-title" style={{ fontSize: isSidebar ? '0.9rem' : 'clamp(0.95rem, 2vw, 1.05rem)', fontWeight: 600 }}>{article.title}</h4>
