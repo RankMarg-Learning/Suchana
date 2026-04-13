@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Outfit, Geist } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/Sidebar";
+import { MobileNav } from "@/components/layout/MobileNav";
 import { Search, Bell, User, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Toaster } from 'sonner';
@@ -38,14 +39,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={cn("font-sans", geist.variable)}>
-      <body className={cn(inter.className, outfit.variable, "flex min-h-screen bg-background")}>
+      <body className={cn(inter.className, outfit.variable, "bg-background")}>
         <Toaster position="top-right" expand={true} richColors />
         <Providers>
-          <div className="flex w-full min-h-screen">
-            <Sidebar />
-            <main className="flex-1 min-h-screen bg-[#F9FAFB] overflow-y-auto">
+          <div className="flex flex-col lg:flex-row min-h-screen w-full">
+            <MobileNav />
+            <Sidebar className="hidden lg:flex" />
+            <main className="flex-1 min-h-screen bg-[#F9FAFB] overflow-y-auto w-full">
               {/* Main Content Container */}
-              <div className="p-10 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <div className="p-4 md:p-8 lg:p-10 max-w-[1600px] mx-auto animate-in fade-in slide-in-from-bottom-2 duration-500">
                 {children}
               </div>
             </main>
