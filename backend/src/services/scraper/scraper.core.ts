@@ -31,6 +31,15 @@ export class ScraperService {
                 if (extractedHtml) {
                     htmlToProcess = `<article>${extractedHtml}</article>`;
                 }
+            } else if (url.includes('jobapply24.in')) {
+                const extractedHtml = ScraperUtils.extractTargetSections(
+                    html,
+                    [],
+                    ['.entry-content']
+                );
+                if (extractedHtml) {
+                    htmlToProcess = `<article>${extractedHtml}</article>`;
+                }
             }
 
             const { text, charCount, extractedLinks } = ScraperUtils.cleanHtml(htmlToProcess, url);

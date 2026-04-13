@@ -171,19 +171,23 @@ export async function testScraperDirect(req: Request, res: Response, next: NextF
         } else if (url.includes('sarkariresult.com.cm')) {
             const extractedHtml = ScraperUtils.extractTargetSections(html, [], ['.gb-container']);
             if (extractedHtml) htmlToProcess = `<article>${extractedHtml}</article>`;
+        } else if (url.includes('jobapply24.in')) {
+            const extractedHtml = ScraperUtils.extractTargetSections(html, [], ['.entry-content']);
+            if (extractedHtml) htmlToProcess = `<article>${extractedHtml}</article>`;
         }
 
         const { text, charCount, extractedLinks } = ScraperUtils.cleanHtml(htmlToProcess, url);
-        const extracted = await AIProvider.extractExamData(text, url, hintCategory);
 
-        if (!extracted) {
-            sendError(res, 500, 'AI_FAILED', 'AI failed to extract data');
-            return;
-        }
+        // const extracted = await AIProvider.extractExamData(text, url, hintCategory);
 
-        extracted.sourceUrl = url;
-        extracted.scrapedAt = new Date();
-        sendSuccess(res, extracted);
+        // if (!extracted) {
+        //     sendError(res, 500, 'AI_FAILED', 'AI failed to extract data');
+        //     return;
+        // }
+
+        // extracted.sourceUrl = url;
+        // extracted.scrapedAt = new Date();
+        sendSuccess(res, text);
     } catch (err: any) {
         logger.error(`[Scraper] test-direct failed: ${err.message}`);
         sendError(res, 500, 'SCRAPE_TEST_FAILED', err.message);
