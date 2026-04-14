@@ -14,7 +14,9 @@ import {
     reviewDecisionSchema,
     updateStagedEventSchema,
     createStagedEventSchema,
+    extractTextSchema,
 } from '../schemas/scraper.schema';
+
 
 const router = Router();
 
@@ -62,6 +64,10 @@ router.post('/trigger/sync', sensitiveActionsLimiter, validate(triggerScrapeSche
 
 // POST /api/v1/scraper/test-direct    → Direct URL test (Synchronous, no DB storage)
 router.post('/test-direct', scraperController.testScraperDirect);
+
+// POST /api/v1/scraper/extract-text  → Extract from raw text (Synchronous, creates StagedExam)
+router.post('/extract-text', validate(extractTextSchema), scraperController.extractFromText);
+
 
 // ─── Review pipeline ────────────────────────────────────────────
 // GET  /api/v1/scraper/staged?reviewStatus=PENDING&page=1

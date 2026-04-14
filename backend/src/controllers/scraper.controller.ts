@@ -15,7 +15,10 @@ import type {
     ReviewDecisionDto,
     UpdateStagedEventDto,
     CreateStagedEventDto,
+    ExtractTextDto,
 } from '../schemas/scraper.schema';
+import { ScraperService } from '../services/scraper/scraper.core';
+
 
 
 export async function listScrapeSources(req: Request, res: Response, next: NextFunction) {
@@ -268,3 +271,14 @@ export async function getReviewStats(req: Request, res: Response, next: NextFunc
         next(err);
     }
 }
+
+export async function extractFromText(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { text, sourceUrl, hintCategory } = req.body as ExtractTextDto;
+        const result = await ScraperService.scrapeText(text, sourceUrl, hintCategory);
+        sendSuccess(res, result);
+    } catch (err) {
+        next(err);
+    }
+}
+

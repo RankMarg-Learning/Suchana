@@ -302,7 +302,12 @@ export const scraperService = {
         const response = await apiClient.post('/scraper/trigger', { sourceId });
         return response.data;
     },
+    extractFromText: async (data: { text: string; sourceUrl?: string; hintCategory?: string }): Promise<ApiResponse<any>> => {
+        const response = await apiClient.post('/scraper/extract-text', data);
+        return response.data;
+    },
     clearCache: async (): Promise<ApiResponse<{ message: string }>> => {
+
         const response = await apiClient.post('/scraper/clear-cache');
         return response.data;
     },
