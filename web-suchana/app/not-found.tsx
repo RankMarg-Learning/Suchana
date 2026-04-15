@@ -1,11 +1,22 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Home, Search, ArrowRight, AlertCircle, FileQuestion, Bell, Phone } from "lucide-react";
 import SiteNav from "./components/SiteNav";
 import SiteFooter from "./components/SiteFooter";
+import { trackEvent } from "./lib/telemetry";
 
 export default function NotFound() {
+  useEffect(() => {
+    trackEvent({
+      action: '404_error',
+      category: 'error',
+      label: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+      path: typeof window !== 'undefined' ? window.location.pathname : 'unknown',
+      referrer: typeof document !== 'undefined' ? document.referrer : 'none'
+    });
+  }, []);
   return (
     <div className="flex flex-col min-h-screen">
 
