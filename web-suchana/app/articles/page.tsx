@@ -4,11 +4,11 @@ import ArticlesClient from './ArticlesClient';
 import { RefreshCw } from 'lucide-react';
 
 export const metadata: Metadata = {
-  title: 'Guides & Intelligence - Exam Suchana',
+  title: 'Latest Articles - Exam Suchana',
   description: 'Find detailed exam analysis, syllabus, preparation strategies, salary details and all guidance for government exams.',
   keywords: ['government exams', 'syllabus', 'salary', 'intelligence', 'preparation', 'guides'],
   openGraph: {
-    title: 'Guides & Intelligence - Exam Suchana',
+    title: 'Latest Articles - Exam Suchana',
     description: 'Find detailed exam analysis, syllabus, and guidance for your dream career.',
     type: 'website',
   },

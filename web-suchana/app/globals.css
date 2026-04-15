@@ -5430,3 +5430,357 @@ body::before {
   letter-spacing: 6px;
   line-height: 1;
 }
+/* ─── Golden Rule Design System 2025 ─── */
+
+/* 1. Layout & Spacing */
+.section-premium {
+  padding: 80px 0;
+}
+
+@media (min-width: 1024px) {
+  .section-premium {
+    padding: 120px 0;
+  }
+}
+
+.container-tight {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* 2. Hero Component */
+.hero-gateway {
+  position: relative;
+  padding: 100px 0 60px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .hero-gateway {
+    padding: 140px 0 80px;
+  }
+}
+
+.hero-title-v5 {
+  font-size: 2.75rem;
+  font-weight: 850;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .hero-title-v5 {
+    font-size: 4.5rem;
+  }
+}
+
+.hero-subtitle-v5 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: #64748b;
+  margin-bottom: 2.5rem;
+  max-width: 600px;
+}
+
+@media (min-width: 768px) {
+  .hero-subtitle-v5 {
+    font-size: 1.5rem;
+  }
+}
+
+.status-hub-neo {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 20px;
+}
+
+@media (min-width: 768px) {
+  .status-hub-neo {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .status-hub-neo {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.status-card-premium {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 20px 24px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+}
+
+.status-card-premium:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.08);
+  border-color: rgba(255, 255, 255, 0);
+  background: #ffffff;
+}
+
+.status-icon-box {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.5s ease;
+}
+
+.status-card-premium:hover .status-icon-box {
+  transform: rotate(-5deg) scale(1.1);
+}
+
+.status-label-small {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #94a3b8;
+  margin-bottom: 2px;
+}
+
+.status-label-title {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+}
+
+/* 5. Category Neo Design */
+.category-neo-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: 32px;
+}
+
+@media (min-width: 768px) {
+  .category-neo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.category-neo-card {
+  padding: 40px;
+  background: #ffffff;
+  border: 1px solid #f1f5f9;
+  border-radius: 36px;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.category-neo-card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 40px 80px rgba(15, 23, 42, 0.08);
+  border-color: #e2e8f0;
+}
+
+/* 6. Micro Interactions */
+.glow-on-hover:hover {
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
+}
+
+.tap-effect:active {
+  transform: scale(0.96);
+}
+
+
+/* Decorative Orbs */
+.hero-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.12;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-orb-1 {
+  width: 500px;
+  height: 500px;
+  background: var(--accent);
+  top: -200px;
+  right: -100px;
+  animation: orb-float 20s infinite alternate;
+}
+
+.hero-orb-2 {
+  width: 400px;
+  height: 400px;
+  background: #3b82f6;
+  bottom: -100px;
+  left: -100px;
+  animation: orb-float 15s infinite alternate-reverse;
+}
+
+@keyframes orb-float {
+  from { transform: translate(0, 0); }
+  to { transform: translate(40px, 40px); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+
+/* ─── Standardized Header System (Golden Rule) ─── */
+
+.page-header-premium {
+  position: relative;
+  padding: 64px 0 48px;
+  background: white;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.page-header-expansive {
+  padding: 60px 0 40px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  border-bottom: none;
+}
+
+@media (min-width: 1024px) {
+  .page-header-expansive {
+    padding: 80px 0 60px;
+  }
+}
+
+/* Design Grid Pattern */
+.design-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(to right, rgba(0,0,0,0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+  mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-badge-v6 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 100px;
+  background: rgba(37, 99, 235, 0.05);
+  border: 1px solid rgba(37, 99, 235, 0.1);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: #2563eb;
+  margin-bottom: 24px;
+}
+
+.hero-title-v6 {
+  font-family: var(--font-space-grotesk), sans-serif;
+  font-size: 3rem;
+  font-weight: 850;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: #0f172a;
+  margin-bottom: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .hero-title-v6 { font-size: 4.5rem; }
+}
+
+.hero-desc-v6 {
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.6;
+  color: #64748b;
+  max-width: 640px;
+  margin: 0 auto 40px;
+}
+
+@media (min-width: 768px) {
+  .hero-desc-v6 { font-size: 1.25rem; }
+}
+
+/* Floating Elements */
+.orb-v6 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  opacity: 0.15;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.orb-v6-primary {
+  width: 600px;
+  height: 600px;
+  background: #3b82f6;
+  top: -200px;
+  right: -100px;
+}
+
+.orb-v6-secondary {
+  width: 400px;
+  height: 400px;
+  background: #7c3aed;
+  bottom: -100px;
+  left: -100px;
+}
+
+
+/* ─── Modern List Architecture ─── */
+.exam-list-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.exam-list-modern .exam-list-row {
+  border: none;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  transition: all 0.2s ease;
+}
+
+.exam-list-modern .exam-list-row:last-child {
+  border-bottom: none;
+}
+
+.exam-list-modern .exam-list-row:hover {
+  background: #f8fafc;
+  transform: none;
+  z-index: 1;
+}
+
