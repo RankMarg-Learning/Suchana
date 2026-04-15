@@ -50,6 +50,7 @@ import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trackFunnelStep, trackConversion } from "@/app/lib/telemetry";
 import { useScrollTracking } from "@/app/hooks/useScrollTracking";
+import FAQSection from "@/app/components/FAQSection";
 
 
 const STAGE_ICONS: Record<string, any> = {
@@ -556,6 +557,10 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                 )}
               </div>
             </section>
+          )}
+
+          {exam.faqs && exam.faqs.length > 0 && (
+            <FAQSection faqs={exam.faqs} />
           )}
 
           <section className="exam-detail-section" aria-labelledby="links-heading">

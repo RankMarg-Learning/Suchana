@@ -43,6 +43,16 @@ export const SITE_CONFIGS: Record<string, SiteConfig> = {
         contentSelectors: ['article', '.entry-content', 'main', 'table', '.post-content'],
         listingLinkSelector: 'h2 a, .entry-title a, h3 a',
         listingLinkFilter: (href) => href.includes('testbook.com/') && !href.endsWith('testbook.com/'),
+    },
+    'jobapply24.in': {
+        noiseSelectors: [
+            'header', 'footer', 'nav', '.sidebar', '.widget', 'script', 'style',
+            'noscript', '.advertisement', '.ad', '.code-block', '.group-card',
+            '.whatsapp-card', '.telegram-card', '.instagram-card', '#comments'
+        ],
+        contentSelectors: ['.entry-content', 'article', 'main', 'table'],
+        listingLinkSelector: 'h2 a, h3 a, .entry-title a, article a',
+        listingLinkFilter: (href) => href.includes('jobapply24.in/') && href.length > 25,
     }
 };
 

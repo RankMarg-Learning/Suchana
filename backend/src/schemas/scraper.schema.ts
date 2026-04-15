@@ -98,3 +98,11 @@ export const createStagedEventSchema = updateStagedEventSchema.extend({
     title: z.string().min(2),
 });
 export type CreateStagedEventDto = z.infer<typeof createStagedEventSchema>;
+
+export const extractTextSchema = z.object({
+    text: z.string().min(50, 'Text must be at least 50 characters'),
+    sourceUrl: z.string().url().optional().default('https://manual-input.com'),
+    hintCategory: z.enum(EXAM_CATEGORIES as unknown as [string, ...string[]]).optional(),
+});
+export type ExtractTextDto = z.infer<typeof extractTextSchema>;
+

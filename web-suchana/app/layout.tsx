@@ -178,7 +178,7 @@ export default function RootLayout({
     <html lang="en-IN" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#7c3aed" />
-
+        <meta name="google-adsense-account" content="ca-pub-6631120605146752" />
         {/* JSON-LD Structured Data */}
         <script
           type="application/ld+json"
@@ -197,6 +197,7 @@ export default function RootLayout({
         </Providers>
         {process.env.NODE_ENV === "production" && (
           <>
+
             <Script async src="https://www.googletagmanager.com/gtag/js?id=G-1SHT5DRT85" />
             <Script id="google-analytics">
               {`

@@ -39,6 +39,7 @@ export interface Exam {
     additionalDetails?: string | null;
     salary?: string | null;
     age?: string | null;
+    faqs?: { question: string; answer: string }[] | null;
     lifecycleEvents?: LifecycleEvent[];
 }
 
@@ -99,6 +100,7 @@ export interface StagedExam {
     additionalDetails?: string | null;
     salary?: string | null;
     age?: string | null;
+    faqs?: { question: string; answer: string }[] | null;
     stagedEvents?: StagedEvent[];
     scrapeJob?: ScrapeJob;
 }
@@ -204,7 +206,27 @@ export interface SeoPage {
     createdAt: string;
     updatedAt: string;
     examId?: string | null;
-    exam?: Exam;
+    exam?: {
+        id: string;
+        title: string;
+        slug: string;
+        status: string;
+        state: string;
+        conductingBody: string;
+        officialWebsite: string;
+    };
+    faqs?: { question: string; answer: string }[] | null;
+    tags?: Tag[];
+}
+
+export interface Tag {
+    id: string;
+    name: string;
+    slug: string;
+    color: string;
+    description?: string | null;
+    createdAt: string;
+    updatedAt: string;
 }
 
 export const examService = {
@@ -302,7 +324,12 @@ export const scraperService = {
         const response = await apiClient.post('/scraper/trigger', { sourceId });
         return response.data;
     },
+    extractFromText: async (data: { text: string; sourceUrl?: string; hintCategory?: string }): Promise<ApiResponse<any>> => {
+        const response = await apiClient.post('/scraper/extract-text', data);
+        return response.data;
+    },
     clearCache: async (): Promise<ApiResponse<{ message: string }>> => {
+
         const response = await apiClient.post('/scraper/clear-cache');
         return response.data;
     },
@@ -376,5 +403,39 @@ export const seoService = {
         return response.data;
     },
 };
+
+export const tagService = {
+    getAll: async (search?: string): Promise<ApiResponse<Tag[]>> => {
+        const response = await apiClient.get('/tags', { params: search ? { search } : {} });
+        return response.data;
+    },
+    create: async (data: { name: string; color?: string; description?: string }): Promise<ApiResponse<Tag>> => {
+        const response = await apiClient.post('/tags', data);
+        return response.data;
+    },
+    update: async (id: string, data: Partial<Tag>): Promise<ApiResponse<Tag>> => {
+        const response = await apiClient.patch(`/tags/${id}`, data);
+        return response.data;
+    },
+    delete: async (id: string): Promise<ApiResponse<{ deleted: boolean }>> => {
+        const response = await apiClient.delete(`/tags/${id}`);
+        return response.data;
+    },
+    getTagsByPage: async (pageId: string): Promise<ApiResponse<Tag[]>> => {
+        const response = await apiClient.get(`/tags/seo-page/${pageId}`);
+        return response.data;
+    },
+    setPageTags: async (pageId: string, tagIds: string[]): Promise<ApiResponse<Tag[]>> => {
+        const response = await apiClient.put(`/tags/seo-page/${pageId}`, { tagIds });
+        return response.data;
+    },
+    getRelatedByTag: async (tagId: string, excludePageId?: string, limit = 5): Promise<ApiResponse<Pick<SeoPage, 'id' | 'slug' | 'title' | 'category' | 'isPublished' | 'metaDescription' | 'updatedAt'>[]>> => {
+        const response = await apiClient.get(`/tags/${tagId}/related-pages`, {
+            params: { ...(excludePageId ? { excludePageId } : {}), limit }
+        });
+        return response.data;
+    },
+};
+
 
 export default apiClient;

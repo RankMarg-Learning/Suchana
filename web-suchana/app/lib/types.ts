@@ -34,6 +34,7 @@ export interface Exam {
   officialWebsite?: string;
   notificationUrl?: string;
   description?: string;
+  faqs?: { question: string; answer: string }[];
   lifecycleEvents?: LifecycleEvent[];
   seoPages?: { slug: string; category: string }[];
   createdAt?: string;
@@ -52,7 +53,9 @@ export interface SeoPage {
   canonicalUrl?: string;
   isPublished: boolean;
   category?: string;
+  examId?: string | null;
   exam?: Exam;
+  faqs?: { question: string; answer: string }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -88,13 +91,18 @@ export const STAGE_LABELS: Record<string, string> = {
 
 export const CATEGORIES = [
   { value: "ALL", label: "All Exams", icon: "🏛️" },
-  { value: "CIVIL_SERVICES", label: "Civil Services", icon: "⚖️" },
+  { value: "UPSC", label: "UPSC", icon: "🏛️" },
   { value: "SSC", label: "SSC", icon: "📋" },
-  { value: "RAILWAY", label: "Railway", icon: "🚂" },
-  { value: "BANKING", label: "Banking", icon: "🏦" },
-  { value: "DEFENCE", label: "Defence", icon: "🪖" },
-  { value: "POLICE", label: "Police", icon: "👮" },
-  { value: "TEACHING", label: "Teaching", icon: "📚" },
+  { value: "RAILWAY_JOBS", label: "Railway", icon: "🚂" },
+  { value: "BANKING_JOBS", label: "Banking", icon: "🏦" },
+  { value: "DEFENCE_JOBS", label: "Defence", icon: "🪖" },
+  { value: "POLICE_JOBS", label: "Police", icon: "👮" },
+  { value: "TEACHING_ELIGIBILITY", label: "Teaching", icon: "📚" },
+  { value: "STATE_PSC", label: "State PSC", icon: "🏛️" },
+  { value: "ENGINEERING_ENTRANCE", label: "Engineering", icon: "🛠️" },
+  { value: "MEDICAL_ENTRANCE", label: "Medical", icon: "🩺" },
+  { value: "LAW_ENTRANCE", label: "Law", icon: "⚖️" },
+  { value: "MBA_ENTRANCE", label: "Management", icon: "💼" },
 ];
 
 export const STATUSES = [

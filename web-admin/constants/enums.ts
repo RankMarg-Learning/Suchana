@@ -21,6 +21,10 @@ export const ExamCategory = {
     FOREIGN_STUDY_EXAMS: "FOREIGN_STUDY_EXAMS",
     SKILL_CERTIFICATION: "SKILL_CERTIFICATION",
     UNIVERSITY_ENTRANCE: "UNIVERSITY_ENTRANCE",
+    DESIGN_ENTRANCE: "DESIGN_ENTRANCE",
+    ARCHITECTURE_ENTRANCE: "ARCHITECTURE_ENTRANCE",
+    NURSING_ENTRANCE: "NURSING_ENTRANCE",
+    PHARMACY_ENTRANCE: "PHARMACY_ENTRANCE",
     OTHER: "OTHER"
 } as const;
 export type ExamCategory = (typeof ExamCategory)[keyof typeof ExamCategory];
@@ -80,7 +84,7 @@ export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
     DOCUMENT_VERIFICATION: 90,
     JOINING: 100,
 };
- 
+
 export const DEFAULT_ACTION_LABELS: Record<string, string> = {
     NOTIFICATION: 'View Notification',
     REGISTRATION: 'Apply Now',
@@ -135,6 +139,7 @@ export const getTerminalStatusFromStage = (stage: string): ExamStatus => {
 };
 
 export const SeoPageCategory = {
+    NEWS: 'NEWS',
     NOTIFICATION: 'NOTIFICATION',
     ADMIT_CARD: 'ADMIT_CARD',
     RESULT: 'RESULT',

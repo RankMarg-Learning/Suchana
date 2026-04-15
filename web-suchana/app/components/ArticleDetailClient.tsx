@@ -7,6 +7,7 @@ import { SeoPage } from '../lib/types';
 import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd } from './AdUnits';
 import { cleanLabel } from '../lib/types';
+import FAQSection from './FAQSection';
 
 interface Props {
   page: SeoPage;
@@ -58,9 +59,13 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
               </div>
             )}
 
-            <div className="article-body" style={{ marginBottom: 60 }}>
+            <div className="article-body" style={{ marginBottom: 20 }}>
               <MarkdownRenderer content={page.content} />
             </div>
+
+            {page.faqs && page.faqs.length > 0 && (
+              <FAQSection faqs={page.faqs} />
+            )}
 
             {latestData && latestData.length > 0 && (
               <LatestArticlesSection

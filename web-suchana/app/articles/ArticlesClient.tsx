@@ -104,7 +104,7 @@ export default function ArticlesClient() {
           <div className="feed-header">
             <div className="feed-title-row">
               <div>
-                <h1 className="feed-title">Latest Guides</h1>
+                <h1 className="feed-title">Latest Articles</h1>
                 <p className="feed-subtitle">Syllabus, analysis, and preparation strategies.</p>
               </div>
             </div>
@@ -153,9 +153,9 @@ export default function ArticlesClient() {
           ) : (
             <div className="latest-articles-list" style={{ marginTop: '20px' }}>
               {allArticles.map(article => (
-                <Link 
-                  key={article.id} 
-                  href={`/${article.slug}`} 
+                <Link
+                  key={article.id}
+                  href={`/${article.slug}`}
                   className="article-list-item"
                   onClick={() => trackFunnelStep('article_discovery_click', {
                     article_id: article.id,

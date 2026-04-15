@@ -23,7 +23,7 @@ export class ScraperUtils {
         const extractedLinks = url.includes('sarkariresult.com.cm') ? this.extractUsefulLinks(html, url) : undefined;
         let contentText = '';
 
-        if (url.includes('sarkariresult.com.cm')) {
+        if (url.includes('sarkariresult.com.cm') || url.includes('jobapply24.in')) {
             contentText = this.extractSarkariResultContent($);
         }
 
@@ -67,7 +67,10 @@ export class ScraperUtils {
             'Vacancy Details',
             'Eligibility Criteria',
             'Mode Of Selection',
-            'Total Post'
+            'Total Post',
+            'Key Highlights',
+            'Educational Qualification',
+            'Selection Process'
         ];
 
         let content = '';

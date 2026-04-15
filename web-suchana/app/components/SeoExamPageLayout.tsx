@@ -21,6 +21,7 @@ import { LeaderboardAd, SidebarAd, InFeedAd } from './AdUnits';
 import { Exam, SeoPage, cleanLabel, STATUS_LABELS, getCategoryInfo, enumToSlug } from '../lib/types';
 import { LifecycleStage } from '../lib/enums';
 import LatestArticlesSection from './LatestArticlesSection';
+import FAQSection from './FAQSection';
 
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeoPages } from '../lib/api';
@@ -219,10 +220,13 @@ export default function SeoExamPageLayout({
               </div>
             )}
 
-            {/* Main Content */}
-            <div className="seo-content" style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 'clamp(1.05rem, 2vw, 1.15rem)', marginBottom: 60 }}>
+            <div className="seo-content" style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 'clamp(1.05rem, 2vw, 1.15rem)', marginBottom: 20 }}>
               <MarkdownRenderer content={seoPage.content} />
             </div>
+
+            {seoPage.faqs && seoPage.faqs.length > 0 && (
+              <FAQSection faqs={seoPage.faqs} />
+            )}
 
             {latestArticles.length > 0 && (
               <LatestArticlesSection

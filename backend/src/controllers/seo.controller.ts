@@ -10,7 +10,7 @@ export class SeoController {
     try {
       const { slug } = req.params;
       const isAdmin = !!req.headers.authorization;
-      
+
       const page = await prisma.seoPage.findUnique({
         where: { slug, ...(isAdmin ? {} : { isPublished: true }) },
         select: {
@@ -27,35 +27,17 @@ export class SeoController {
           isPublished: true,
           isTrending: true,
           createdAt: true,
+          faqs: true,
           updatedAt: true,
           exam: {
             select: {
+              id: true,
               title: true,
-              shortTitle: true,
               slug: true,
               status: true,
-              category: true,
-              examLevel: true,
               state: true,
               conductingBody: true,
               officialWebsite: true,
-              lifecycleEvents: {
-                orderBy: { stageOrder: 'asc' },
-                select: {
-                  stage: true,
-                  startsAt: true,
-                  endsAt: true,
-                  actionUrl: true,
-                  actionLabel: true,
-                }
-              },
-              seoPages: {
-                where: {
-                  isPublished: true,
-                  category: { in: ['SYLLABUS', 'ELIGIBILITY', 'SALARY', 'NOTIFICATION'] }
-                },
-                select: { slug: true, category: true }
-              }
             }
           }
         }
@@ -99,8 +81,8 @@ export class SeoController {
       const where: any = {
         ...(isAdmin ? {} : { isPublished: true }),
         ...(category ? { category } : {}),
-        ...(req.query.isTrending === 'true' ? { isTrending: true } : 
-           req.query.isTrending === 'false' ? { isTrending: false } : {}),
+        ...(req.query.isTrending === 'true' ? { isTrending: true } :
+          req.query.isTrending === 'false' ? { isTrending: false } : {}),
         ...(search ? {
           OR: [
             { title: { contains: search, mode: 'insensitive' } },
@@ -144,9 +126,9 @@ export class SeoController {
     }
   }
 
-  static async createPage(req: Request, res: Response, next: NextFunction) {
+    static async createPage(req: Request, res: Response, next: NextFunction) {
     try {
-      const { slug, title, content, metaTitle, metaDescription, keywords, ogImage, canonicalUrl, isPublished, examId, category } = req.body;
+      const { slug, title, content, metaTitle, metaDescription, keywords, ogImage, canonicalUrl, isPublished, examId, category, faqs } = req.body;
 
       const existing = await prisma.seoPage.findUnique({ where: { slug } });
       if (existing) {
@@ -165,7 +147,8 @@ export class SeoController {
           canonicalUrl,
           isPublished: isPublished ?? true,
           examId,
-          category
+          category,
+          faqs: faqs || []
         }
       });
 

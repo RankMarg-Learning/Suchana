@@ -15,6 +15,7 @@ import {
     Smartphone,
     ShieldCheck,
     Globe,
+    Tag,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -26,6 +27,7 @@ const navItems = [
     { title: 'Scrapers', href: '/scraper', icon: Database },
     { title: 'Reviews', href: '/review', icon: ClipboardList },
     { title: 'Articles & SEO', href: '/seo', icon: Globe },
+    { title: 'Tags', href: '/tags', icon: Tag },
     { title: 'Settings', href: '/settings', icon: Settings },
 ];
 

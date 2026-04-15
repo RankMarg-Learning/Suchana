@@ -17,8 +17,10 @@ import {
     ExternalLink,
     Search,
     CheckCircle2,
-    AlertCircle
+    AlertCircle,
+    FileText
 } from 'lucide-react';
+
 import { AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { cn, formatDate } from '@/lib/utils';
@@ -37,7 +39,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Textarea } from "@/components/ui/textarea";
 import { EXAM_CATEGORIES } from '@/constants/enums';
+
 
 export default function ScraperPage() {
     const [jobs, setJobs] = useState<ScrapeJob[]>([]);
@@ -49,6 +53,8 @@ export default function ScraperPage() {
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSource, setEditingSource] = useState<ScrapeSource | null>(null);
+    const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+
 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [sourceToDelete, setSourceToDelete] = useState<ScrapeSource | null>(null);
@@ -176,12 +182,17 @@ export default function ScraperPage() {
                         <Play className="w-4 h-4" />
                         Run All
                     </Button>
+                    <Button onClick={() => setIsManualModalOpen(true)} variant="outline" className="gap-2 border-primary/20 hover:bg-primary/5">
+                        <FileText className="w-4 h-4 text-primary" />
+                        Manual Scrape
+                    </Button>
                     <Button onClick={() => handleOpenModal()} className="gap-2 shadow-sm">
                         <Plus className="w-4 h-4" />
                         Add Source
                     </Button>
                 </div>
             </div>
+
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -418,7 +429,15 @@ export default function ScraperPage() {
                         }}
                     />
                 )}
+                {isManualModalOpen && (
+                    <ManualScrapeModal
+                        isOpen={isManualModalOpen}
+                        onClose={() => setIsManualModalOpen(false)}
+                        onSuccess={() => fetchData(true)}
+                    />
+                )}
             </AnimatePresence>
+
 
             {/* Delete Confirmation */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
@@ -558,3 +577,125 @@ function SourceModal({ source, isOpen, onClose, onSave }: { source: ScrapeSource
         </Dialog>
     );
 }
+
+function ManualScrapeModal({ isOpen, onClose, onSuccess }: { isOpen: boolean, onClose: () => void, onSuccess: () => void }) {
+    const [text, setText] = useState('');
+    const [sourceUrl, setSourceUrl] = useState('');
+    const [hintCategory, setHintCategory] = useState('GLOBAL');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleScrape = async () => {
+        if (!text || text.length < 50) {
+            toast.error('Please paste at least 50 characters of text.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const res = await scraperService.extractFromText({
+                text,
+                sourceUrl: sourceUrl || undefined,
+                hintCategory: hintCategory === 'GLOBAL' ? undefined : hintCategory
+            });
+
+            if (res.success) {
+                toast.success('Text processed successfully!');
+                onSuccess();
+                onClose();
+            } else {
+                toast.error(res.error?.message || 'Failed to process text');
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.error?.message || 'An error occurred during extraction');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden rounded-2xl border-none shadow-2xl">
+                <DialogHeader className="p-6 pb-4 border-b">
+                    <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-primary" />
+                        Manual Text Extraction
+                    </DialogTitle>
+                    <DialogDescription className="text-xs">
+                        Paste the raw text of an exam notification or page content. AI will attempt to extract structured data.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="p-6 space-y-5 bg-background">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-xs font-medium text-muted-foreground flex justify-between">
+                                Raw Source Text
+                                <span className={cn("text-[10px]", text.length < 50 ? "text-rose-500" : "text-emerald-500")}>
+                                    {text.length} characters (min 50)
+                                </span>
+                            </Label>
+                            <Textarea
+                                value={text}
+                                onChange={e => setText(e.target.value)}
+                                placeholder="Paste exam details, notifications, or full page text here..."
+                                className="min-h-[300px] rounded-lg text-sm font-mono leading-relaxed"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-xs font-medium text-muted-foreground">Reference URL (Optional)</Label>
+                                <Input
+                                    value={sourceUrl}
+                                    onChange={e => setSourceUrl(e.target.value)}
+                                    placeholder="https://example.com/notification.pdf"
+                                    className="h-10 rounded-lg text-sm"
+                                    type="url"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                                    Category Hint
+                                    <Tooltip>
+                                        <TooltipTrigger asChild>
+                                            <AlertCircle className="w-3 h-3 text-muted-foreground cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>Helping AI know what kind of exam this is improves accuracy.</TooltipContent>
+                                    </Tooltip>
+                                </Label>
+                                <Select value={hintCategory} onValueChange={setHintCategory}>
+                                    <SelectTrigger className="h-10 rounded-lg text-sm">
+                                        <SelectValue placeholder="Select category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="GLOBAL">Auto-detect</SelectItem>
+                                        {EXAM_CATEGORIES.map(cat => (
+                                            <SelectItem key={cat} value={cat} className="text-sm">{cat}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2 border-t mt-4">
+                        <Button type="button" variant="ghost" onClick={onClose} className="rounded-lg h-10 px-6 text-sm">Cancel</Button>
+                        <Button
+                            onClick={handleScrape}
+                            disabled={isSubmitting || text.length < 50}
+                            className="rounded-lg h-10 px-8 text-sm shadow-md gap-2 bg-slate-900 hover:bg-slate-800 text-white"
+                        >
+                            {isSubmitting ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Zap className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            )}
+                            Extract Data
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}
+

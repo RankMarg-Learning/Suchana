@@ -31,6 +31,15 @@ export class ScraperService {
                 if (extractedHtml) {
                     htmlToProcess = `<article>${extractedHtml}</article>`;
                 }
+            } else if (url.includes('jobapply24.in')) {
+                const extractedHtml = ScraperUtils.extractTargetSections(
+                    html,
+                    [],
+                    ['.entry-content']
+                );
+                if (extractedHtml) {
+                    htmlToProcess = `<article>${extractedHtml}</article>`;
+                }
             }
 
             const { text, charCount, extractedLinks } = ScraperUtils.cleanHtml(htmlToProcess, url);
@@ -113,4 +122,78 @@ export class ScraperService {
             return { jobId: job.id, status: ScrapeJobStatus.FAILED, candidatesFound: 0, results, errors: [err.message] };
         }
     }
+
+    static async scrapeText(text: string, sourceUrl: string, hintCategory?: string): Promise<DeduplicationSummary> {
+        // 1. Ensure a "Manual" source exists
+        let source = await prisma.scrapeSource.findFirst({
+            where: { label: 'Manual Input' }
+        });
+
+        if (!source) {
+            source = await prisma.scrapeSource.create({
+                data: {
+                    label: 'Manual Input',
+                    url: 'https://manual-input.com',
+                    sourceType: 'DETAIL',
+                    isActive: true
+                }
+            });
+        }
+
+        // 2. Create a job for this manual action
+        const job = await prisma.scrapeJob.create({
+            data: {
+                scrapeSourceId: source.id,
+                status: ScrapeJobStatus.RUNNING
+            }
+        });
+
+        try {
+            // 3. Extract data using AI
+            const extracted = await AIProvider.extractExamData(text, sourceUrl, hintCategory);
+            if (!extracted) {
+                await prisma.scrapeJob.update({
+                    where: { id: job.id },
+                    data: { status: ScrapeJobStatus.FAILED, errorMessage: 'AI extraction failed' }
+                });
+                return { sourceUrl, outcome: 'AI_FAILED' as any, reason: 'AI failed to parse content' };
+            }
+
+            extracted.sourceUrl = sourceUrl;
+            extracted.scrapedAt = new Date();
+
+            // 4. Deduplicate and Stage
+            const dedup = await checkAndStage(job.id, extracted);
+
+            const candidatesFound = ['NEW_STAGED', 'LINKED_AS_UPDATE'].includes(dedup.outcome) ? 1 : 0;
+
+            await prisma.scrapeJob.update({
+                where: { id: job.id },
+                data: {
+                    status: ScrapeJobStatus.COMPLETED,
+                    candidatesFound,
+                    completedAt: new Date(),
+                    rawPayload: { mode: 'MANUAL_TEXT', outcome: dedup.outcome } as any
+                }
+            });
+
+            return {
+                sourceUrl,
+                outcome: dedup.outcome,
+                stagedExamId: (dedup as any).stagedExamId,
+                existingExamId: (dedup as any).existingExamId,
+                canonicalStagedExamId: (dedup as any).canonicalStagedExamId,
+                reason: (dedup as any).reason,
+            } as DeduplicationSummary;
+
+        } catch (err: any) {
+            logger.error(`[Scraper] scrapeText failed: ${err.message}`);
+            await prisma.scrapeJob.update({
+                where: { id: job.id },
+                data: { status: ScrapeJobStatus.FAILED, errorMessage: err.message, completedAt: new Date() }
+            });
+            return { sourceUrl, outcome: 'ERROR' as any, reason: err.message };
+        }
+    }
 }
+

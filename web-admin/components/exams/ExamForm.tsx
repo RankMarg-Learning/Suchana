@@ -50,6 +50,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import ViralShareDialog from './ViralShareDialog';
+import FAQEditor from '../articles/FAQEditor';
 
 const examSchema = z.object({
     title: z.string().min(5, "Title must be at least 5 characters"),
@@ -72,6 +73,7 @@ const examSchema = z.object({
     isTrending: z.boolean(),
     publishedAt: z.string().nullable(),
     createdAt: z.string().nullable(),
+    faqs: z.array(z.object({ question: z.string(), answer: z.string() })).nullable().optional(),
 });
 
 type ExamFormValues = z.infer<typeof examSchema>;
@@ -119,6 +121,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
             isTrending: actualInitialData?.isTrending ?? false,
             publishedAt: actualInitialData?.publishedAt || '',
             createdAt: actualInitialData?.createdAt || '',
+            faqs: actualInitialData?.faqs || [],
         }
     });
 
@@ -347,6 +350,25 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                             </CardContent>
                         </Card>
                     </div>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Exam FAQs</CardTitle>
+                            <CardDescription>Address common candidate queries for this specific recruitment</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Controller
+                                name="faqs"
+                                control={control}
+                                render={({ field }) => (
+                                    <FAQEditor 
+                                        faqs={field.value || []} 
+                                        onChange={field.onChange} 
+                                    />
+                                )}
+                            />
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <div className="space-y-6">

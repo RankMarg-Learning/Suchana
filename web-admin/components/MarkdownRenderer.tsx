@@ -67,60 +67,101 @@ export default function MarkdownRenderer({
             
             if (custom === 'read-more') {
               return (
-                <div className="callout-box callout-related">
-                  <div className="callout-icon"><ArrowRight size={18} /></div>
+                <div className="callout-box callout-related !border-l-0 !pl-0 !items-start gap-3">
+                  <div className="flex-shrink-0 mt-1">
+                    <span className="bg-primary text-primary-foreground text-[9px] font-bold px-2 py-1 rounded uppercase tracking-wider">
+                      Read More
+                    </span>
+                  </div>
                   <div className="callout-content">
-                    <a href={url}>{label}</a>
+                    <a href={url} className="underline underline-offset-4 font-bold decoration-primary/40">{label}</a>
                   </div>
                 </div>
               );
             }
             if (custom === 'telegram') {
               return (
-                <div className="callout-box callout-telegram">
-                  <div className="callout-icon"><Send size={18} /></div>
-                  <div className="callout-content">
-                    <a href={url} target="_blank" rel="noopener noreferrer">{label}</a>
+                <a href={url} target="_blank" rel="noopener noreferrer" className="block my-6 no-underline group">
+                  <div className="p-4 rounded-xl bg-[#0088cc]/5 border border-[#0088cc]/10 flex items-center justify-between transition-all hover:bg-[#0088cc]/10 hover:border-[#0088cc]/30 active:scale-[0.99]">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#0088cc] flex items-center justify-center text-white shadow-lg shadow-[#0088cc]/20 group-hover:scale-105 transition-transform">
+                        <Send size={20} />
+                      </div>
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-[#0088cc] uppercase tracking-wider leading-none mb-1 opacity-70">LATEST UPDATES</span>
+                          <span className="text-[15px] font-bold text-gray-900 group-hover:text-[#0088cc] transition-colors line-clamp-1">
+                            {label}
+                          </span>
+                        </div>
+                    </div>
+                    <div className="flex-shrink-0 ml-4">
+                      <div className="bg-[#0088cc] text-white text-[11px] font-black px-4 py-1.5 rounded-full shadow-md group-hover:shadow-lg transition-all">JOIN</div>
+                    </div>
                   </div>
-                </div>
+                </a>
               );
             }
             if (custom === 'whatsapp') {
               return (
-                <div className="callout-box callout-whatsapp">
-                  <div className="callout-icon"><MessageCircle size={18} /></div>
-                  <div className="callout-content">
-                    <a href={url} target="_blank" rel="noopener noreferrer">{label}</a>
+                <a href={url} target="_blank" rel="noopener noreferrer" className="block my-6 no-underline group">
+                  <div className="p-4 rounded-xl bg-[#25d366]/5 border border-[#25d366]/10 flex items-center justify-between transition-all hover:bg-[#25d366]/10 hover:border-[#25d366]/30 active:scale-[0.99]">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#25d366] flex items-center justify-center text-white shadow-lg shadow-[#25d366]/20 group-hover:scale-105 transition-transform">
+                        <MessageCircle size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-[#25d366] uppercase tracking-wider leading-none mb-1 opacity-70">INSTANT ALERTS</span>
+                        <span className="text-[15px] font-bold text-gray-900 group-hover:text-[#25d366] transition-colors line-clamp-1">
+                          {label}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 ml-4">
+                      <div className="bg-[#25d366] text-white text-[11px] font-black px-4 py-1.5 rounded-full shadow-md group-hover:shadow-lg transition-all">JOIN</div>
+                    </div>
                   </div>
-                </div>
+                </a>
               );
             }
             if (custom === 'timeline') {
               return (
-                <div className="callout-box callout-timeline">
-                  <div className="callout-icon"><Calendar size={18} /></div>
-                  <div className="callout-content">
-                    <a href={url}>{label}</a>
+                <a href={url} className="block my-6 no-underline group">
+                  <div className="p-4 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-between transition-all hover:bg-purple-100/50 hover:border-purple-200 active:scale-[0.99]">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex-shrink-0 rounded-full bg-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-200 group-hover:scale-105 transition-transform">
+                        <Calendar size={20} />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-purple-700 uppercase tracking-wider leading-none mb-1 opacity-70">EXAM SCHEDULE</span>
+                        <span className="text-[15px] font-bold text-gray-900 group-hover:text-purple-700 transition-colors line-clamp-1">
+                          {label}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex-shrink-0 ml-4 flex items-center gap-2">
+                       <span className="hidden sm:block text-[11px] font-bold text-purple-700">VIEW TIMELINE</span>
+                       <ArrowRight size={18} className="text-purple-600 group-hover:translate-x-1 transition-transform" />
+                    </div>
                   </div>
-                </div>
+                </a>
               );
             }
             if (custom === 'book') {
               return (
                 <div className="book-card-container">
-                  <div className="book-card">
+                  <a href={url} target="_blank" rel="noopener noreferrer" className="book-card no-underline">
                     <div className="book-badge">Topper Recommended</div>
                     <div className="book-image">
                       <img src={image} alt={label} loading="lazy" />
                     </div>
                     <div className="book-info">
                       <h4 className="book-title">{label}</h4>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="book-buy-btn">
+                      <div className="book-buy-btn">
                         <BookOpen size={14} className="mr-1" />
                         See Book
-                      </a>
+                      </div>
                     </div>
-                  </div>
+                  </a>
                 </div>
               );
             }
@@ -142,18 +183,18 @@ export default function MarkdownRenderer({
                     if (!bTitle || !bImage || !bUrl) return null;
                     
                     return (
-                      <div key={idx} className="mini-book-card">
+                      <a key={idx} href={bUrl} target="_blank" rel="noopener noreferrer" className="mini-book-card no-underline">
                         <div className="mini-book-badge">Topper Recommended</div>
                         <div className="mini-book-image-container">
                           <img src={bImage} alt={bTitle} loading="lazy" />
                         </div>
                         <div className="mini-book-info-container">
                           <h5 className="mini-book-card-title" title={bTitle}>{bTitle}</h5>
-                          <a href={bUrl} target="_blank" rel="noopener noreferrer" className="mini-book-card-link">
+                          <div className="mini-book-card-link">
                             See Book
-                          </a>
+                          </div>
                         </div>
-                      </div>
+                      </a>
                     );
                   })}
                 </div>

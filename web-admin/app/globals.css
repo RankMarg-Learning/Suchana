@@ -321,134 +321,106 @@
 
 /* Callout Boxes */
 .callout-box {
-  margin: 1.5rem 0;
-  padding: 1.25rem;
-  border-radius: 12px;
+  margin: 1.25rem 0;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
   display: flex;
+  align-items: flex-start;
   gap: 1rem;
   border: 1px solid transparent;
-}
-
-.callout-icon {
-  flex-shrink: 0;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.callout-content {
-  font-size: inherit;
-  line-height: 1.6;
-}
-
-.callout-content>*:last-child {
-  margin-bottom: 0;
-}
-
-.callout-info {
-  background: oklch(0.95 0.02 240);
-  border-color: oklch(0.9 0.05 240);
-  color: oklch(0.3 0.05 240);
-}
-
-.callout-info .callout-icon {
-  background: oklch(0.9 0.05 240);
-  color: oklch(0.5 0.1 240);
-}
-
-.callout-warning {
-  background: oklch(0.98 0.06 85);
-  border-color: oklch(0.92 0.12 85);
-  color: oklch(0.35 0.1 85);
-}
-
-.callout-warning .callout-icon {
-  background: oklch(0.95 0.15 85);
-  color: oklch(0.55 0.2 85);
-}
-
-.callout-tip {
-  background: oklch(0.98 0.03 150);
-  border-color: oklch(0.92 0.08 150);
-  color: oklch(0.3 0.08 150);
-}
-
-.callout-tip .callout-icon {
-  background: oklch(0.95 0.1 150);
-  color: oklch(0.5 0.15 150);
-}
-
-.callout-box {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.5rem 0.75rem;
-  margin: 1.25rem 0;
-  border-radius: 4px;
-  background: transparent;
-  border-left: 2px solid var(--primary);
-  transition: all 0.2s ease;
+  border-left-width: 3px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--muted);
 }
 
 .callout-box:hover {
-  background: color-mix(in oklch, var(--primary), transparent 97%);
-  padding-left: 1rem;
+  /* Subtle lift instead of horizontal shift */
+  transform: translateX(4px);
 }
 
 .callout-icon {
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
   color: var(--primary);
-  opacity: 0.7;
+  margin-top: 2px;
 }
 
 .callout-content {
   flex-grow: 1;
+  font-size: 0.9375rem;
+  line-height: 1.6;
 }
 
 .callout-content a {
   font-weight: 600;
-  color: var(--foreground);
-  text-decoration: underline !important;
-  text-decoration-color: color-mix(in oklch, var(--primary), transparent 70%) !important;
+  color: var(--primary);
+  text-decoration: underline;
   text-underline-offset: 4px;
-  font-size: 0.9375rem;
-  display: inline;
   transition: all 0.2s ease;
 }
 
-.callout-box:hover .callout-content a {
-  color: var(--primary);
-  text-decoration-color: var(--primary) !important;
+.callout-box.callout-info {
+  background: oklch(0.95 0.02 240);
+  border-color: oklch(0.9 0.05 240);
+  border-left-color: oklch(0.5 0.1 240);
+}
+
+.callout-box.callout-warning {
+  background: oklch(0.98 0.06 85);
+  border-color: oklch(0.92 0.12 85);
+  border-left-color: oklch(0.6 0.15 85);
+}
+
+.callout-box.callout-tip {
+  background: oklch(0.98 0.03 150);
+  border-color: oklch(0.92 0.08 150);
+  border-left-color: oklch(0.5 0.15 150);
 }
 
 /* Variant Specifics */
-.callout-related { border-left-color: var(--primary); }
+.callout-related {
+  border-left-color: var(--primary);
+}
+
 .callout-related:hover .callout-content a {
   color: var(--primary);
   text-decoration-color: var(--primary) !important;
 }
 
-.callout-telegram { border-left-color: #0088cc; }
-.callout-telegram .callout-icon { color: #0088cc; }
-.callout-telegram:hover .callout-content a { 
-  color: #0088cc; 
+.callout-telegram {
+  border-left-color: #0088cc;
+}
+
+.callout-telegram .callout-icon {
+  color: #0088cc;
+}
+
+.callout-telegram:hover .callout-content a {
+  color: #0088cc;
   text-decoration-color: #0088cc !important;
 }
 
-.callout-whatsapp { border-left-color: #25d366; }
-.callout-whatsapp .callout-icon { color: #25d366; }
-.callout-whatsapp:hover .callout-content a { 
-  color: #25d366; 
+.callout-whatsapp {
+  border-left-color: #25d366;
+}
+
+.callout-whatsapp .callout-icon {
+  color: #25d366;
+}
+
+.callout-whatsapp:hover .callout-content a {
+  color: #25d366;
   text-decoration-color: #25d366 !important;
 }
 
-.callout-timeline { border-left-color: var(--primary); }
+.callout-timeline {
+  border-left-color: var(--primary);
+}
+
 .callout-timeline:hover .callout-content a {
   color: var(--primary);
   text-decoration-color: var(--primary) !important;
@@ -465,13 +437,15 @@
   display: inline-block;
   vertical-align: top;
   width: 100%;
-  max-width: 170px; /* Base compact mobile size */
+  max-width: 170px;
+  /* Base compact mobile size */
   margin: 0.75rem 0.5rem 0.75rem 0;
 }
 
 @media (min-width: 1024px) {
   .book-card-container {
-    max-width: 200px; /* Slightly larger on desktop */
+    max-width: 200px;
+    /* Slightly larger on desktop */
   }
 }
 
@@ -491,13 +465,14 @@
   position: relative;
   background: white;
   border: 1px solid #eef2f6;
-  border-radius: 8px; /* Sharper, cleaner corners */
+  border-radius: 8px;
+  /* Sharper, cleaner corners */
   overflow: hidden;
   transition: all 0.2s ease;
   height: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 .book-card:hover {
@@ -514,7 +489,8 @@
   color: white;
   padding: 2px 6px;
   border-radius: 4px;
-  font-size: 8px; /* Micro badge */
+  font-size: 8px;
+  /* Micro badge */
   font-weight: 800;
   z-index: 10;
   text-transform: uppercase;
@@ -523,7 +499,8 @@
 
 .book-image {
   width: 100%;
-  aspect-ratio: 2/3; /* Standard book cover ratio */
+  aspect-ratio: 4/5;
+  /* Standard book cover ratio */
   overflow: hidden;
   background: #f8fafc;
   display: flex;
@@ -535,8 +512,10 @@
 .book-image img {
   width: 100%;
   height: 100%;
-  object-fit: contain; /* Show the full book cover without cropping */
-  padding: 6px; /* Tighter */
+  object-fit: contain;
+  /* Show the full book cover without cropping */
+  padding: 6px;
+  /* Tighter */
   transition: transform 0.5s ease;
 }
 
@@ -545,15 +524,15 @@
 }
 
 .book-info {
-  padding: 0.6rem; /* Reduced by 20% */
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  gap: 0.4rem; /* Reduced */
+  gap: 0.25rem;
 }
 
 .book-title {
-  font-size: 0.75rem !important; /* Smaller size */
+  font-size: 0.75rem !important;
   font-weight: 600 !important;
   color: #334155 !important;
   margin: 0 !important;
@@ -562,7 +541,7 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  height: 1.8rem; /* Shorter box */
+  height: 1.6rem;
 }
 
 .book-buy-btn {
@@ -572,8 +551,8 @@
   justify-content: center;
   background: #f1f5f9;
   border: none;
-  color: #64748b !important;
-  padding: 0.35rem; /* Tighter */
+  color: var(--text-muted) !important;
+  padding: 0.35rem;
   border-radius: 6px;
   font-size: 0.72rem !important;
   font-weight: 700 !important;
@@ -603,9 +582,11 @@
 .mini-book-grid::-webkit-scrollbar {
   height: 4px;
 }
+
 .mini-book-grid::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
+
 .mini-book-grid::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
@@ -614,8 +595,10 @@
 .mini-book-card {
   position: relative;
   display: flex;
-  flex-direction: column; /* Vertical Card */
-  flex: 0 0 135px; /* Compact mobile base */
+  flex-direction: column;
+  /* Vertical Card */
+  flex: 0 0 135px;
+  /* Compact mobile base */
   scroll-snap-align: start;
   background: white;
   border: 1px solid #eef2f6;
@@ -623,18 +606,20 @@
   padding: 8px;
   gap: 8px;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
 }
 
 @media (min-width: 768px) {
   .mini-book-card {
-    flex: 0 0 155px; /* Tablet size */
+    flex: 0 0 155px;
+    /* Tablet size */
   }
 }
 
 @media (min-width: 1024px) {
   .mini-book-card {
-    flex: 0 0 180px; /* Desktop size */
+    flex: 0 0 180px;
+    /* Desktop size */
   }
 }
 
@@ -646,7 +631,8 @@
   color: white;
   padding: 1px 4px;
   border-radius: 3px;
-  font-size: 7px; /* Micro */
+  font-size: 7px;
+  /* Micro */
   font-weight: 800;
   z-index: 5;
   text-transform: uppercase;
@@ -655,12 +641,12 @@
 .mini-book-card:hover {
   transform: translateY(-2px);
   border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .mini-book-image-container {
   width: 100%;
-  aspect-ratio: 2/3;
+  aspect-ratio: 4/5;
   background: #f8fafc;
   border-radius: 4px;
   overflow: hidden;
@@ -680,7 +666,7 @@
 .mini-book-info-container {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   flex-grow: 1;
 }
 
@@ -694,7 +680,7 @@
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  height: 1.7rem;
+  height: 1.5rem;
 }
 
 .mini-book-card-link {
@@ -702,7 +688,7 @@
   display: block;
   text-align: center;
   background: #f1f5f9;
-  color: #64748b !important;
+  color: var(--text-muted) !important;
   padding: 4px;
   border-radius: 4px;
   font-size: 0.65rem !important;
@@ -720,25 +706,34 @@
   text-decoration: underline !important;
 }
 
-/* Standard Callouts */
-.callout-info { border-left-color: #3b82f6; }
-.callout-info .callout-icon { color: #3b82f6; }
-
-.callout-warning { border-left-color: #ef4444; }
-.callout-warning .callout-icon { color: #ef4444; }
-
-.callout-tip { border-left-color: #10b981; }
-.callout-tip .callout-icon { color: #10b981; }
-
-.callout-related a {
-  color: inherit !important;
-  text-decoration: none !important;
-  border-bottom: 2px solid transparent;
-  transition: border-color 0.2s;
+/* Special Callout Variants */
+.callout-related {
+  border-left-color: var(--primary);
+  background: transparent;
+  border-radius: 0;
+  padding: 0.5rem 0;
 }
 
-.callout-related a:hover {
-  border-bottom-color: var(--primary);
+.callout-telegram {
+  border-left-color: #0088cc;
+  background: oklch(0.95 0.01 240);
+}
+
+.callout-telegram .callout-icon {
+  color: #0088cc;
+}
+
+.callout-whatsapp {
+  border-left-color: #25d366;
+  background: oklch(0.95 0.01 150);
+}
+
+.callout-whatsapp .callout-icon {
+  color: #25d366;
+}
+
+.callout-timeline {
+  border-left-color: var(--primary);
 }
 
 .markdown-renderer table {
