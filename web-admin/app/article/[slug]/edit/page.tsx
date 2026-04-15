@@ -2,16 +2,19 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useParams } from 'next/navigation';
-import { seoService, examService, SeoPage } from '@/lib/api';
+import { seoService, examService, tagService, SeoPage } from '@/lib/api';
 import ArticleEditor from '@/components/articles/ArticleEditor';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export default function EditArticlePage() {
     const router = useRouter();
     const params = useParams();
     const slug = params.slug as string;
     const queryClient = useQueryClient();
+    const [isSaving, setIsSaving] = useState(false);
 
     const { data: pageResponse, isLoading } = useQuery({
         queryKey: ['seo-page-details', slug],
@@ -19,40 +22,32 @@ export default function EditArticlePage() {
         enabled: !!slug,
     });
 
-    const { data: examsResponse } = useQuery({
-        queryKey: ['exams-brief'],
-        queryFn: () => examService.getAllExams({ limit: 100 }),
-    });
+    const handleSave = async (data: Partial<SeoPage>, tagIds: string[]) => {
+        const pageId = (pageResponse?.data as any)?.id;
+        if (!pageId) {
+            toast.error('Error: Article ID is missing. Please refresh the page.');
+            return;
+        }
 
-    const updateMutation = useMutation({
-        mutationFn: (data: Partial<SeoPage>) => {
-            const pageId = (pageResponse?.data as any)?.id;
+        setIsSaving(true);
+        try {
+            const { id, exam, createdAt, updatedAt, tags, ...sanitizedData } = data as any;
 
-            const {
-                id,
-                exam,
-                createdAt,
-                updatedAt,
-                ...sanitizedData
-            } = data as any;
+            const res = await seoService.updatePage(pageId, sanitizedData);
+            if (!res.success) throw new Error('Failed to update article');
 
-            if (!pageId) {
-                toast.error("Error: Article ID is missing. Please refresh the page.");
-                throw new Error("Article ID is undefined");
-            }
+            await tagService.setPageTags(pageId, tagIds);
 
-            return seoService.updatePage(pageId, sanitizedData);
-        },
-        onSuccess: () => {
             toast.success('Article updated successfully');
             queryClient.invalidateQueries({ queryKey: ['seo-pages-admin'] });
             queryClient.invalidateQueries({ queryKey: ['seo-page-details', slug] });
             router.push('/seo');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || 'Failed to update article');
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message || error?.message || 'Failed to update article');
+        } finally {
+            setIsSaving(false);
         }
-    });
+    };
 
     if (isLoading) {
         return (
@@ -69,8 +64,10 @@ export default function EditArticlePage() {
     if (!pageResponse?.data) {
         return (
             <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
-                <h1 className="text-2xl font-bold font-outfit text-slate-900tracking-tight">Article Not Found</h1>
-                <p className="text-slate-500 font-medium">The article with slug <span className="text-indigo-600 font-mono font-bold">/{slug}</span> does not exist or has been removed.</p>
+                <h1 className="text-2xl font-bold font-outfit text-slate-900 tracking-tight">Article Not Found</h1>
+                <p className="text-slate-500 font-medium">
+                    The article with slug <span className="text-indigo-600 font-mono font-bold">/{slug}</span> does not exist or has been removed.
+                </p>
                 <Button variant="outline" onClick={() => router.push('/seo')} className="rounded-xl border-slate-200">
                     Go Back to Manager
                 </Button>
@@ -83,13 +80,9 @@ export default function EditArticlePage() {
             <ArticleEditor
                 title={`Edit Article: ${pageResponse.data.title}`}
                 initialData={pageResponse.data}
-                exams={examsResponse?.data || []}
-                isSaving={updateMutation.isPending}
-                onSave={(data) => updateMutation.mutate(data)}
+                isSaving={isSaving}
+                onSave={handleSave}
             />
         </div>
     );
 }
-
-// Minimal Button internal fallback if needed, or import it
-import { Button } from '@/components/ui/button';

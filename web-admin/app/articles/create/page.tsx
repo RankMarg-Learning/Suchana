@@ -1,39 +1,45 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { seoService, examService, SeoPage } from '@/lib/api';
+import { seoService, examService, tagService, SeoPage } from '@/lib/api';
 import ArticleEditor from '@/components/articles/ArticleEditor';
 import { toast } from 'sonner';
+import { useState } from 'react';
 
 export default function CreateArticlePage() {
     const router = useRouter();
-    const queryClient = useQueryClient();
+    const [isSaving, setIsSaving] = useState(false);
 
-    const { data: examsResponse } = useQuery({
-        queryKey: ['exams-brief'],
-        queryFn: () => examService.getAllExams({ limit: 100 }),
-    });
+    const handleSave = async (data: Partial<SeoPage>, tagIds: string[]) => {
+        setIsSaving(true);
+        try {
+            // 1. Create the article first
+            const res = await seoService.createPage(data);
+            if (!res.success || !res.data?.id) throw new Error('Failed to create article');
 
-    const createMutation = useMutation({
-        mutationFn: (data: Partial<SeoPage>) => seoService.createPage(data),
-        onSuccess: () => {
+            const newPageId = res.data.id;
+            console.log("page id ", newPageId)
+            // 2. Attach tags (only if any were selected)
+            if (tagIds.length > 0) {
+                await tagService.setPageTags(newPageId, tagIds);
+            }
+
             toast.success('Article published successfully');
-            queryClient.invalidateQueries({ queryKey: ['seo-pages-admin'] });
             router.push('/seo');
-        },
-        onError: (error: any) => {
-            toast.error(error.response?.data?.error?.message || 'Failed to publish article');
+        } catch (error: any) {
+            toast.error(error?.response?.data?.error?.message || error?.message || 'Failed to publish article');
+        } finally {
+            setIsSaving(false);
         }
-    });
+    };
 
     return (
         <div className="container mx-auto py-0 max-w-7xl h-full min-h-screen">
             <ArticleEditor
                 title="Create New Knowledge Article"
-                exams={examsResponse?.data || []}
-                isSaving={createMutation.isPending}
-                onSave={(data) => createMutation.mutate(data)}
+                isSaving={isSaving}
+                onSave={handleSave}
             />
         </div>
     );

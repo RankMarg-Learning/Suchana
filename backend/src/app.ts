@@ -14,27 +14,6 @@ export function createApp(): Application {
 
     app.set('trust proxy', 1);
 
-    app.use(helmet({
-        contentSecurityPolicy: env.IS_PROD ? undefined : false,
-        crossOriginEmbedderPolicy: true,
-        crossOriginOpenerPolicy: true,
-        crossOriginResourcePolicy: { policy: "cross-origin" },
-        dnsPrefetchControl: { allow: false },
-        frameguard: { action: "deny" },
-        hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
-        ieNoOpen: true,
-        noSniff: true,
-        originAgentCluster: true,
-        permittedCrossDomainPolicies: { permittedPolicies: "none" },
-        referrerPolicy: { policy: "no-referrer" },
-        xssFilter: true,
-    }));
-
-    app.use(globalLimiter);
-
-    app.use(preventParamPollution);
-    app.use(secureHeaders);
-
     app.use(
         cors({
             origin: (origin, callback) => {
@@ -44,11 +23,26 @@ export function createApp(): Application {
                     callback(new Error(`CORS policy: origin "${origin}" not allowed`));
                 }
             },
-            methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-            allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Admin-ID', 'X-Platform', 'X-User-ID'],
-            credentials: false,
+            methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+            allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key', 'X-Admin-ID', 'X-Platform', 'X-User-ID', 'X-Requested-With'],
+            credentials: true,
         })
     );
+
+    app.use(helmet({
+        contentSecurityPolicy: env.IS_PROD ? undefined : false,
+        crossOriginEmbedderPolicy: false,
+        crossOriginOpenerPolicy: { policy: "same-origin" },
+        crossOriginResourcePolicy: { policy: "cross-origin" },
+        dnsPrefetchControl: { allow: false },
+        frameguard: { action: "deny" },
+        hsts: { maxAge: 31536000, includeSubDomains: true, preload: true },
+        referrerPolicy: { policy: "strict-origin-when-cross-origin" },
+    }));
+
+    app.use(globalLimiter);
+    app.use(preventParamPollution);
+    app.use(secureHeaders);
 
     app.use(express.json({ limit: '200kb' }));
     app.use(express.urlencoded({ extended: true, limit: '200kb' }));
