@@ -34,6 +34,7 @@ export interface Exam {
   officialWebsite?: string;
   notificationUrl?: string;
   description?: string;
+  faqs?: { question: string; answer: string }[];
   lifecycleEvents?: LifecycleEvent[];
   seoPages?: { slug: string; category: string }[];
   createdAt?: string;
@@ -52,7 +53,9 @@ export interface SeoPage {
   canonicalUrl?: string;
   isPublished: boolean;
   category?: string;
+  examId?: string | null;
   exam?: Exam;
+  faqs?: { question: string; answer: string }[];
   createdAt: string;
   updatedAt: string;
 }

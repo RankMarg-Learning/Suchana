@@ -39,6 +39,7 @@ export interface Exam {
     additionalDetails?: string | null;
     salary?: string | null;
     age?: string | null;
+    faqs?: { question: string; answer: string }[] | null;
     lifecycleEvents?: LifecycleEvent[];
 }
 
@@ -99,6 +100,7 @@ export interface StagedExam {
     additionalDetails?: string | null;
     salary?: string | null;
     age?: string | null;
+    faqs?: { question: string; answer: string }[] | null;
     stagedEvents?: StagedEvent[];
     scrapeJob?: ScrapeJob;
 }
@@ -213,6 +215,7 @@ export interface SeoPage {
         conductingBody: string;
         officialWebsite: string;
     };
+    faqs?: { question: string; answer: string }[] | null;
     tags?: Tag[];
 }
 

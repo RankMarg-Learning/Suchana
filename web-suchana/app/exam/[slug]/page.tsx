@@ -228,12 +228,24 @@ function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamByS
     }
   }
 
-  if (faqs.length === 0) return null;
+  if (faqs.length === 0 && (!exam.faqs || exam.faqs.length === 0)) return null;
+
+  const combinedFaqs = [
+    ...(exam.faqs || []).map(f => ({
+      "@type": "Question",
+      name: f.question,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: f.answer,
+      },
+    })),
+    ...faqs
+  ];
 
   return {
     "@type": "FAQPage",
     "@id": `${canonicalUrl}#faq`,
-    mainEntity: faqs,
+    mainEntity: combinedFaqs,
   };
 }
 

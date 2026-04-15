@@ -144,6 +144,23 @@ function buildEventJsonLd(exam: any) {
   };
 }
 
+function buildFaqJsonLd(page: SeoPage) {
+  if (!page.faqs || page.faqs.length === 0) return null;
+
+  return {
+    "@type": "FAQPage",
+    "@id": `${SITE_URL}/${page.slug}#faq`,
+    "mainEntity": page.faqs.map(f => ({
+      "@type": "Question",
+      "name": f.question,
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": f.answer
+      }
+    }))
+  };
+}
+
 export default async function DynamicSlugPage({ params }: Props) {
   const { slug } = await params;
 
@@ -216,6 +233,7 @@ export default async function DynamicSlugPage({ params }: Props) {
         ),
         page.exam ? buildJobPostingJsonLd(page.exam) : null,
         page.exam ? buildEventJsonLd(page.exam) : null,
+        buildFaqJsonLd(page),
       ].filter(Boolean)
     };
 

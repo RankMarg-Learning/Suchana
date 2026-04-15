@@ -138,6 +138,7 @@ model Exam {
   additionalDetails     String?
   salary                String?
   age                   String?
+  faqs                  Json?
   examYear              Int?
   isTrending            Boolean          @default(false)
   lifecycleEvents       LifecycleEvent[]
@@ -286,6 +287,7 @@ model SeoPage {
   canonicalUrl    String?
   isPublished     Boolean      @default(true)
   isTrending      Boolean      @default(false)
+  faqs            Json?
   category        String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
@@ -318,10 +320,10 @@ model Tag {
 }
 
 model SeoPageTag {
-  seoPageId String
-  tagId     String
-  seoPage   SeoPage  @relation(fields: [seoPageId], references: [id], onDelete: Cascade)
-  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  seoPageId  String
+  tagId      String
+  seoPage    SeoPage  @relation(fields: [seoPageId], references: [id], onDelete: Cascade)
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
   assignedAt DateTime @default(now())
 
   @@id([seoPageId, tagId])

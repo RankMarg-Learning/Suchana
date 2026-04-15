@@ -59,11 +59,11 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-import MarkdownRenderer from '../MarkdownRenderer';
-
-import ArticleViralShareDialog from './ArticleViralShareDialog';
-import { useQuery } from '@tanstack/react-query';
 import ExamLink from './ExamLink';
+import FAQEditor from './FAQEditor';
+import { useQuery } from '@tanstack/react-query';
+import MarkdownRenderer from '../MarkdownRenderer';
+import ArticleViralShareDialog from './ArticleViralShareDialog';
 
 interface ArticleEditorProps {
     initialData?: Partial<SeoPage>;
@@ -124,7 +124,8 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
         isPublished: base.isPublished ?? true,
         isTrending: base.isTrending ?? false,
         examId: extractedExamId,
-        category: base.category || 'OTHERS' as any
+        category: base.category || 'OTHERS' as any,
+        faqs: base.faqs || []
     }));
 
     const { data: exam } = useQuery({
@@ -147,7 +148,8 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
                 isPublished: initialData.isPublished ?? true,
                 isTrending: initialData.isTrending ?? false,
                 examId: exId,
-                category: initialData.category || 'OTHERS' as any
+                category: initialData.category || 'OTHERS' as any,
+                faqs: initialData.faqs || []
             });
             setIsSlugLocked(!!initialData.slug);
 
@@ -593,6 +595,13 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
                                                 }}
                                             />
                                         </div>
+                                        
+                                        <div className="mt-8 border-t pt-8">
+                                            <FAQEditor
+                                                faqs={formData.faqs || []}
+                                                onChange={(faqs) => setFormData(prev => ({ ...prev, faqs }))}
+                                            />
+                                        </div>
                                     </TabsContent>
 
                                     <TabsContent value="preview" className="mt-0 focus-visible:outline-none ring-0">
@@ -765,6 +774,7 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
                             </CardContent>
                         )}
                     </Card>
+
 
                     <Card className="overflow-hidden shadow-sm ring-1 ring-border border-none">
                         <CardHeader className="cursor-pointer hover:bg-muted/30 transition-colors pb-2" onClick={() => toggleSection('tags')}>
