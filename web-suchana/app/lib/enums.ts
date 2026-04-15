@@ -167,6 +167,7 @@ export const getTerminalStatusFromStage = (stage: string): ExamStatus => {
 };
 
 export const SeoPageCategory = {
+    NEWS: 'NEWS',
     NOTIFICATION: 'NOTIFICATION',
     ADMIT_CARD: 'ADMIT_CARD',
     RESULT: 'RESULT',
@@ -204,6 +205,7 @@ export const SeoPageCategory = {
 export type SeoPageCategory = (typeof SeoPageCategory)[keyof typeof SeoPageCategory];
 
 export const ARTICLE_CATEGORIES: { value: SeoPageCategory; label: string }[] = [
+    { value: 'NEWS', label: 'News' },
     { value: 'NOTIFICATION', label: 'Notification' },
     { value: 'ADMIT_CARD', label: 'Admit Card' },
     { value: 'RESULT', label: 'Result' },

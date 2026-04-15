@@ -80,7 +80,7 @@ export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
     DOCUMENT_VERIFICATION: 90,
     JOINING: 100,
 };
- 
+
 export const DEFAULT_ACTION_LABELS: Record<string, string> = {
     NOTIFICATION: 'View Notification',
     REGISTRATION: 'Apply Now',
@@ -135,6 +135,7 @@ export const getTerminalStatusFromStage = (stage: string): ExamStatus => {
 };
 
 export const SeoPageCategory = {
+    NEWS: 'NEWS',
     NOTIFICATION: 'NOTIFICATION',
     ADMIT_CARD: 'ADMIT_CARD',
     RESULT: 'RESULT',
