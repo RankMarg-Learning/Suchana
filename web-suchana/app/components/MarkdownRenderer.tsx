@@ -22,13 +22,13 @@ export default function MarkdownRenderer({
   const processedContent = useMemo(() => {
     if (!content) return "";
     let final = content.replace(/\\n/g, "\n");
-    
+
     // 1. Timeline: [TIMELINE: Label | URL]
     final = final.replace(/\[TIMELINE:\s*(.*?)\s*\|\s*(.*?)\s*\]/gi, '<div data-custom="timeline" data-label="$1" data-url="$2"></div>');
-    
+
     // 2. Read More: [READMORE: Label | URL]
     final = final.replace(/\[READMORE:\s*(.*?)\s*\|\s*(.*?)\s*\]/gi, '<div data-custom="read-more" data-label="$1" data-url="$2"></div>');
-    
+
     // 3. Telegram: [TELEGRAM: Label | URL]
     final = final.replace(/\[TELEGRAM:\s*(.*?)\s*\|\s*(.*?)\s*\]/gi, '<div data-custom="telegram" data-label="$1" data-url="$2"></div>');
 
@@ -64,17 +64,16 @@ export default function MarkdownRenderer({
             const label = props['data-label'];
             const url = props['data-url'];
             const image = props['data-image'];
-            
+
             if (custom === 'read-more') {
               return (
-                <div className="callout-box callout-related !border-l-0 !pl-0 !items-start gap-3">
-                  <div className="flex-shrink-0 mt-1">
-                    <span className="bg-indigo-600 text-white text-[9px] font-bold px-2 py-1 rounded uppercase tracking-wider">
-                      Read More
-                    </span>
-                  </div>
-                  <div className="callout-content">
-                    <a href={url} className="underline underline-offset-4 font-bold decoration-indigo-600/40">{label}</a>
+                <div className="read-more-card">
+                  <div className="read-more-badge">Read More</div>
+                  <div className="read-more-content">
+                    <a href={url} className="read-more-link">
+                      {label}
+                      <ArrowRight size={14} className="read-more-arrow" />
+                    </a>
                   </div>
                 </div>
               );
@@ -87,12 +86,12 @@ export default function MarkdownRenderer({
                       <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#0088cc] flex items-center justify-center text-white shadow-lg shadow-[#0088cc]/20 group-hover:scale-105 transition-transform">
                         <Send size={20} />
                       </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-[#0088cc] uppercase tracking-wider leading-none mb-1 opacity-70">LATEST UPDATES</span>
-                          <span className="text-[15px] font-bold text-gray-900 group-hover:text-[#0088cc] transition-colors line-clamp-1">
-                            {label}
-                          </span>
-                        </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-[#0088cc] uppercase tracking-wider leading-none mb-1 opacity-70">LATEST UPDATES</span>
+                        <span className="text-[15px] font-bold text-gray-900 group-hover:text-[#0088cc] transition-colors line-clamp-1">
+                          {label}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex-shrink-0 ml-4">
                       <div className="bg-[#0088cc] text-white text-[11px] font-black px-4 py-1.5 rounded-full shadow-md group-hover:shadow-lg transition-all">JOIN</div>
@@ -109,12 +108,12 @@ export default function MarkdownRenderer({
                       <div className="w-10 h-10 flex-shrink-0 rounded-full bg-[#25d366] flex items-center justify-center text-white shadow-lg shadow-[#25d366]/20 group-hover:scale-105 transition-transform">
                         <MessageCircle size={20} />
                       </div>
-                        <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-[#25d366] uppercase tracking-wider leading-none mb-1 opacity-70">INSTANT ALERTS</span>
-                          <span className="text-[15px] font-bold text-gray-900 group-hover:text-[#25d366] transition-colors line-clamp-1">
-                            {label}
-                          </span>
-                        </div>
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-bold text-[#25d366] uppercase tracking-wider leading-none mb-1 opacity-70">INSTANT ALERTS</span>
+                        <span className="text-[15px] font-bold text-gray-900 group-hover:text-[#25d366] transition-colors line-clamp-1">
+                          {label}
+                        </span>
+                      </div>
                     </div>
                     <div className="flex-shrink-0 ml-4">
                       <div className="bg-[#25d366] text-white text-[11px] font-black px-4 py-1.5 rounded-full shadow-md group-hover:shadow-lg transition-all">JOIN</div>
@@ -139,8 +138,8 @@ export default function MarkdownRenderer({
                       </div>
                     </div>
                     <div className="flex-shrink-0 ml-4 flex items-center gap-2">
-                       <span className="hidden sm:block text-[11px] font-bold text-purple-700">VIEW TIMELINE</span>
-                       <ArrowRight size={18} className="text-purple-600 group-hover:translate-x-1 transition-transform" />
+                      <span className="hidden sm:block text-[11px] font-bold text-purple-700">VIEW TIMELINE</span>
+                      <ArrowRight size={18} className="text-purple-600 group-hover:translate-x-1 transition-transform" />
                     </div>
                   </div>
                 </a>
@@ -149,52 +148,52 @@ export default function MarkdownRenderer({
             if (custom === 'book') {
               return (
                 <div className="book-card-container">
-                  <div className="book-card">
+                  <a href={url} target="_blank" rel="noopener noreferrer" className="book-card no-underline">
                     <div className="book-badge">Topper Recommended</div>
                     <div className="book-image">
                       <img src={image} alt={label} loading="lazy" />
                     </div>
                     <div className="book-info">
                       <h4 className="book-title">{label}</h4>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="book-buy-btn">
+                      <div className="book-buy-btn">
                         <BookOpen size={14} className="mr-1" />
                         See Book
-                      </a>
+                      </div>
                     </div>
-                  </div>
+                  </a>
                 </div>
               );
             }
             if (custom === 'book-grid') {
               const booksRaw = props['data-books'] || "";
               const books = booksRaw.split(';').map((b: string) => b.trim()).filter(Boolean);
-              
+
               return (
                 <div className="mini-book-grid">
                   {books.map((bookStr: string, idx: number) => {
                     const parts = bookStr.split('|').map(s => s.trim());
                     if (parts.length < 3) return null;
-                    
+
                     // The last two are always URL and Image
                     const bUrl = parts.pop();
                     const bImage = parts.pop();
                     const bTitle = parts.join(' | '); // Keep any extra pipes in title
-                    
+
                     if (!bTitle || !bImage || !bUrl) return null;
-                    
+
                     return (
-                      <div key={idx} className="mini-book-card">
+                      <a key={idx} href={bUrl} target="_blank" rel="noopener noreferrer" className="mini-book-card no-underline">
                         <div className="mini-book-badge">Topper Recommended</div>
                         <div className="mini-book-image-container">
                           <img src={bImage} alt={bTitle} loading="lazy" />
                         </div>
                         <div className="mini-book-info-container">
                           <h5 className="mini-book-card-title" title={bTitle}>{bTitle}</h5>
-                          <a href={bUrl} target="_blank" rel="noopener noreferrer" className="mini-book-card-link">
+                          <div className="mini-book-card-link">
                             See Book
-                          </a>
+                          </div>
                         </div>
-                      </div>
+                      </a>
                     );
                   })}
                 </div>
@@ -211,10 +210,10 @@ export default function MarkdownRenderer({
           a: ({ node, href, children, ...props }) => {
             const isInternal = href?.startsWith('/') || href?.startsWith('#');
             return (
-              <a 
-                {...props} 
+              <a
+                {...props}
                 href={href}
-                className="markdown-link" 
+                className="markdown-link"
                 target={isInternal ? "_self" : "_blank"}
                 rel={isInternal ? "" : "noopener noreferrer"}
               >

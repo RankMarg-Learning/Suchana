@@ -149,19 +149,19 @@ export default function MarkdownRenderer({
             if (custom === 'book') {
               return (
                 <div className="book-card-container">
-                  <div className="book-card">
+                  <a href={url} target="_blank" rel="noopener noreferrer" className="book-card no-underline">
                     <div className="book-badge">Topper Recommended</div>
                     <div className="book-image">
                       <img src={image} alt={label} loading="lazy" />
                     </div>
                     <div className="book-info">
                       <h4 className="book-title">{label}</h4>
-                      <a href={url} target="_blank" rel="noopener noreferrer" className="book-buy-btn">
+                      <div className="book-buy-btn">
                         <BookOpen size={14} className="mr-1" />
                         See Book
-                      </a>
+                      </div>
                     </div>
-                  </div>
+                  </a>
                 </div>
               );
             }
@@ -183,18 +183,18 @@ export default function MarkdownRenderer({
                     if (!bTitle || !bImage || !bUrl) return null;
                     
                     return (
-                      <div key={idx} className="mini-book-card">
+                      <a key={idx} href={bUrl} target="_blank" rel="noopener noreferrer" className="mini-book-card no-underline">
                         <div className="mini-book-badge">Topper Recommended</div>
                         <div className="mini-book-image-container">
                           <img src={bImage} alt={bTitle} loading="lazy" />
                         </div>
                         <div className="mini-book-info-container">
                           <h5 className="mini-book-card-title" title={bTitle}>{bTitle}</h5>
-                          <a href={bUrl} target="_blank" rel="noopener noreferrer" className="mini-book-card-link">
+                          <div className="mini-book-card-link">
                             See Book
-                          </a>
+                          </div>
                         </div>
-                      </div>
+                      </a>
                     );
                   })}
                 </div>

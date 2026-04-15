@@ -1,10 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
-import { Home, Search, ArrowRight, AlertCircle, FileQuestion, Bell, Phone } from "lucide-react";
-import SiteNav from "./components/SiteNav";
-import SiteFooter from "./components/SiteFooter";
+import { Home, Search, ArrowRight, FileQuestion, Bell, Phone } from "lucide-react";
 import { trackEvent } from "./lib/telemetry";
 
 export default function NotFound() {

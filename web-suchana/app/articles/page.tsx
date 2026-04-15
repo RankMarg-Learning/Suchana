@@ -1,7 +1,6 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 import ArticlesClient from './ArticlesClient';
-import { RefreshCw } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'Latest Articles - Exam Suchana',
