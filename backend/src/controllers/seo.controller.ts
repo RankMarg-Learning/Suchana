@@ -173,9 +173,13 @@ export class SeoController {
         }
       }
 
+      const { faqs, ...rest } = data;
       const page = await prisma.seoPage.update({
         where: { id },
-        data
+        data: {
+          ...rest,
+          faqs: faqs ?? undefined
+        }
       });
 
       sendSuccess(res, page);

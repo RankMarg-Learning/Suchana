@@ -151,9 +151,11 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
     const slugExists = await prisma.exam.findUnique({ where: { slug: baseSlug } });
     const slug = slugExists ? uniqueSlug(fullTitle) : baseSlug;
 
+    const { faqs, ...baseDto } = dto;
+
     const exam = await prisma.exam.create({
         data: {
-            ...dto,
+            ...baseDto,
             createdAt: dto.createdAt ? new Date(dto.createdAt) : undefined,
             qualificationCriteria: dto.qualificationCriteria,
             applicationFee: dto.applicationFee,
@@ -163,6 +165,7 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
             slug,
             createdBy: adminId,
             publishedAt: dto.isPublished ? new Date() : null,
+            faqs: faqs ?? undefined,
         },
     });
 
@@ -181,7 +184,7 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
     const existing = await prisma.exam.findUnique({ where: { id } });
     if (!existing) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam "${id}" not found`);
 
-    const { createdAt, ...restDto } = dto;
+    const { createdAt, faqs, ...restDto } = dto;
     const data: Prisma.ExamUpdateInput = {
         ...restDto,
         ...(createdAt && { createdAt: new Date(createdAt) }),
@@ -191,6 +194,7 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
         salary: dto.salary,
         additionalDetails: dto.additionalDetails,
         ...(dto.isPublished && !existing.isPublished && { publishedAt: new Date() }),
+        faqs: faqs ?? undefined,
     };
 
     const updated = await prisma.exam.update({ where: { id }, data });
