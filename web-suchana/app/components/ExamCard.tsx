@@ -18,7 +18,6 @@ export function ExamListRow({ exam }: { exam: Exam }) {
   return (
     <Link
       href={`/exam/${exam.slug}`}
-      prefetch={false}
       className="exam-list-row compact-row"
       aria-label={`View ${exam.shortTitle ?? exam.title} details`}
       onClick={() => trackFunnelStep('exam_discovery_click', { 

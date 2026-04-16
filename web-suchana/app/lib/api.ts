@@ -2,10 +2,10 @@ import { cache } from 'react';
 import { Exam, LifecycleEvent, SeoPage } from "./types";
 
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1").replace(/\/+$/, "");
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://examsuchana.in";
+  (process.env.NEXT_PUBLIC_SITE_URL || "https://examsuchana.in").replace(/\/+$/, "");
 
 // ─── API Functions ────────────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ export async function fetchExamsFromAPI(
 
 export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null> => {
   try {
-    const res = await fetch(`${API_BASE}/exams/slug/${slug}`, {
+    const res = await fetch(`${API_BASE}/exams/slug/${encodeURIComponent(slug)}`, {
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;
@@ -87,7 +87,7 @@ export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null> 
 
 export const fetchSeoPageBySlug = cache(async (slug: string): Promise<SeoPage | null> => {
   try {
-    const res = await fetch(`${API_BASE}/seo-pages/${slug}`, {
+    const res = await fetch(`${API_BASE}/seo-pages/${encodeURIComponent(slug)}`, {
       next: { revalidate: 3600 }, // ISR: 1 hour
     });
     if (!res.ok) return null;
@@ -163,7 +163,7 @@ export async function fetchAllExamSlugs(): Promise<string[]> {
     let page = 1;
     let hasMore = true;
 
-    while (hasMore && page <= 10) {
+    while (hasMore && page <= 50) { // Limit to 50 pages (5000 slugs)
       const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { cache: 'no-store' });
       if (!response.ok) break;
       const result = await response.json();
@@ -205,7 +205,7 @@ export async function fetchAllConductingBodies(): Promise<string[]> {
 
 export async function fetchSavedExams(userId: string): Promise<Exam[]> {
   try {
-    const res = await fetch(`${API_BASE}/exams/saved/${userId}`);
+    const res = await fetch(`${API_BASE}/exams/saved/${encodeURIComponent(userId)}`);
     if (!res.ok) return [];
     const data = await res.json();
     return data.data ?? [];
@@ -215,7 +215,7 @@ export async function fetchSavedExams(userId: string): Promise<Exam[]> {
 }
 
 export async function toggleSavedExam(userId: string, examId: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/users/${userId}/saved-exams`, {
+  const res = await fetch(`${API_BASE}/users/${encodeURIComponent(userId)}/saved-exams`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ examId }),
@@ -230,7 +230,7 @@ export async function getPersonalizedExams(
   limit = 20
 ): Promise<{ exams: Exam[]; total: number }> {
   try {
-    const res = await fetch(`${API_BASE}/users/${id}/exams?page=${page}&limit=${limit}`);
+    const res = await fetch(`${API_BASE}/users/${encodeURIComponent(id)}/exams?page=${page}&limit=${limit}`);
     if (!res.ok) throw new Error();
     const data = await res.json();
     return {
@@ -243,13 +243,13 @@ export async function getPersonalizedExams(
 }
 
 export async function getUser(id: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/users/${id}`);
+  const res = await fetch(`${API_BASE}/users/${encodeURIComponent(id)}`);
   const data = await res.json();
   return data.data;
 }
 
 export async function updateUser(id: string, payload: any): Promise<any> {
-  const res = await fetch(`${API_BASE}/users/${id}`, {
+  const res = await fetch(`${API_BASE}/users/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -273,7 +273,7 @@ export async function registerUser(payload: any): Promise<any> {
 }
 
 export async function checkUserByPhone(phone: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/users/phone/${phone}`);
+  const res = await fetch(`${API_BASE}/users/phone/${encodeURIComponent(phone)}`);
   if (!res.ok) return { isRegistered: false, data: null };
   const data = await res.json();
   return data;

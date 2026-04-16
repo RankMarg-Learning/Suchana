@@ -13,6 +13,7 @@ interface Props {
 }
 
 export const revalidate = 3600; // Revalidate every hour
+export const dynamicParams = true; // Allow dynamic params for recently created exams
 
 export async function generateStaticParams() {
   const slugs = await fetchAllExamSlugs();
