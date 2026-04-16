@@ -35,7 +35,6 @@ export default function LatestArticlesSection({ title, articles, viewAllHref = "
           <Link
             key={article.id}
             href={`/${article.slug}`}
-            prefetch={false}
             className="article-list-item"
             style={{
               padding: isSidebar ? '12px 0' : 'clamp(12px, 2vh, 16px) 0',

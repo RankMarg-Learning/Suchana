@@ -17,6 +17,7 @@ interface Props {
 
 
 export const revalidate = 3600; // Revalidate every hour
+export const dynamicParams = true;
 
 export async function generateStaticParams() {
   const slugs = await fetchAllSeoPageSlugs();
