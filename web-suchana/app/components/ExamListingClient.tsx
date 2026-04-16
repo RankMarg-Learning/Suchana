@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import SiteNav from "./SiteNav";
 import SiteFooter from "./SiteFooter";
 import { ChevronDown, RefreshCw, Zap, Search, X } from "lucide-react";
@@ -12,6 +12,7 @@ import { ADS_CONFIG } from "../config/ads";
 import { ExamListRow, SkeletonRow } from "./ExamCard";
 import { trackFunnelStep } from "../lib/telemetry";
 import { useScrollTracking } from "../hooks/useScrollTracking";
+import { useInfiniteQuery } from "@tanstack/react-query";
 
 interface Props {
   title: string;
@@ -25,10 +26,6 @@ interface Props {
 
 export default function ExamListingClient({ title, category, status, conductingBody, state, startDate, endDate }: Props) {
   useScrollTracking(`list:${title}`);
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
 
@@ -42,13 +39,18 @@ export default function ExamListingClient({ title, category, status, conductingB
     return () => clearTimeout(t);
   }, [searchQuery, title]);
 
-  const loadExams = useCallback(async (reset: boolean, pageNo?: number) => {
-    setLoading(true);
-    if (reset) setExams([]); // Clear stale data to show skeletons
-    const reqPage = reset ? 1 : (pageNo ?? page);
-    try {
-      const result = await fetchExamsFromAPI(
-        reqPage,
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: ['exams', { category, status, conductingBody, state, startDate, endDate, search: debouncedSearch }],
+    queryFn: ({ pageParam = 1 }) => 
+      fetchExamsFromAPI(
+        pageParam,
         10,
         category,
         status,
@@ -57,40 +59,31 @@ export default function ExamListingClient({ title, category, status, conductingB
         state,
         startDate,
         endDate
-      );
-
-      if (reset) {
-        setExams(result.exams ?? []);
-        setPage(1);
-      } else {
-        setExams((prev) => [...prev, ...(result.exams ?? [])]);
-      }
-      setHasMore((result.exams ?? []).length === 10);
-    } catch (err) {
-      console.error("Failed to load exams:", err);
-      if (reset) setExams([]);
-      setHasMore(false);
-    } finally {
-      setLoading(false);
-    }
-  }, [category, status, debouncedSearch, page, conductingBody, state, startDate, endDate]);
-
-  useEffect(() => {
-    loadExams(true);
-  }, [category, status, debouncedSearch, conductingBody, state, startDate, endDate]);
-
-  const AD_FREQUENCY = ADS_CONFIG.inFeedAdFrequency;
-  const feedItems: Array<{ type: "exam"; exam: Exam } | { type: "ad"; adIndex: number }> = [];
-  exams.forEach((exam, i) => {
-    feedItems.push({ type: "exam", exam });
-    if (ADS_CONFIG.enableAds && ADS_CONFIG.placements.inFeedNativeAds && (i + 1) % AD_FREQUENCY === 0) {
-      feedItems.push({ type: "ad", adIndex: Math.floor(i / AD_FREQUENCY) });
-    }
+      ),
+    getNextPageParam: (lastPage, allPages) => {
+      return lastPage.exams.length === 10 ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
+    // Add staleTime to prevent unnecessary background refetches for static content
+    staleTime: 1000 * 60 * 5, 
   });
+
+  const allExams = useMemo(() => data?.pages.flatMap(page => page.exams) ?? [], [data]);
+
+  const feedItems = useMemo(() => {
+    const AD_FREQUENCY = ADS_CONFIG.inFeedAdFrequency;
+    const items: Array<{ type: "exam"; exam: Exam } | { type: "ad"; adIndex: number }> = [];
+    allExams.forEach((exam, i) => {
+      items.push({ type: "exam", exam });
+      if (ADS_CONFIG.enableAds && ADS_CONFIG.placements.inFeedNativeAds && (i + 1) % AD_FREQUENCY === 0) {
+        items.push({ type: "ad", adIndex: Math.floor(i / AD_FREQUENCY) });
+      }
+    });
+    return items;
+  }, [allExams]);
 
   return (
     <>
-
       <div className="leaderboard-wrap">
         <LeaderboardAd id="top-listing-leaderboard" />
       </div>
@@ -98,9 +91,7 @@ export default function ExamListingClient({ title, category, status, conductingB
       <div className="app-shell">
         <LeftSidebar
           categoryFilter={category || "ALL"}
-          setCategoryFilter={() => {
-            // Optionally handle navigation here if we wanted the sidebar to work
-          }}
+          setCategoryFilter={() => {}}
         />
 
         <main className="feed-main" aria-label={`Exam listings for ${title}`}>
@@ -114,7 +105,7 @@ export default function ExamListingClient({ title, category, status, conductingB
                 <h1 className="feed-title">{title}</h1>
               </div>
               <div className="feed-count">
-                {!loading && `${exams.length} listings`}
+                {!isLoading && `${allExams.length} listings`}
               </div>
             </div>
 
@@ -143,9 +134,9 @@ export default function ExamListingClient({ title, category, status, conductingB
           </div>
 
           <div className="exam-list" role="list">
-            {loading && exams.length === 0 ? (
+            {isLoading && allExams.length === 0 ? (
               [1, 2, 3, 4].map(n => <SkeletonRow key={n} />)
-            ) : exams.length === 0 ? (
+            ) : allExams.length === 0 ? (
               <div className="empty-state">
                 <h2 className="empty-title">No exams found</h2>
                 <div className="empty-desc">No exams currently match these criteria. Check back later for updates.</div>
@@ -160,18 +151,17 @@ export default function ExamListingClient({ title, category, status, conductingB
                   )
                 )}
 
-                {hasMore && (
+                {hasNextPage && (
                   <div className="load-more-wrap">
                     <button
                       className="btn btn-ghost btn-lg"
                       onClick={() => { 
-                        trackFunnelStep('discovery_load_more', { page: page + 1, context: title });
-                        setPage(p => p + 1); 
-                        loadExams(false, page + 1); 
+                        trackFunnelStep('discovery_load_more', { context: title });
+                        fetchNextPage();
                       }}
-                      disabled={loading}
+                      disabled={isFetchingNextPage}
                     >
-                      {loading ? <><RefreshCw size={15} className="spin-icon" /> Loading...</> : <><ChevronDown size={15} /> Load More</>}
+                      {isFetchingNextPage ? <><RefreshCw size={15} className="spin-icon" /> Loading...</> : <><ChevronDown size={15} /> Load More</>}
                     </button>
                   </div>
                 )}
@@ -182,16 +172,13 @@ export default function ExamListingClient({ title, category, status, conductingB
 
         <RightSidebar
           statusFilter={status || "ALL"}
-          setStatusFilter={() => {
-            // Optionally handle navigation here
-          }}
+          setStatusFilter={() => {}}
         />
       </div>
 
       <div className="leaderboard-wrap">
         <LeaderboardAd id="bottom-listing-leaderboard" />
       </div>
-
     </>
   );
 }

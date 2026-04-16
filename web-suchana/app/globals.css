@@ -4601,6 +4601,12 @@ body::before {
   border: 1px solid var(--border);
 }
 
+.markdown-hr {
+  margin: 1rem 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
 .markdown-link {
   display: inline-flex;
   align-items: center;
@@ -5528,7 +5534,7 @@ r .card-branding-icon-box {
   border: none;
   height: 1px;
   background: linear-gradient(to right, transparent, var(--border), var(--border-strong), var(--border), transparent);
-  margin: 48px auto;
+  margin: 1rem auto;
   width: 90%;
   position: relative;
   overflow: visible;

@@ -87,7 +87,7 @@ export default function HomePage() {
                   { label: "Examination", title: "Results", icon: Award, color: "#059669", bg: "#ecfdf5", href: "/s/result-declared" },
                   { label: "Verified", title: "Answer Keys", icon: Info, color: "#7c3aed", bg: "#f5f3ff", href: "/s/answer-key-out" }
                 ].map((hub) => (
-                  <Link key={hub.title} href={hub.href} className="status-card-premium group tap-effect">
+                  <Link key={hub.title} href={hub.href} prefetch={false} className="status-card-premium group tap-effect">
                     <div className="status-icon-box" style={{ background: hub.bg }}>
                       <hub.icon size={22} color={hub.color} />
                     </div>
@@ -117,6 +117,7 @@ export default function HomePage() {
                   <Link
                     key={cat.id}
                     href={`/c/${enumToSlug(cat.id)}`}
+                    prefetch={false}
                     className="category-btn"
                   >
                     <cat.icon size={16} strokeWidth={2.4} style={{ color: cat.color }} />

@@ -134,29 +134,71 @@ export async function fetchSeoPages(
 
 export async function fetchAllSeoPageSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/seo-pages?limit=1000`, {
-      cache: 'no-store'
-    });
-    if (!res.ok) {
-      console.error(`Failed to fetch SEO slugs: ${res.status}`);
-      return [];
+    let allSlugs: string[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && page <= 10) { // Safety cap at 1000 slugs
+      const res = await fetch(`${API_BASE}/seo-pages/list?page=${page}&limit=100`, {
+        cache: 'no-store'
+      });
+      if (!res.ok) break;
+      const data = await res.json();
+      const pages = data.data?.pages || data.pages || [];
+      const slugs = pages.map((p: any) => p.slug).filter(Boolean);
+      allSlugs = [...allSlugs, ...slugs];
+      hasMore = slugs.length === 100;
+      page++;
     }
-    const data = await res.json();
-    const items = data.data ?? data.seoPages ?? [];
-    return items.map((p: any) => p.slug).filter(Boolean);
+    return allSlugs;
   } catch (err) {
     console.error("Error fetching SEO slugs:", err);
     return [];
   }
 }
 
-
 export async function fetchAllExamSlugs(): Promise<string[]> {
   try {
-    const response = await fetch(`${API_BASE}/exams?limit=1000`, { cache: 'no-store' });
-    const result = await response.json();
-    return (result.data || result.exams || []).map((exam: any) => exam.slug);
+    let allSlugs: string[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && page <= 10) {
+      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { cache: 'no-store' });
+      if (!response.ok) break;
+      const result = await response.json();
+      const exams = result.data || result.exams || [];
+      const slugs = exams.map((exam: any) => exam.slug);
+      allSlugs = [...allSlugs, ...slugs];
+      hasMore = exams.length === 100;
+      page++;
+    }
+    return allSlugs;
   } catch (error) {
+    console.error("Error fetching Exam slugs:", error);
+    return [];
+  }
+}
+
+export async function fetchAllConductingBodies(): Promise<string[]> {
+  try {
+    let allBodies: string[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && page <= 10) {
+      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { cache: 'no-store' });
+      if (!response.ok) break;
+      const result = await response.json();
+      const exams = result.data || result.exams || [];
+      const bodies = exams.map((e: any) => e.conductingBody).filter(Boolean);
+      allBodies = [...allBodies, ...bodies];
+      hasMore = exams.length === 100;
+      page++;
+    }
+    return Array.from(new Set(allBodies));
+  } catch (error) {
+    console.error("Error fetching conducting bodies:", error);
     return [];
   }
 }
