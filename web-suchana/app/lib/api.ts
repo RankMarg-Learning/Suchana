@@ -2,10 +2,10 @@ import { cache } from 'react';
 import { Exam, LifecycleEvent, SeoPage } from "./types";
 
 export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1";
+  (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1").replace(/\/+$/, "");
 
 export const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL || "https://examsuchana.in";
+  (process.env.NEXT_PUBLIC_SITE_URL || "https://examsuchana.in").replace(/\/+$/, "");
 
 // ─── API Functions ────────────────────────────────────────────────────────────
 
@@ -72,7 +72,7 @@ export async function fetchExamsFromAPI(
 
 export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null> => {
   try {
-    const res = await fetch(`${API_BASE}/exams/slug/${slug}`, {
+    const res = await fetch(`${API_BASE}/exams/slug/${encodeURIComponent(slug)}`, {
       next: { revalidate: 300 },
     });
     if (!res.ok) return null;
@@ -87,7 +87,7 @@ export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null> 
 
 export const fetchSeoPageBySlug = cache(async (slug: string): Promise<SeoPage | null> => {
   try {
-    const res = await fetch(`${API_BASE}/seo-pages/${slug}`, {
+    const res = await fetch(`${API_BASE}/seo-pages/${encodeURIComponent(slug)}`, {
       next: { revalidate: 3600 }, // ISR: 1 hour
     });
     if (!res.ok) return null;
@@ -134,36 +134,78 @@ export async function fetchSeoPages(
 
 export async function fetchAllSeoPageSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/seo-pages?limit=1000`, {
-      cache: 'no-store'
-    });
-    if (!res.ok) {
-      console.error(`Failed to fetch SEO slugs: ${res.status}`);
-      return [];
+    let allSlugs: string[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && page <= 10) { // Safety cap at 1000 slugs
+      const res = await fetch(`${API_BASE}/seo-pages/list?page=${page}&limit=100`, {
+        cache: 'no-store'
+      });
+      if (!res.ok) break;
+      const data = await res.json();
+      const pages = data.data?.pages || data.pages || [];
+      const slugs = pages.map((p: any) => p.slug).filter(Boolean);
+      allSlugs = [...allSlugs, ...slugs];
+      hasMore = slugs.length === 100;
+      page++;
     }
-    const data = await res.json();
-    const items = data.data ?? data.seoPages ?? [];
-    return items.map((p: any) => p.slug).filter(Boolean);
+    return allSlugs;
   } catch (err) {
     console.error("Error fetching SEO slugs:", err);
     return [];
   }
 }
 
-
 export async function fetchAllExamSlugs(): Promise<string[]> {
   try {
-    const response = await fetch(`${API_BASE}/exams?limit=1000`, { cache: 'no-store' });
-    const result = await response.json();
-    return (result.data || result.exams || []).map((exam: any) => exam.slug);
+    let allSlugs: string[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && page <= 50) { // Limit to 50 pages (5000 slugs)
+      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { cache: 'no-store' });
+      if (!response.ok) break;
+      const result = await response.json();
+      const exams = result.data || result.exams || [];
+      const slugs = exams.map((exam: any) => exam.slug);
+      allSlugs = [...allSlugs, ...slugs];
+      hasMore = exams.length === 100;
+      page++;
+    }
+    return allSlugs;
   } catch (error) {
+    console.error("Error fetching Exam slugs:", error);
+    return [];
+  }
+}
+
+export async function fetchAllConductingBodies(): Promise<string[]> {
+  try {
+    let allBodies: string[] = [];
+    let page = 1;
+    let hasMore = true;
+
+    while (hasMore && page <= 10) {
+      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { cache: 'no-store' });
+      if (!response.ok) break;
+      const result = await response.json();
+      const exams = result.data || result.exams || [];
+      const bodies = exams.map((e: any) => e.conductingBody).filter(Boolean);
+      allBodies = [...allBodies, ...bodies];
+      hasMore = exams.length === 100;
+      page++;
+    }
+    return Array.from(new Set(allBodies));
+  } catch (error) {
+    console.error("Error fetching conducting bodies:", error);
     return [];
   }
 }
 
 export async function fetchSavedExams(userId: string): Promise<Exam[]> {
   try {
-    const res = await fetch(`${API_BASE}/exams/saved/${userId}`);
+    const res = await fetch(`${API_BASE}/exams/saved/${encodeURIComponent(userId)}`);
     if (!res.ok) return [];
     const data = await res.json();
     return data.data ?? [];
@@ -173,7 +215,7 @@ export async function fetchSavedExams(userId: string): Promise<Exam[]> {
 }
 
 export async function toggleSavedExam(userId: string, examId: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/users/${userId}/saved-exams`, {
+  const res = await fetch(`${API_BASE}/users/${encodeURIComponent(userId)}/saved-exams`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ examId }),
@@ -188,7 +230,7 @@ export async function getPersonalizedExams(
   limit = 20
 ): Promise<{ exams: Exam[]; total: number }> {
   try {
-    const res = await fetch(`${API_BASE}/users/${id}/exams?page=${page}&limit=${limit}`);
+    const res = await fetch(`${API_BASE}/users/${encodeURIComponent(id)}/exams?page=${page}&limit=${limit}`);
     if (!res.ok) throw new Error();
     const data = await res.json();
     return {
@@ -201,13 +243,13 @@ export async function getPersonalizedExams(
 }
 
 export async function getUser(id: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/users/${id}`);
+  const res = await fetch(`${API_BASE}/users/${encodeURIComponent(id)}`);
   const data = await res.json();
   return data.data;
 }
 
 export async function updateUser(id: string, payload: any): Promise<any> {
-  const res = await fetch(`${API_BASE}/users/${id}`, {
+  const res = await fetch(`${API_BASE}/users/${encodeURIComponent(id)}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -231,7 +273,7 @@ export async function registerUser(payload: any): Promise<any> {
 }
 
 export async function checkUserByPhone(phone: string): Promise<any> {
-  const res = await fetch(`${API_BASE}/users/phone/${phone}`);
+  const res = await fetch(`${API_BASE}/users/phone/${encodeURIComponent(phone)}`);
   if (!res.ok) return { isRegistered: false, data: null };
   const data = await res.json();
   return data;

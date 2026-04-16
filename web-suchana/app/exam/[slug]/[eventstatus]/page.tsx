@@ -1,12 +1,30 @@
 import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
-import { fetchExamBySlug, SITE_URL } from "@/app/lib/api";
+import { fetchExamBySlug, SITE_URL, fetchExamsFromAPI } from "@/app/lib/api";
 import { cleanLabel, stripHtml } from "@/app/lib/types";
 import EventDetailClient from "./EventDetailClient";
 
 
 interface Props {
   params: Promise<{ slug: string, eventstatus: string }>;
+}
+
+export const revalidate = 3600; // Revalidate every hour
+
+export async function generateStaticParams() {
+  const { exams } = await fetchExamsFromAPI(1, 100);
+  const params: { slug: string; eventstatus: string }[] = [];
+
+  exams.forEach((exam) => {
+    exam.lifecycleEvents?.forEach((event) => {
+      params.push({
+        slug: exam.slug,
+        eventstatus: event.stage.toLowerCase().replace(/_/g, '-'),
+      });
+    });
+  });
+
+  return params;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

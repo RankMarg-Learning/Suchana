@@ -117,6 +117,7 @@ export default function HomePage() {
                   <Link
                     key={cat.id}
                     href={`/c/${enumToSlug(cat.id)}`}
+                    prefetch={false}
                     className="category-btn"
                   >
                     <cat.icon size={16} strokeWidth={2.4} style={{ color: cat.color }} />
