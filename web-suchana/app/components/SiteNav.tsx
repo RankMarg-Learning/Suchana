@@ -46,7 +46,7 @@ export default function SiteNav() {
         <div className="container navbar-inner">
           <Link href="/" className="logo-modern">
             <div className="logo-icon">
-              <Image src={'/examsuchana-logoT.png'} height={36} width={36} alt="Exam Suchana" priority />
+              <Image src={'/examsuchana-logoT.png'} height={36} width={36} alt="Exam Suchana" priority unoptimized />
             </div>
             <span className="logo-text">
               Exam <span>Suchana</span>
