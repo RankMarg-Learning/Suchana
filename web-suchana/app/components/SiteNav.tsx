@@ -66,7 +66,7 @@ export default function SiteNav() {
                     {EXAM_CATEGORIES.slice(0, 10).map((cat) => {
                       const slug = enumToSlug(cat);
                       return (
-                        <Link key={cat} href={`/c/${slug}`} className={`dropdown-item ${isCategoryActive(slug) ? "active" : ""}`}>
+                        <Link key={cat} href={`/c/${slug}`} prefetch={false} className={`dropdown-item ${isCategoryActive(slug) ? "active" : ""}`}>
                           {cleanLabel(cat)}
                         </Link>
                       );
@@ -78,7 +78,7 @@ export default function SiteNav() {
                     {EXAM_STATUSES.filter(s => s !== 'ARCHIVED' && s !== 'ACTIVE').slice(0, 6).map((status) => {
                       const slug = enumToSlug(status);
                       return (
-                        <Link key={status} href={`/s/${slug}`} className={`dropdown-item ${isStatusActive(slug) ? "active" : ""}`}>
+                        <Link key={status} href={`/s/${slug}`} prefetch={false} className={`dropdown-item ${isStatusActive(slug) ? "active" : ""}`}>
                           {cleanLabel(status)}
                         </Link>
                       );
@@ -96,7 +96,7 @@ export default function SiteNav() {
                 {navStates.map((state) => {
                   const statePath = `/state/${state.toLowerCase().replace(/ /g, "-")}`;
                   return (
-                    <Link key={state} href={statePath} className={`dropdown-item ${isActive(statePath) ? "active" : ""}`}>
+                    <Link key={state} href={statePath} prefetch={false} className={`dropdown-item ${isActive(statePath) ? "active" : ""}`}>
                       {state}
                     </Link>
                   );

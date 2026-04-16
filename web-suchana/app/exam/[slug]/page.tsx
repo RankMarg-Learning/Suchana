@@ -12,6 +12,12 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
+export const revalidate = 3600; // Revalidate every hour
+
+export async function generateStaticParams() {
+  const slugs = await fetchAllExamSlugs();
+  return slugs.map((slug) => ({ slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;

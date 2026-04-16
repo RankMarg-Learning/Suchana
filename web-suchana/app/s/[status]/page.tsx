@@ -4,9 +4,15 @@ import ExamListingClient from '@/app/components/ExamListingClient';
 import { STATUS_LABELS, slugToEnum, enumToSlug } from '@/app/lib/types';
 import { EXAM_STATUSES } from '@/app/lib/enums';
 
+import getQueryClient from '@/app/lib/getQueryClient';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { fetchExamsFromAPI } from '@/app/lib/api';
+
 interface Props {
   params: Promise<{ status: string }>;
 }
+
+export const revalidate = 3600; // Revalidate every hour
 
 export async function generateStaticParams() {
   return EXAM_STATUSES.map((status) => ({
@@ -34,10 +40,21 @@ export default async function StatusListingPage({ params }: Props) {
 
   if (!label) notFound();
 
+  const queryClient = getQueryClient();
+
+  // Prefetch the first page of exams for this status on the server
+  await queryClient.prefetchInfiniteQuery({
+    queryKey: ['exams', { category: undefined, status: statusEnum, conductingBody: undefined, state: undefined, startDate: undefined, endDate: undefined, search: '' }],
+    queryFn: () => fetchExamsFromAPI(1, 10, undefined, statusEnum),
+    initialPageParam: 1,
+  });
+
   return (
-    <ExamListingClient 
-      title={`${label} Exams`} 
-      status={statusEnum} 
-    />
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ExamListingClient 
+        title={`${label} Exams`} 
+        status={statusEnum} 
+      />
+    </HydrationBoundary>
   );
 }

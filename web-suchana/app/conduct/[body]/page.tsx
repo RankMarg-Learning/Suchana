@@ -2,8 +2,21 @@ import { Metadata } from 'next';
 import ExamListingClient from '@/app/components/ExamListingClient';
 import { cleanLabel } from '@/app/lib/types';
 
+import getQueryClient from '@/app/lib/getQueryClient';
+import { dehydrate, HydrationBoundary } from '@tanstack/react-query';
+import { fetchExamsFromAPI, fetchAllConductingBodies } from '@/app/lib/api';
+
 interface Props {
   params: Promise<{ body: string }>;
+}
+
+export const revalidate = 3600; // Revalidate every hour
+
+export async function generateStaticParams() {
+  const bodies = await fetchAllConductingBodies();
+  return bodies.map((body) => ({
+    body: body.toLowerCase().replace(/ /g, "-"),
+  }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -21,10 +34,21 @@ export default async function ConductingBodyListingPage({ params }: Props) {
   // Use a more relaxed normalization for search on the backend
   const label = bodySlug.toUpperCase().replace(/-/g, " ");
 
+  const queryClient = getQueryClient();
+
+  // Prefetch the first page of exams for this conducting body on the server
+  await queryClient.prefetchInfiniteQuery({
+    queryKey: ['exams', { category: undefined, status: undefined, conductingBody: label, state: undefined, startDate: undefined, endDate: undefined, search: '' }],
+    queryFn: () => fetchExamsFromAPI(1, 10, undefined, undefined, undefined, label),
+    initialPageParam: 1,
+  });
+
   return (
-    <ExamListingClient 
-      title={`${label} Exams`} 
-      conductingBody={label} 
-    />
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <ExamListingClient 
+        title={`${label} Exams`} 
+        conductingBody={label} 
+      />
+    </HydrationBoundary>
   );
 }

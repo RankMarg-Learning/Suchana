@@ -7,12 +7,24 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/", "/favicon.ico", "/examsuchana-logoT.png"],
-        disallow: ["/api/", "/_next/", "/admin/"],
+        disallow: [
+          "/api/", 
+          "/_next/", 
+          "/admin/", 
+          "/saved", 
+          "/onboarding",
+          "/*?search=", // Block search result pages from crawling
+          "/*?page=",   // Block deep pagination if needed, but maybe keep for SEO
+        ],
+      },
+      {
+        userAgent: ["GPTBot", "CCBot", "ClaudeBot"], // Block AI bots to save edge requests/bandwidth
+        disallow: ["/"],
       },
       {
         userAgent: "Googlebot",
         allow: ["/", "/favicon.ico", "/examsuchana-logoT.png"],
-        disallow: ["/api/", "/admin/"],
+        disallow: ["/api/", "/admin/", "/saved"],
         crawlDelay: 1,
       },
     ],
