@@ -13,7 +13,7 @@ export function proxy(request: NextRequest) {
   // These routes can sometimes be exposed during builds or probes.
   // We explicitly return 404 to prevent indexing and resource waste.
   if (
-    pathname.includes('.segments') || 
+    pathname.includes('.segments') ||
     pathname.includes('_tree.segment') ||
     pathname.endsWith('.map')
   ) {
@@ -22,10 +22,10 @@ export function proxy(request: NextRequest) {
 
   // 2. SEO & SECURITY HEADERS
   const response = NextResponse.next();
-  
+
   // Prevent MIME type sniffing
   response.headers.set('X-Content-Type-Options', 'nosniff');
-  
+
   // Caching strategy for dynamic pages to reduce edge requests
   // For standard pages, we allow some stale-while-revalidate at the edge
   if (!pathname.startsWith('/api') && !pathname.startsWith('/admin')) {
