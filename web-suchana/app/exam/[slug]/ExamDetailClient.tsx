@@ -397,9 +397,9 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                   {CATEGORIES.find(c => c.value === exam.category)?.label || cleanLabel(exam.category)}
                 </Link>
                 {exam.state && (
-                  <Link href={`/state/${slugify(exam.state)}`} className="exam-tag">
+                  <span className="exam-tag">
                     <MapPin size={10} style={{ display: "inline", marginRight: 2 }} />{exam.state}
-                  </Link>
+                  </span>
                 )}
               </div>
               <h1 className="exam-detail-title" itemProp="name">{exam.title}</h1>

@@ -64,23 +64,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const STATES = [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-    "Delhi", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir",
-    "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra",
-    "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
-    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura",
-    "Uttar Pradesh", "Uttarakhand", "West Bengal", "Chandigarh",
-    "Puducherry", "Ladakh"
-  ];
-
-  const statePages: MetadataRoute.Sitemap = STATES.map(state => ({
-    url: `${SITE_URL}/state/${slugify(state)}`,
-    lastModified: now,
-    changeFrequency: "daily" as const,
-    priority: 0.6,
-  }));
-
   const conductPages: MetadataRoute.Sitemap = bodies.map((body: any) => ({
     url: `${SITE_URL}/conduct/${slugify(body)}`,
     lastModified: now,
@@ -94,7 +77,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...seoPages,
     ...statusPages,
     ...categoryPages,
-    ...statePages,
     ...conductPages
   ];
 }

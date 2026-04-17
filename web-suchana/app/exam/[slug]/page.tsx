@@ -95,7 +95,7 @@ function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
       "@id": `${SITE_URL}#organization`,
       name: exam.conductingBody || "Government Agency",
       url: exam.officialWebsite || SITE_URL,
-      logo: `${SITE_URL}/examsuchana-logoT.png`,
+      logo: `${SITE_URL}/og-image.png`,
     },
     identifier: {
       "@type": "PropertyValue",
@@ -146,7 +146,7 @@ function buildEventJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamB
       "@id": `${SITE_URL}#organization`,
       name: exam.conductingBody,
       url: exam.officialWebsite,
-      logo: `${SITE_URL}/examsuchana-logoT.png`,
+      logo: `${SITE_URL}/og-image.png`,
     },
     location: {
       "@type": "Place",

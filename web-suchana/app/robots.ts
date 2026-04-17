@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/favicon.ico", "/examsuchana-logoT.png"],
+        allow: ["/", "/favicon.ico"],
         disallow: [
           "/api/", 
           "/_next/", 
@@ -23,7 +23,7 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: "Googlebot",
-        allow: ["/", "/favicon.ico", "/examsuchana-logoT.png"],
+        allow: ["/", "/favicon.ico"],
         disallow: ["/api/", "/admin/", "/saved"],
         crawlDelay: 1,
       },
