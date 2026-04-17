@@ -21,7 +21,7 @@ export default function SiteFooter() {
             <div className="footer-brand">
               <Link href="/" className="logo-footer">
                 <div className="logo-icon-footer">
-                  <Image src={'/examsuchana-logoT.png'} height={40} width={40} alt="Exam Suchana" priority />
+                  <Image src={'/examsuchana-logoT.png'} height={40} width={40} alt="Exam Suchana" priority unoptimized />
                 </div>
                 <div className="logo-text-footer">
                   <span className="brand-primary">Exam</span>
