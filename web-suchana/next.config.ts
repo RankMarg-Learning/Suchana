@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
+  poweredByHeader: false,
+  reactStrictMode: true,
+  compress: true,
   images: {
     remotePatterns: [
       {
@@ -9,6 +12,7 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
       },
     ],
+    minimumCacheTTL: 60,
   },
 };
 
