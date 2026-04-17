@@ -1,6 +1,5 @@
 import { Metadata } from "next";
-import Link from "next/link";
-import { ChevronRight, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
     title: "Browse Exams by State | Exam Suchana",
@@ -38,12 +37,10 @@ export default function StateDirectoryPage() {
                 {/* Grid of List Rows (3-col Desktop, 1-col Mobile) */}
                 <div className="features-grid" style={{ marginTop: '20px' }}>
                     {STATES.map((state) => (
-                        <Link
+                        <div
                             key={state}
-                            href={`/state/${state.toLowerCase().replace(/ /g, "-")}`}
                             className="exam-list-row compact-row"
                             style={{
-                                textDecoration: 'none',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
@@ -58,8 +55,8 @@ export default function StateDirectoryPage() {
                                     {state}
                                 </span>
                             </div>
-                            <ChevronRight size={14} color="var(--text-muted)" opacity={0.6} />
-                        </Link>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', opacity: 0.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>Active</span>
+                        </div>
                     ))}
                 </div>
             </div>

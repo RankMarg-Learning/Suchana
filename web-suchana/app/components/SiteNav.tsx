@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Bell, Bookmark, ChevronDown, Menu, X, ArrowRight } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { EXAM_CATEGORIES, EXAM_STATUSES } from "../lib/enums";
@@ -45,9 +44,6 @@ export default function SiteNav() {
       <nav className={`navbar-modern ${scrolled ? "scrolled" : ""}`}>
         <div className="container navbar-inner">
           <Link href="/" className="logo-modern">
-            <div className="logo-icon">
-              <Image src={'/examsuchana-logoT.png'} height={36} width={36} alt="Exam Suchana" priority unoptimized />
-            </div>
             <span className="logo-text">
               Exam <span>Suchana</span>
             </span>
@@ -93,16 +89,7 @@ export default function SiteNav() {
                 States <ChevronDown size={14} />
               </button>
               <div className="dropdown-menu single-col">
-                {navStates.map((state) => {
-                  const statePath = `/state/${state.toLowerCase().replace(/ /g, "-")}`;
-                  return (
-                    <Link key={state} href={statePath} className={`dropdown-item ${isActive(statePath) ? "active" : ""}`}>
-                      {state}
-                    </Link>
-                  );
-                })}
-                <div className="dropdown-divider" />
-                <Link href="/state" className={`dropdown-item more ${isActive('/state') ? "active" : ""}`}>All 28 States &rarr;</Link>
+                <Link href="/state" className={`dropdown-item more ${isActive('/state') ? "active" : ""}`}>Browse by State &rarr;</Link>
               </div>
             </li>
 
@@ -161,12 +148,8 @@ export default function SiteNav() {
             </div>
 
             <div className="mobile-section">
-              <span className="mobile-section-title">State Exams</span>
-              {navStates.slice(0, 4).map(state => (
-                <Link key={state} href={`/state/${state.toLowerCase().replace(/ /g, "-")}`} onClick={() => setMobileMenuOpen(false)}>
-                  {state}
-                </Link>
-              ))}
+              <span className="mobile-section-title">Browse by State</span>
+              <Link href="/state" onClick={() => setMobileMenuOpen(false)}>All 28 States &rarr;</Link>
             </div>
 
             <div className="mobile-cta">

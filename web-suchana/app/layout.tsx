@@ -110,12 +110,8 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/examsuchana-logoT.png", sizes: "192x192", type: "image/png" },
-      { url: "/examsuchana-logoT.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [
-      { url: "/examsuchana-logoT.png", sizes: "180x180", type: "image/png" },
-    ],
+    apple: [],
   },
   other: {
     "mobile-web-app-capable": "yes",
@@ -155,7 +151,7 @@ const organizationJsonLd = {
   "@type": "Organization",
   name: "Exam Suchana",
   url: SITE_URL,
-  logo: `${SITE_URL}/examsuchana-logoT.png`,
+  logo: `${SITE_URL}/og-image.png`,
   sameAs: [
     "https://t.me/ExamSuchana",
   ],

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { EXAM_CATEGORIES, EXAM_STATUSES } from "../lib/enums";
 import { enumToSlug, cleanLabel, slugToEnum } from "../lib/types";
@@ -20,9 +19,6 @@ export default function SiteFooter() {
             {/* ─── Brand & Summary ─── */}
             <div className="footer-brand">
               <Link href="/" className="logo-footer">
-                <div className="logo-icon-footer">
-                  <Image src={'/examsuchana-logoT.png'} height={40} width={40} alt="Exam Suchana" priority unoptimized />
-                </div>
                 <div className="logo-text-footer">
                   <span className="brand-primary">Exam</span>
                   <span className="brand-secondary">Suchana</span>
@@ -63,13 +59,8 @@ export default function SiteFooter() {
             <div className="footer-col">
               <div className="footer-col-title">By State</div>
               <ul className="footer-links">
-                {["Delhi", "Uttar Pradesh", "Bihar", "Maharashtra", "Rajasthan", "Madhya Pradesh"].map((state) => (
-                  <li key={state}>
-                    <Link href={`/state/${state.toLowerCase().replace(/ /g, "-")}`}>{state}</Link>
-                  </li>
-                ))}
-                <li className="mt-2">
-                  <Link href="/state" className="text-accent font-bold">All 28 States &rarr;</Link>
+                <li>
+                  <Link href="/state" className="text-accent font-bold">Browse All 28 States &rarr;</Link>
                 </li>
               </ul>
             </div>

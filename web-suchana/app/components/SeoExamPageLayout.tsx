@@ -279,22 +279,7 @@ export default function SeoExamPageLayout({
                 </div>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Location</div>
-                  {exam.state ? (
-                    <Link 
-                      href={`/state/${exam.state.toLowerCase().replace(/ /g, "-")}`}
-                      style={{ 
-                        color: 'var(--text-primary)', 
-                        textDecoration: 'none',
-                        transition: 'color 0.2s',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
-                      onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-                    >
-                      <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{exam.state}</div>
-                    </Link>
-                  ) : (
-                    <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>India (National)</div>
-                  )}
+                  <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{exam.state || "India (National)"}</div>
                 </div>
               </div>
             </div>
