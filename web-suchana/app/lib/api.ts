@@ -18,7 +18,11 @@ export async function fetchTrendingContent(): Promise<{ exams: Exam[]; articles:
     const json = await res.json();
     return json.data ?? { exams: [], articles: [] };
   } catch (err) {
-    console.error("Error fetching trending content:", err);
+    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn("[API] Could not fetch trending content (Backend likely down). Skipping for build...");
+    } else {
+      console.error("Error fetching trending content:", err);
+    }
     return { exams: [], articles: [] };
   }
 }
@@ -46,27 +50,40 @@ export async function fetchExamsFromAPI(
   if (startDate) params.set("startDate", startDate);
   if (endDate) params.set("endDate", endDate);
 
-  const res = await fetch(`${API_BASE}/exams?${params}`, {
-    next: { revalidate: 300 },
-  });
+  try {
+    const res = await fetch(`${API_BASE}/exams?${params}`, {
+      next: { revalidate: 300 },
+    });
 
-  if (!res.ok) {
-    const errorText = await res.text().catch(() => "Unknown error");
-    let errorMsg = errorText;
-    try {
-      const errorJson = JSON.parse(errorText);
-      errorMsg = errorJson.error?.message || errorJson.message || errorText;
-    } catch { /* not json */ }
+    if (!res.ok) {
+      const errorText = await res.text().catch(() => "Unknown error");
+      let errorMsg = errorText;
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMsg = errorJson.error?.message || errorJson.message || errorText;
+      } catch { /* not json */ }
 
-    console.error(`API Error on ${res.url}:`, errorMsg);
-    throw new Error(`API error (${res.status}): ${errorMsg}`);
+      if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+        console.warn(`[API] Exams fetch failed (${res.status}). Skipping for build...`);
+      } else {
+        console.error(`API Error on ${res.url}:`, errorMsg);
+      }
+      return { exams: [], total: 0 };
+    }
+
+    const data = await res.json();
+    return {
+      exams: data.data ?? data.exams ?? [],
+      total: data.meta?.total ?? data.total ?? 0,
+    };
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn("[API] Could not fetch exams (Backend likely down). Skipping for build...");
+    } else {
+      console.error("Error fetching exams:", err);
+    }
+    return { exams: [], total: 0 };
   }
-
-  const data = await res.json();
-  return {
-    exams: data.data ?? data.exams ?? [],
-    total: data.meta?.total ?? data.total ?? 0,
-  };
 }
 
 
@@ -127,32 +144,33 @@ export async function fetchSeoPages(
       total: result.total ?? 0,
     };
   } catch (err) {
-    console.error("Error fetching SEO pages:", err);
+    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn("[API] Could not fetch SEO pages (Backend likely down). Skipping for build...");
+    } else {
+      console.error("Error fetching SEO pages:", err);
+    }
     return { pages: [], total: 0 };
   }
 }
 
 export async function fetchAllSeoPageSlugs(): Promise<string[]> {
   try {
-    let allSlugs: string[] = [];
-    let page = 1;
-    let hasMore = true;
-
-    while (hasMore && page <= 10) { // Safety cap at 1000 slugs
-      const res = await fetch(`${API_BASE}/seo-pages/list?page=${page}&limit=100`, {
-        cache: 'no-store'
-      });
-      if (!res.ok) break;
-      const data = await res.json();
-      const pages = data.data?.pages || data.pages || [];
-      const slugs = pages.map((p: any) => p.slug).filter(Boolean);
-      allSlugs = [...allSlugs, ...slugs];
-      hasMore = slugs.length === 100;
-      page++;
-    }
-    return allSlugs;
+    const res = await fetch(`${API_BASE}/seo-pages`, {
+      next: { revalidate: 3600 }
+    });
+    
+    if (!res.ok) return [];
+    
+    const data = await res.json();
+    const pages = data.data || data || [];
+    
+    return pages.map((p: any) => p.slug).filter(Boolean);
   } catch (err) {
-    console.error("Error fetching SEO slugs:", err);
+    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn("[API] Could not fetch SEO slugs (Backend likely down). Skipping for build...");
+    } else {
+      console.error("Error fetching SEO slugs:", err);
+    }
     return [];
   }
 }
@@ -164,7 +182,9 @@ export async function fetchAllExamSlugs(): Promise<string[]> {
     let hasMore = true;
 
     while (hasMore && page <= 50) { // Limit to 50 pages (5000 slugs)
-      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { cache: 'no-store' });
+      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { 
+        next: { revalidate: 3600 } 
+      });
       if (!response.ok) break;
       const result = await response.json();
       const exams = result.data || result.exams || [];
@@ -174,8 +194,12 @@ export async function fetchAllExamSlugs(): Promise<string[]> {
       page++;
     }
     return allSlugs;
-  } catch (error) {
-    console.error("Error fetching Exam slugs:", error);
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn("[API] Could not fetch Exam slugs (Backend likely down). Skipping for build...");
+    } else {
+      console.error("Error fetching Exam slugs:", err);
+    }
     return [];
   }
 }
@@ -187,7 +211,9 @@ export async function fetchAllConductingBodies(): Promise<string[]> {
     let hasMore = true;
 
     while (hasMore && page <= 10) {
-      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { cache: 'no-store' });
+      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { 
+        next: { revalidate: 3600 } 
+      });
       if (!response.ok) break;
       const result = await response.json();
       const exams = result.data || result.exams || [];
@@ -197,8 +223,12 @@ export async function fetchAllConductingBodies(): Promise<string[]> {
       page++;
     }
     return Array.from(new Set(allBodies));
-  } catch (error) {
-    console.error("Error fetching conducting bodies:", error);
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+      console.warn("[API] Could not fetch conducting bodies (Backend likely down). Skipping for build...");
+    } else {
+      console.error("Error fetching conducting bodies:", err);
+    }
     return [];
   }
 }

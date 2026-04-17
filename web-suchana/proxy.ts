@@ -6,7 +6,7 @@ import type { NextRequest } from 'next/server';
  * 1. Blocks internal Next.js segment files from being accessed.
  * 2. Implements security headers for performance and ranking stability.
  */
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. BLOCK INTERNAL NEXT.JS ROUTES
