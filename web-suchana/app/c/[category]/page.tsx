@@ -30,6 +30,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${label} Exams 2026: All Recruitment Notifications & Exam Schedules`,
     description: `Browse all government exams and jobs under the ${label} category. Get latest updates on recruitment dates, timelines, and application links on Exam Suchana.`,
+    alternates: {
+      canonical: `/c/${catSlug}`,
+    },
   };
 }
 

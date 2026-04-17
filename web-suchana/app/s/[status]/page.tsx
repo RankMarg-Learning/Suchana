@@ -30,6 +30,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${label} Exams 2026: Latest Government Job Updates & Notifications`,
     description: `Explore all government recruitment notifications currently in ${label} stage. Get complete timelines, eligibility, and direct links for application.`,
+    alternates: {
+      canonical: `/s/${statusSlug}`,
+    },
   };
 }
 
