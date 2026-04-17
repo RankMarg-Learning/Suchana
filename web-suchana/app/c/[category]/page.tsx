@@ -28,8 +28,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!catEnum) return { title: 'Exams' };
 
   return {
-    title: `${label} Exams 2025: All Recruitment Notifications & Exam Schedules`,
+    title: `${label} Exams 2026: All Recruitment Notifications & Exam Schedules`,
     description: `Browse all government exams and jobs under the ${label} category. Get latest updates on recruitment dates, timelines, and application links on Exam Suchana.`,
+    alternates: {
+      canonical: `/c/${catSlug}`,
+    },
   };
 }
 
@@ -50,9 +53,9 @@ export default async function CategoryListingPage({ params }: Props) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ExamListingClient 
-        title={`${label} Exams`} 
-        category={catEnum} 
+      <ExamListingClient
+        title={`${label} Exams`}
+        category={catEnum}
       />
     </HydrationBoundary>
   );

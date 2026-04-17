@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const label = bodySlug.toUpperCase().replace(/-/g, " ");
 
   return {
-    title: `${label} Exam Notifications 2025: All Recruitment Schedules & Updates`,
+    title: `${label} Exam Notifications 2026: All Recruitment Schedules & Updates`,
     description: `Full list of all current and upcoming government recruitment notifications from ${label}. Track application deadlines, admit card releases, and results on Exam Suchana.`,
   };
 }
@@ -45,9 +45,9 @@ export default async function ConductingBodyListingPage({ params }: Props) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ExamListingClient 
-        title={`${label} Exams`} 
-        conductingBody={label} 
+      <ExamListingClient
+        title={`${label} Exams`}
+        conductingBody={label}
       />
     </HydrationBoundary>
   );

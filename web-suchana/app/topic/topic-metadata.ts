@@ -57,7 +57,7 @@ export const TOPIC_SEO_CONFIG: Record<string, TopicSeoData> = {
   [SeoPageCategory.CUTOFF]: {
     title: `Previous & Expected Cut Off Marks ${year}`,
     description: "Analyze latest exam cutoff marks for all categories. Compare previous years' trends and check expert-predicted expected cutoffs.",
-    keywords: ["exam cutoff marks", "previous year cutoff", "expected cutoff 2025", "category wise marks"]
+    keywords: ["exam cutoff marks", "previous year cutoff", "expected cutoff 2026", "category wise marks"]
   }
 };
 

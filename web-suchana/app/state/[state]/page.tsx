@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const label = unslugify(stateSlug);
 
   return {
-    title: `Government Exams in ${label} 2025: Latest State Job Notifications`,
+    title: `Government Exams in ${label} 2026: Latest State Job Notifications`,
     description: `Real-time updates on all government recruitment exams in ${label}. Track State PSC, local board, and national level exams held within ${label} on Exam Suchana India.`,
   };
 }
@@ -53,9 +53,9 @@ export default async function StateListingPage({ params }: Props) {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ExamListingClient 
-        title={`Exams in ${label}`} 
-        state={label} 
+      <ExamListingClient
+        title={`Exams in ${label}`}
+        state={label}
       />
     </HydrationBoundary>
   );
