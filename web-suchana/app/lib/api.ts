@@ -12,7 +12,7 @@ export const SITE_URL =
 export async function fetchTrendingContent(): Promise<{ exams: Exam[]; articles: SeoPage[] }> {
   try {
     const res = await fetch(`${API_BASE}/exams/trending`, {
-      next: { revalidate: 600 },
+      next: { revalidate: 900 }, // 15 mins - Fast enough for "Live" feel
     });
     if (!res.ok) return { exams: [], articles: [] };
     const json = await res.json();
@@ -47,7 +47,7 @@ export async function fetchExamsFromAPI(
   if (endDate) params.set("endDate", endDate);
 
   const res = await fetch(`${API_BASE}/exams?${params}`, {
-    next: { revalidate: 300 },
+    next: { revalidate: 1200 }, // 20 mins - Balance for list updates
   });
 
   if (!res.ok) {
@@ -73,7 +73,7 @@ export async function fetchExamsFromAPI(
 export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null> => {
   try {
     const res = await fetch(`${API_BASE}/exams/slug/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 300 },
+      next: { revalidate: 1800 }, // 30 mins - Plenty for single exam info
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -88,7 +88,7 @@ export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null> 
 export const fetchSeoPageBySlug = cache(async (slug: string): Promise<SeoPage | null> => {
   try {
     const res = await fetch(`${API_BASE}/seo-pages/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 3600 }, // ISR: 1 hour
+      next: { revalidate: 43200 }, // 12 hours - Articles/News are less volatile
     });
     if (!res.ok) return null;
     const json = await res.json();
@@ -114,7 +114,7 @@ export async function fetchSeoPages(
     if (isTrending !== undefined) params.set("isTrending", String(isTrending));
 
     const res = await fetch(`${API_BASE}/seo-pages/list?${params}`, {
-      next: { revalidate: 600 },
+      next: { revalidate: 3600 }, // 1 hour
     });
 
     if (!res.ok) return { pages: [], total: 0 };
