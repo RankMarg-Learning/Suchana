@@ -286,7 +286,7 @@ import { fetchExamsFromAPI } from "@/app/lib/api";
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
   const exam = await fetchExamBySlug(slug);
-  
+
   if (!exam) {
     notFound();
   }
