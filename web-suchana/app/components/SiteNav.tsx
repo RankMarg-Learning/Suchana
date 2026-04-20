@@ -117,7 +117,9 @@ export default function SiteNav({ trendingExams = [] }: { trendingExams?: any[] 
                 {openAccordion === 'resources' && (
                   <div className="flex flex-col pb-4 pl-4 space-y-4 text-[15px] font-medium text-slate-600">
                     <Link href="/topic/syllabus" onClick={() => setMobileMenuOpen(false)}>Syllabus</Link>
+                    <Link href="/topic/preparation-strategy" onClick={() => setMobileMenuOpen(false)}>Preparation Strategy</Link>
                     <Link href="/topic/previous-year-paper" onClick={() => setMobileMenuOpen(false)}>Previous Papers</Link>
+                    <Link href="/topic/tool" onClick={() => setMobileMenuOpen(false)}>Tools</Link>
                     <Link href="/topic/current-affairs" onClick={() => setMobileMenuOpen(false)}>Current Affairs</Link>
                   </div>
                 )}
