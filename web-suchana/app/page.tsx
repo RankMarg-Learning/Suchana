@@ -198,7 +198,6 @@ export default function HomePage() {
                 <div className="sidebar-links">
                   {latestArticles.map((article) => (
                     <Link key={article.id} href={`/${article.slug}`} className="sidebar-link">
-                      <FileText size={14} style={{ opacity: 0.7 }} />
                       <span>{article.title}</span>
                     </Link>
                   ))}
