@@ -118,10 +118,10 @@ export async function fetchSeoPages(
     });
 
     if (!res.ok) return { pages: [], total: 0 };
-    
+
     const data = await res.json();
     const result = data.data ?? data;
-    
+
     return {
       pages: result.pages ?? [],
       total: result.total ?? 0,

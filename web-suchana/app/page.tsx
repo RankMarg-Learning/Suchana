@@ -56,7 +56,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <SiteNav />
 
       <main>
         {/* 1. Hero Gateway Section */}
@@ -173,7 +172,7 @@ export default function HomePage() {
           <aside className="sidebar-right desktop-only">
             {/* Telegram Widget */}
             <div className="app-download-widget" style={{ background: 'linear-gradient(135deg, #0088cc 0%, #00aaff 100%)', border: 'none' }}>
-              <div className="app-widget-icon" style={{ background: 'rgba(255,255,255,0.2)' }}>
+              <div className="app-widget-icon" >
                 <Bell size={18} color="white" />
               </div>
               <div className="app-widget-title" style={{ color: 'white' }}>Join Telegram</div>
@@ -210,27 +209,10 @@ export default function HomePage() {
               </div>
             )}
 
-            {/* Google News Widget */}
-            <div className="sidebar-widget text-center" style={{ padding: '32px 24px' }}>
-              <div className="flex justify-center mb-4">
-                <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center">
-                  <Star size={24} color="#3b82f6" fill="#3b82f6" />
-                </div>
-              </div>
-              <h4 className="text-sm font-black uppercase tracking-widest text-slate-900 mb-2">Google News</h4>
-              <p className="text-xs text-slate-500 mb-4">Follow us on Google News for instant exam updates.</p>
-              <a
-                href="https://news.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost w-full justify-center !text-xs !font-black !uppercase !tracking-widest"
-              >
-                Follow Now
-              </a>
-            </div>
+
 
             {/* App Download Widget */}
-            <div className="app-download-widget">
+            {/* <div className="app-download-widget">
               <div className="app-widget-icon">
                 <Smartphone size={18} color="var(--accent-light)" />
               </div>
@@ -245,7 +227,7 @@ export default function HomePage() {
               >
                 Download Free <ArrowRight size={14} />
               </a>
-            </div>
+            </div> */}
           </aside>
         </div>
       </main>

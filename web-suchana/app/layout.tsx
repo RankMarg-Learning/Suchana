@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-import { SITE_URL } from "./lib/api";
+import { SITE_URL, fetchTrendingContent } from "./lib/api";
 import SiteNav from "./components/SiteNav";
 import SiteFooter from "./components/SiteFooter";
 
@@ -165,11 +165,14 @@ const organizationJsonLd = {
 
 import Providers from "./components/Providers";
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const { exams: trendingExams } = await fetchTrendingContent();
+  const hasLiveUpdate = trendingExams && trendingExams.length > 0;
+
   return (
     <html lang="en-IN" suppressHydrationWarning>
       <head>
@@ -185,9 +188,9 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
       </head>
-      <body className={`${inter.variable} ${spaceGrotesk.variable} antialiased`}>
+      <body className={`${hasLiveUpdate ? 'has-live-update' : ''} ${inter.variable} ${spaceGrotesk.variable} antialiased`}>
         <Providers>
-          <SiteNav />
+          <SiteNav trendingExams={trendingExams} />
           {children}
           <SiteFooter />
         </Providers>
