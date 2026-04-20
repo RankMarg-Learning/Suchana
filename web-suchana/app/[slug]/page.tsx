@@ -20,8 +20,8 @@ export const revalidate = 3600; // Revalidate every hour
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  const slugs = await fetchAllSeoPageSlugs();
-  return slugs.map((slug) => ({ slug }));
+  const { pages } = await fetchSeoPages(1, 20, "ALL", "", true);
+  return pages.map((page) => ({ slug: page.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

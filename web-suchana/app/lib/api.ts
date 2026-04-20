@@ -158,12 +158,12 @@ export async function fetchAllSeoPageSlugs(): Promise<string[]> {
     const res = await fetch(`${API_BASE}/seo-pages`, {
       next: { revalidate: 3600 }
     });
-    
+
     if (!res.ok) return [];
-    
+
     const data = await res.json();
     const pages = data.data || data || [];
-    
+
     return pages.map((p: any) => p.slug).filter(Boolean);
   } catch (err) {
     if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
@@ -182,8 +182,8 @@ export async function fetchAllExamSlugs(): Promise<string[]> {
     let hasMore = true;
 
     while (hasMore && page <= 50) { // Limit to 50 pages (5000 slugs)
-      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { 
-        next: { revalidate: 3600 } 
+      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, {
+        next: { revalidate: 3600 }
       });
       if (!response.ok) break;
       const result = await response.json();
@@ -211,8 +211,8 @@ export async function fetchAllConductingBodies(): Promise<string[]> {
     let hasMore = true;
 
     while (hasMore && page <= 10) {
-      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, { 
-        next: { revalidate: 3600 } 
+      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, {
+        next: { revalidate: 3600 }
       });
       if (!response.ok) break;
       const result = await response.json();
