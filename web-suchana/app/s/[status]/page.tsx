@@ -13,6 +13,7 @@ interface Props {
 }
 
 export const revalidate = 3600; // Revalidate every hour
+export const dynamicParams = false; // Instantly 404 for any unregistered slug
 
 export async function generateStaticParams() {
   return EXAM_STATUSES.map((status) => ({
@@ -30,6 +31,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${label} Exams 2026: Latest Government Job Updates & Notifications`,
     description: `Explore all government recruitment notifications currently in ${label} stage. Get complete timelines, eligibility, and direct links for application.`,
+    alternates: {
+      canonical: `/s/${statusSlug}`,
+    },
   };
 }
 

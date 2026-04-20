@@ -4,6 +4,8 @@ import { EXAM_STATUSES, EXAM_CATEGORIES } from "./lib/enums";
 import { enumToSlug } from "./lib/types";
 
 // Helper to ensure URL segments are XML safe and SEO friendly
+export const dynamic = "force-dynamic";
+
 const slugify = (text: string) => {
   return text
     .toLowerCase()

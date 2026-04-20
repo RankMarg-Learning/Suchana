@@ -13,6 +13,7 @@ interface Props {
 }
 
 export const revalidate = 3600; // Revalidate every hour
+export const dynamicParams = false; // Instantly 404 for any unregistered slug
 
 export async function generateStaticParams() {
   return EXAM_CATEGORIES.map((cat) => ({
@@ -30,6 +31,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${label} Exams 2026: All Recruitment Notifications & Exam Schedules`,
     description: `Browse all government exams and jobs under the ${label} category. Get latest updates on recruitment dates, timelines, and application links on Exam Suchana.`,
+    alternates: {
+      canonical: `/c/${catSlug}`,
+    },
   };
 }
 

@@ -14,17 +14,25 @@ export default function robots(): MetadataRoute.Robots {
           "/saved", 
           "/onboarding",
           "/*?search=", // Block search result pages from crawling
-          "/*?page=",   // Block deep pagination if needed, but maybe keep for SEO
+          "/*?page=",   // Block deep pagination if needed
+          "/*.segments",
+          "/*_tree.segment",
         ],
       },
       {
-        userAgent: ["GPTBot", "CCBot", "ClaudeBot"], // Block AI bots to save edge requests/bandwidth
+        userAgent: ["GPTBot", "CCBot", "ClaudeBot", "PerplexityBot"], // Block AI bots
         disallow: ["/"],
       },
       {
         userAgent: "Googlebot",
         allow: ["/", "/favicon.ico"],
-        disallow: ["/api/", "/admin/", "/saved"],
+        disallow: [
+          "/api/", 
+          "/admin/", 
+          "/saved",
+          "/*.segments",
+          "/*_tree.segment",
+        ],
         crawlDelay: 1,
       },
     ],
