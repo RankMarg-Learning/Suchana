@@ -1,13 +1,8 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { fetchSeoPageBySlug, fetchAllSeoPageSlugs, fetchExamBySlug, SITE_URL, fetchSeoPages } from '@/app/lib/api';
-import SiteNav from '../components/SiteNav';
-import SiteFooter from '../components/SiteFooter';
-import MarkdownRenderer from '../components/MarkdownRenderer';
-import { LeaderboardAd, InFeedAd, SidebarAd } from '../components/AdUnits';
-import { STATUS_LABELS, cleanLabel, formatDate, getTotalVacancies, SeoPage, stripHtml } from "@/app/lib/types";
+import { fetchSeoPageBySlug, SITE_URL, fetchSeoPages } from '@/app/lib/api';
+import { SeoPage, stripHtml } from "@/app/lib/types";
 import SeoExamPageLayout from '../components/SeoExamPageLayout';
-import LatestArticlesSection from '../components/LatestArticlesSection';
 import ArticleDetailClient from '../components/ArticleDetailClient';
 import ExamListingClient from '../components/ExamListingClient';
 
@@ -54,6 +49,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   const page = await fetchSeoPageBySlug(slug);
+
+  if (page && 'error' in page) {
+    return {
+      title: "Loading Article... | Exam Suchana",
+      description: "Fetching the latest content. Please wait.",
+    };
+  }
 
   if (page) {
     const canonical = page.canonicalUrl || `${SITE_URL}/${slug}`;
@@ -215,6 +217,10 @@ export default async function DynamicSlugPage({ params }: Props) {
   }
 
   const page = await fetchSeoPageBySlug(slug);
+
+  if (page && 'error' in page) {
+    throw new Error("Failed to fetch article data from API");
+  }
 
   if (page) {
     const jsonLd = {

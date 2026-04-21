@@ -35,6 +35,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Exam Not Found" };
   }
 
+  if ('error' in exam) {
+    return { title: "Updates Loading... | Exam Suchana" };
+  }
+
   const requestedStage = eventstatus.toUpperCase().replace(/-/g, '_');
   const event = exam.lifecycleEvents?.find(e => e.stage === requestedStage);
 
@@ -64,6 +68,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ExamEventPage({ params }: Props) {
   const { slug, eventstatus } = await params;
   const exam = await fetchExamBySlug(slug);
+
+  if (exam && 'error' in exam) {
+    throw new Error("Failed to fetch event data from API");
+  }
 
   if (!exam) {
     notFound();

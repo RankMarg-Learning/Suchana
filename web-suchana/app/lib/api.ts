@@ -7,6 +7,43 @@ export const API_BASE =
 export const SITE_URL =
   (process.env.NEXT_PUBLIC_SITE_URL || "https://examsuchana.in").replace(/\/+$/, "");
 
+// ─── Build-Time Rate-Limit Helpers ────────────────────────────────────────────
+
+/** True only during `next build` static generation. */
+const IS_BUILD = process.env.NEXT_PHASE === 'phase-production-build';
+
+/** Inter-request pause to stay within the backend rate-limit during build. */
+const BUILD_PAGE_DELAY_MS = Number(process.env.BUILD_API_DELAY_MS ?? 400);
+
+const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Wrapper around native fetch that retries on 429.
+ * - Reads `Retry-After` header when present.
+ * - Falls back to exponential back-off (1 s → 2 s → 4 s).
+ * - Only retries up to `maxRetries` times.
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit & { next?: NextFetchRequestConfig },
+  maxRetries = 3,
+): Promise<Response> {
+  let attempt = 0;
+  while (true) {
+    const res = await fetch(url, options as RequestInit);
+    if (res.status !== 429 || attempt >= maxRetries) return res;
+
+    const retryAfter = res.headers.get('Retry-After');
+    const waitMs = retryAfter
+      ? Number(retryAfter) * 1000
+      : Math.pow(2, attempt) * 1000;  // 1 s, 2 s, 4 s …
+
+    console.warn(`[API] 429 received. Retrying in ${waitMs}ms (attempt ${attempt + 1}/${maxRetries}) → ${url}`);
+    await sleep(waitMs);
+    attempt++;
+  }
+}
+
 // ─── API Functions ────────────────────────────────────────────────────────────
 
 export async function fetchTrendingContent(): Promise<{ exams: Exam[]; articles: SeoPage[] }> {
@@ -87,31 +124,39 @@ export async function fetchExamsFromAPI(
 }
 
 
-export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null> => {
+export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null | { error: boolean }> => {
   try {
     const res = await fetch(`${API_BASE}/exams/slug/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 1800 }, // 30 mins - Plenty for single exam info
+      next: { revalidate: 1800 }, // 30 mins
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      return { error: true };
+    }
     const json = await res.json();
     return json.data ?? json;
-  } catch {
-    return null;
+  } catch (err) {
+    console.error(`[API] Error fetching exam ${slug}:`, err);
+    return { error: true };
   }
 });
 
 // ─── SEO Pages API ────────────────────────────────────────────────────────────
 
-export const fetchSeoPageBySlug = cache(async (slug: string): Promise<SeoPage | null> => {
+export const fetchSeoPageBySlug = cache(async (slug: string): Promise<SeoPage | null | { error: boolean }> => {
   try {
     const res = await fetch(`${API_BASE}/seo-pages/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 43200 }, // 12 hours - Articles/News are less volatile
+      next: { revalidate: 43200 }, // 12 hours
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      return { error: true };
+    }
     const json = await res.json();
     return json.data ?? json;
-  } catch {
-    return null;
+  } catch (err) {
+    console.error(`[API] Error fetching SEO page ${slug}:`, err);
+    return { error: true };
   }
 });
 
@@ -155,18 +200,22 @@ export async function fetchSeoPages(
 
 export async function fetchAllSeoPageSlugs(): Promise<string[]> {
   try {
-    const res = await fetch(`${API_BASE}/seo-pages`, {
-      next: { revalidate: 3600 }
-    });
+    const res = await fetchWithRetry(
+      `${API_BASE}/seo-pages`,
+      { next: { revalidate: 3600 } } as RequestInit & { next: NextFetchRequestConfig },
+    );
 
-    if (!res.ok) return [];
+    if (!res.ok) {
+      console.warn(`[API] SEO slugs fetch failed (${res.status}). Skipping for build...`);
+      return [];
+    }
 
     const data = await res.json();
     const pages = data.data || data || [];
 
     return pages.map((p: any) => p.slug).filter(Boolean);
   } catch (err) {
-    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+    if (IS_BUILD || process.env.NODE_ENV === 'development') {
       console.warn("[API] Could not fetch SEO slugs (Backend likely down). Skipping for build...");
     } else {
       console.error("Error fetching SEO slugs:", err);
@@ -182,20 +231,26 @@ export async function fetchAllExamSlugs(): Promise<string[]> {
     let hasMore = true;
 
     while (hasMore && page <= 50) { // Limit to 50 pages (5000 slugs)
-      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, {
-        next: { revalidate: 3600 }
-      });
-      if (!response.ok) break;
+      const response = await fetchWithRetry(
+        `${API_BASE}/exams?page=${page}&limit=100&isPublished=true`,
+        { next: { revalidate: 3600 } } as RequestInit & { next: NextFetchRequestConfig },
+      );
+      if (!response.ok) {
+        console.warn(`[API] Exams fetch failed (${response.status}). Skipping for build...`);
+        break;
+      }
       const result = await response.json();
       const exams = result.data || result.exams || [];
       const slugs = exams.map((exam: any) => exam.slug);
       allSlugs = [...allSlugs, ...slugs];
       hasMore = exams.length === 100;
       page++;
+      // Throttle between pages during build to avoid rate-limiting.
+      if (hasMore && IS_BUILD) await sleep(BUILD_PAGE_DELAY_MS);
     }
     return allSlugs;
   } catch (err) {
-    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+    if (IS_BUILD || process.env.NODE_ENV === 'development') {
       console.warn("[API] Could not fetch Exam slugs (Backend likely down). Skipping for build...");
     } else {
       console.error("Error fetching Exam slugs:", err);
@@ -211,20 +266,25 @@ export async function fetchAllConductingBodies(): Promise<string[]> {
     let hasMore = true;
 
     while (hasMore && page <= 10) {
-      const response = await fetch(`${API_BASE}/exams?page=${page}&limit=100&isPublished=true`, {
-        next: { revalidate: 3600 }
-      });
-      if (!response.ok) break;
+      const response = await fetchWithRetry(
+        `${API_BASE}/exams?page=${page}&limit=100&isPublished=true`,
+        { next: { revalidate: 3600 } } as RequestInit & { next: NextFetchRequestConfig },
+      );
+      if (!response.ok) {
+        console.warn(`[API] Conducting bodies fetch failed (${response.status}). Stopping pagination.`);
+        break;
+      }
       const result = await response.json();
       const exams = result.data || result.exams || [];
       const bodies = exams.map((e: any) => e.conductingBody).filter(Boolean);
       allBodies = [...allBodies, ...bodies];
       hasMore = exams.length === 100;
       page++;
+      if (hasMore && IS_BUILD) await sleep(BUILD_PAGE_DELAY_MS);
     }
     return Array.from(new Set(allBodies));
   } catch (err) {
-    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
+    if (IS_BUILD || process.env.NODE_ENV === 'development') {
       console.warn("[API] Could not fetch conducting bodies (Backend likely down). Skipping for build...");
     } else {
       console.error("Error fetching conducting bodies:", err);
