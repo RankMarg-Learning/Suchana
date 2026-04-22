@@ -24,7 +24,7 @@ export async function generateStaticParams() {
     });
   });
 
-  return params;
+  return params.slice(0, 50);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

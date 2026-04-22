@@ -10,7 +10,7 @@ export const SITE_URL =
 // ─── Build-Time Rate-Limit Helpers ────────────────────────────────────────────
 
 /** True only during `next build` static generation. */
-const IS_BUILD = process.env.NEXT_PHASE === 'phase-production-build';
+export const IS_BUILD = process.env.NEXT_PHASE === 'phase-production-build';
 
 /** Inter-request pause to stay within the backend rate-limit during build. */
 const BUILD_PAGE_DELAY_MS = Number(process.env.BUILD_API_DELAY_MS ?? 400);
@@ -31,14 +31,17 @@ async function fetchWithRetry(
   let attempt = 0;
   while (true) {
     const res = await fetch(url, options as RequestInit);
-    if (res.status !== 429 || attempt >= maxRetries) return res;
+    // Retry on 429 (Too Many Requests) or 5xx (Server Errors)
+    if ((res.status !== 429 && res.status < 500) || attempt >= maxRetries) return res;
 
     const retryAfter = res.headers.get('Retry-After');
+    // If backend provides Retry-After, use it. Otherwise, back off exponentially.
+    // Increase backoff slightly to give backend more breathing room: 2s, 4s, 8s
     const waitMs = retryAfter
       ? Number(retryAfter) * 1000
-      : Math.pow(2, attempt) * 1000;  // 1 s, 2 s, 4 s …
+      : Math.pow(2, attempt + 1) * 1000;
 
-    console.warn(`[API] 429 received. Retrying in ${waitMs}ms (attempt ${attempt + 1}/${maxRetries}) → ${url}`);
+    console.warn(`[API] ${res.status} received. Retrying in ${waitMs}ms (attempt ${attempt + 1}/${maxRetries}) → ${url}`);
     await sleep(waitMs);
     attempt++;
   }
@@ -126,7 +129,7 @@ export async function fetchExamsFromAPI(
 
 export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null | { error: boolean }> => {
   try {
-    const res = await fetch(`${API_BASE}/exams/slug/${encodeURIComponent(slug)}`, {
+    const res = await fetchWithRetry(`${API_BASE}/exams/slug/${encodeURIComponent(slug)}`, {
       next: { revalidate: 1800 }, // 30 mins
     });
     if (!res.ok) {
@@ -145,7 +148,7 @@ export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null |
 
 export const fetchSeoPageBySlug = cache(async (slug: string): Promise<SeoPage | null | { error: boolean }> => {
   try {
-    const res = await fetch(`${API_BASE}/seo-pages/${encodeURIComponent(slug)}`, {
+    const res = await fetchWithRetry(`${API_BASE}/seo-pages/${encodeURIComponent(slug)}`, {
       next: { revalidate: 43200 }, // 12 hours
     });
     if (!res.ok) {

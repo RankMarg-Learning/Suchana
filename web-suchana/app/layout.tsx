@@ -178,6 +178,8 @@ export default async function RootLayout({
         <meta name="theme-color" content="#7c3aed" />
         <meta name="google-adsense-account" content="ca-pub-6631120605146752" />
         {/* JSON-LD Structured Data */}
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6631120605146752"
+          crossOrigin="anonymous"></script>
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}

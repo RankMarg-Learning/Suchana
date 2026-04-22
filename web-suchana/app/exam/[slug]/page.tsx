@@ -18,7 +18,9 @@ export const dynamicParams = true; // Allow dynamic params for recently created 
 
 export async function generateStaticParams() {
   const slugs = await fetchAllExamSlugs();
-  return slugs.map((slug) => ({ slug }));
+  // Limit to 50 during build to prevent Vercel build failures from rate limiting or timeouts.
+  // The rest will be statically generated on-demand when first requested (dynamicParams = true).
+  return slugs.slice(0, 50).map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
