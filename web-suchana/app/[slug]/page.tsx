@@ -15,8 +15,10 @@ export const revalidate = 3600; // Revalidate every hour
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
-  const { pages } = await fetchSeoPages(1, 20, "ALL", "", true);
-  return pages.map((page) => ({ slug: page.slug }));
+  // Return empty array to prevent Next.js from hammering the backend with concurrent
+  // requests during build time. All pages will be generated on-demand (ISR)
+  // when first requested (dynamicParams = true).
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

@@ -17,10 +17,10 @@ export const revalidate = 3600; // Revalidate every hour
 export const dynamicParams = true; // Allow dynamic params for recently created exams
 
 export async function generateStaticParams() {
-  const slugs = await fetchAllExamSlugs();
-  // Limit to 50 during build to prevent Vercel build failures from rate limiting or timeouts.
-  // The rest will be statically generated on-demand when first requested (dynamicParams = true).
-  return slugs.slice(0, 50).map((slug) => ({ slug }));
+  // Return empty array to prevent Next.js from hammering the backend with concurrent
+  // requests during build time. All exam pages will be generated on-demand (ISR)
+  // when first requested (dynamicParams = true).
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
