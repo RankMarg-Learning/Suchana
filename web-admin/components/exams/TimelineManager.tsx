@@ -13,7 +13,7 @@ import {
     Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LifecycleEvent, lifecycleService } from '@/lib/api';
+import { LifecycleEvent, lifecycleService, revalidationService } from '@/lib/api';
 import { LifecycleStage } from '@/constants/enums';
 import { toast } from 'sonner';
 import { DatePicker } from '../ui/DatePicker';
@@ -32,9 +32,10 @@ import MarkdownRenderer from '../MarkdownRenderer';
 interface TimelineManagerProps {
     examId: string;
     initialEvents?: LifecycleEvent[];
+    slug?: string;
 }
 
-export default function TimelineManager({ examId, initialEvents }: TimelineManagerProps) {
+export default function TimelineManager({ examId, initialEvents, slug }: TimelineManagerProps) {
     const [events, setEvents] = useState<LifecycleEvent[]>(
         [...(initialEvents || [])].sort((a, b) => (a.stageOrder ?? 999) - (b.stageOrder ?? 999))
     );
@@ -57,6 +58,15 @@ export default function TimelineManager({ examId, initialEvents }: TimelineManag
             fetchEvents();
         }
     }, [examId, initialEvents]);
+
+    const notifyFrontend = async () => {
+        if (!slug) return;
+        try {
+            await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${slug}`]);
+        } catch (error) {
+            // fail silently, not critical for user flow
+        }
+    };
 
     const fetchEvents = async () => {
         if (!examId) return;
@@ -95,6 +105,7 @@ export default function TimelineManager({ examId, initialEvents }: TimelineManag
             setIsAdding(false);
             setNewEvent({ stage: LifecycleStage.NOTIFICATION, title: '', isTBD: false });
             fetchEvents();
+            notifyFrontend();
         } catch (error) {
             toast.error('Failed to add event');
         }
@@ -106,6 +117,7 @@ export default function TimelineManager({ examId, initialEvents }: TimelineManag
             await lifecycleService.deleteEvent(examId, eventId);
             toast.success('Event removed');
             setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId));
+            notifyFrontend();
         } catch (error) {
             toast.error('Failed to delete event');
         }
@@ -117,6 +129,7 @@ export default function TimelineManager({ examId, initialEvents }: TimelineManag
             await lifecycleService.updateEvent(examId, eventId, sanitized);
             toast.success('Event updated');
             fetchEvents();
+            notifyFrontend();
         } catch (error) {
             toast.error('Failed to update event');
         }
@@ -142,6 +155,7 @@ export default function TimelineManager({ examId, initialEvents }: TimelineManag
             }
             setHasOrderChanged(false);
             toast.success('Sequence Synchronized');
+            notifyFrontend();
         } catch (error) {
             console.error('Failed to sync sequence:', error);
             toast.error('Sequence Sync Failed');

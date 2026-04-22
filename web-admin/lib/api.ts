@@ -437,5 +437,24 @@ export const tagService = {
     },
 };
 
+export const revalidationService = {
+    triggerRevalidation: async (paths: string[]): Promise<any> => {
+        try {
+            const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://examsuchana.in';
+            const secret = process.env.NEXT_PUBLIC_REVALIDATION_SECRET || 'suchana-admin-secret-key-2026';
+            
+            const response = await axios.post(`${frontendUrl}/api/revalidate`, { paths }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-revalidate-secret': secret
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Failed to trigger frontend revalidation:', error);
+            throw error;
+        }
+    }
+};
 
 export default apiClient;

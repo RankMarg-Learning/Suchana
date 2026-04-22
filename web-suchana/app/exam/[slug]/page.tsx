@@ -4,6 +4,7 @@ import { fetchExamBySlug, SITE_URL, fetchAllExamSlugs } from "@/app/lib/api";
 import {
   cleanLabel,
   stripHtml,
+  Exam
 } from "@/app/lib/types";
 import { generateSeoTitle, generateSeoDescription } from "@/app/lib/seo";
 import ExamDetailClient from "./ExamDetailClient";
@@ -16,8 +17,10 @@ export const revalidate = 3600; // Revalidate every hour
 export const dynamicParams = true; // Allow dynamic params for recently created exams
 
 export async function generateStaticParams() {
-  const slugs = await fetchAllExamSlugs();
-  return slugs.map((slug) => ({ slug }));
+  // Return empty array to prevent Next.js from hammering the backend with concurrent
+  // requests during build time. All exam pages will be generated on-demand (ISR)
+  // when first requested (dynamicParams = true).
+  return [];
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -28,6 +31,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title: "Exam Not Found",
       description: "The requested exam could not be found on Exam Suchana.",
+    };
+  }
+
+  if ('error' in exam) {
+    return {
+      title: "Loading... | Exam Suchana",
+      description: "We are fetching the latest updates for this exam. Please wait.",
     };
   }
 
@@ -81,7 +91,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 
-function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
+function buildJobPostingJsonLd(exam: Exam) {
   const regEvent = exam.lifecycleEvents?.find((e) => e.stage === "REGISTRATION");
   const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
 
@@ -128,7 +138,7 @@ function buildJobPostingJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
   };
 }
 
-function buildEventJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
+function buildEventJsonLd(exam: Exam) {
   const examEvent = exam.lifecycleEvents?.find((e) => e.stage === "EXAM_DATE" || e.stage === "EXAM");
   if (!examEvent?.startsAt) return null;
 
@@ -162,7 +172,7 @@ function buildEventJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamB
   };
 }
 
-function buildBreadcrumbJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
+function buildBreadcrumbJsonLd(exam: Exam) {
   const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
   return {
     "@type": "BreadcrumbList",
@@ -175,7 +185,7 @@ function buildBreadcrumbJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetch
   };
 }
 
-function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
+function buildFaqJsonLd(exam: Exam) {
   const faqs = [];
   const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
 
@@ -258,7 +268,7 @@ function buildFaqJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamByS
 
 
 
-function buildWebPageJsonLd(exam: NonNullable<Awaited<ReturnType<typeof fetchExamBySlug>>>) {
+function buildWebPageJsonLd(exam: Exam) {
   const canonicalUrl = `${SITE_URL}/exam/${exam.slug}`;
   return {
     "@type": "WebPage",
@@ -286,6 +296,10 @@ import { fetchExamsFromAPI } from "@/app/lib/api";
 export default async function ExamDetailPage({ params }: Props) {
   const { slug } = await params;
   const exam = await fetchExamBySlug(slug);
+
+  if (exam && 'error' in exam) {
+    throw new Error("Failed to fetch exam data from API");
+  }
 
   if (!exam) {
     notFound();

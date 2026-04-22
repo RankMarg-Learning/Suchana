@@ -256,7 +256,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
 
   const { data: relatedExams = [] } = useQuery({
     queryKey: ["relatedExams", category],
-    queryFn: () => fetchExamsFromAPI(1, 4, category).then(r => r.exams.filter(e => e.id !== exam?.id).slice(0, 4)),
+    queryFn: () => fetchExamsFromAPI(1, 4, category).then(r => r.exams.filter(e => e.id !== (exam && !('error' in exam) ? exam.id : null)).slice(0, 4)),
   });
 
   const [now, setNow] = useState(0);
@@ -273,7 +273,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
     enabled: !!userId,
   });
 
-  if (!exam) return null;
+  if (!exam || ('error' in exam)) return null;
 
   const isSaved = savedExams.some((e: any) => e.id === exam.id);
 

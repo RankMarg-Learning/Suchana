@@ -20,7 +20,8 @@ const THEMES: Record<string, { main: string; bg: string; accent: string }> = {
 
 export default async function Image({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const exam = await fetchExamBySlug(slug).catch(() => null);
+  const res = await fetchExamBySlug(slug).catch(() => null);
+  const exam = res && !('error' in res) ? res : null;
 
   const title = (exam?.shortTitle || exam?.title || slug.replace(/-/g, ' ')).toUpperCase();
   const status = exam?.status || 'NOTIFICATION';

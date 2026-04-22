@@ -12,7 +12,10 @@ export default async function Image({ params }: { params: Promise<{ slug: string
 
   let page = null;
   try {
-    page = await fetchSeoPageBySlug(slug);
+    const res = await fetchSeoPageBySlug(slug);
+    if (res && !('error' in res)) {
+      page = res;
+    }
   } catch (e) {
     console.error("OG Image Fetch Error:", e);
   }
