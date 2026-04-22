@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { seoService, examService, tagService, SeoPage } from '@/lib/api';
+import { seoService, examService, tagService, revalidationService, SeoPage } from '@/lib/api';
 import ArticleEditor from '@/components/articles/ArticleEditor';
 import { toast } from 'sonner';
 import { useState } from 'react';
@@ -26,6 +26,13 @@ export default function CreateArticlePage() {
             }
 
             toast.success('Article published successfully');
+            
+            // Revalidate frontend
+            try {
+                const slug = data.slug || res.data.slug;
+                await revalidationService.triggerRevalidation(['/', '/articles', `/${slug}`]);
+            } catch (err) {}
+            
             router.push('/seo');
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message || error?.message || 'Failed to publish article');

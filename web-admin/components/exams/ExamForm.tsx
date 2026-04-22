@@ -17,7 +17,7 @@ import {
     EXAM_LEVELS,
     EXAM_STATUSES,
 } from '@/constants/enums';
-import { ApiResponse, Exam, examService } from '@/lib/api';
+import { ApiResponse, Exam, examService, revalidationService } from '@/lib/api';
 import { toast } from 'sonner';
 
 // Shadcn UI
@@ -140,9 +140,28 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                 return await examService.createExam(payload as any);
             }
         },
-        onSuccess: () => {
+        onSuccess: async () => {
             toast.success(isEdit ? 'Exam updated' : 'Exam created');
             queryClient.invalidateQueries({ queryKey: ['exams'] });
+            
+            // Trigger frontend cache revalidation
+            try {
+                // Revalidate the specific exam page and the main listing pages
+                const pathsToRevalidate = ['/', '/all-exams'];
+                if (actualInitialData?.slug) {
+                    pathsToRevalidate.push(`/exam/${actualInitialData.slug}`);
+                }
+                const currentSlug = actualInitialData?.slug || getValues('shortTitle')?.toLowerCase().replace(/\s+/g, '-');
+                if (currentSlug && currentSlug !== actualInitialData?.slug) {
+                    pathsToRevalidate.push(`/exam/${currentSlug}`);
+                }
+                
+                await revalidationService.triggerRevalidation(pathsToRevalidate);
+                toast.success('Frontend cache updated instantly');
+            } catch (err) {
+                console.error("Failed to revalidate:", err);
+            }
+            
             router.push('/exams');
         },
         onError: (error: any) => {

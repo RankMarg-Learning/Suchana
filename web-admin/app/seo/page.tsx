@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { seoService, SeoPage } from '@/lib/api';
+import { seoService, revalidationService, SeoPage } from '@/lib/api';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useSearchParams, usePathname } from 'next/navigation';
@@ -120,9 +120,18 @@ export default function SeoPagesPage() {
 
     const deleteMutation = useMutation({
         mutationFn: (id: string) => seoService.deletePage(id),
-        onSuccess: () => {
+        onSuccess: async (_, id) => {
             toast.success('Article deleted');
             queryClient.invalidateQueries({ queryKey: ['seo-pages-admin'] });
+            
+            // Revalidate frontend
+            const deletedPage = pages.find((p: any) => p.id === id);
+            if (deletedPage) {
+                try {
+                    await revalidationService.triggerRevalidation(['/', '/articles', `/${deletedPage.slug}`]);
+                } catch (err) {}
+            }
+            
             setDeletingPage(null);
         },
         onError: () => toast.error('Failed to delete article')
@@ -317,9 +326,13 @@ export default function SeoPagesPage() {
                                                     size="icon"
                                                     onClick={() => {
                                                         seoService.updatePage(pageItem.id!, { isTrending: !pageItem.isTrending })
-                                                            .then(() => {
+                                                            .then(async () => {
                                                                 toast.success(`Article marked as ${!pageItem.isTrending ? 'trending' : 'normal'}`);
                                                                 queryClient.invalidateQueries({ queryKey: ['seo-pages-admin'] });
+                                                                
+                                                                try {
+                                                                    await revalidationService.triggerRevalidation(['/', '/articles', `/${pageItem.slug}`]);
+                                                                } catch (err) {}
                                                             })
                                                             .catch(() => toast.error('Failed to update trending status'));
                                                     }}

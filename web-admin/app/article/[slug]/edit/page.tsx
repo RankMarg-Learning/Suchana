@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter, useParams } from 'next/navigation';
-import { seoService, examService, tagService, SeoPage } from '@/lib/api';
+import { seoService, examService, tagService, revalidationService, SeoPage } from '@/lib/api';
 import ArticleEditor from '@/components/articles/ArticleEditor';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -41,6 +41,14 @@ export default function EditArticlePage() {
             toast.success('Article updated successfully');
             queryClient.invalidateQueries({ queryKey: ['seo-pages-admin'] });
             queryClient.invalidateQueries({ queryKey: ['seo-page-details', slug] });
+            
+            // Revalidate frontend
+            try {
+                const updatedSlug = sanitizedData.slug || slug;
+                await revalidationService.triggerRevalidation(['/', '/articles', `/${updatedSlug}`]);
+                toast.success('Frontend cache updated');
+            } catch (err) {}
+            
             router.push('/seo');
         } catch (error: any) {
             toast.error(error?.response?.data?.error?.message || error?.message || 'Failed to update article');

@@ -18,7 +18,7 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { examService, seoService, Exam } from '@/lib/api';
+import { examService, seoService, revalidationService, Exam } from '@/lib/api';
 import { EXAM_STATUSES } from '@/constants/enums';
 import { toast } from 'sonner';
 import SummaryStats from '@/components/exams/SummaryStats';
@@ -139,9 +139,17 @@ export default function ExamsPage() {
     const publishMutation = useMutation({
         mutationFn: ({ id, isPublished }: { id: string, isPublished: boolean }) =>
             examService.updateExam(id, { isPublished }),
-        onSuccess: (_, variables) => {
+        onSuccess: async (_, variables) => {
             toast.success(`Exam ${variables.isPublished ? 'published' : 'unpublished'} successfully`);
             queryClient.invalidateQueries({ queryKey: ['exams'] });
+            
+            // Revalidate frontend
+            const examToUpdate = exams.find((e: any) => e.id === variables.id);
+            if (examToUpdate) {
+                try {
+                    await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${examToUpdate.slug}`]);
+                } catch (err) {}
+            }
         },
         onError: () => toast.error('Failed to update published status')
     });
@@ -149,9 +157,18 @@ export default function ExamsPage() {
     // Mutation for deletion
     const deleteMutation = useMutation({
         mutationFn: (id: string) => examService.deleteExam(id),
-        onSuccess: () => {
+        onSuccess: async (_, id) => {
             toast.success('Exam deleted successfully');
             queryClient.invalidateQueries({ queryKey: ['exams'] });
+            
+            // Revalidate frontend
+            const deletedExam = exams.find((e: any) => e.id === id);
+            if (deletedExam) {
+                try {
+                    await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${deletedExam.slug}`]);
+                } catch (err) {}
+            }
+            
             setDeletingExam(null);
         },
         onError: () => toast.error('Failed to delete exam')
@@ -160,8 +177,16 @@ export default function ExamsPage() {
     const generateSeoMutation = useMutation({
         mutationFn: ({ examId, categories }: { examId: string, categories: string[] }) =>
             seoService.generateExamPages(examId, categories),
-        onSuccess: (response) => {
+        onSuccess: async (response) => {
             toast.success(`Generated ${response.data.generatedCount} SEO pages successfully`);
+            
+            // Revalidate frontend
+            if (generatingSeoExam) {
+                try {
+                    await revalidationService.triggerRevalidation(['/', '/articles', `/exam/${generatingSeoExam.slug}`]);
+                } catch (err) {}
+            }
+            
             setGeneratingSeoExam(null);
         },
         onError: () => toast.error('Failed to generate SEO pages')
@@ -396,9 +421,13 @@ export default function ExamsPage() {
                                                     </DropdownMenuItem>
                                                     <DropdownMenuItem onClick={() => {
                                                         examService.updateExam(exam.id, { isTrending: !exam.isTrending })
-                                                            .then(() => {
+                                                            .then(async () => {
                                                                 toast.success(`Exam marked as ${!exam.isTrending ? 'trending' : 'normal'}`);
                                                                 queryClient.invalidateQueries({ queryKey: ['exams'] });
+                                                                
+                                                                try {
+                                                                    await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${exam.slug}`]);
+                                                                } catch (err) {}
                                                             })
                                                             .catch(() => toast.error('Failed to update trending status'));
                                                     }}>
