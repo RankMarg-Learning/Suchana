@@ -55,7 +55,7 @@ export default function StateDirectoryPage() {
                                     {state}
                                 </span>
                             </div>
-                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', opacity: 0.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>Active</span>
+                            <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--accent)', opacity: 0.5, textTransform: 'uppercase', letterSpacing: 0.5 }}>Active Soon</span>
                         </div>
                     ))}
                 </div>

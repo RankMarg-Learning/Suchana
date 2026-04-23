@@ -69,10 +69,11 @@ export default function SiteFooter() {
             <div className="footer-col">
               <div className="footer-col-title">Platform</div>
               <ul className="footer-links">
-                <li><Link href="/about">Intelligence Unit</Link></li>
-                <li><Link href="/contact">Support Center</Link></li>
-                <li><Link href="/privacy">Privacy Ledger</Link></li>
-                <li><Link href="/terms">Operational Terms</Link></li>
+                <li><Link href="/about">About</Link></li>
+                <li><Link href="/contact">Contact</Link></li>
+                <li><Link href="/privacy">Privacy Policy</Link></li>
+                <li><Link href="/terms">Terms of Service</Link></li>
+                <li><Link href="/disclaimer">Disclaimer</Link></li>
               </ul>
             </div>
           </div>
