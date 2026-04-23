@@ -186,13 +186,24 @@ export default function CategoryFeedClient({
               ))}
             </div>
           ) : allArticles.length === 0 ? (
-            <div className="empty-state">
-              <AlertCircle size={48} className="empty-icon" />
-              <h3>No resources found</h3>
-              <p>Try adjusting your search query.</p>
-              <button className="btn btn-primary" onClick={() => { setSearch(""); }}>
-                Clear Search
-              </button>
+            <div className="empty-state-container animate-fade-in">
+              <div className="empty-state-card">
+                <div className="empty-state-icon-wrapper">
+                  <Search size={42} className="empty-state-icon" />
+                  <div className="empty-state-icon-glow"></div>
+                </div>
+                <h3 className="empty-state-title">No resources found</h3>
+                <p className="empty-state-description">
+                  We couldn't find any articles matching <span className="search-highlight">"{debouncedSearch}"</span>. 
+                  Try adjusting your keywords or browse other categories.
+                </p>
+                <button 
+                  className="btn-modern btn-primary-modern" 
+                  onClick={() => setSearch("")}
+                >
+                  <X size={18} /> Clear Search
+                </button>
+              </div>
             </div>
           ) : (
             <div className="latest-articles-list" style={{ marginTop: '20px', display: 'grid', gridTemplateColumns: '1fr', gap: '16px' }}>

@@ -53,7 +53,7 @@ export default function SiteNav({ trendingExams = [] }: { trendingExams?: any[] 
                   <Link href="/topic/preparation-strategy" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Preparation Strategy</Link>
                   <Link href="/topic/previous-year-paper" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Previous Papers</Link>
                   <Link href="/topic/tool" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Tools</Link>
-                  <Link href="/topic/current-affairs" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Current Affairs</Link>
+                  <Link href="/topic/books" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Best Books</Link>
                 </div>
               </div>
               <Link href="/topic/news" className="hover:text-slate-900 transition-colors py-4">News</Link>

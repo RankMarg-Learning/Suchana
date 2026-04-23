@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { 
+import {
   ArrowRight, Landmark, ClipboardList, Building2, TrainFront,
   ShieldCheck, GraduationCap, Building, Settings, Stethoscope,
   Briefcase, Scale, Smartphone, Bell, ChevronLeft, ChevronRight
@@ -28,7 +28,7 @@ const CATEGORY_DISPLAY = [
 
 export default function CategoriesPage() {
   const [mounted, setMounted] = useState(false);
-  
+
   useEffect(() => { setMounted(true); }, []);
 
   if (!mounted) return (
@@ -48,17 +48,17 @@ export default function CategoriesPage() {
   return (
     <main className="min-h-screen bg-slate-50/50 pt-8 pb-20">
       <div className="max-w-[1200px] mx-auto px-4 lg:px-8">
-        
+
         {/* Ads top */}
         <div className="mb-8 hidden md:block">
           <LeaderboardAd id="cat-top-leaderboard" />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
-          
+
           {/* Main Content */}
           <section className="flex-1">
-            
+
             {/* Breadcrumb */}
             <nav className="flex items-center text-sm font-medium text-slate-500 mb-6">
               <Link href="/" className="hover:text-slate-900 transition-colors">Home</Link>
@@ -77,8 +77,8 @@ export default function CategoriesPage() {
             {/* Category Grid - Shadcn Minimalist Style */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {CATEGORY_DISPLAY.map((cat) => (
-                <Link 
-                  key={cat.id} 
+                <Link
+                  key={cat.id}
                   href={`/c/${enumToSlug(cat.id)}`}
                   className="group flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all"
                 >
@@ -101,14 +101,14 @@ export default function CategoriesPage() {
                 <ChevronLeft size={16} className="mr-2" /> Back to Dashboard
               </Link>
             </div>
-            
+
           </section>
 
           {/* Right Sidebar - Shadcn Sidebar Style */}
           <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-6">
-            
+
             <SidebarAd id="cat-right-ad-1" />
-            
+
             {/* Shadcn Card for App Prompt */}
             <div className="rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm flex flex-col">
               <div className="flex flex-col space-y-1.5 p-6 pb-4">
@@ -121,13 +121,13 @@ export default function CategoriesPage() {
                 </p>
               </div>
               <div className="p-6 pt-0">
-                <a 
-                  href="https://play.google.com/store" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href="https://play.google.com/store"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-slate-900 text-slate-50 hover:bg-slate-900/90 h-10 px-4 py-2 w-full"
                 >
-                  Download Free
+                  Coming Soon
                 </a>
               </div>
             </div>

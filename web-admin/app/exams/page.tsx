@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
     Search,
     Plus,
@@ -16,15 +16,12 @@ import {
     Link as LinkIcon
 } from 'lucide-react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { examService, seoService, revalidationService, Exam } from '@/lib/api';
 import { EXAM_STATUSES } from '@/constants/enums';
 import { toast } from 'sonner';
-import SummaryStats from '@/components/exams/SummaryStats';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-
-// Shadcn UI
 import {
     Table,
     TableBody,
@@ -93,25 +90,69 @@ const PAGE_SIZE = 15;
 
 export default function ExamsPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const pathname = usePathname();
     const queryClient = useQueryClient();
-    const [search, setSearch] = useState('');
-    const [statusFilter, setStatusFilter] = useState('ALL');
-    const [publishFilter, setPublishFilter] = useState('ALL');
-    const [trendingFilter, setTrendingFilter] = useState('ALL');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+
+    // Filters from URL
+    const statusFilter = searchParams.get('status') || 'ALL';
+    const publishFilter = searchParams.get('publish') || 'ALL';
+    const trendingFilter = searchParams.get('trending') || 'ALL';
+    const currentPage = parseInt(searchParams.get('page') || '1');
+    const startDate = searchParams.get('startDate') || '';
+    const endDate = searchParams.get('endDate') || '';
+    const searchQuery = searchParams.get('search') || '';
+
+    // Local state for search input to keep it responsive
+    const [search, setSearch] = useState(searchQuery);
+
+    // Dialog/UI state
     const [deletingExam, setDeletingExam] = useState<Exam | null>(null);
     const [generatingSeoExam, setGeneratingSeoExam] = useState<Exam | null>(null);
     const [selectedCategories, setSelectedCategories] = useState<string[]>(SEO_CATEGORIES.map(c => c.id));
 
+    // Sync local search with URL
+    useEffect(() => {
+        setSearch(searchQuery);
+    }, [searchQuery]);
+
+    const updateFilters = useCallback((updates: Record<string, any>) => {
+        const params = new URLSearchParams(searchParams.toString());
+
+        Object.entries(updates).forEach(([key, value]) => {
+            if (value === 'ALL' || value === '' || value === undefined || value === null) {
+                params.delete(key);
+            } else {
+                params.set(key, value.toString());
+            }
+        });
+
+        // Reset page if any filter other than 'page' is updated
+        const isPageUpdateOnly = Object.keys(updates).length === 1 && 'page' in updates;
+        if (!isPageUpdateOnly && !updates.page) {
+            params.set('page', '1');
+        }
+
+        router.push(`${pathname}?${params.toString()}`);
+    }, [pathname, router, searchParams]);
+
+    // Debounced search update
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (search !== searchQuery) {
+                updateFilters({ search: search });
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search, searchQuery, updateFilters]);
+
     // Main query for the paginated & filtered list
     const { data: response, isLoading, isRefetching } = useQuery({
-        queryKey: ['exams', currentPage, search, statusFilter, publishFilter, startDate, endDate],
+        queryKey: ['exams', currentPage, searchQuery, statusFilter, publishFilter, trendingFilter, startDate, endDate],
         queryFn: () => examService.getAllExams({
             page: currentPage,
             limit: PAGE_SIZE,
-            search: search || undefined,
+            search: searchQuery || undefined,
             status: statusFilter === 'ALL' ? undefined : statusFilter,
             isPublished: publishFilter === 'PUBLISHED' ? 'true' :
                 publishFilter === 'UNPUBLISHED' ? 'false' : undefined,
@@ -142,13 +183,13 @@ export default function ExamsPage() {
         onSuccess: async (_, variables) => {
             toast.success(`Exam ${variables.isPublished ? 'published' : 'unpublished'} successfully`);
             queryClient.invalidateQueries({ queryKey: ['exams'] });
-            
+
             // Revalidate frontend
             const examToUpdate = exams.find((e: any) => e.id === variables.id);
             if (examToUpdate) {
                 try {
                     await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${examToUpdate.slug}`]);
-                } catch (err) {}
+                } catch (err) { }
             }
         },
         onError: () => toast.error('Failed to update published status')
@@ -160,15 +201,15 @@ export default function ExamsPage() {
         onSuccess: async (_, id) => {
             toast.success('Exam deleted successfully');
             queryClient.invalidateQueries({ queryKey: ['exams'] });
-            
+
             // Revalidate frontend
             const deletedExam = exams.find((e: any) => e.id === id);
             if (deletedExam) {
                 try {
                     await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${deletedExam.slug}`]);
-                } catch (err) {}
+                } catch (err) { }
             }
-            
+
             setDeletingExam(null);
         },
         onError: () => toast.error('Failed to delete exam')
@@ -179,14 +220,14 @@ export default function ExamsPage() {
             seoService.generateExamPages(examId, categories),
         onSuccess: async (response) => {
             toast.success(`Generated ${response.data.generatedCount} SEO pages successfully`);
-            
+
             // Revalidate frontend
             if (generatingSeoExam) {
                 try {
                     await revalidationService.triggerRevalidation(['/', '/articles', `/exam/${generatingSeoExam.slug}`]);
-                } catch (err) {}
+                } catch (err) { }
             }
-            
+
             setGeneratingSeoExam(null);
         },
         onError: () => toast.error('Failed to generate SEO pages')
@@ -243,15 +284,12 @@ export default function ExamsPage() {
                             placeholder="Search title, authority or slug..."
                             className="pl-9 w-full"
                             value={search}
-                            onChange={(e) => {
-                                setSearch(e.target.value);
-                                setCurrentPage(1);
-                            }}
+                            onChange={(e) => setSearch(e.target.value)}
                         />
                     </div>
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-                        <Select value={publishFilter} onValueChange={(val) => { setPublishFilter(val); setCurrentPage(1); }}>
+                        <Select value={publishFilter} onValueChange={(val) => updateFilters({ publish: val })}>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Visibility" />
                             </SelectTrigger>
@@ -262,7 +300,7 @@ export default function ExamsPage() {
                             </SelectContent>
                         </Select>
 
-                        <Select value={trendingFilter} onValueChange={(val) => { setTrendingFilter(val); setCurrentPage(1); }}>
+                        <Select value={trendingFilter} onValueChange={(val) => updateFilters({ trending: val })}>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Trending" />
                             </SelectTrigger>
@@ -273,7 +311,7 @@ export default function ExamsPage() {
                             </SelectContent>
                         </Select>
 
-                        <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
+                        <Select value={statusFilter} onValueChange={(val) => updateFilters({ status: val })}>
                             <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Status" />
                             </SelectTrigger>
@@ -289,14 +327,14 @@ export default function ExamsPage() {
                             type="date"
                             className="w-full"
                             value={startDate}
-                            onChange={(e) => { setStartDate(e.target.value); setCurrentPage(1); }}
+                            onChange={(e) => updateFilters({ startDate: e.target.value })}
                         />
-                        
+
                         <Input
                             type="date"
                             className="w-full"
                             value={endDate}
-                            onChange={(e) => { setEndDate(e.target.value); setCurrentPage(1); }}
+                            onChange={(e) => updateFilters({ endDate: e.target.value })}
                         />
                     </div>
                 </CardContent>
@@ -424,10 +462,10 @@ export default function ExamsPage() {
                                                             .then(async () => {
                                                                 toast.success(`Exam marked as ${!exam.isTrending ? 'trending' : 'normal'}`);
                                                                 queryClient.invalidateQueries({ queryKey: ['exams'] });
-                                                                
+
                                                                 try {
                                                                     await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${exam.slug}`]);
-                                                                } catch (err) {}
+                                                                } catch (err) { }
                                                             })
                                                             .catch(() => toast.error('Failed to update trending status'));
                                                     }}>
@@ -452,7 +490,7 @@ export default function ExamsPage() {
                                     <div className="flex flex-col items-center justify-center space-y-3 text-muted-foreground">
                                         <Search className="h-10 w-10 opacity-20" />
                                         <p className="text-sm font-medium">No results matched your filters</p>
-                                        <Button variant="outline" size="sm" onClick={() => { setSearch(''); setStatusFilter('ALL'); setPublishFilter('ALL'); setStartDate(''); setEndDate(''); }}>
+                                        <Button variant="outline" size="sm" onClick={() => updateFilters({ search: '', status: 'ALL', publish: 'ALL', trending: 'ALL', startDate: '', endDate: '' })}>
                                             Clear Filters
                                         </Button>
                                     </div>
@@ -471,7 +509,7 @@ export default function ExamsPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            onClick={() => updateFilters({ page: Math.max(currentPage - 1, 1) })}
                             disabled={currentPage === 1 || isLoading}
                         >
                             <ChevronLeft className="mr-2 h-4 w-4" />
@@ -491,7 +529,7 @@ export default function ExamsPage() {
                                         variant={currentPage === pageNum ? "default" : "ghost"}
                                         size="icon"
                                         className="h-8 w-8 text-xs font-semibold"
-                                        onClick={() => setCurrentPage(pageNum)}
+                                        onClick={() => updateFilters({ page: pageNum })}
                                     >
                                         {pageNum}
                                     </Button>
@@ -501,7 +539,7 @@ export default function ExamsPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            onClick={() => updateFilters({ page: Math.min(currentPage + 1, totalPages) })}
                             disabled={currentPage === totalPages || totalPages === 1 || isLoading}
                         >
                             Next

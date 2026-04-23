@@ -160,11 +160,6 @@ function TimelineItem({
               >
                 <MarkdownRenderer content={event.description} className="tl-markdown" variant="fact" />
               </div>
-              {event.description.length > 100 && (
-                <button onClick={() => setIsExpanded(!isExpanded)} className="tl-more-btn" style={{ marginTop: 8 }}>
-                  {isExpanded ? "Show less" : "Read more"}
-                </button>
-              )}
             </div>
           )}
 
@@ -567,10 +562,10 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
             <h2 id="links-heading" className="exam-detail-section-title">Official Resources</h2>
             <div className="official-links">
               {exam.officialWebsite && (
-                <a 
-                  href={exam.officialWebsite} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={exam.officialWebsite}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="official-link-btn"
                   onClick={() => trackConversion('official_website_click', { exam_slug: exam.slug })}
                 >
@@ -578,10 +573,10 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                 </a>
               )}
               {exam.notificationUrl && (
-                <a 
-                  href={exam.notificationUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
+                <a
+                  href={exam.notificationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="official-link-btn primary"
                   onClick={() => trackConversion('official_notification_click', { exam_slug: exam.slug })}
                 >
@@ -630,16 +625,16 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
 
         <aside className="sidebar-right">
           <div className="app-download-widget" style={{ background: 'linear-gradient(135deg, #0088cc 0%, #00aaff 100%)', border: 'none' }}>
-            <div className="app-widget-icon" style={{ background: 'rgba(255,255,255,0.2)' }}>
+            <div className="app-widget-icon" >
               <Bell size={18} color="white" />
             </div>
             <div className="app-widget-title" style={{ color: 'white' }}>Join Telegram</div>
             <div className="app-widget-sub" style={{ color: 'rgba(255,255,255,0.9)' }}>Get the fastest exam notifications directly on your phone.</div>
-            <a 
-              href="https://t.me/examsuchana" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="app-widget-btn" 
+            <a
+              href="https://t.me/examsuchana"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="app-widget-btn"
               style={{ background: 'white', color: '#0088cc' }}
               onClick={() => trackConversion('telegram_join_click', { source: 'sidebar_widget' })}
             >
@@ -673,15 +668,15 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
             </div>
             <div className="app-widget-title">Get the App</div>
             <div className="app-widget-sub">Push notifications for every exam update. Never miss a deadline.</div>
-            <a 
-              href="https://play.google.com/store" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="app-widget-btn" 
+            <a
+              href="https://play.google.com/store"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="app-widget-btn"
               id="detail-app-download"
               onClick={() => trackConversion('app_download_click', { source: 'sidebar_widget' })}
             >
-              <ArrowRight size={14} /> Download Free
+              <ArrowRight size={14} /> Coming Soon
             </a>
           </div>
 
