@@ -71,7 +71,6 @@ export default function ExamDetailScreen() {
   const { showInterstitial, showRewarded } = useAds();
   const insets = useSafeAreaInsets();
   const [countdown, setCountdown] = useState('');
-  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   const textPrimary = useThemeColor({}, 'text');
   const textMuted = useThemeColor({}, 'textMuted');
@@ -395,19 +394,8 @@ export default function ExamDetailScreen() {
               <Text style={[styles.sectionTitle, { color: textPrimary }]}>About Examination</Text>
             </View>
             <View>
-              {isDescExpanded ? (
-                <MarkdownRenderer content={formatText(exam.description)} />
-              ) : (
-                <Text style={[styles.description, { color: textMuted }]} numberOfLines={3}>
-                  {exam.description.replace(/[#*`\n]/g, ' ')}
-                </Text>
-              )}
+              <MarkdownRenderer content={formatText(exam.description)} />
 
-              {exam.description.length > 100 && (
-                <TouchableOpacity onPress={() => setIsDescExpanded(!isDescExpanded)} style={{ marginTop: 8 }}>
-                  <Text style={[styles.moreBtn, { color: tint }]}>{isDescExpanded ? 'Show less' : 'Read more...'}</Text>
-                </TouchableOpacity>
-              )}
             </View>
           </View>
         )}

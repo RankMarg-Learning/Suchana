@@ -112,6 +112,8 @@ export default async function DynamicCategoryPage({ params }: Props) {
 
   const label = categoryData.label;
   const ui = getCategoryUI(catEnum);
+  console.log("label", label);
+  console.log("catEnum", catEnum);
 
   return (
     <Suspense fallback={

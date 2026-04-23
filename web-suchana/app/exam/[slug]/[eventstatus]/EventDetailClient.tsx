@@ -126,8 +126,8 @@ export default function EventDetailClient({ exam, event }: { exam: Exam, event: 
               </div>
 
               {event.actionUrl && (
-                <div style={{ marginTop: 24, paddingTop: 24, borderTop: '1px solid var(--border)' }}>
-                  <a href={event.actionUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '14px 20px', fontSize: '1rem' }}>
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
+                  <a href={event.actionUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '6px 10px', fontSize: '1rem' }}>
                     {event.actionLabel || `Access ${cleanLabel(event.stage)} Portal`} <ExternalLink size={18} />
                   </a>
                 </div>
