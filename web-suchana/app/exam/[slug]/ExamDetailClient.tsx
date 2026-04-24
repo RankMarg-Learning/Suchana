@@ -662,7 +662,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
           <SidebarAd id="detail-right-ad-1" />
           <SidebarAd id="detail-right-ad-2" />
 
-          <div className="app-download-widget">
+          {/* <div className="app-download-widget">
             <div className="app-widget-icon">
               <Smartphone size={18} color="var(--accent-light)" />
             </div>
@@ -678,7 +678,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
             >
               <ArrowRight size={14} /> Coming Soon
             </a>
-          </div>
+          </div> */}
 
 
           <SidebarAd id="detail-right-ad-3" tall />

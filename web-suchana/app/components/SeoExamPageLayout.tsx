@@ -107,9 +107,9 @@ export default function SeoExamPageLayout({
         {/* ─── Left Sidebar ─── */}
         <aside className="sidebar-left">
           <div className="sidebar-widget">
-            <Link 
-              href={`/exam/${exam.slug}`} 
-              className="back-btn" 
+            <Link
+              href={`/exam/${exam.slug}`}
+              className="back-btn"
               style={{ fontSize: '0.85rem' }}
               onClick={() => trackFunnelStep('article_to_timeline_click', {
                 article_slug: seoPage.slug,
@@ -258,10 +258,10 @@ export default function SeoExamPageLayout({
                 </div>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Organization</div>
-                  <Link 
+                  <Link
                     href={`/conduct/${(exam.conductingBody || "ALL").toLowerCase().replace(/ /g, "-")}`}
-                    style={{ 
-                      color: 'var(--text-primary)', 
+                    style={{
+                      color: 'var(--text-primary)',
                       textDecoration: 'none',
                       transition: 'color 0.2s',
                     }}
@@ -285,11 +285,11 @@ export default function SeoExamPageLayout({
             </div>
 
             {exam.officialWebsite && (
-              <a 
-                href={exam.officialWebsite} 
-                target="_blank" 
-                rel="noopener noreferrer" 
-                className="btn btn-ghost" 
+              <a
+                href={exam.officialWebsite}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-ghost"
                 style={{ width: '100%', marginTop: 20, justifyContent: 'center', fontSize: '0.8rem' }}
                 onClick={() => trackConversion('article_official_site_click', {
                   article_slug: seoPage.slug,
@@ -304,7 +304,7 @@ export default function SeoExamPageLayout({
           <SidebarAd id="seo-right-ad-2" />
 
           {/* App Download CTA */}
-          <div className="app-download-widget">
+          {/* <div className="app-download-widget">
             <div className="app-widget-icon">
               <Smartphone size={18} color="var(--accent-light)" />
             </div>
@@ -315,7 +315,7 @@ export default function SeoExamPageLayout({
             <a href="#" className="app-widget-btn" style={{ fontSize: '0.85rem' }}>
               Check for Updates <ArrowRight size={14} />
             </a>
-          </div>
+          </div> */}
 
           <SidebarAd id="seo-right-ad-3" tall />
         </aside>

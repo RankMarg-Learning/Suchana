@@ -50,11 +50,11 @@ export default function CategoriesPage() {
       <div className="max-w-[1200px] mx-auto px-4 lg:px-8">
 
         {/* Ads top */}
-        <div className="mb-8 hidden md:block">
+        {/* <div className="mb-8 hidden md:block">
           <LeaderboardAd id="cat-top-leaderboard" />
-        </div>
+        </div> */}
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-6">
 
           {/* Main Content */}
           <section className="flex-1">
@@ -110,7 +110,7 @@ export default function CategoriesPage() {
             <SidebarAd id="cat-right-ad-1" />
 
             {/* Shadcn Card for App Prompt */}
-            <div className="rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm flex flex-col">
+            {/* <div className="rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm flex flex-col">
               <div className="flex flex-col space-y-1.5 p-6 pb-4">
                 <div className="flex items-center gap-2 font-semibold leading-none tracking-tight mb-2">
                   <Smartphone size={18} className="text-slate-500" />
@@ -130,7 +130,7 @@ export default function CategoriesPage() {
                   Coming Soon
                 </a>
               </div>
-            </div>
+            </div> */}
 
             <SidebarAd id="cat-right-ad-2" tall />
 
