@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 
 export async function POST(req: NextRequest) {
   try {
@@ -18,20 +18,38 @@ export async function POST(req: NextRequest) {
     const tag = body.tag || req.nextUrl.searchParams.get("tag");
     const paths = body.paths; // Array of paths
 
+    if (tag) {
+      await revalidateTag(tag, 'max');
+    }
+
     if (paths && Array.isArray(paths)) {
-      paths.forEach((p) => revalidatePath(p));
-      return NextResponse.json({ revalidated: true, now: Date.now(), paths });
+      for (const p of paths) {
+        await revalidatePath(p, 'page');
+      }
+      return NextResponse.json({ revalidated: true, now: Date.now(), paths, tag });
     }
 
     if (path) {
-      // e.g. path: "/exam/upsc-iesiss-examination-2026"
-      // or path: "/" for homepage
-      revalidatePath(path);
-      return NextResponse.json({ revalidated: true, now: Date.now(), path });
+      await revalidatePath(path, 'page');
+      
+      // Auto-revalidate common tags based on path
+      const slug = path.startsWith('/') ? path.slice(1) : path;
+      if (slug && !slug.includes('/')) {
+        await revalidateTag(`seo-page-${slug}`, 'max');
+      } else if (path.startsWith('/exam/')) {
+        const examSlug = path.replace('/exam/', '');
+        await revalidateTag(`exam-${examSlug}`, 'max');
+      }
+
+      return NextResponse.json({ revalidated: true, now: Date.now(), path, tag });
+    }
+
+    if (tag) {
+      return NextResponse.json({ revalidated: true, now: Date.now(), tag });
     }
 
     return NextResponse.json(
-      { message: "Missing required parameter 'path' or 'paths'" }, 
+      { message: "Missing required parameter 'path', 'paths', or 'tag'" }, 
       { status: 400 }
     );
   } catch (err: any) {
@@ -52,13 +70,31 @@ export async function GET(req: NextRequest) {
     const path = req.nextUrl.searchParams.get("path");
     const tag = req.nextUrl.searchParams.get("tag");
 
+    if (tag) {
+      await revalidateTag(tag, 'max');
+    }
+
     if (path) {
-      revalidatePath(path);
-      return NextResponse.json({ revalidated: true, now: Date.now(), path });
+      await revalidatePath(path, 'page');
+
+      // Auto-revalidate common tags based on path
+      const slug = path.startsWith('/') ? path.slice(1) : path;
+      if (slug && !slug.includes('/')) {
+        await revalidateTag(`seo-page-${slug}`, 'max');
+      } else if (path.startsWith('/exam/')) {
+        const examSlug = path.replace('/exam/', '');
+        await revalidateTag(`exam-${examSlug}`, 'max');
+      }
+
+      return NextResponse.json({ revalidated: true, now: Date.now(), path, tag });
+    }
+
+    if (tag) {
+      return NextResponse.json({ revalidated: true, now: Date.now(), tag });
     }
 
     return NextResponse.json(
-      { message: "Missing required query parameter 'path'" }, 
+      { message: "Missing required query parameter 'path' or 'tag'" }, 
       { status: 400 }
     );
   } catch (err: any) {

@@ -17,12 +17,6 @@ const BUILD_PAGE_DELAY_MS = Number(process.env.BUILD_API_DELAY_MS ?? 400);
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
-/**
- * Wrapper around native fetch that retries on 429.
- * - Reads `Retry-After` header when present.
- * - Falls back to exponential back-off (1 s → 2 s → 4 s).
- * - Only retries up to `maxRetries` times.
- */
 async function fetchWithRetry(
   url: string,
   options: RequestInit & { next?: NextFetchRequestConfig },
@@ -31,12 +25,9 @@ async function fetchWithRetry(
   let attempt = 0;
   while (true) {
     const res = await fetch(url, options as RequestInit);
-    // Retry on 429 (Too Many Requests) or 5xx (Server Errors)
     if ((res.status !== 429 && res.status < 500) || attempt >= maxRetries) return res;
 
     const retryAfter = res.headers.get('Retry-After');
-    // If backend provides Retry-After, use it. Otherwise, back off exponentially.
-    // Increase backoff slightly to give backend more breathing room: 2s, 4s, 8s
     const waitMs = retryAfter
       ? Number(retryAfter) * 1000
       : Math.pow(2, attempt + 1) * 1000;
@@ -92,7 +83,10 @@ export async function fetchExamsFromAPI(
 
   try {
     const res = await fetch(`${API_BASE}/exams?${params}`, {
-      next: { revalidate: 1200 }, // 20 mins - Balance for list updates
+      next: {
+        revalidate: 1200, // 20 mins
+        tags: ['exams-list']
+      },
     });
 
     if (!res.ok) {
@@ -130,7 +124,10 @@ export async function fetchExamsFromAPI(
 export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null | { error: boolean }> => {
   try {
     const res = await fetchWithRetry(`${API_BASE}/exams/slug/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 1800 }, // 30 mins
+      next: {
+        revalidate: 2000, // 33 mins
+        tags: ['exams', `exam-${slug}`]
+      },
     });
     if (!res.ok) {
       if (res.status === 404) return null;
@@ -149,7 +146,10 @@ export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null |
 export const fetchSeoPageBySlug = cache(async (slug: string): Promise<SeoPage | null | { error: boolean }> => {
   try {
     const res = await fetchWithRetry(`${API_BASE}/seo-pages/${encodeURIComponent(slug)}`, {
-      next: { revalidate: 43200 }, // 12 hours
+      next: {
+        revalidate: 43200, // 12 hours
+        tags: ['seo-pages', `seo-page-${slug}`]
+      },
     });
     if (!res.ok) {
       if (res.status === 404) return null;
@@ -179,7 +179,10 @@ export async function fetchSeoPages(
     if (isTrending !== undefined) params.set("isTrending", String(isTrending));
 
     const res = await fetch(`${API_BASE}/seo-pages/list?${params}`, {
-      next: { revalidate: 3600 }, // 1 hour
+      next: {
+        revalidate: 43200, // 12 hours
+        tags: ['seo-pages-list']
+      },
     });
 
     if (!res.ok) return { pages: [], total: 0 };
@@ -205,7 +208,7 @@ export async function fetchAllSeoPageSlugs(): Promise<string[]> {
   try {
     const res = await fetchWithRetry(
       `${API_BASE}/seo-pages`,
-      { next: { revalidate: 3600 } } as RequestInit & { next: NextFetchRequestConfig },
+      { next: { revalidate: 43200 } } as RequestInit & { next: NextFetchRequestConfig },
     );
 
     if (!res.ok) {

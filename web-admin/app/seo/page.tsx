@@ -128,7 +128,10 @@ export default function SeoPagesPage() {
             const deletedPage = pages.find((p: any) => p.id === id);
             if (deletedPage) {
                 try {
-                    await revalidationService.triggerRevalidation(['/', '/articles', `/${deletedPage.slug}`]);
+                    await revalidationService.triggerRevalidation({
+                        paths: ['/', '/articles', `/${deletedPage.slug}`],
+                        tag: 'seo-pages-list'
+                    });
                 } catch (err) {}
             }
             
@@ -331,7 +334,10 @@ export default function SeoPagesPage() {
                                                                 queryClient.invalidateQueries({ queryKey: ['seo-pages-admin'] });
                                                                 
                                                                 try {
-                                                                    await revalidationService.triggerRevalidation(['/', '/articles', `/${pageItem.slug}`]);
+                                                                    await revalidationService.triggerRevalidation({
+                                                                        paths: ['/', '/articles', `/${pageItem.slug}`],
+                                                                        tag: 'seo-pages-list'
+                                                                    });
                                                                 } catch (err) {}
                                                             })
                                                             .catch(() => toast.error('Failed to update trending status'));

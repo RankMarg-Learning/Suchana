@@ -58,6 +58,7 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
+import { Badge } from '@/components/ui/badge';
 
 import ExamLink from './ExamLink';
 import FAQEditor from './FAQEditor';
@@ -328,6 +329,8 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
         setFormData({ ...formData, keywords });
     };
 
+    const wordCount = formData.content ? formData.content.trim().split(/\s+/).filter(Boolean).length : 0;
+
     return (
         <div className="space-y-6 pb-20">
             {/* Simple Header */}
@@ -417,7 +420,12 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
                                 </div>
                                 <Tabs defaultValue="write" className="space-y-4">
                                     <div className="flex items-center justify-between mt-2 pt-2 border-t">
-                                        <Label htmlFor="content" className="text-sm font-semibold">Content (Markdown)</Label>
+                                        <div className="flex items-center gap-3">
+                                            <Label htmlFor="content" className="text-sm font-semibold">Content (Markdown)</Label>
+                                            <Badge variant="outline" className="text-[10px] font-medium bg-muted/30 text-muted-foreground border-muted-foreground/20">
+                                                {wordCount} words
+                                            </Badge>
+                                        </div>
                                         <TabsList className="h-8 p-1 bg-muted/50 border shadow-none">
                                             <TabsTrigger value="write" className="h-6 text-[11px] gap-1.5 px-3 data-[state=active]:bg-background data-[state=active]:shadow-sm">
                                                 <Code className="w-3.5 h-3.5" />

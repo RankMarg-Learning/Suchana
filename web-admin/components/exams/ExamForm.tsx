@@ -156,7 +156,10 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                     pathsToRevalidate.push(`/exam/${currentSlug}`);
                 }
                 
-                await revalidationService.triggerRevalidation(pathsToRevalidate);
+                await revalidationService.triggerRevalidation({ 
+                    paths: pathsToRevalidate,
+                    tag: 'exams-list'
+                });
                 toast.success('Frontend cache updated instantly');
             } catch (err) {
                 console.error("Failed to revalidate:", err);

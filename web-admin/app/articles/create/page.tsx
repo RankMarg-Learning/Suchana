@@ -30,7 +30,10 @@ export default function CreateArticlePage() {
             // Revalidate frontend
             try {
                 const slug = data.slug || res.data.slug;
-                await revalidationService.triggerRevalidation(['/', '/articles', `/${slug}`]);
+                await revalidationService.triggerRevalidation({
+                    paths: ['/', '/articles', `/${slug}`],
+                    tag: 'seo-pages-list'
+                });
             } catch (err) {}
             
             router.push('/seo');

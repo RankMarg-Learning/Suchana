@@ -45,7 +45,10 @@ export default function EditArticlePage() {
             // Revalidate frontend
             try {
                 const updatedSlug = sanitizedData.slug || slug;
-                await revalidationService.triggerRevalidation(['/', '/articles', `/${updatedSlug}`]);
+                await revalidationService.triggerRevalidation({
+                    paths: ['/', '/articles', `/${updatedSlug}`],
+                    tag: 'seo-pages-list'
+                });
                 toast.success('Frontend cache updated');
             } catch (err) {}
             

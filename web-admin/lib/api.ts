@@ -438,12 +438,12 @@ export const tagService = {
 };
 
 export const revalidationService = {
-    triggerRevalidation: async (paths: string[]): Promise<any> => {
+    triggerRevalidation: async (data: { paths?: string[]; tag?: string }): Promise<any> => {
         try {
             const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://examsuchana.in';
             const secret = process.env.NEXT_PUBLIC_REVALIDATION_SECRET || 'suchana-admin-secret-key-2026';
             
-            const response = await axios.post(`${frontendUrl}/api/revalidate`, { paths }, {
+            const response = await axios.post(`${frontendUrl}/api/revalidate`, data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-revalidate-secret': secret
