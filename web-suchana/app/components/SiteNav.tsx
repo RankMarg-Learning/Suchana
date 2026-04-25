@@ -26,17 +26,17 @@ export default function SiteNav({ trendingExams = [] }: { trendingExams?: any[] 
           <div className="flex items-center justify-between h-14">
 
             {/* Logo */}
-            <Link href="/" className="font-bold text-lg tracking-tight text-slate-900">
+            <Link href="/" className="font-bold text-[18px] tracking-tight text-slate-900">
               ExamSuchana
             </Link>
 
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-6 text-sm font-medium text-slate-600">
+            <div className="hidden lg:flex items-center space-x-6 text-[15px] font-medium text-slate-600">
               <div className="relative group/nav py-4">
                 <button className="flex items-center gap-1 hover:text-slate-900 transition-colors">
                   Updates <ChevronDown size={14} className="group-hover/nav:rotate-180 transition-transform" />
                 </button>
-                <div className="absolute top-full left-0 w-48 bg-white border border-slate-200 rounded-md shadow-md opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all z-50 p-1 flex flex-col">
+                <div className="absolute top-full left-0 w-48 bg-white border border-slate-200 rounded-md shadow-md opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all z-50 p-1 flex flex-col text-[14px]">
                   <Link href="/topic/notification" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Notifications</Link>
                   <Link href="/topic/result" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Results</Link>
                   <Link href="/topic/admit-card" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Admit Cards</Link>
@@ -48,7 +48,7 @@ export default function SiteNav({ trendingExams = [] }: { trendingExams?: any[] 
                 <button className="flex items-center gap-1 hover:text-slate-900 transition-colors">
                   Resources <ChevronDown size={14} className="group-hover/nav:rotate-180 transition-transform" />
                 </button>
-                <div className="absolute top-full left-0 w-48 bg-white border border-slate-200 rounded-md shadow-md opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all z-50 p-1 flex flex-col">
+                <div className="absolute top-full left-0 w-48 bg-white border border-slate-200 rounded-md shadow-md opacity-0 invisible group-hover/nav:opacity-100 group-hover/nav:visible transition-all z-50 p-1 flex flex-col text-[14px]">
                   <Link href="/topic/syllabus" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Syllabus</Link>
                   <Link href="/topic/preparation-strategy" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Preparation Strategy</Link>
                   <Link href="/topic/previous-year-paper" className="px-3 py-2 rounded-sm hover:bg-slate-100 text-slate-700">Previous Papers</Link>
@@ -66,7 +66,7 @@ export default function SiteNav({ trendingExams = [] }: { trendingExams?: any[] 
               {mounted && (
                 <Link
                   href="/onboarding"
-                  className="hidden lg:flex items-center justify-center px-4 py-2 border border-slate-200 rounded-md text-sm font-medium hover:bg-slate-100 text-slate-900 transition-colors"
+                  className="hidden lg:flex items-center justify-center px-4 py-2 border border-slate-200 rounded-md text-[14px] font-medium hover:bg-slate-100 text-slate-900 transition-colors"
                 >
                   <Bell size={16} className="mr-2" /> Get Notified
                 </Link>
@@ -90,13 +90,13 @@ export default function SiteNav({ trendingExams = [] }: { trendingExams?: any[] 
           <div className="lg:hidden absolute top-14 left-0 w-full bg-white border-b border-slate-200 shadow-sm overflow-y-auto max-h-[85vh]">
             <div className="px-4 py-2 flex flex-col space-y-1 pb-8">
 
-              <Link href="/onboarding" className="flex items-center px-4 py-3 border border-slate-200 rounded-md  text-white font-medium text-sm mt-3 mb-2 justify-center transition-colors hover:bg-slate-100" onClick={() => setMobileMenuOpen(false)}>
+              <Link href="/onboarding" className="flex items-center px-4 py-3 border border-slate-200 rounded-md text-[15px] font-medium mt-3 mb-2 justify-center transition-colors hover:bg-slate-100" onClick={() => setMobileMenuOpen(false)}>
                 <Bell size={16} className="mr-2" /> Get Notified
               </Link>
 
               {/* Updates Accordion */}
               <div className="border-b border-slate-100">
-                <button className="w-full flex items-center justify-between py-4 text-sm font-medium text-slate-900" onClick={() => toggleAccordion('updates')}>
+                <button className="w-full flex items-center justify-between py-4 text-[15px] font-medium text-slate-900" onClick={() => toggleAccordion('updates')}>
                   Updates <ChevronDown size={16} className={`text-slate-500 transition-transform ${openAccordion === 'updates' ? 'rotate-180' : ''}`} />
                 </button>
                 {openAccordion === 'updates' && (

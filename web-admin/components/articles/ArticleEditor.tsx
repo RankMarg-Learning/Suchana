@@ -49,7 +49,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
-import { SeoPage, Exam, examService, Tag, tagService } from '@/lib/api';
+import { SeoPage, Exam, examService, Tag, tagService, authorService } from '@/lib/api';
 import { SeoPageCategory } from '../../constants/enums';
 import {
     Popover,
@@ -65,6 +65,7 @@ import FAQEditor from './FAQEditor';
 import { useQuery } from '@tanstack/react-query';
 import MarkdownRenderer from '../MarkdownRenderer';
 import ArticleViralShareDialog from './ArticleViralShareDialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface ArticleEditorProps {
     initialData?: Partial<SeoPage>;
@@ -114,6 +115,8 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
     const base = initialData || {};
     const extractedExamId = base.examId || (base as any).exam?.id || null;
 
+    const extractedAuthorId = base.authorId || (base as any).author?.id || null;
+
     const [formData, setFormData] = useState<Partial<SeoPage>>(() => ({
         slug: base.slug || '',
         title: base.title || '',
@@ -126,6 +129,7 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
         isTrending: base.isTrending ?? false,
         examId: extractedExamId,
         category: base.category || 'OTHERS' as any,
+        authorId: extractedAuthorId,
         faqs: base.faqs || []
     }));
 
@@ -138,6 +142,7 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
     React.useEffect(() => {
         if (initialData) {
             const exId = initialData.examId || (initialData as any).exam?.id || null;
+            const autId = initialData.authorId || (initialData as any).author?.id || null;
             setFormData({
                 slug: initialData.slug || '',
                 title: initialData.title || '',
@@ -150,6 +155,7 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
                 isTrending: initialData.isTrending ?? false,
                 examId: exId,
                 category: initialData.category || 'OTHERS' as any,
+                authorId: autId,
                 faqs: initialData.faqs || []
             });
             setIsSlugLocked(!!initialData.slug);
@@ -160,25 +166,26 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
 
     const [isSlugLocked, setIsSlugLocked] = useState(!!initialData?.slug);
     const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
-    // Controlled local string for the keywords field (avoids uncontrolled-input bug)
+
+    const { data: authors } = useQuery({
+        queryKey: ['authors'],
+        queryFn: () => authorService.getAll()
+    });
+
     const [keywordsInput, setKeywordsInput] = useState(
         (initialData?.keywords ?? []).join(', ')
     );
 
-    // ── Tags state ──────────────────────────────────────────────────────────
     const [allTags, setAllTags] = useState<Tag[]>(() => {
-        // Seed with tags already embedded in initialData so badges render immediately
         return (initialData?.tags ?? []) as Tag[];
     });
     const [selectedTagIds, setSelectedTagIds] = useState<Set<string>>(() => {
-        // Pre-populate from initialData.tags so selected badges appear without waiting for API
         return new Set((initialData?.tags ?? []).map((t) => t.id));
     });
     const [tagSearch, setTagSearch] = useState('');
     const [tagsLoading, setTagsLoading] = useState(false);
     const [isCreatingTag, setIsCreatingTag] = useState(false);
 
-    // Related articles state
     type RelatedPage = { id: string; slug: string; title: string; category?: string; isPublished?: boolean; metaDescription?: string | null; updatedAt: string };
     const [relatedArticles, setRelatedArticles] = useState<RelatedPage[]>([]);
     const [relatedLoading, setRelatedLoading] = useState(false);
@@ -603,7 +610,7 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
                                                 }}
                                             />
                                         </div>
-                                        
+
                                         <div className="mt-8 border-t pt-8">
                                             <FAQEditor
                                                 faqs={formData.faqs || []}
@@ -778,6 +785,23 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
                                             </ScrollArea>
                                         </PopoverContent>
                                     </Popover>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label>Author</Label>
+                                    <Select
+                                        value={formData.authorId || 'none'}
+                                        onValueChange={(val) => setFormData({ ...formData, authorId: val === 'none' ? null : val })}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select author" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">None</SelectItem>
+                                            {authors?.data?.map(author => (
+                                                <SelectItem key={author.id} value={author.id}>{author.name}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                 </div>
                             </CardContent>
                         )}

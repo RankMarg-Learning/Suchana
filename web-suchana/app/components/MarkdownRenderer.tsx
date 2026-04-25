@@ -59,7 +59,7 @@ export default function MarkdownRenderer({
           h2: ({ children }) => {
             const id = generateHeadingId(children);
             return (
-              <h2 id={id} className="group mt-16 mb-8 text-2xl sm:text-3xl font-extrabold tracking-tight flex items-center">
+              <h2 id={id} className="group mt-14 mb-6 text-xl sm:text-2xl font-extrabold tracking-tight flex items-center">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-800 via-indigo-900 to-blue-700 py-1">
                   {children}
                 </span>
@@ -69,7 +69,7 @@ export default function MarkdownRenderer({
           h3: ({ children }) => {
             const id = generateHeadingId(children);
             return (
-              <h3 id={id} className="group mt-12 mb-6 text-xl sm:text-2xl font-bold tracking-tight flex items-center border-b border-gray-100 pb-3">
+              <h3 id={id} className="group mt-10 mb-4 text-lg sm:text-xl font-bold tracking-tight flex items-center border-b border-gray-100 pb-2">
                 <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-800 py-1">
                   {children}
                 </span>
@@ -115,7 +115,7 @@ export default function MarkdownRenderer({
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-[#0088cc] uppercase tracking-wider leading-none mb-1 opacity-70">LATEST UPDATES</span>
-                        <span className="text-[15px] font-bold text-gray-900 group-hover:text-[#0088cc] transition-colors line-clamp-1">
+                        <span className="text-[16px] font-bold text-gray-900 group-hover:text-[#0088cc] transition-colors line-clamp-1">
                           {label}
                         </span>
                       </div>

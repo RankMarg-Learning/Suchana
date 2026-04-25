@@ -141,6 +141,8 @@ model Exam {
   faqs                  Json?
   examYear              Int?
   isTrending            Boolean          @default(false)
+  authorId              String?
+  author                Author?          @relation(fields: [authorId], references: [id])
   lifecycleEvents       LifecycleEvent[]
   seoPages              SeoPage[]
 
@@ -157,6 +159,7 @@ model Exam {
   @@index([isTrending])
   @@index([isPublished, isTrending])
   @@index([examYear])
+  @@index([authorId])
 }
 
 model LifecycleEvent {
@@ -293,6 +296,8 @@ model SeoPage {
   updatedAt       DateTime     @updatedAt
   examId          String?
   exam            Exam?        @relation(fields: [examId], references: [id])
+  authorId        String?
+  author          Author?      @relation(fields: [authorId], references: [id])
   tags            SeoPageTag[]
 
   @@index([slug])
@@ -303,6 +308,24 @@ model SeoPage {
   @@index([createdAt])
   @@index([category, isPublished])
   @@index([isPublished, isTrending])
+  @@index([authorId])
+}
+
+model Author {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  image       String?
+  designation String?
+  bio         String?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  exams       Exam[]
+  seoPages    SeoPage[]
+
+  @@index([slug])
+  @@index([isActive])
 }
 
 model Tag {

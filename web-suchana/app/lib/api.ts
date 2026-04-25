@@ -1,5 +1,5 @@
 import { cache } from 'react';
-import { Exam, LifecycleEvent, SeoPage } from "./types";
+import { Author, Exam, LifecycleEvent, SeoPage } from "./types";
 
 export const API_BASE =
   (process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api/v1").replace(/\/+$/, "");
@@ -137,6 +137,26 @@ export const fetchExamBySlug = cache(async (slug: string): Promise<Exam | null |
     return json.data ?? json;
   } catch (err) {
     console.error(`[API] Error fetching exam ${slug}:`, err);
+    return { error: true };
+  }
+});
+
+export const fetchAuthorBySlug = cache(async (slug: string): Promise<Author | null | { error: boolean }> => {
+  try {
+    const res = await fetchWithRetry(`${API_BASE}/authors/slug/${encodeURIComponent(slug)}`, {
+      next: {
+        revalidate: 43200, // 12 hours
+        tags: ['authors', `author-${slug}`]
+      },
+    });
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      return { error: true };
+    }
+    const json = await res.json();
+    return json.data ?? json;
+  } catch (err) {
+    console.error(`[API] Error fetching author ${slug}:`, err);
     return { error: true };
   }
 });

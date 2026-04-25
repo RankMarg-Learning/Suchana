@@ -29,6 +29,16 @@ export class SeoController {
           createdAt: true,
           faqs: true,
           updatedAt: true,
+          author: {
+            select: {
+              id: true,
+              name: true,
+              bio: true,
+              slug: true,
+              image: true,
+              designation: true
+            }
+          },
           exam: {
             select: {
               id: true,
@@ -108,6 +118,9 @@ export class SeoController {
             examId: true,
             exam: {
               select: { id: true, title: true, slug: true }
+            },
+            author: {
+              select: { id: true, name: true }
             }
           }
         }),
@@ -126,9 +139,9 @@ export class SeoController {
     }
   }
 
-    static async createPage(req: Request, res: Response, next: NextFunction) {
+  static async createPage(req: Request, res: Response, next: NextFunction) {
     try {
-      const { slug, title, content, metaTitle, metaDescription, keywords, ogImage, canonicalUrl, isPublished, examId, category, faqs } = req.body;
+      const { slug, title, content, metaTitle, metaDescription, keywords, ogImage, canonicalUrl, isPublished, examId, category, authorId, faqs } = req.body;
 
       const existing = await prisma.seoPage.findUnique({ where: { slug } });
       if (existing) {
@@ -148,6 +161,7 @@ export class SeoController {
           isPublished: isPublished ?? true,
           examId,
           category,
+          authorId,
           faqs: faqs || []
         }
       });

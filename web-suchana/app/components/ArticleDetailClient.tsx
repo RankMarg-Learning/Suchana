@@ -1,5 +1,6 @@
 "use client";
 
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeoPages } from '../lib/api';
 import LatestArticlesSection from './LatestArticlesSection';
@@ -8,6 +9,7 @@ import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd } from './AdUnits';
 import { cleanLabel } from '../lib/types';
 import FAQSection from './FAQSection';
+import { CheckCircle } from 'lucide-react';
 
 interface Props {
   page: SeoPage;
@@ -43,13 +45,45 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
                   <span className="exam-tag">{cleanLabel(page.category)}</span>
                 </div>
               )}
-              <h1 className="article-title" style={{ fontSize: 'clamp(2.2rem, 7vw, 3.5rem)', fontWeight: 800, lineHeight: 1.05, marginBottom: '2.5rem', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+              <h1 className="article-title" style={{ 
+                fontSize: 'clamp(1.75rem, 4vw, 2.25rem)', 
+                fontWeight: 800, 
+                lineHeight: 1.1, 
+                marginBottom: '1.5rem', 
+                color: 'var(--text-primary)', 
+                letterSpacing: '-0.03em' 
+              }}>
                 {page.title}
               </h1>
-              <div className="article-meta" style={{ display: 'flex', flexWrap: 'wrap', gap: 20, color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: 40, borderBottom: '1px solid var(--border)', paddingBottom: 32 }}>
-                <span>Updated {new Date(page.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                <span>•</span>
-                <span>5 min read</span>
+              <div className="article-meta" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 20, color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: 40, borderBottom: '1px solid var(--border)', paddingBottom: 32 }}>
+                {page.author && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <Link
+                      href={`/author/${page.author.slug}`}
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
+                      className="group"
+                    >
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img
+                          src={page.author.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(page.author.name)}&background=7c3aed&color=fff`}
+                          alt={page.author.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem', transition: 'color 0.2s' }} className="group-hover:text-accent">
+                          {page.author.name}
+                        </span>
+                      </div>
+                    </Link>
+                    <span style={{ width: 1, height: 14, background: 'var(--border)', opacity: 0.8 }} />
+                  </div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                  <span>Updated {new Date(page.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  <span>•</span>
+                  <span>5 min read</span>
+                </div>
               </div>
             </header>
 
@@ -59,7 +93,7 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
               </div>
             )}
 
-            <div className="article-body text-base" style={{ marginBottom: 80, lineHeight: '1.8' }}>
+            <div className="article-body" style={{ marginBottom: 80 }}>
               <MarkdownRenderer content={page.content} />
             </div>
 
@@ -68,6 +102,7 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
                 <FAQSection faqs={page.faqs} />
               </div>
             )}
+
 
             {latestData && latestData.length > 0 && (
               <LatestArticlesSection

@@ -151,26 +151,50 @@ export default function SeoExamPageLayout({
                 </div>
               )}
               <h1 className="article-title" style={{
-                fontSize: 'clamp(1.75rem, 5vw, 2.8rem)',
-                fontWeight: 700,
+                fontSize: 'clamp(1.75rem, 5vw, 2.5rem)',
+                fontWeight: 800,
                 lineHeight: 1.1,
-                marginBottom: '1.25rem',
-                color: 'var(--text-primary)'
+                marginBottom: '1.5rem',
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.03em'
               }}>
                 {seoPage.title}
               </h1>
 
               <div className="article-meta" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
-                <Link
-                  href={`/s/${enumToSlug(exam.status)}`}
-                  className={`status-badge status-${exam.status}`}
-                >
-                  <div className="status-dot" />
-                  {statusLabel}
-                </Link>
+                {seoPage.author && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <Link 
+                      href={`/author/${seoPage.author.slug}`} 
+                      style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
+                      className="group"
+                    >
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img 
+                          src={seoPage.author.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(seoPage.author.name)}&background=7c3aed&color=fff`} 
+                          alt={seoPage.author.name} 
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        />
+                      </div>
+                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem', transition: 'color 0.2s' }} className="group-hover:text-accent">
+                        {seoPage.author.name}
+                      </span>
+                    </Link>
+                    <span style={{ width: 1, height: 14, background: 'var(--border)', opacity: 0.8 }} />
+                  </div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <Link
+                    href={`/s/${enumToSlug(exam.status)}`}
+                    className={`status-badge status-${exam.status}`}
+                  >
+                    <div className="status-dot" />
+                    {statusLabel}
+                  </Link>
 
-                <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  • {new Date(seoPage.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    • {new Date(seoPage.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                  </div>
                 </div>
               </div>
 
@@ -220,13 +244,14 @@ export default function SeoExamPageLayout({
               </div>
             )}
 
-            <div className="seo-content" style={{ color: 'var(--text-secondary)', lineHeight: 1.7, fontSize: 'clamp(1.05rem, 2vw, 1.15rem)', marginBottom: 20 }}>
+            <div className="seo-content" style={{ marginBottom: 60 }}>
               <MarkdownRenderer content={seoPage.content} />
             </div>
 
             {seoPage.faqs && seoPage.faqs.length > 0 && (
               <FAQSection faqs={seoPage.faqs} />
             )}
+
 
             {latestArticles.length > 0 && (
               <LatestArticlesSection

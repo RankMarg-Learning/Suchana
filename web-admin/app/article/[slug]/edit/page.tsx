@@ -31,7 +31,7 @@ export default function EditArticlePage() {
 
         setIsSaving(true);
         try {
-            const { id, exam, createdAt, updatedAt, tags, ...sanitizedData } = data as any;
+            const { id, exam, author, createdAt, updatedAt, tags, ...sanitizedData } = data as any;
 
             const res = await seoService.updatePage(pageId, sanitizedData);
             if (!res.success) throw new Error('Failed to update article');
