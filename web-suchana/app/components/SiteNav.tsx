@@ -67,7 +67,7 @@ export default function SiteNav({ trendingExams = [] }: { trendingExams?: any[] 
                   href="/onboarding"
                   className="hidden lg:flex items-center justify-center px-4 py-2 border border-slate-200 rounded-md text-[14px] font-medium hover:bg-slate-100 text-slate-900 transition-colors"
                 >
-                  <Bell size={16} className="mr-2" /> Get Notified
+                  <Bell size={16} className="mr-2" /> Register
                 </Link>
               )}
 
