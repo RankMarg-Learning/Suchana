@@ -40,6 +40,8 @@ export interface Exam {
     salary?: string | null;
     age?: string | null;
     faqs?: { question: string; answer: string }[] | null;
+    authorId?: string | null;
+    author?: Author | null;
     lifecycleEvents?: LifecycleEvent[];
 }
 
@@ -215,6 +217,8 @@ export interface SeoPage {
         conductingBody: string;
         officialWebsite: string;
     };
+    authorId?: string | null;
+    author?: Author | null;
     faqs?: { question: string; answer: string }[] | null;
     tags?: Tag[];
 }
@@ -227,6 +231,22 @@ export interface Tag {
     description?: string | null;
     createdAt: string;
     updatedAt: string;
+}
+
+export interface Author {
+    id: string;
+    name: string;
+    slug: string;
+    image?: string | null;
+    designation?: string | null;
+    bio?: string | null;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    _count?: {
+        exams: number;
+        seoPages: number;
+    };
 }
 
 export const examService = {
@@ -256,6 +276,29 @@ export const examService = {
     },
     notifyBookmarkedUsers: async (id: string, title: string, body: string, audience: 'BOOKMARKED' | 'INTERESTED'): Promise<ApiResponse<{ sent: boolean }>> => {
         const response = await apiClient.post(`/exams/${id}/notify`, { title, body, audience });
+        return response.data;
+    },
+};
+
+export const authorService = {
+    getAll: async (): Promise<ApiResponse<Author[]>> => {
+        const response = await apiClient.get('/authors');
+        return response.data;
+    },
+    getById: async (id: string): Promise<ApiResponse<Author>> => {
+        const response = await apiClient.get(`/authors/${id}`);
+        return response.data;
+    },
+    create: async (data: Partial<Author>): Promise<ApiResponse<Author>> => {
+        const response = await apiClient.post('/authors', data);
+        return response.data;
+    },
+    update: async (id: string, data: Partial<Author>): Promise<ApiResponse<Author>> => {
+        const response = await apiClient.put(`/authors/${id}`, data);
+        return response.data;
+    },
+    delete: async (id: string): Promise<ApiResponse<{ deleted: boolean }>> => {
+        const response = await apiClient.delete(`/authors/${id}`);
         return response.data;
     },
 };
@@ -438,12 +481,12 @@ export const tagService = {
 };
 
 export const revalidationService = {
-    triggerRevalidation: async (paths: string[]): Promise<any> => {
+    triggerRevalidation: async (data: { paths?: string[]; tag?: string }): Promise<any> => {
         try {
             const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://examsuchana.in';
             const secret = process.env.NEXT_PUBLIC_REVALIDATION_SECRET || 'suchana-admin-secret-key-2026';
             
-            const response = await axios.post(`${frontendUrl}/api/revalidate`, { paths }, {
+            const response = await axios.post(`${frontendUrl}/api/revalidate`, data, {
                 headers: {
                     'Content-Type': 'application/json',
                     'x-revalidate-secret': secret

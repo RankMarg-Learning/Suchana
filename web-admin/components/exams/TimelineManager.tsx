@@ -62,7 +62,10 @@ export default function TimelineManager({ examId, initialEvents, slug }: Timelin
     const notifyFrontend = async () => {
         if (!slug) return;
         try {
-            await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${slug}`]);
+            await revalidationService.triggerRevalidation({
+                paths: ['/', '/all-exams', `/exam/${slug}`],
+                tag: 'exams-list'
+            });
         } catch (error) {
             // fail silently, not critical for user flow
         }

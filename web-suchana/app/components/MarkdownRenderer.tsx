@@ -56,9 +56,36 @@ export default function MarkdownRenderer({
         remarkPlugins={[remarkGfm, remarkBreaks]}
         rehypePlugins={[rehypeRaw]}
         components={{
-          h2: ({ children }) => <h2 id={generateHeadingId(children)}>{children}</h2>,
-          h3: ({ children }) => <h3 id={generateHeadingId(children)}>{children}</h3>,
-          h4: ({ children }) => <h4 id={generateHeadingId(children)}>{children}</h4>,
+          h2: ({ children }) => {
+            const id = generateHeadingId(children);
+            return (
+              <h2 id={id} className="group mt-14 mb-6 text-xl sm:text-2xl font-extrabold tracking-tight flex items-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-800 via-indigo-900 to-blue-700 py-1">
+                  {children}
+                </span>
+              </h2>
+            );
+          },
+          h3: ({ children }) => {
+            const id = generateHeadingId(children);
+            return (
+              <h3 id={id} className="group mt-10 mb-4 text-lg sm:text-xl font-bold tracking-tight flex items-center border-b border-gray-100 pb-2">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-800 py-1">
+                  {children}
+                </span>
+              </h3>
+            );
+          },
+          h4: ({ children }) => {
+            const id = generateHeadingId(children);
+            return (
+              <h4 id={id} className="group mt-10 mb-4 text-lg font-bold tracking-tight flex items-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-slate-900 to-slate-600 py-1">
+                  {children}
+                </span>
+              </h4>
+            );
+          },
           div: ({ node, ...props }: any) => {
             const custom = props['data-custom'];
             const label = props['data-label'];
@@ -88,7 +115,7 @@ export default function MarkdownRenderer({
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-[#0088cc] uppercase tracking-wider leading-none mb-1 opacity-70">LATEST UPDATES</span>
-                        <span className="text-[15px] font-bold text-gray-900 group-hover:text-[#0088cc] transition-colors line-clamp-1">
+                        <span className="text-[16px] font-bold text-gray-900 group-hover:text-[#0088cc] transition-colors line-clamp-1">
                           {label}
                         </span>
                       </div>

@@ -35,10 +35,26 @@ export interface Exam {
   notificationUrl?: string;
   description?: string;
   faqs?: { question: string; answer: string }[];
+  authorId?: string | null;
+  author?: Author | null;
   lifecycleEvents?: LifecycleEvent[];
   seoPages?: { slug: string; category: string }[];
   createdAt?: string;
   updatedAt?: string;
+}
+
+export interface Author {
+  id: string;
+  name: string;
+  slug: string;
+  image?: string | null;
+  designation?: string | null;
+  bio?: string | null;
+  isActive: boolean;
+  exams?: Exam[];
+  seoPages?: SeoPage[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface SeoPage {
@@ -55,6 +71,8 @@ export interface SeoPage {
   category?: string;
   examId?: string | null;
   exam?: Exam;
+  authorId?: string | null;
+  author?: Author | null;
   faqs?: { question: string; answer: string }[];
   createdAt: string;
   updatedAt: string;

@@ -77,6 +77,9 @@ export async function listExams(query: ListExamQuery, bypassCache = false) {
                     isTrending: true,
                     publishedAt: true,
                     updatedAt: true,
+                    author: {
+                        select: { id: true, name: true, slug: true, image: true, designation: true }
+                    }
                 },
             }),
             prisma.exam.count({ where }),
@@ -104,6 +107,16 @@ export async function getExamById(id: string, bypassCache = false) {
                 seoPages: {
                     where: { isPublished: true },
                     select: { slug: true, title: true }
+                },
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                        image: true,
+                        bio: true,
+                        designation: true
+                    }
                 }
             },
         });
@@ -128,6 +141,16 @@ export async function getExamBySlug(slug: string, bypassCache = false) {
                 seoPages: {
                     where: { isPublished: true },
                     select: { slug: true, title: true }
+                },
+                author: {
+                    select: {
+                        id: true,
+                        name: true,
+                        slug: true,
+                        image: true,
+                        bio: true,
+                        designation: true
+                    }
                 }
             },
         });
@@ -165,6 +188,7 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
             slug,
             createdBy: adminId,
             publishedAt: dto.isPublished ? new Date() : null,
+            authorId: dto.authorId,
             faqs: faqs ?? undefined,
         },
     });
@@ -184,7 +208,7 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
     const existing = await prisma.exam.findUnique({ where: { id } });
     if (!existing) throw new AppError(404, 'EXAM_NOT_FOUND', `Exam "${id}" not found`);
 
-    const { createdAt, faqs, ...restDto } = dto;
+    const { createdAt, faqs, authorId, ...restDto } = dto;
     const data: Prisma.ExamUpdateInput = {
         ...restDto,
         ...(createdAt && { createdAt: new Date(createdAt) }),
@@ -194,6 +218,7 @@ export async function updateExam(id: string, dto: UpdateExamDto, adminId: string
         salary: dto.salary,
         additionalDetails: dto.additionalDetails,
         ...(dto.isPublished && !existing.isPublished && { publishedAt: new Date() }),
+        author: authorId ? { connect: { id: authorId } } : { disconnect: true },
         faqs: faqs ?? undefined,
     };
 

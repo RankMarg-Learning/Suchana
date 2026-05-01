@@ -31,7 +31,7 @@ export default function EditArticlePage() {
 
         setIsSaving(true);
         try {
-            const { id, exam, createdAt, updatedAt, tags, ...sanitizedData } = data as any;
+            const { id, exam, author, createdAt, updatedAt, tags, ...sanitizedData } = data as any;
 
             const res = await seoService.updatePage(pageId, sanitizedData);
             if (!res.success) throw new Error('Failed to update article');
@@ -45,7 +45,10 @@ export default function EditArticlePage() {
             // Revalidate frontend
             try {
                 const updatedSlug = sanitizedData.slug || slug;
-                await revalidationService.triggerRevalidation(['/', '/articles', `/${updatedSlug}`]);
+                await revalidationService.triggerRevalidation({
+                    paths: ['/', '/articles', `/${updatedSlug}`],
+                    tag: 'seo-pages-list'
+                });
                 toast.success('Frontend cache updated');
             } catch (err) {}
             

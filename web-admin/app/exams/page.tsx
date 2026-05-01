@@ -188,7 +188,10 @@ export default function ExamsPage() {
             const examToUpdate = exams.find((e: any) => e.id === variables.id);
             if (examToUpdate) {
                 try {
-                    await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${examToUpdate.slug}`]);
+                    await revalidationService.triggerRevalidation({
+                        paths: ['/', '/all-exams', `/exam/${examToUpdate.slug}`],
+                        tag: 'exams-list'
+                    });
                 } catch (err) { }
             }
         },
@@ -206,7 +209,10 @@ export default function ExamsPage() {
             const deletedExam = exams.find((e: any) => e.id === id);
             if (deletedExam) {
                 try {
-                    await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${deletedExam.slug}`]);
+                    await revalidationService.triggerRevalidation({
+                        paths: ['/', '/all-exams', `/exam/${deletedExam.slug}`],
+                        tag: 'exams-list'
+                    });
                 } catch (err) { }
             }
 
@@ -224,7 +230,10 @@ export default function ExamsPage() {
             // Revalidate frontend
             if (generatingSeoExam) {
                 try {
-                    await revalidationService.triggerRevalidation(['/', '/articles', `/exam/${generatingSeoExam.slug}`]);
+                    await revalidationService.triggerRevalidation({
+                        paths: ['/', '/articles', `/exam/${generatingSeoExam.slug}`],
+                        tag: 'seo-pages-list'
+                    });
                 } catch (err) { }
             }
 
@@ -464,7 +473,10 @@ export default function ExamsPage() {
                                                                 queryClient.invalidateQueries({ queryKey: ['exams'] });
 
                                                                 try {
-                                                                    await revalidationService.triggerRevalidation(['/', '/all-exams', `/exam/${exam.slug}`]);
+                                                                    await revalidationService.triggerRevalidation({
+                                                                        paths: ['/', '/all-exams', `/exam/${exam.slug}`],
+                                                                        tag: 'exams-list'
+                                                                    });
                                                                 } catch (err) { }
                                                             })
                                                             .catch(() => toast.error('Failed to update trending status'));

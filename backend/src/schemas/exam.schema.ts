@@ -21,6 +21,7 @@ export const createExamSchema = z.object({
     isPublished: z.boolean().default(false),
     isTrending: z.boolean().default(false),
     createdAt: z.string().optional().nullable(),
+    authorId: z.string().optional().nullable(),
     faqs: z.array(z.object({
         question: z.string(),
         answer: z.string()

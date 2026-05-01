@@ -17,7 +17,7 @@ import {
     EXAM_LEVELS,
     EXAM_STATUSES,
 } from '@/constants/enums';
-import { ApiResponse, Exam, examService, revalidationService } from '@/lib/api';
+import { ApiResponse, Exam, examService, authorService, revalidationService } from '@/lib/api';
 import { toast } from 'sonner';
 
 // Shadcn UI
@@ -48,7 +48,7 @@ import MarkdownRenderer from '../MarkdownRenderer';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import ViralShareDialog from './ViralShareDialog';
 import FAQEditor from '../articles/FAQEditor';
 
@@ -73,6 +73,7 @@ const examSchema = z.object({
     isTrending: z.boolean(),
     publishedAt: z.string().nullable(),
     createdAt: z.string().nullable(),
+    authorId: z.string().nullable().optional(),
     faqs: z.array(z.object({ question: z.string(), answer: z.string() })).nullable().optional(),
 });
 
@@ -121,8 +122,14 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
             isTrending: actualInitialData?.isTrending ?? false,
             publishedAt: actualInitialData?.publishedAt || '',
             createdAt: actualInitialData?.createdAt || '',
+            authorId: actualInitialData?.authorId || (actualInitialData as any)?.author?.id || null,
             faqs: actualInitialData?.faqs || [],
         }
+    });
+
+    const { data: authors } = useQuery({
+        queryKey: ['authors'],
+        queryFn: () => authorService.getAll()
     });
 
     const mutation = useMutation({
@@ -143,7 +150,7 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
         onSuccess: async () => {
             toast.success(isEdit ? 'Exam updated' : 'Exam created');
             queryClient.invalidateQueries({ queryKey: ['exams'] });
-            
+
             // Trigger frontend cache revalidation
             try {
                 // Revalidate the specific exam page and the main listing pages
@@ -155,13 +162,16 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                 if (currentSlug && currentSlug !== actualInitialData?.slug) {
                     pathsToRevalidate.push(`/exam/${currentSlug}`);
                 }
-                
-                await revalidationService.triggerRevalidation(pathsToRevalidate);
+
+                await revalidationService.triggerRevalidation({
+                    paths: pathsToRevalidate,
+                    tag: 'exams-list'
+                });
                 toast.success('Frontend cache updated instantly');
             } catch (err) {
                 console.error("Failed to revalidate:", err);
             }
-            
+
             router.push('/exams');
         },
         onError: (error: any) => {
@@ -380,9 +390,9 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                                 name="faqs"
                                 control={control}
                                 render={({ field }) => (
-                                    <FAQEditor 
-                                        faqs={field.value || []} 
-                                        onChange={field.onChange} 
+                                    <FAQEditor
+                                        faqs={field.value || []}
+                                        onChange={field.onChange}
                                     />
                                 )}
                             />
@@ -462,6 +472,27 @@ export default function ExamForm({ initialData = null, isEdit = false }: ExamFor
                                             <SelectContent>
                                                 {EXAM_STATUSES.map(s => (
                                                     <SelectItem key={s} value={s}>{s.replace(/_/g, ' ')}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label>Author</Label>
+                                <Controller
+                                    name="authorId"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select value={field.value || 'none'} onValueChange={(val) => field.onChange(val === 'none' ? null : val)}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select author" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="none">None</SelectItem>
+                                                {authors?.data?.map(author => (
+                                                    <SelectItem key={author.id} value={author.id}>{author.name}</SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
