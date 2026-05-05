@@ -487,7 +487,6 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
               {exam.age && (
                 <div className="fee-card eligibility-card">
                   <div className="fee-card-title">
-                    <Info size={14} className="text-secondary" style={{ marginRight: 8, verticalAlign: 'middle' }} />
                     Age Limit
                   </div>
                   <div className="fact-content">
