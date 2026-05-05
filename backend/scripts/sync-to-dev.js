@@ -34,6 +34,7 @@ async function main() {
     { name: 'ScrapeJob', label: 'Scrape Jobs' },
     { name: 'StagedExam', label: 'Staged Exams' },
     { name: 'StagedLifecycleEvent', label: 'Staged Lifecycle Events' },
+    { name: 'Author', label: 'Authors' },
     { name: 'Exam', label: 'Exams' },
     { name: 'LifecycleEvent', label: 'Lifecycle Events' },
     { name: 'SeoPage', label: 'SEO Pages' },

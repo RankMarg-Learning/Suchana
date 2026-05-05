@@ -1,9 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
-import { ExternalLink, Info, AlertTriangle, Lightbulb, ArrowRight, Send, Calendar, MessageCircle, BookOpen } from "lucide-react";
+import { ExternalLink, Info, AlertTriangle, Lightbulb, ArrowRight, Send, Calendar, MessageCircle, BookOpen, ChevronDown, CheckCircle } from "lucide-react";
 import { formatDatesInText, generateHeadingId } from "@/app/lib/types";
 
 interface MarkdownRendererProps {
@@ -43,6 +43,16 @@ export default function MarkdownRenderer({
       // Clean the content to be passed as an attribute
       const encoded = content.replace(/"/g, '&quot;');
       return `<div data-custom="book-grid" data-books="${encoded}"></div>`;
+    });
+
+    // 7. Button: [BUTTON: Label | URL | align(optional)]
+    final = final.replace(/\[BUTTON:\s*(.*?)\s*\|\s*(.*?)(?:\s*\|\s*(left|center|right))?\s*\]/gi, '<div data-custom="button" data-label="$1" data-url="$2" data-align="$3"></div>');
+
+    // 8. MCQ: [MCQ: Question | Opt1; Opt2; Opt3; Opt4 | AnswerIndex | Solution]
+    final = final.replace(/\[MCQ:\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(\d+)\s*\|\s*(.*?)\s*\]/gi, (match, q, opts, ans, sol) => {
+      const encodedOpts = opts.replace(/"/g, '&quot;');
+      const encodedSol = sol.replace(/"/g, '&quot;');
+      return `<div data-custom="mcq" data-question="${q}" data-options="${encodedOpts}" data-answer="${ans}" data-solution="${encodedSol}"></div>`;
     });
 
     return formatDatesInText(final, includeTime);
@@ -92,6 +102,26 @@ export default function MarkdownRenderer({
             const url = props['data-url'];
             const image = props['data-image'];
 
+            if (custom === 'button') {
+              const align = props['data-align']?.toLowerCase() || 'center';
+              const justifyClass = align === 'left' ? 'justify-start' : align === 'right' ? 'justify-end' : 'justify-center';
+
+              return (
+                <div className={`flex ${justifyClass} my-8`}>
+                  <a href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-8 py-3.5 text-sm font-bold text-white bg-primary rounded-full hover:bg-primary/90 transition-colors no-underline">
+                    <span>{label}</span>
+                  </a>
+                </div>
+              );
+            }
+            if (custom === 'mcq') {
+              const question = props['data-question'];
+              const options = props['data-options']?.split(';').map((o: string) => o.trim()).filter(Boolean) || [];
+              const answerIndex = parseInt(props['data-answer']) - 1;
+              const solution = props['data-solution'];
+
+              return <MCQItem question={question} options={options} answerIndex={answerIndex} solution={solution} />;
+            }
             if (custom === 'read-more') {
               return (
                 <div className="read-more-card">
@@ -253,6 +283,73 @@ export default function MarkdownRenderer({
       >
         {processedContent}
       </ReactMarkdown>
+    </div>
+  );
+}
+
+function MCQItem({ question, options, answerIndex, solution }: { question: string, options: string[], answerIndex: number, solution: string }) {
+  const [selected, setSelected] = useState<number | null>(null);
+
+  return (
+    <div className="my-6 text-left">
+      <div className="flex gap-2 mb-4">
+        <h4 className="text-xl font-bold text-slate-900 leading-tight pt-1 m-0">
+          {question}
+        </h4>
+      </div>
+
+      <div className="space-y-2 mb-6">
+        {options.map((opt: string, idx: number) => {
+          const isCorrect = idx === answerIndex;
+          const isSelected = selected === idx;
+          const showResult = selected !== null;
+
+          let stateClasses = "bg-white border-slate-200 hover:border-primary/40 hover:bg-slate-50";
+          if (showResult) {
+            if (isCorrect) {
+              stateClasses = "bg-emerald-50 border-emerald-500 text-emerald-700";
+            } else if (isSelected) {
+              stateClasses = "bg-rose-50 border-rose-500 text-rose-700";
+            } else {
+              stateClasses = "bg-white border-slate-100 opacity-60";
+            }
+          }
+
+          return (
+            <button
+              key={idx}
+              disabled={showResult}
+              onClick={() => setSelected(idx)}
+              className={`w-full flex items-center gap-3 p-1.5 border rounded-md transition-all text-left group ${stateClasses} ${!showResult ? 'active:scale-[0.98]' : ''}`}
+            >
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black transition-colors flex-shrink-0 ${showResult && isCorrect ? 'bg-emerald-500 text-white' :
+                showResult && isSelected ? 'bg-rose-500 text-white' :
+                  'bg-slate-100 text-slate-500 group-hover:bg-primary group-hover:text-white'
+                }`}>
+                {String.fromCharCode(65 + idx)}
+              </div>
+              <span className="text-[15px] font-semibold leading-snug">{opt}</span>
+              {showResult && isCorrect && <CheckCircle size={20} className="ml-auto text-emerald-600" />}
+              {showResult && isSelected && !isCorrect && <AlertTriangle size={20} className="ml-auto text-rose-600" />}
+            </button>
+          );
+        })}
+      </div>
+
+      {selected !== null && (
+        <details className="group border-t border-slate-100 pt-6 animate-in fade-in slide-in-from-top-4 duration-500">
+          <summary className="flex items-center justify-between cursor-pointer list-none text-primary font-bold text-sm hover:opacity-80 transition-opacity select-none">
+            <span className="flex items-center gap-2">
+              <Lightbulb size={18} />
+              View Solution
+            </span>
+            <ChevronDown size={20} className="transition-transform group-open:rotate-180" />
+          </summary>
+          <div className="mt-5 p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[15px] text-slate-700 leading-relaxed">
+            {solution}
+          </div>
+        </details>
+      )}
     </div>
   );
 }

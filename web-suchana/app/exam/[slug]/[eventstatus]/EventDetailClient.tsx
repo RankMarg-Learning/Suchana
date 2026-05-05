@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, ExternalLink, Calendar, Bell, ChevronRight, Share2, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, ExternalLink, Calendar, Bell, ChevronRight, Share2, MapPin, CheckCircle, User, BookOpen } from "lucide-react";
 import { Exam, LifecycleEvent, cleanLabel, formatDate, enumToSlug, getCategoryInfo } from "@/app/lib/types";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
@@ -93,6 +93,26 @@ export default function EventDetailClient({ exam, event }: { exam: Exam, event: 
               {exam.title}: {title}
             </h1>
 
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: 'var(--green-glow)', color: 'var(--green)', borderRadius: 20, fontSize: '0.8rem', fontWeight: 600 }}>
+                <CheckCircle size={14} /> Fact Checked
+              </div>
+              {exam.author ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                   <User size={14} /> By <Link href={`/author/${exam.author.slug}`} style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{exam.author.name}</Link>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                   <User size={14} /> By <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>Exam Suchana Team</span>
+                </div>
+              )}
+              {exam.updatedAt && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  <Calendar size={14} /> Updated: {formatDate(exam.updatedAt)}
+                </div>
+              )}
+            </div>
+
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', alignItems: 'center', borderBottom: '1px solid var(--border)', paddingBottom: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
                 <MapPin size={16} color="var(--green)" /> {exam.state || 'National'}
@@ -139,6 +159,34 @@ export default function EventDetailClient({ exam, event }: { exam: Exam, event: 
                 <MarkdownRenderer content={event.description} />
               </div>
             )}
+
+            <div style={{ marginTop: 40, padding: 24, background: 'var(--bg-secondary)', borderRadius: 16, border: '1px solid var(--border)' }}>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 700, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <BookOpen size={20} color="var(--accent)" /> Official References & Sources
+              </h3>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: 16 }}>
+                The information provided above is sourced directly from the official notification and website of {exam.conductingBody}. For definitive details, always refer to the original sources linked below.
+              </p>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {exam.officialWebsite && (
+                  <li>
+                    <a href={exam.officialWebsite} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--accent)', fontWeight: 600, fontSize: '0.95rem', textDecoration: 'underline' }}>
+                      <ExternalLink size={16} /> Official Website: {exam.conductingBody}
+                    </a>
+                  </li>
+                )}
+                {exam.notificationUrl && (
+                  <li>
+                    <a href={exam.notificationUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'var(--accent)', fontWeight: 600, fontSize: '0.95rem', textDecoration: 'underline' }}>
+                      <ExternalLink size={16} /> Download Official Notification (PDF)
+                    </a>
+                  </li>
+                )}
+                {!exam.officialWebsite && !exam.notificationUrl && (
+                  <li style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Official links are not available at this moment.</li>
+                )}
+              </ul>
+            </div>
 
             <div style={{ display: 'flex', gap: 16, justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: 40, borderTop: '1px solid var(--border)', paddingTop: 24, marginTop: 40 }}>
               {prevEvent ? (

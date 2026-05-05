@@ -26,14 +26,10 @@ import {
     BookOpen,
     LayoutGrid,
     X,
-    PanelRightClose,
-    PanelRightOpen,
-    Maximize2,
-    Minimize2,
     ChevronDown,
-    ChevronUp
+    ChevronUp,
+    HelpCircle
 } from 'lucide-react';
-import TextareaAutosize from 'react-textarea-autosize';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -559,6 +555,25 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
                                                                 </Button>
                                                             </TooltipTrigger>
                                                             <TooltipContent>Insert Compact 3-Book Grid</TooltipContent>
+                                                        </Tooltip>
+
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-pink-50 border-pink-200 text-pink-700 hover:bg-pink-100 hover:text-pink-800" onClick={() => insertTemplate('\n[BUTTON: Click Here | https://link.com | center]')}>
+                                                                    <LinkIcon2 className="w-3 h-3" />
+                                                                    BUTTON
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert CTA Button</TooltipContent>
+                                                        </Tooltip>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-cyan-50 border-cyan-200 text-cyan-700 hover:bg-cyan-100 hover:text-cyan-800" onClick={() => insertTemplate('\n[MCQ: Question here? | Option A; Option B; Option C; Option D | 2 | Solution explanation here]')}>
+                                                                    <HelpCircle className="w-3 h-3" />
+                                                                    MCQ
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert Question with Options</TooltipContent>
                                                         </Tooltip>
                                                     </div>
 
