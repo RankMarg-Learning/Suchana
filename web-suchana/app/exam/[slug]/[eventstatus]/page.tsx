@@ -84,8 +84,47 @@ export default async function ExamEventPage({ params }: Props) {
     redirect(`/exam/${slug}`);
   }
 
+  const title = event.title || event.actionLabel || cleanLabel(event.stage);
+  const seoTitle = `${exam.shortTitle || exam.title} ${title} Released - Check Now`;
+  const descRaw = event.description ? stripHtml(event.description).slice(0, 150) : "";
+  const description = descRaw || `Check the latest ${title} updates for ${exam.title} by ${exam.conductingBody}.`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": seoTitle,
+    "description": description,
+    "url": `${SITE_URL}/exam/${slug}/${eventstatus.toLowerCase()}`,
+    "publisher": {
+      "@type": "Organization",
+      "name": "Exam Suchana",
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${SITE_URL}/logo.png`
+      }
+    },
+    "datePublished": exam.createdAt || new Date().toISOString(),
+    "dateModified": exam.updatedAt || new Date().toISOString(),
+    "author": exam.author ? {
+      "@type": "Person",
+      "name": exam.author.name,
+      "url": `${SITE_URL}/author/${exam.author.slug}`
+    } : {
+      "@type": "Organization",
+      "name": "Exam Suchana Editorial Team"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${SITE_URL}/exam/${slug}/${eventstatus.toLowerCase()}`
+    }
+  };
+
   return (
     <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <EventDetailClient exam={exam} event={event} />
     </div>
   );

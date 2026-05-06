@@ -65,27 +65,6 @@ function deriveStatus(events: SlimEvent[], nowMs: number): ExamStatus {
     return getTerminalStatusFromStage(latest.stage);
 }
 
-function generateDynamicTitle(shortTitle: string, status: ExamStatus, examYear?: number | null): string {
-    const yearMatch = shortTitle.match(/\b(20\d{2})\b/);
-    const year = examYear?.toString() || (yearMatch ? yearMatch[1] : '');
-    const name = shortTitle.replace(/\b20\d{2}\b/, '').replace(/\s+/g, ' ').trim();
-    const yearSuffix = year ? ` ${year}` : '';
-
-    switch (status) {
-        case ExamStatus.REGISTRATION_OPEN:
-            const recruitmentLabel = name.toLowerCase().includes('recruitment') ? '' : ' Recruitment';
-            return `${name}${recruitmentLabel}${yearSuffix} – Apply Online`.trim();
-        case ExamStatus.ADMIT_CARD_OUT:
-            return `${name} Admit Card${yearSuffix} OUT`.trim();
-        case ExamStatus.RESULT_DECLARED:
-            return `${name} Result${yearSuffix} OUT – Check Scorecard`.trim();
-        case ExamStatus.ANSWER_KEY_OUT:
-            return `${name} Answer Key${yearSuffix} OUT`.trim();
-        default:
-            const defaultLabel = name.toLowerCase().includes('recruitment') ? '' : ' Recruitment';
-            return `${name}${defaultLabel}${yearSuffix}`.trim();
-    }
-}
 
 export class CronService {
 
@@ -96,7 +75,7 @@ export class CronService {
 
         let skip = 0;
         let totalProcessed = 0;
-        const updates: { id: string; status: ExamStatus; title: string }[] = [];
+        const updates: { id: string; status: ExamStatus }[] = [];
         const auditLogs: string[] = [];
 
         while (true) {
@@ -121,13 +100,11 @@ export class CronService {
             for (const exam of batch) {
                 const target = deriveStatus(exam.lifecycleEvents as SlimEvent[], nowMs);
                 if (target !== exam.status) {
-                    const newTitle = generateDynamicTitle(exam.shortTitle, target as ExamStatus, (exam as any).examYear);
                     updates.push({
                         id: exam.id,
-                        status: target as ExamStatus,
-                        title: newTitle
+                        status: target as ExamStatus
                     });
-                    auditLogs.push(`  ${exam.slug}: ${exam.status} → ${target} | title: ${newTitle}`);
+                    auditLogs.push(`  ${exam.slug}: ${exam.status} → ${target}`);
                 }
             }
 
@@ -149,7 +126,7 @@ export class CronService {
             await prisma.$transaction(
                 chunk.map(u => prisma.exam.update({
                     where: { id: u.id },
-                    data: { status: u.status, title: u.title }
+                    data: { status: u.status }
                 }))
             );
         }

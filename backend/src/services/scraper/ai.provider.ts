@@ -24,7 +24,6 @@ export class AIProvider {
 
   static async extractExamData(plaintext: string, url: string, hintCategory?: string): Promise<AiStructuredExam | null> {
     const prompt = this.buildPrompt(plaintext, url, hintCategory);
-    console.log(prompt)
     const openai = this.getClient();
 
     try {
@@ -135,7 +134,7 @@ OUTPUT: Return only valid JSON — no markdown fences, no extra keys.
       "stage": "string (MUST be one of Lifecycle stage ENUM exactly)",
       "stageOrder": "number",
       "title": "string",
-      "description": "string (SEO) -> Data which is not shore in this json event but imp, if not then empty string",
+      "description": "string (SEO) -> MUST BE HIGHLY DETAILED. Create an authority-driven markdown article specifically for THIS stage. Include: 1) What this stage means 2) Expert Tips/Information Gain (e.g., how to prepare, common mistakes, or what to bring) 3) Step-by-step instructions if applicable (like how to download admit card or apply) 4) FAQs specifically for this stage. DO NOT just copy generic exam info. Make it unique to this event.",
       "startsAt": "ISO8601|null",
       "endsAt": "ISO8601|null",
       "isTBD": "boolean",

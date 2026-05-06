@@ -79,7 +79,7 @@ export default function HomePage() {
               </p>
 
               {/* Integrated Status Controls (Collabs with Desc) */}
-              <div className="status-hub-neo animate-slide-up" style={{ animationDelay: '200ms' }}>
+              <div className="status-hub-neo animate-slide-up" >
                 {[
                   { label: "Recruitment", title: "Latest Exams", icon: Bell, color: "#2563eb", bg: "#eff6ff", href: "/latest-jobs" },
                   { label: "Hall Ticket", title: "Admit Cards", icon: Zap, color: "#ea580c", bg: "#fff7ed", href: "/s/admit-card-out" },

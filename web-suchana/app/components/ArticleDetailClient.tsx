@@ -9,7 +9,6 @@ import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd } from './AdUnits';
 import { cleanLabel } from '../lib/types';
 import FAQSection from './FAQSection';
-import { CheckCircle } from 'lucide-react';
 
 interface Props {
   page: SeoPage;
@@ -31,27 +30,27 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
         <LeaderboardAd id="article-top-leaderboard" />
       </div>
 
-      <div className="app-shell" style={{ gap: '4rem' }}>
+      <div className="app-shell">
         <aside className="sidebar-left">
           <SidebarAd id="article-left-ad-1" tall />
           <SidebarAd id="article-left-ad-2" />
         </aside>
 
         <main className="feed-main">
-          <article className="seo-article-v3" style={{ padding: '3rem 0' }}>
+          <article className="seo-article-v3" >
             <header className="article-header" style={{ marginBottom: '4rem' }}>
               {page.category && (
                 <div className="article-tag" style={{ marginBottom: 20 }}>
                   <span className="exam-tag">{cleanLabel(page.category)}</span>
                 </div>
               )}
-              <h1 className="article-title" style={{ 
-                fontSize: 'clamp(1.75rem, 4vw, 2.25rem)', 
-                fontWeight: 800, 
-                lineHeight: 1.1, 
-                marginBottom: '1.5rem', 
-                color: 'var(--text-primary)', 
-                letterSpacing: '-0.03em' 
+              <h1 className="article-title" style={{
+                fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
+                fontWeight: 800,
+                lineHeight: 1.1,
+                marginBottom: '1.5rem',
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.03em'
               }}>
                 {page.title}
               </h1>
