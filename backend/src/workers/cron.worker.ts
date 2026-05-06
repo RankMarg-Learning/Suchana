@@ -5,8 +5,8 @@ import { logger } from '../utils/logger';
 export function startCronWorker(): void {
     logger.info('🚀 Direct cron jobs initialized...');
 
-    // Exam status sync every 4 hours (matching the existing schedule: 0 */4 * * *)
-    cron.schedule('0 */4 * * *', async () => {
+    // Exam status sync every day at 1 AM
+    cron.schedule('0 1 * * *', async () => {
         logger.debug('[CronWorker] Starting scheduled job: update-exam-statuses');
         try {
             await CronService.syncExamStatuses();
