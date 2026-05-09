@@ -57,6 +57,7 @@ export default function SiteNav({ trendingExams = [] }: { trendingExams?: any[] 
               </div>
               <Link href="/topic/news" className="hover:text-slate-900 transition-colors py-4">News</Link>
               <Link href="/topic/guide" className="hover:text-slate-900 transition-colors py-4">Guide</Link>
+              <Link href="/topic/gk-static" className="hover:text-slate-900 transition-colors py-4">Static GK</Link>
               <Link href="/categories" className="hover:text-slate-900 transition-colors py-4">All Exams</Link>
             </div>
 
@@ -142,6 +143,9 @@ export default function SiteNav({ trendingExams = [] }: { trendingExams?: any[] 
               </Link>
               <Link href="/topic/news" className="py-4 text-sm font-medium text-slate-900" onClick={() => setMobileMenuOpen(false)}>
                 News
+              </Link>
+              <Link href="/topic/gk-static" className="py-4 text-sm font-medium text-slate-900" onClick={() => setMobileMenuOpen(false)}>
+                Static GK
               </Link>
               <Link href="/categories" className="py-4 text-sm font-medium text-slate-900" onClick={() => setMobileMenuOpen(false)}>
                 All Exams
