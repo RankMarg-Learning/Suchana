@@ -63,12 +63,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const categoryPages: MetadataRoute.Sitemap = EXAM_CATEGORIES.map((c) => ({
-    url: `${SITE_URL}/c/${enumToSlug(c)}`,
-    lastModified: now,
-    changeFrequency: "daily" as const,
-    priority: 0.7,
-  }));
+  // const categoryPages: MetadataRoute.Sitemap = EXAM_CATEGORIES.map((c) => ({
+  //   url: `${SITE_URL}/c/${enumToSlug(c)}`,
+  //   lastModified: now,
+  //   changeFrequency: "daily" as const,
+  //   priority: 0.7,
+  // }));
 
 
 
@@ -77,6 +77,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...examPages,
     ...seoPages,
     ...statusPages,
-    ...categoryPages,
+    // ...categoryPages,
   ];
 }
