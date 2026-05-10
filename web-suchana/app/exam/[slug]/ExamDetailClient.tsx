@@ -31,6 +31,7 @@ import {
   UserSquare2,
   Layers,
   Star,
+  Calculator
 } from "lucide-react";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 import {
@@ -359,6 +360,33 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
         <aside className="sidebar-left">
           <SidebarAd id="detail-left-ad-1" tall />
           <SidebarAd id="detail-left-ad-2" />
+
+          {/* Calculators CTA */}
+          <div className="desktop-only feature-card" style={{ padding: '16px', marginTop: '24px', background: 'var(--bg-primary)' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px', color: 'var(--text-secondary)' }}>
+              Useful Tools
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Link href="/salary-calculator" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px', textDecoration: 'none' }} className="hover:bg-accent/10 transition-colors">
+                <div style={{ background: 'var(--accent)', color: 'white', padding: '8px', borderRadius: '6px' }}>
+                  <Calculator size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Salary Calculator</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Check in-hand pay</div>
+                </div>
+              </Link>
+              <Link href="/age-calculator" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px', textDecoration: 'none' }} className="hover:bg-accent/10 transition-colors">
+                <div style={{ background: 'var(--accent)', color: 'white', padding: '8px', borderRadius: '6px' }}>
+                  <Calendar size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Age Calculator</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Verify eligibility</div>
+                </div>
+              </Link>
+            </div>
+          </div>
         </aside>
         <section className="feed-main" id="exam-detail" itemScope itemType="https://schema.org/Article">
           <div className="exam-detail-header-wrap">
@@ -489,25 +517,52 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                   <div className="fee-card-title">
                     Age Limit
                   </div>
-                  <div className="fact-content">
+                  <div className="exam-detail-desc">
                     <MarkdownRenderer
                       content={exam.age}
-                      variant="fact"
+                      variant="default"
                     />
                   </div>
                 </div>
               )}
               <div className="fee-card eligibility-card">
                 <div className="fee-card-title">Qualification Criteria</div>
-                <div className="fact-content">
+                <div className="exam-detail-desc">
                   <MarkdownRenderer
                     content={exam.qualificationCriteria || "Please refer to the official notification for detailed qualification requirements."}
-                    variant="fact"
+                    variant="default"
                   />
                 </div>
               </div>
             </div>
           </section>
+
+          {/* Mobile-only Calculators CTA */}
+          <div className="mobile-only feature-card" style={{ padding: '16px', marginBottom: '32px', background: 'var(--bg-primary)', flexDirection: 'column' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px', color: 'var(--text-secondary)' }}>
+              Useful Tools
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <Link href="/salary-calculator" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px', textDecoration: 'none' }} className="hover:bg-accent/10 transition-colors">
+                <div style={{ background: 'var(--accent)', color: 'white', padding: '8px', borderRadius: '6px' }}>
+                  <Calculator size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Salary Calculator</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Check in-hand pay</div>
+                </div>
+              </Link>
+              <Link href="/age-calculator" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px', textDecoration: 'none' }} className="hover:bg-accent/10 transition-colors">
+                <div style={{ background: 'var(--accent)', color: 'white', padding: '8px', borderRadius: '6px' }}>
+                  <Calendar size={16} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Age Calculator</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Verify eligibility</div>
+                </div>
+              </Link>
+            </div>
+          </div>
 
           {exam.applicationFee && (
             <section className="exam-detail-section" aria-labelledby="fee-heading">
@@ -515,14 +570,14 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                 <Calendar size={18} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
                 Application Fee
               </h2>
-              <div className="fact-content"><MarkdownRenderer content={exam.applicationFee ?? "N/A"} variant="fact" /></div>
+              <div className="exam-detail-desc"><MarkdownRenderer content={exam.applicationFee ?? "N/A"} variant="default" /></div>
             </section>
           )}
 
           {exam.additionalDetails && (
             <section className="exam-detail-section" aria-labelledby="add-heading">
               <h2 id="add-heading" className="exam-detail-section-title">Additional Details</h2>
-              <div className="fact-content"><MarkdownRenderer content={exam.additionalDetails} variant="fact" /></div>
+              <div className="exam-detail-desc"><MarkdownRenderer content={exam.additionalDetails} variant="default" /></div>
             </section>
           )}
 
@@ -592,6 +647,27 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
               <ChevronLeft size={16} /> Back to All Careers
             </Link>
           </div>
+
+          {exam.seoPages && exam.seoPages.length > 0 && (
+            <section className="exam-detail-section mobile-only" aria-labelledby="related-guides-mobile-heading" style={{ marginTop: 32, flexDirection: 'column' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
+                <h2 id="related-guides-mobile-heading" className="exam-detail-section-title" style={{ marginBottom: 0, fontSize: '18px' }}>
+                  <BookOpen size={16} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle', marginTop: '-2px' }} />
+                  Related Guides
+                </h2>
+              </div>
+              <div className="latest-articles-list">
+                {exam.seoPages.map((p: any) => (
+                  <Link key={p.slug} href={`/${p.slug}`} className="article-list-item">
+                    <div className="article-list-content">
+                      <h4 className="article-list-title" style={{ fontSize: '15px' }}>{p.title}</h4>
+                    </div>
+                    <ArrowRight size={16} className="article-list-arrow" />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
 
           {latestArticles.length > 0 && (
             <section className="exam-detail-section" aria-labelledby="latest-articles-heading" style={{ marginTop: 64 }}>
