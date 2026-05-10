@@ -2382,7 +2382,7 @@ body::before {
 }
 
 .text-white {
-  color: var(--text-primary);
+  color: #ffffff
 }
 
 .text-gray-400 {

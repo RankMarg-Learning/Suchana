@@ -124,13 +124,14 @@ export default function MarkdownRenderer({
             }
             if (custom === 'read-more') {
               return (
-                <div className="read-more-card">
-                  <div className="read-more-badge">Read More</div>
-                  <div className="read-more-content">
-                    <a href={url} className="read-more-link">
-                      {label}
-                      <ArrowRight size={14} className="read-more-arrow" />
-                    </a>
+                <div className="callout-box callout-related !border-l-0 !pl-0 !items-start gap-3">
+                  <div className="flex-shrink-0 mt-1">
+                    <span className="bg-primary text-primary-foreground text-[9px] font-bold px-2 py-1 rounded uppercase tracking-wider">
+                      Read More
+                    </span>
+                  </div>
+                  <div className="callout-content">
+                    <a href={url} className="underline underline-offset-4 font-bold decoration-primary/40">{label}</a>
                   </div>
                 </div>
               );
@@ -145,7 +146,7 @@ export default function MarkdownRenderer({
                       </div>
                       <div className="flex flex-col">
                         <span className="text-[10px] font-bold text-[#0088cc] uppercase tracking-wider leading-none mb-1 opacity-70">LATEST UPDATES</span>
-                        <span className="text-[16px] font-bold text-gray-900 group-hover:text-[#0088cc] transition-colors line-clamp-1">
+                        <span className="text-[15px] font-bold text-gray-900 group-hover:text-[#0088cc] transition-colors line-clamp-1">
                           {label}
                         </span>
                       </div>
@@ -291,11 +292,11 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
   const [selected, setSelected] = useState<number | null>(null);
 
   return (
-    <div className="my-6 text-left">
-      <div className="flex gap-2 mb-4">
-        <h4 className="text-xl font-bold text-slate-900 leading-tight pt-1 m-0">
+    <div className="my-2 gap-2 text-left">
+      <div className="flex gap-0 mb-2">
+        <h5 className="text-base font-bold text-slate-900 leading-tight  m-0">
           {question}
-        </h4>
+        </h5>
       </div>
 
       <div className="space-y-2 mb-6">
@@ -328,7 +329,7 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
                 }`}>
                 {String.fromCharCode(65 + idx)}
               </div>
-              <span className="text-[15px] font-semibold leading-snug">{opt}</span>
+              <span className="text-sm font-semibold leading-snug">{opt}</span>
               {showResult && isCorrect && <CheckCircle size={20} className="ml-auto text-emerald-600" />}
               {showResult && isSelected && !isCorrect && <AlertTriangle size={20} className="ml-auto text-rose-600" />}
             </button>
@@ -341,11 +342,11 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
           <summary className="flex items-center justify-between cursor-pointer list-none text-primary font-bold text-sm hover:opacity-80 transition-opacity select-none">
             <span className="flex items-center gap-2">
               <Lightbulb size={18} />
-              View Solution
+              View Explanation
             </span>
             <ChevronDown size={20} className="transition-transform group-open:rotate-180" />
           </summary>
-          <div className="mt-5 p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[15px] text-slate-700 leading-relaxed">
+          <div className="mt-5 p-5 bg-slate-50 border border-slate-100 rounded-2xl text-base text-slate-700 leading-relaxed">
             {solution}
           </div>
         </details>
