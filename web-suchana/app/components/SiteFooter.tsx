@@ -71,6 +71,8 @@ export default function SiteFooter() {
               <ul className="footer-links">
                 <li><Link href="/about">About</Link></li>
                 <li><Link href="/contact">Contact</Link></li>
+                <li><Link href="/salary-calculator">Salary Calculator</Link></li>
+                <li><Link href="/age-calculator">Age Calculator</Link></li>
                 <li><Link href="/privacy">Privacy Policy</Link></li>
                 <li><Link href="/terms">Terms of Service</Link></li>
                 <li><Link href="/disclaimer">Disclaimer</Link></li>

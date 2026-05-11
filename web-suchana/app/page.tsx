@@ -26,8 +26,8 @@ const CATEGORY_DISPLAY = [
   { id: ExamCategory.DEFENCE_JOBS, name: "Defence", icon: ShieldCheck, desc: "NDA, CDS & AFCAT", color: "#ef4444" },
   { id: ExamCategory.TEACHING_ELIGIBILITY, name: "Teaching", icon: GraduationCap, desc: "CTET, NET & SET", color: "#8b5cf6" },
   { id: ExamCategory.STATE_PSC, name: "State PSC", icon: Building, desc: "Provincial Services", color: "#06b6d4" },
-  { id: ExamCategory.ENGINEERING_ENTRANCE, name: "Engineering", icon: Settings, desc: "JEE Main & Advanced", color: "#ec4899" },
-  { id: ExamCategory.MEDICAL_ENTRANCE, name: "Medical", icon: Stethoscope, desc: "NEET UG & PG", color: "#f43f5e" },
+  { id: ExamCategory.ENGINEERING_EXAM, name: "Engineering", icon: Settings, desc: "JEE Main & Advanced", color: "#ec4899" },
+  { id: ExamCategory.MEDICAL_EXAM, name: "Medical", icon: Stethoscope, desc: "NEET UG & PG", color: "#f43f5e" },
 ];
 
 export default function HomePage() {
@@ -166,6 +166,35 @@ export default function HomePage() {
                 Browse All 1000+ Exams <ArrowRight size={16} style={{ marginLeft: '8px' }} />
               </Link>
             </div>
+
+            {/* Mobile-only Latest Guides */}
+            {latestArticles.length > 0 && (
+              <div className="mobile-only flex-col mt-4 mb-4">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <h2 className="text-2xl font-bold tracking-tight text-slate-900 m-0 flex items-center gap-2">
+                    <BookOpen size={20} className="text-slate-500" />
+                    Latest Guides
+                  </h2>
+                  <Link href="/articles" className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 700 }}>
+                    View All  <ArrowRight size={14} style={{ marginLeft: 6 }} />
+                  </Link>
+                </div>
+                <div className="latest-articles-list">
+                  {latestArticles.map((article) => (
+                    <Link key={article.id} href={`/${article.slug}`} className="article-list-item">
+                      <div className="article-list-content">
+                        <h4 className="article-list-title">{article.title}</h4>
+                        <div className="article-list-meta">
+                          <span className="article-list-tag">{article.category ? article.category.replace(/_/g, ' ') : "Guide"}</span>
+                          <span className="article-list-date">{new Date(article.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+                        </div>
+                      </div>
+                      <ArrowRight size={16} className="article-list-arrow" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Right Sidebar: Utility Widgets */}
@@ -191,19 +220,25 @@ export default function HomePage() {
 
             {/* Latest Guides Widget */}
             {latestArticles.length > 0 && (
-              <div className="sidebar-widget">
-                <div className="sidebar-widget-title">
-                  <BookOpen size={14} /> Latest Guides
+              <div className="sidebar-widget" style={{ padding: '24px 0 0 0', border: 'none', background: 'transparent' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+                  <h2 className="text-lg font-bold text-slate-900 m-0 flex items-center gap-2">
+                    <BookOpen size={16} className="text-slate-500" />
+                    Latest Guides
+                  </h2>
                 </div>
-                <div className="sidebar-links">
+                <div className="latest-articles-list">
                   {latestArticles.map((article) => (
-                    <Link key={article.id} href={`/${article.slug}`} className="sidebar-link">
-                      <span>{article.title}</span>
+                    <Link key={article.id} href={`/${article.slug}`} className="article-list-item" style={{ padding: '16px', background: 'white' }}>
+                      <div className="article-list-content">
+                        <h4 className="article-list-title" style={{ fontSize: '14px', lineHeight: 1.4 }}>{article.title}</h4>
+                      </div>
+                      <ArrowRight size={14} className="article-list-arrow" />
                     </Link>
                   ))}
                 </div>
-                <Link href="/articles" className="sidebar-link" style={{ marginTop: '8px', color: 'var(--accent)', fontWeight: 700 }}>
-                  View All Articles
+                <Link href="/articles" className="btn btn-ghost w-full" style={{ marginTop: '12px', fontSize: '13px', fontWeight: 700, justifyContent: 'center' }}>
+                  View All Guides <ArrowRight size={14} style={{ marginLeft: 6 }} />
                 </Link>
               </div>
             )}

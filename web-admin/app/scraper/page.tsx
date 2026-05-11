@@ -477,8 +477,8 @@ function SourceModal({ source, isOpen, onClose, onSave }: { source: ScrapeSource
         { id: 'SSC', label: 'Staff Selection' },
         { id: 'STATE_PSC', label: 'State Commission' },
         { id: 'TEACHING_ELIGIBILITY', label: 'Teaching & Academia' },
-        { id: 'ENGINEERING_ENTRANCE', label: 'Engineering' },
-        { id: 'MEDICAL_ENTRANCE', label: 'Medical' },
+        { id: 'ENGINEERING_EXAM', label: 'Engineering' },
+        { id: 'MEDICAL_EXAM', label: 'Medical' },
         { id: 'OTHER', label: 'Other' },
     ];
 

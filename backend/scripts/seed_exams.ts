@@ -161,7 +161,7 @@ async function main() {
             title: 'SSC Junior Engineer (JE) 2024',
             shortTitle: 'SSC JE',
             conductingBody: 'Staff Selection Commission',
-            category: ExamCategory.ENGINEERING_ENTRANCE,
+            category: ExamCategory.ENGINEERING_EXAM,
             status: ExamStatus.REGISTRATION_OPEN,
             examLevel: ExamLevel.NATIONAL,
             stages: [
@@ -208,9 +208,9 @@ async function main() {
             ]
         },
         {
-            title: 'JEECUP Polytechnic Entrance 2024',
+            title: 'JEECUP Polytechnic Exam 2024',
             shortTitle: 'JEECUP',
-            conductingBody: 'UP Joint Entrance Examination Council',
+            conductingBody: 'UP Joint Exam Examination Council',
             category: ExamCategory.OTHER,
             status: ExamStatus.NOTIFICATION,
             examLevel: ExamLevel.STATE,
@@ -257,10 +257,10 @@ async function main() {
             ]
         },
         {
-            title: 'CAT 2024 MBA Entrance',
+            title: 'CAT 2024 MBA Exam',
             shortTitle: 'CAT',
             conductingBody: 'IIM Calcutta',
-            category: ExamCategory.MBA_ENTRANCE,
+            category: ExamCategory.MBA_EXAM,
             status: ExamStatus.REGISTRATION_OPEN,
             examLevel: ExamLevel.NATIONAL,
             stages: [
@@ -298,7 +298,7 @@ async function main() {
             title: 'GATE 2025',
             shortTitle: 'GATE',
             conductingBody: 'IIT Roorkee',
-            category: ExamCategory.ENGINEERING_ENTRANCE,
+            category: ExamCategory.ENGINEERING_EXAM,
             status: ExamStatus.NOTIFICATION,
             examLevel: ExamLevel.NATIONAL,
             stages: [

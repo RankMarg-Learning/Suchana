@@ -265,11 +265,11 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
   const [selected, setSelected] = useState<number | null>(null);
 
   return (
-    <div className="my-6 text-left">
-      <div className="flex gap-2 mb-4">
-        <h4 className="text-xl font-bold text-slate-900 leading-tight pt-1 m-0">
+    <div className="my-2 gap-2 text-left">
+      <div className="flex gap-0 mb-2">
+        <h5 className="text-base font-bold text-slate-900 leading-tight  m-0">
           {question}
-        </h4>
+        </h5>
       </div>
 
       <div className="space-y-2 mb-6">
@@ -302,7 +302,7 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
                 }`}>
                 {String.fromCharCode(65 + idx)}
               </div>
-              <span className="text-[15px] font-semibold leading-snug">{opt}</span>
+              <span className="text-sm font-semibold leading-snug">{opt}</span>
               {showResult && isCorrect && <CheckCircle size={20} className="ml-auto text-emerald-600" />}
               {showResult && isSelected && !isCorrect && <AlertTriangle size={20} className="ml-auto text-rose-600" />}
             </button>
@@ -319,7 +319,7 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
             </span>
             <ChevronDown size={20} className="transition-transform group-open:rotate-180" />
           </summary>
-          <div className="mt-5 p-5 bg-slate-50 border border-slate-100 rounded-2xl text-[15px] text-slate-700 leading-relaxed">
+          <div className="mt-5 p-5 bg-slate-50 border border-slate-100 rounded-2xl text-base text-slate-700 leading-relaxed">
             {solution}
           </div>
         </details>
