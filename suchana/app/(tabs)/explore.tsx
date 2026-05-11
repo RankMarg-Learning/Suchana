@@ -71,7 +71,7 @@ export default function SavedExamsTab() {
 
   if (!userId) {
     return (
-      <SafeAreaView style={[styles.root, { backgroundColor: background }]}>
+      <View style={[styles.root, { backgroundColor: background }]}>
         <View style={styles.emptyContainer}>
           <Settings size={48} color={border} style={{ marginBottom: 16 }} />
           <Text style={[styles.emptyTitle, { color: textPrimary }]}>Login Required</Text>
@@ -84,22 +84,12 @@ export default function SavedExamsTab() {
             <Text style={styles.exploreBtnText}>Setup Profile</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: background }]} edges={['top']}>
-      <View style={styles.header}>
-        <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-          <Bookmark size={24} color={tint} style={{ marginRight: 10 }} />
-          <Text style={[styles.headerTitle, { color: textPrimary }]}>My Saved Exams</Text>
-        </View>
-        {exams.length > 0 && (
-          <Text style={[styles.countText, { color: textMuted, backgroundColor: cardBg }]}>{exams.length}/10</Text>
-        )}
-      </View>
-
+    <View style={[styles.root, { backgroundColor: background }]}>
       <FlatList
         data={exams}
         keyExtractor={(item) => item.id}
@@ -109,22 +99,28 @@ export default function SavedExamsTab() {
               exam={item}
               isSaved={true}
               onSaveToggle={() => saveMutation.mutate(item.id)}
-              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.id } })}
+              onPress={() => router.push({ pathname: '/exam/[id]', params: { id: item.slug } })}
             />
           </View>
         )}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={
-          exams.length > 0 ? (
-            <>
-              {/* Native Ad at top of list */}
-              <NativeAdCard placement="SAVED_TOP" style={{ marginHorizontal: 16, marginBottom: 20 }} />
-
-              <View style={[styles.nudgeBox, { backgroundColor: tint + '18', borderColor: tint + '33' }]}>
-                <Text style={[styles.nudgeText, { color: tint }]}>You'll get notifications for these exams.</Text>
-              </View>
-            </>
-          ) : null
+          <View>
+            <View style={styles.topSection}>
+               <Text style={[styles.headerTitle, { color: textPrimary }]}>My Saved Exams</Text>
+               {exams.length > 0 && (
+                 <Text style={[styles.countText, { color: textMuted, backgroundColor: cardBg }]}>{exams.length}/10</Text>
+               )}
+            </View>
+            {exams.length > 0 ? (
+              <>
+                <NativeAdCard placement="SAVED_TOP" style={{ marginHorizontal: 16, marginBottom: 20 }} />
+                <View style={[styles.nudgeBox, { backgroundColor: tint + '18', borderColor: tint + '33' }]}>
+                  <Text style={[styles.nudgeText, { color: tint }]}>You'll get notifications for these exams.</Text>
+                </View>
+              </>
+            ) : null}
+          </View>
         }
         ListEmptyComponent={isLoading ? null : renderEmpty}
         ListFooterComponent={exams.length > 0 ? (
@@ -141,26 +137,26 @@ export default function SavedExamsTab() {
           />
         }
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: {
+  topSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 24,
   },
   headerTitle: {
-    fontSize: 22,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '900',
   },
   countText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,

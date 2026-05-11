@@ -106,13 +106,6 @@ export default function UpdatesScreen() {
     </TouchableOpacity>
   );
 
-  const greeting = () => {
-    const h = new Date().getHours();
-    if (h < 12) return 'Good Morning';
-    if (h < 17) return 'Good Afternoon';
-    return 'Good Evening';
-  };
-
   const renderEmpty = () => (
     <View style={styles.empty}>
       <Calendar size={48} color={textMuted} style={{ marginBottom: 16 }} />
@@ -129,9 +122,8 @@ export default function UpdatesScreen() {
     );
   }
 
-  const headerColors = (colorScheme === 'dark' ? ['#2E1065', '#09090B'] : ['#F5F3FF', '#FFFFFF']) as readonly [string, string];
   return (
-    <SafeAreaView style={[styles.root, { backgroundColor: background }]} edges={['top']}>
+    <View style={[styles.root, { backgroundColor: background }]}>
       <FlatList
         data={updatedExams}
         keyExtractor={item => item.id}
@@ -155,26 +147,7 @@ export default function UpdatesScreen() {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor={tint} />}
         ListHeaderComponent={
           <View>
-            <LinearGradient colors={headerColors} style={styles.headerGradient}>
-              <View style={styles.header}>
-                <View>
-                  <Text style={[styles.greeting, { color: colorScheme === 'dark' ? '#94a3b8' : '#64748b' }]}>{greeting()}</Text>
-                  <Text style={[styles.name, { color: textPrimary }]}>{user?.name ?? 'Aspirant'}</Text>
-                </View>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                  <TouchableOpacity
-                    style={[styles.iconCircle, { backgroundColor: cardBg, borderColor: border }]}
-                    onPress={() => router.push('/search')}>
-                    <Search size={20} color={textPrimary} />
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.profileCircle, { backgroundColor: cardBg, borderColor: border }]} onPress={() => router.push('/profile')}>
-                    <View style={styles.avatar}>
-                      <Text style={styles.avatarTxt}>{user?.name?.charAt(0).toUpperCase() || 'A'}</Text>
-                    </View>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
+            <View style={{ paddingTop: 10 }}>
               {!user && (
                 <TouchableOpacity style={styles.nudge} onPress={() => router.push('/onboarding')}>
                   <Sparkles size={20} color="#fff" />
@@ -185,7 +158,7 @@ export default function UpdatesScreen() {
                   <ArrowRight size={18} color="#fff" />
                 </TouchableOpacity>
               )}
-            </LinearGradient>
+            </View>
 
             <HomeCarousel banners={banners} />
 
@@ -228,33 +201,21 @@ export default function UpdatesScreen() {
           </View>
         ) : null}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
   loader: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  headerGradient: { paddingBottom: 24, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, marginBottom: 12 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 24, marginBottom: 16 },
-  greeting: { fontSize: 13, fontWeight: '600' },
-  name: { fontSize: 26, fontWeight: '900', marginTop: 4 },
-  profileCircle: { width: 44, height: 44, borderRadius: 22, padding: 2, borderWidth: 1 },
-  avatar: { flex: 1, borderRadius: 20, backgroundColor: '#3B0764', justifyContent: 'center', alignItems: 'center' },
-  avatarTxt: { color: '#C4B5FD', fontSize: 18, fontWeight: '800' },
-  nudge: { marginHorizontal: 20, backgroundColor: '#5B21B6', borderRadius: 18, padding: 14, flexDirection: 'row', alignItems: 'center', gap: 12 },
-  nudgeTitle: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  topGreeting: { paddingHorizontal: 20, paddingTop: 20, marginBottom: 12 },
+  greeting: { fontSize: 13, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  name: { fontSize: 28, fontWeight: '900', marginTop: 4 },
+  nudge: { marginHorizontal: 20, backgroundColor: '#5B21B6', borderRadius: 18, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 20 },
+  nudgeTitle: { color: '#fff', fontSize: 15, fontWeight: '800' },
   nudgeSub: { color: '#DDD6FE', fontSize: 12 },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 1,
-  },
   section: { marginVertical: 12 },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 12 },
+  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 16 },
   sectionTitle: { fontSize: 18, fontWeight: '800' },
   viewAll: { fontSize: 13, fontWeight: '700' },
   regList: { paddingHorizontal: 20, gap: 12 },

@@ -14,6 +14,8 @@ export async function fetchExams(params?: {
     limit?: number;
     isPublished?: boolean;
     lifecycleStage?: string;
+    startDate?: string;
+    endDate?: string;
 }): Promise<{ exams: Exam[]; total: number }> {
     const { data } = await client.get('/', { params: { isPublished: true, ...params } });
     return {
@@ -43,4 +45,23 @@ export async function fetchTimeline(examId: string): Promise<LifecycleEvent[]> {
 export async function fetchSavedExams(userId: string): Promise<Exam[]> {
     const { data } = await client.get(`/saved/${userId}`);
     return data.data ?? [];
+}
+
+export async function fetchSeoPageBySlug(slug: string): Promise<any> {
+    const { data } = await axios.get(`${API.SEO_PAGES}/${encodeURIComponent(slug)}`);
+    return data.data;
+}
+
+export async function fetchSeoPages(params?: {
+    page?: number;
+    limit?: number;
+    category?: string;
+    search?: string;
+    isTrending?: boolean;
+}): Promise<{ pages: any[]; total: number }> {
+    const { data } = await axios.get(`${API.SEO_PAGES}/list`, { params });
+    return {
+        pages: data.data?.pages ?? [],
+        total: data.data?.total ?? 0
+    };
 }

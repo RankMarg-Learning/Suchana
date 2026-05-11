@@ -9,8 +9,10 @@ const LOCALHOST = Platform.OS === 'android' && !debuggerHost ? '10.0.2.2' : loca
 export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || `http://${localhost}:3001/api/v1`;
 
 export const API = {
+    BASE: BASE_URL,
     EXAMS: `${BASE_URL}/exams`,
     USERS: `${BASE_URL}/users`,
     PUSH_TOKENS: `${BASE_URL}/push-tokens`,
     CONFIG: `${BASE_URL}/config`,
+    SEO_PAGES: `${BASE_URL}/seo-pages`,
 } as const;

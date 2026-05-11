@@ -12,7 +12,9 @@ export type AdPlacement =
   | 'SAVED_FOOTER'
   | 'SAVED_FOOTER_NATIVE'
   | 'PROFILE_MIDDLE'
-  | 'PROFILE_BOTTOM';
+  | 'PROFILE_BOTTOM'
+  | 'ARTICLES_TOP'
+  | 'ARTICLES_FOOTER';
 
 export interface AdConfig {
   enabled: boolean;
@@ -65,6 +67,14 @@ export const ADS_CONFIG: Record<AdPlacement, AdConfig> = {
     adUnitId: AD_UNIT_IDS.NATIVE,
   },
   PROFILE_BOTTOM: {
+    enabled: true,
+    adUnitId: AD_UNIT_IDS.BANNER,
+  },
+  ARTICLES_TOP: {
+    enabled: true,
+    adUnitId: AD_UNIT_IDS.NATIVE,
+  },
+  ARTICLES_FOOTER: {
     enabled: true,
     adUnitId: AD_UNIT_IDS.BANNER,
   },
