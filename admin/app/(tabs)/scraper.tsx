@@ -350,8 +350,8 @@ function SourceModal({ visible, initial, onClose, onSave }: { visible: boolean, 
               { id: 'SSC', label: 'SSC' },
               { id: 'STATE_PSC', label: 'State PSC' },
               { id: 'TEACHING_ELIGIBILITY', label: 'Teaching' },
-              { id: 'ENGINEERING_ENTRANCE', label: 'Engineering' },
-              { id: 'MEDICAL_ENTRANCE', label: 'Medical' },
+              { id: 'ENGINEERING_EXAM', label: 'Engineering' },
+              { id: 'MEDICAL_EXAM', label: 'Medical' },
               { id: 'OTHER', label: 'Other' },
             ].map(c => (
               <TouchableOpacity

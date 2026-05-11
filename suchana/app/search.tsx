@@ -24,8 +24,8 @@ const CATEGORIES: { label: string; value: ExamCategory }[] = [
   { label: 'State PSC', value: ExamCategory.STATE_PSC },
   { label: 'Teaching', value: ExamCategory.TEACHING_ELIGIBILITY },
   { label: 'Police', value: ExamCategory.POLICE_JOBS },
-  { label: 'Medical', value: ExamCategory.MEDICAL_ENTRANCE },
-  { label: 'Engineering', value: ExamCategory.ENGINEERING_ENTRANCE },
+  { label: 'Medical', value: ExamCategory.MEDICAL_EXAM },
+  { label: 'Engineering', value: ExamCategory.ENGINEERING_EXAM },
 ];
 
 const LEVELS: { label: string; value: ExamLevel | '' }[] = [

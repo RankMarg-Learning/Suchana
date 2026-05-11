@@ -26,8 +26,8 @@ const CATEGORY_DISPLAY = [
   { id: ExamCategory.DEFENCE_JOBS, name: "Defence", icon: ShieldCheck, desc: "NDA, CDS & AFCAT", color: "#ef4444" },
   { id: ExamCategory.TEACHING_ELIGIBILITY, name: "Teaching", icon: GraduationCap, desc: "CTET, NET & SET", color: "#8b5cf6" },
   { id: ExamCategory.STATE_PSC, name: "State PSC", icon: Building, desc: "Provincial Services", color: "#06b6d4" },
-  { id: ExamCategory.ENGINEERING_ENTRANCE, name: "Engineering", icon: Settings, desc: "JEE Main & Advanced", color: "#ec4899" },
-  { id: ExamCategory.MEDICAL_ENTRANCE, name: "Medical", icon: Stethoscope, desc: "NEET UG & PG", color: "#f43f5e" },
+  { id: ExamCategory.ENGINEERING_EXAM, name: "Engineering", icon: Settings, desc: "JEE Main & Advanced", color: "#ec4899" },
+  { id: ExamCategory.MEDICAL_EXAM, name: "Medical", icon: Stethoscope, desc: "NEET UG & PG", color: "#f43f5e" },
 ];
 
 export default function HomePage() {

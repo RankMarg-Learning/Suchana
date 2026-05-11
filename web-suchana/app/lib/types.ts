@@ -117,10 +117,10 @@ export const CATEGORIES = [
   { value: "POLICE_JOBS", label: "Police", icon: "👮" },
   { value: "TEACHING_ELIGIBILITY", label: "Teaching", icon: "📚" },
   { value: "STATE_PSC", label: "State PSC", icon: "🏛️" },
-  { value: "ENGINEERING_ENTRANCE", label: "Engineering", icon: "🛠️" },
-  { value: "MEDICAL_ENTRANCE", label: "Medical", icon: "🩺" },
-  { value: "LAW_ENTRANCE", label: "Law", icon: "⚖️" },
-  { value: "MBA_ENTRANCE", label: "Management", icon: "💼" },
+  { value: "ENGINEERING_EXAM", label: "Engineering", icon: "🛠️" },
+  { value: "MEDICAL_EXAM", label: "Medical", icon: "🩺" },
+  { value: "LAW_EXAM", label: "Law", icon: "⚖️" },
+  { value: "MBA_EXAM", label: "Management", icon: "💼" },
 ];
 
 export const STATUSES = [

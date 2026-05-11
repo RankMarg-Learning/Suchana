@@ -19,10 +19,10 @@ const CATEGORY_DISPLAY = [
   { id: ExamCategory.DEFENCE_JOBS, name: "Defence", icon: ShieldCheck, desc: "NDA, CDS, AFCAT & Agniveer" },
   { id: ExamCategory.TEACHING_ELIGIBILITY, name: "Teaching", icon: GraduationCap, desc: "CTET, NET, KVS & States" },
   { id: ExamCategory.STATE_PSC, name: "State PSC", icon: Building, desc: "BPSC, UPPCS, MPSC & Others" },
-  { id: ExamCategory.ENGINEERING_ENTRANCE, name: "Engineering", icon: Settings, desc: "JEE Main, Advanced & BITSET" },
-  { id: ExamCategory.MEDICAL_ENTRANCE, name: "Medical", icon: Stethoscope, desc: "NEET UG, PG & AIIMS" },
-  { id: ExamCategory.LAW_ENTRANCE, name: "Law / Judiciary", icon: Scale, desc: "CLAT, AILET & State PCS-J" },
-  { id: ExamCategory.MBA_ENTRANCE, name: "Management", icon: Briefcase, desc: "CAT, MAT, XAT & GMAT" },
+  { id: ExamCategory.ENGINEERING_EXAM, name: "Engineering", icon: Settings, desc: "JEE Main, Advanced & BITSET" },
+  { id: ExamCategory.MEDICAL_EXAM, name: "Medical", icon: Stethoscope, desc: "NEET UG, PG & AIIMS" },
+  { id: ExamCategory.LAW_EXAM, name: "Law / Judiciary", icon: Scale, desc: "CLAT, AILET & State PCS-J" },
+  { id: ExamCategory.MBA_EXAM, name: "Management", icon: Briefcase, desc: "CAT, MAT, XAT & GMAT" },
   { id: ExamCategory.POLICE_JOBS, name: "Police & SI", icon: ShieldCheck, desc: "State Police & Central Forces" },
 ];
 
