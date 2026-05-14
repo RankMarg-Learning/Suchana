@@ -57,6 +57,13 @@ export interface Author {
   updatedAt: string;
 }
 
+export interface Tag {
+  id: string;
+  name: string;
+  slug: string;
+  color: string;
+}
+
 export interface SeoPage {
   id: string;
   slug: string;
@@ -74,6 +81,7 @@ export interface SeoPage {
   authorId?: string | null;
   author?: Author | null;
   faqs?: { question: string; answer: string }[];
+  tags?: { tag: Tag }[];
   createdAt: string;
   updatedAt: string;
 }

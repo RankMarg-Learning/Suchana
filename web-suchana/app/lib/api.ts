@@ -224,6 +224,20 @@ export async function fetchSeoPages(
   }
 }
 
+export async function fetchRelatedArticlesByTag(tagId: string, excludeSlug?: string, limit = 5): Promise<SeoPage[]> {
+  try {
+    const res = await fetch(`${API_BASE}/tags/${tagId}/related-pages?limit=${limit}${excludeSlug ? `&excludeSlug=${excludeSlug}` : ''}`, {
+      next: { revalidate: 43200 }, // 12 hours
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.data || [];
+  } catch (err) {
+    console.error("Error fetching related articles by tag:", err);
+    return [];
+  }
+}
+
 export async function fetchAllSeoPageSlugs(): Promise<string[]> {
   try {
     const res = await fetchWithRetry(

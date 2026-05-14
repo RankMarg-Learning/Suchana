@@ -116,14 +116,14 @@ export default function MarkdownRenderer({
             }
             if (custom === 'read-more') {
               return (
-                <div className="callout-box callout-related !border-l-0 !pl-0 !items-start gap-3">
+                <div className="callout-box callout-related !border-x-0 !border-y !border-border !rounded-none !shadow-none !bg-transparent !py-3 !my-4 !pl-0 !items-center gap-3 hover:!translate-x-0 transition-none">
                   <div className="flex-shrink-0 mt-1">
                     <span className="bg-primary text-primary-foreground text-[9px] font-bold px-2 py-1 rounded uppercase tracking-wider">
                       Read More
                     </span>
                   </div>
                   <div className="callout-content">
-                    <a href={url} className="underline underline-offset-4 font-bold decoration-primary/40">{label}</a>
+                    <a href={url} className="font-bold hover:text-primary hover:underline underline-offset-4 decoration-primary/40 transition-colors duration-200">{label}</a>
                   </div>
                 </div>
               );

@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeoPages } from '../lib/api';
 import LatestArticlesSection from './LatestArticlesSection';
+import { Share2, Facebook, Twitter, MessageCircle } from 'lucide-react';
 import { SeoPage } from '../lib/types';
 import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd } from './AdUnits';
 import { cleanLabel } from '../lib/types';
 import FAQSection from './FAQSection';
+import { ImportantLinksWidget, RelatedArticlesWidget, ExamTimelineWidget, CategoryWidget } from './SidebarWidgets';
 
 interface Props {
   page: SeoPage;
@@ -16,11 +18,42 @@ interface Props {
 }
 
 export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
-  // Fetch Latest site-wide guides
   const { data: latestData = [] } = useQuery({
     queryKey: ['latest-guides'],
     queryFn: () => fetchSeoPages(1, 5).then(res => res.pages ?? []),
   });
+
+  const handleShare = (platform: string) => {
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const shareTitle = page.title;
+    const url = encodeURIComponent(shareUrl);
+    const title = encodeURIComponent(shareTitle);
+
+    let shareLink = '';
+    switch (platform) {
+      case 'twitter':
+        shareLink = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+        break;
+      case 'facebook':
+        shareLink = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+        break;
+      case 'whatsapp':
+        shareLink = `https://api.whatsapp.com/send?text=${title}%20${url}`;
+        break;
+      case 'generic':
+        if (navigator.share) {
+          navigator.share({ title: shareTitle, url: shareUrl }).catch(() => { });
+          return;
+        } else {
+          navigator.clipboard.writeText(shareUrl);
+          alert('Link copied to clipboard!');
+          return;
+        }
+    }
+    if (shareLink) {
+      window.open(shareLink, '_blank', 'width=600,height=400');
+    }
+  };
 
   return (
     <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
@@ -32,8 +65,9 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
 
       <div className="app-shell">
         <aside className="sidebar-left">
+          <ImportantLinksWidget />
+
           <SidebarAd id="article-left-ad-1" tall />
-          <SidebarAd id="article-left-ad-2" />
         </aside>
 
         <main className="feed-main">
@@ -83,7 +117,17 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
                   <span>•</span>
                   <span>5 min read</span>
                 </div>
+                {/* Social Share Bar */}
+                <div className="share-bar" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Share:</span>
+                  <button onClick={() => handleShare('twitter')} className="share-btn twitter"><Twitter size={16} /></button>
+                  <button onClick={() => handleShare('facebook')} className="share-btn facebook"><Facebook size={16} /></button>
+                  <button onClick={() => handleShare('whatsapp')} className="share-btn whatsapp"><MessageCircle size={16} /></button>
+                  <button onClick={() => handleShare('generic')} className="share-btn generic"><Share2 size={16} /></button>
+                </div>
               </div>
+
+
             </header>
 
             {page.ogImage && (
@@ -113,6 +157,7 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
         </main>
 
         <aside className="sidebar-right">
+          <CategoryWidget />
           <SidebarAd id="article-right-ad-1" />
           <SidebarAd id="article-right-ad-2" tall />
         </aside>

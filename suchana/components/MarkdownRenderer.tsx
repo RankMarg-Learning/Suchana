@@ -116,8 +116,8 @@ export function MarkdownRenderer({ content, variant = 'default', style, includeT
     link: { color: tint },
     table: { borderWidth: 1, borderColor: border, borderRadius: 8, marginVertical: 10, backgroundColor: cardBg },
     thead: { backgroundColor: border, borderBottomWidth: 1, borderBottomColor: border },
-    th: { padding: 12, fontWeight: 'bold' as const, color: textPrimary, borderRightWidth: 1, borderRightColor: border, width: 140, fontSize: 13 },
-    td: { padding: 12, color: textMuted, borderRightWidth: 1, borderRightColor: border, borderBottomWidth: 1, borderBottomColor: border, width: 140, fontSize: 13 },
+    th: { padding: 12, fontWeight: 'bold' as const, color: textPrimary, borderRightWidth: 1, borderRightColor: border, width: 140, fontSize: 16 },
+    td: { padding: 12, color: textMuted, borderRightWidth: 1, borderRightColor: border, borderBottomWidth: 1, borderBottomColor: border, width: 140, fontSize: 16 },
     tr: { flexDirection: 'row' as const },
     image: { width: '100%', height: 200, borderRadius: 12, marginVertical: 10 },
   };
@@ -192,7 +192,7 @@ export function MarkdownRenderer({ content, variant = 'default', style, includeT
         return (
             <TouchableOpacity 
                 key={index} 
-                style={[styles.readMore, { backgroundColor: cardBg, borderColor: border }]}
+                style={[styles.readMore, { backgroundColor: 'transparent', borderTopColor: border, borderBottomColor: border }]}
                 onPress={() => handleLinkPress(url)}
             >
                 <View style={[styles.readMoreBadge, { backgroundColor: tint }]}>
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   socialTitle: { fontSize: 16, fontWeight: '800', lineHeight: 20 },
   socialBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   socialBadgeText: { color: '#fff', fontSize: 10, fontWeight: '900', textTransform: 'uppercase' },
-  readMore: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 18, borderWidth: 1, marginVertical: 12, gap: 12 },
+  readMore: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, marginVertical: 16, gap: 12, borderTopWidth: 1, borderBottomWidth: 1, borderRadius: 0 },
   readMoreBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 },
   readMoreBadgeText: { color: '#fff', fontSize: 9, fontWeight: '900', textTransform: 'uppercase' },
   readMoreText: { flex: 1, fontSize: 15, fontWeight: '800' },
