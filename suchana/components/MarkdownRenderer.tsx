@@ -37,6 +37,12 @@ const markdownRules = {
       />
     );
   },
+  ins: (node: any, children: any, parent: any, styles: any) => (
+    <Text key={node.key} style={{ textDecorationLine: 'underline' }}>{children}</Text>
+  ),
+  u: (node: any, children: any, parent: any, styles: any) => (
+    <Text key={node.key} style={{ textDecorationLine: 'underline' }}>{children}</Text>
+  ),
 };
 
 interface Props {
@@ -66,14 +72,17 @@ export function MarkdownRenderer({ content, variant = 'default', style, includeT
     return false;
   };
 
-  const processedContent = React.useMemo(() => formatDatesInText(content, includeTime), [content, includeTime]);
+  const processedContent = React.useMemo(() => {
+    let final = content.replace(/\\n/g, "\n");
+    return formatDatesInText(final, includeTime);
+  }, [content, includeTime]);
 
   // Parsing logic for blocks
   const blocks = React.useMemo(() => {
     if (!processedContent) return [];
     
     // Regex to find shortcodes: [TYPE: Content]
-    const shortcodeRegex = /\[(MCQ|BUTTON|TELEGRAM|WHATSAPP|TIMELINE|READMORE|BOOK|BOOKGRID):(.*?)\]/gi;
+    const shortcodeRegex = /\[(MCQ|BUTTON|TELEGRAM|WHATSAPP|TIMELINE|READMORE|BOOK|BOOKGRID):([\s\S]*?)\]/gi;
     
     const result = [];
     let lastIndex = 0;
@@ -141,7 +150,7 @@ export function MarkdownRenderer({ content, variant = 'default', style, includeT
       case 'MCQ': {
         const [question, optionsStr, answer, solution] = block.data.split('|').map((s: string) => s.trim());
         const options = optionsStr.split(';').map((s: string) => s.trim());
-        return <MCQComponent key={index} question={question} options={options} answer={parseInt(answer)} solution={solution} />;
+        return <MCQComponent key={index} question={question} options={options} answer={parseInt(answer)} solution={solution} styles={activeStyles} handleLinkPress={handleLinkPress} />;
       }
       case 'TELEGRAM':
       case 'WHATSAPP':
@@ -226,7 +235,7 @@ export function MarkdownRenderer({ content, variant = 'default', style, includeT
   );
 }
 
-function MCQComponent({ question, options, answer, solution }: any) {
+function MCQComponent({ question, options, answer, solution, styles: markdownStyles, handleLinkPress }: any) {
   const [selected, setSelected] = useState<number | null>(null);
   const tint = useThemeColor({}, 'tint');
   const textPrimary = useThemeColor({}, 'text');
@@ -239,7 +248,12 @@ function MCQComponent({ question, options, answer, solution }: any) {
 
   return (
     <View style={styles.mcqContainer}>
-      <Text style={[styles.mcqQuestion, { color: textPrimary }]}>{question}</Text>
+      <Markdown 
+        style={{ ...markdownStyles, body: { ...markdownStyles.body, fontSize: 18, fontWeight: '800', lineHeight: 24, marginBottom: 16, color: textPrimary } }}
+        onLinkPress={handleLinkPress}
+      >
+        {question}
+      </Markdown>
       <View style={styles.optionsList}>
         {options.map((opt: string, idx: number) => {
           const isCorrect = idx + 1 === answer;
@@ -261,7 +275,14 @@ function MCQComponent({ question, options, answer, solution }: any) {
               <View style={[styles.optionIndex, { backgroundColor: showResult && isCorrect ? '#10b981' : showResult && isSelected ? '#ef4444' : border }]}>
                 <Text style={styles.optionIndexText}>{String.fromCharCode(65 + idx)}</Text>
               </View>
-              <Text style={[styles.optionText, { color: textPrimary }]}>{opt}</Text>
+              <View style={{ flex: 1 }}>
+                <Markdown 
+                  style={{ ...markdownStyles, body: { ...markdownStyles.body, fontSize: 15, fontWeight: '600', color: textPrimary } }} 
+                  onLinkPress={handleLinkPress}
+                >
+                  {opt}
+                </Markdown>
+              </View>
               {showResult && isCorrect && <CheckCircle size={18} color="#10b981" />}
               {showResult && isSelected && !isCorrect && <AlertTriangle size={18} color="#ef4444" />}
             </TouchableOpacity>
@@ -274,7 +295,12 @@ function MCQComponent({ question, options, answer, solution }: any) {
                 <Lightbulb size={16} color={tint} />
                 <Text style={[styles.solutionTitle, { color: tint }]}>Explanation</Text>
             </View>
-            <Text style={[styles.solutionText, { color: textMuted }]}>{solution}</Text>
+            <Markdown 
+              style={{ ...markdownStyles, body: { ...markdownStyles.body, fontSize: 14, lineHeight: 22, color: textMuted } }} 
+              onLinkPress={handleLinkPress}
+            >
+              {solution}
+            </Markdown>
         </View>
       )}
     </View>
