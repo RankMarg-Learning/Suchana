@@ -1,14 +1,14 @@
 import Link from "next/link";
 import React from "react";
-import { 
-  Clock, 
-  ClipboardCheck, 
-  Bell, 
-  Wrench, 
-  Calendar, 
-  CircleDollarSign, 
-  CalendarDays, 
-  Map 
+import {
+  Clock,
+  ClipboardCheck,
+  Bell,
+  Wrench,
+  Calendar,
+  CircleDollarSign,
+  CalendarDays,
+  Map
 } from "lucide-react";
 
 interface HomeSidebarProps {
@@ -61,7 +61,7 @@ export default function HomeSidebar({ closingSoon, trendingExams }: HomeSidebarP
         </div>
         <div className="sw-body">
           {trendingExams.slice(0, 6).map((exam: any, i: number) => (
-            <Link href={`/e/${exam.slug}`} key={exam.id} className="score-item">
+            <Link href={`/exam/${exam.slug}`} key={exam.id} className="score-item">
               <div className="sc-rank">0{i + 1}</div>
               <div className="sc-exam">{exam.shortTitle || exam.title}</div>
               <span className={`sc-status ${i % 2 === 0 ? 'ss-open' : 'ss-exam'}`}>{exam.status?.replace(/_/g, ' ')}</span>
