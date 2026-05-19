@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { Mail, MapPin, Clock, MessageSquare, ShieldCheck, Zap, Smartphone, Send, MessageCircle, ExternalLink } from "lucide-react";
+import { Mail, MapPin, Clock, MessageSquare, ShieldCheck, Send, MessageCircle, ExternalLink, Smartphone, Wrench, Calendar, Coins, BookOpen } from "lucide-react";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -9,163 +9,178 @@ export const metadata: Metadata = {
 
 export default function ContactPage() {
   return (
-    <main className="min-h-screen">
-      {/* ─── Hero ─── */}
-      <section className="section" style={{ paddingTop: '100px', paddingBottom: '60px', position: 'relative' }}>
-         <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: "radial-gradient(ellipse 70% 60% at 50% -10%, rgba(var(--accent-rgb), 0.12) 0%, transparent 70%)",
-              zIndex: 0
-            }}
-          />
-        <div className="container" style={{ position: 'relative', zIndex: 1 }}>
-          <div className="hero-badge">
-            <span className="hero-badge-dot" />
-            Support Center
+    <div className="wrap-home" style={{ marginTop: '24px', marginBottom: '60px' }}>
+      <div className="page-grid">
+        
+        {/* LEFT COLUMN: MAIN CONTENT */}
+        <div className="content-col">
+          
+          {/* HEADER */}
+          <div className="sh">
+            <div className="sh-title">
+              <span className="cat-tag">SUPPORT</span> Contact &amp; Support Center
+            </div>
           </div>
-          <h1 className="section-title">
-            How can we <span className="text-accent">help you</span> today?
-          </h1>
-          <p className="section-desc">
-            Whether you&apos;re an aspirant with a question or a partner looking to collaborate, reach out via our official channels below.
-          </p>
-        </div>
-      </section>
 
-      {/* ─── Contact Channels ─── */}
-      <section className="section" style={{ paddingTop: '20px', paddingBottom: '100px' }}>
-        <div className="container">
-          <div className="features-grid">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
             
             {/* Email Channel */}
-            <div className="feature-card" style={{ background: 'linear-gradient(135deg, rgba(var(--accent-rgb), 0.08), transparent)', borderColor: 'rgba(var(--accent-rgb), 0.2)', padding: '40px' }}>
-              <div className="feature-icon" style={{ background: 'rgba(var(--accent-rgb), 0.15)', color: 'var(--accent)', width: '64px', height: '64px', borderRadius: '18px' }}>
-                <Mail size={28} />
+            <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '6px', background: 'rgba(124,58,237,0.06)', color: 'var(--accent)' }}>
+                  <Mail size={20} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Official Support Email</div>
+                  <a href="mailto:help@examsuchana.in" style={{ fontSize: '18px', fontWeight: 800, color: 'var(--ink)', textDecoration: 'none', display: 'block', marginTop: '2px' }}>
+                    help@examsuchana.in
+                  </a>
+                </div>
               </div>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
-                Official Support Email
-              </div>
-              <a href="mailto:help@examsuchana.in" style={{ fontSize: '22px', fontWeight: 800, color: 'var(--accent)', textDecoration: 'none', display: 'block', marginBottom: '16px', fontFamily: 'Space Grotesk' }}>
-                help@examsuchana.in
-              </a>
-              <p style={{ fontSize: '15px', color: 'var(--text-secondary)', lineHeight: 1.7 }}>
+              <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--text-muted)', margin: 0 }}>
                 Direct support for exam tracking, notification corrections, and partnership proposals. We review all messages within 24 hours.
               </p>
             </div>
 
-            {/* Social & Community - FIXED ICONS */}
-            <div className="feature-card" style={{ padding: '40px' }}>
-              <div className="feature-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', width: '64px', height: '64px', borderRadius: '18px' }}>
-                <MessageSquare size={28} />
+            {/* Social & Community */}
+            <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '6px', background: 'rgba(16,185,129,0.06)', color: '#10b981' }}>
+                  <MessageSquare size={20} />
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Active Communities</div>
+                  <h2 style={{ fontFamily: 'var(--hd)', fontSize: '18px', fontWeight: 800, color: 'var(--ink)', margin: '2px 0 0 0' }}>Join Candidate Channels</h2>
+                </div>
               </div>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '16px' }}>
-                Active Communities
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
                 <a href="https://t.me/examsuchana" target="_blank" rel="noopener noreferrer" 
-                  className="btn"
                   style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '12px 18px', 
-                    background: 'rgba(0, 136, 204, 0.08)',
-                    border: '1px solid rgba(0, 136, 204, 0.2)',
-                    borderRadius: '12px',
+                    padding: '12px 16px', 
+                    background: '#f9fafb',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
                     color: '#0088cc',
                     textDecoration: 'none',
                     fontWeight: 700,
-                    width: '100%'
+                    fontSize: '13.5px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <Send size={18} />
-                    Telegram Channel
-                  </div>
-                  <ExternalLink size={14} opacity={0.6} />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Send size={16} /> Telegram
+                  </span>
+                  <ExternalLink size={12} opacity={0.6} />
                 </a>
                 
                 <a href="https://wa.me/examsuchana" target="_blank" rel="noopener noreferrer" 
-                  className="btn"
                   style={{ 
                     display: 'flex', 
                     alignItems: 'center', 
                     justifyContent: 'space-between',
-                    padding: '12px 18px', 
-                    background: 'rgba(37, 211, 102, 0.08)',
-                    border: '1px solid rgba(37, 211, 102, 0.2)',
-                    borderRadius: '12px',
+                    padding: '12px 16px', 
+                    background: '#f9fafb',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
                     color: '#128c7e',
                     textDecoration: 'none',
                     fontWeight: 700,
-                    width: '100%'
+                    fontSize: '13.5px'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <MessageCircle size={18} />
-                    WhatsApp Updates
-                  </div>
-                  <ExternalLink size={14} opacity={0.6} />
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <MessageCircle size={16} /> WhatsApp
+                  </span>
+                  <ExternalLink size={12} opacity={0.6} />
                 </a>
               </div>
-              <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '20px', lineHeight: 1.6 }}>
+              
+              <p style={{ fontSize: '14px', lineHeight: 1.6, color: 'var(--text-muted)', margin: 0 }}>
                 Fastest exam notifications. Join thousands of aspirants receiving real-time alerts.
               </p>
             </div>
 
-            {/* Operational Info */}
-            <div className="feature-card" style={{ padding: '40px' }}>
-              <div className="feature-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', width: '64px', height: '64px', borderRadius: '18px' }}>
-                <Clock size={28} />
+            {/* Secondary Support Context */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--ink)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldCheck size={16} className="text-emerald-500" /> Data Integrity
+                </h3>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                  Spotted an error in an exam timeline? Email us the official gazette link. Our content team verifies and updates within 4 operational hours.
+                </p>
               </div>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px' }}>
-                Operating Hours
+              <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
+                <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--ink)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Smartphone size={16} className="text-purple-500" /> Mobile App Support
+                </h3>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', lineHeight: 1.6, margin: 0 }}>
+                  Experiencing issues with notification delivery or account synchronization? Reach out with your device model details for priority debugging.
+                </p>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
-                <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>Mon – Sat, 9:00 AM – 6:00 PM</div>
-                <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Indian Standard Time (IST)</div>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '14px', color: 'var(--text-secondary)' }}>
-                <MapPin size={14} color="var(--accent)" /> Pan-India Intelligence Operations
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* RIGHT COLUMN: SIDEBAR */}
+        <div className="sidebar-col">
+          
+          {/* OPERATIONAL INFORMATION */}
+          <div className="sw" style={{ marginTop: 0 }}>
+            <div className="sw-head flex items-center gap-1.5">
+              <Clock size={16} className="text-amber-500" /> Operations
+            </div>
+            <div className="sw-body">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div>
+                  <div style={{ fontSize: '14px', fontWeight: 800, color: 'var(--ink)' }}>Mon – Sat, 9:00 AM – 6:00 PM</div>
+                  <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>Indian Standard Time (IST)</div>
+                </div>
+                <div style={{ height: '1px', background: 'var(--border)' }} />
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '13px', color: 'var(--text-muted)' }}>
+                  <MapPin size={14} color="var(--accent)" /> Pan-India Intelligence
+                </div>
               </div>
             </div>
           </div>
 
-          {/* Secondary Support Context */}
-          <div style={{ marginTop: '48px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
-             <div className="feature-card" style={{ background: 'var(--bg-secondary)', border: 'none' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <ShieldCheck size={18} color="#10b981" /> Data Integrity
-                </h3>
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  Spotted an error in an exam timeline? Email us the official gazette link. Our content team verifies and updates within 4 operational hours.
-                </p>
-             </div>
-             <div className="feature-card" style={{ background: 'var(--bg-secondary)', border: 'none' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <Smartphone size={18} color="var(--accent)" /> Mobile App Support
-                </h3>
-                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-                  Experiencing issues with notification delivery or account synchronization? Reach out with your device model details for priority debugging.
-                </p>
-             </div>
+          {/* ASPIRANT TOOLSET */}
+          <div className="sw">
+            <div className="sw-head flex items-center gap-1.5">
+              <Wrench size={16} className="text-purple-400" /> Aspirant Toolset
+            </div>
+            <div className="sw-body">
+              <div className="tool-grid" style={{ gridTemplateColumns: '1fr' }}>
+                <Link href="/age-calculator" className="tool-btn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none' }}>
+                  <span className="tool-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Calendar size={18} />
+                  </span>
+                  Age Calculator
+                </Link>
+                <Link href="/salary-calculator" className="tool-btn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none' }}>
+                  <span className="tool-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Coins size={18} />
+                  </span>
+                  Salary Calculator
+                </Link>
+                <Link href="/syllabus" className="tool-btn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none' }}>
+                  <span className="tool-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <BookOpen size={18} />
+                  </span>
+                  Syllabus Maps
+                </Link>
+              </div>
+            </div>
           </div>
-        </div>
-      </section>
 
-      {/* Footer CTA */}
-      <section className="section">
-        <div className="container" style={{ textAlign: 'center' }}>
-          <div className="notify-card" style={{ padding: '60px 40px' }}>
-            <h2 className="section-title" style={{ margin: '0 0 16px' }}>Ready to target your next exam?</h2>
-            <Link href="/" className="btn btn-primary btn-lg">
-              Return to Control Center
-            </Link>
-          </div>
         </div>
-      </section>
-    </main>
+
+      </div>
+    </div>
   );
 }

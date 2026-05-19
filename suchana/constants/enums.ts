@@ -21,6 +21,10 @@ export const ExamCategory = {
     FOREIGN_STUDY_EXAMS: "FOREIGN_STUDY_EXAMS",
     SKILL_CERTIFICATION: "SKILL_CERTIFICATION",
     UNIVERSITY_EXAM: "UNIVERSITY_EXAM",
+    DESIGN_EXAM: "DESIGN_EXAM",
+    ARCHITECTURE_EXAM: "ARCHITECTURE_EXAM",
+    NURSING_EXAM: "NURSING_EXAM",
+    PHARMACY_EXAM: "PHARMACY_EXAM",
     OTHER: "OTHER"
 } as const;
 export type ExamCategory = (typeof ExamCategory)[keyof typeof ExamCategory];
@@ -81,7 +85,6 @@ export const STAGE_ORDER_MAP: Record<LifecycleStage, number> = {
     JOINING: 100,
 };
 
-
 export const LifecycleEventType = {
     RELEASE: 'RELEASE',     // Notification out, admit card released, result out
     START: 'START',       // Registration window opens, exam starts
@@ -122,3 +125,99 @@ export const QualificationLevel = {
     OTHER: 'OTHER',
 } as const;
 export type QualificationLevel = (typeof QualificationLevel)[keyof typeof QualificationLevel];
+
+/**
+ * Status to show while a lifecycle stage window is CURRENTLY OPEN.
+ * Returns null for stages that should show ACTIVE (ANSWER_KEY, DOC_VERIFICATION, JOINING).
+ */
+export const getStatusFromStage = (stage: string): ExamStatus | null => {
+    if (stage === LifecycleStage.NOTIFICATION) return ExamStatus.NOTIFICATION;
+    if (stage === LifecycleStage.REGISTRATION) return ExamStatus.REGISTRATION_OPEN;
+    if (stage === LifecycleStage.CORRECTION_WINDOW) return ExamStatus.REGISTRATION_OPEN;
+    if (stage === LifecycleStage.EXAM_CITY) return ExamStatus.ACTIVE;
+    if (stage === LifecycleStage.ADMIT_CARD) return ExamStatus.ADMIT_CARD_OUT;
+    if (stage === LifecycleStage.EXAM) return ExamStatus.EXAM_ONGOING;
+    if (stage === LifecycleStage.ANSWER_KEY) return ExamStatus.ANSWER_KEY_OUT;
+    if (stage === LifecycleStage.RESULT) return ExamStatus.RESULT_DECLARED;
+    // DOCUMENT_VERIFICATION, JOINING → show ACTIVE (generic in-progress)
+    return null;
+};
+
+/**
+ * Status to show when this stage is the LAST completed event and
+ * there are no more future events (terminal state before archival).
+ * Only called for the final event, after its window has closed.
+ */
+export const getTerminalStatusFromStage = (stage: string): ExamStatus => {
+    if (stage === LifecycleStage.REGISTRATION) return ExamStatus.REGISTRATION_CLOSED;
+    if (stage === LifecycleStage.EXAM) return ExamStatus.EXAM_COMPLETED;
+    if (stage === LifecycleStage.RESULT) return ExamStatus.RESULT_DECLARED;
+    if (stage === LifecycleStage.DOCUMENT_VERIFICATION) return ExamStatus.RESULT_DECLARED;
+    if (stage === LifecycleStage.JOINING) return ExamStatus.RESULT_DECLARED;
+    // Everything else that ends last → ACTIVE (e.g. exam day was last listed event)
+    return ExamStatus.ACTIVE;
+};
+
+export const SeoPageCategory = {
+    NEWS: 'NEWS',
+    NOTIFICATION: 'NOTIFICATION',
+    ADMIT_CARD: 'ADMIT_CARD',
+    RESULT: 'RESULT',
+    ANSWER_KEY: 'ANSWER_KEY',
+    CUTOFF: 'CUTOFF',
+    SYLLABUS: 'SYLLABUS',
+    EXAM_PATTERN: 'EXAM_PATTERN',
+    ELIGIBILITY: 'ELIGIBILITY',
+    SALARY: 'SALARY',
+    VACANCY: 'VACANCY',
+    APPLICATION_FORM: 'APPLICATION_FORM',
+    BOOKS: 'BOOKS',
+    PREPARATION_STRATEGY: 'PREPARATION_STRATEGY',
+    PREVIOUS_YEAR_PAPER: 'PREVIOUS_YEAR_PAPER',
+    MOCK_TEST: 'MOCK_TEST',
+    ANALYSIS: 'ANALYSIS',
+    COUNSELLING: 'COUNSELLING',
+    DOCUMENT_VERIFICATION: 'DOCUMENT_VERIFICATION',
+    MERIT_LIST: 'MERIT_LIST',
+    SCORECARD: 'SCORECARD',
+    IMPORTANT_DATES: 'IMPORTANT_DATES',
+    SELECTION_PROCESS: 'SELECTION_PROCESS',
+    AGE_LIMIT: 'AGE_LIMIT',
+    APPLICATION_FEE: 'APPLICATION_FEE',
+    STATE_EXAMS: 'STATE_EXAMS',
+    CENTRAL_EXAMS: 'CENTRAL_EXAMS',
+    CURRENT_AFFAIRS: 'CURRENT_AFFAIRS',
+    GK_STATIC: 'GK_STATIC',
+    TOOL: 'TOOL',
+    COMPARISON: 'COMPARISON',
+    GUIDE: 'GUIDE',
+    OTHERS: 'OTHERS',
+} as const;
+
+export type SeoPageCategory = (typeof SeoPageCategory)[keyof typeof SeoPageCategory];
+
+export const ARTICLE_CATEGORIES: { value: SeoPageCategory; label: string }[] = [
+    { value: 'NEWS', label: 'News' },
+    { value: 'NOTIFICATION', label: 'Notification' },
+    { value: 'ADMIT_CARD', label: 'Admit Card' },
+    { value: 'RESULT', label: 'Result' },
+    { value: 'ANSWER_KEY', label: 'Answer Key' },
+    { value: 'CUTOFF', label: 'Cut Off' },
+    { value: 'SYLLABUS', label: 'Syllabus' },
+    { value: 'EXAM_PATTERN', label: 'Exam Pattern' },
+    { value: 'SALARY', label: 'Salary & Job Profile' },
+    { value: 'VACANCY', label: 'Vacancy Details' },
+    { value: 'BOOKS', label: 'Best Books' },
+    { value: 'PREPARATION_STRATEGY', label: 'Preparation Strategy' },
+    { value: 'PREVIOUS_YEAR_PAPER', label: 'Previous Year Paper' },
+    { value: 'MOCK_TEST', label: 'Mock Test' },
+    { value: 'ANALYSIS', label: 'Exam Analysis' },
+    { value: 'COUNSELLING', label: 'Counselling' },
+    { value: 'SELECTION_PROCESS', label: 'Selection Process' },
+    { value: 'CURRENT_AFFAIRS', label: 'Current Affairs' },
+    { value: 'GK_STATIC', label: 'Static GK' },
+    { value: 'TOOL', label: 'Utility Tool' },
+    { value: 'COMPARISON', label: 'Comparison' },
+    { value: 'GUIDE', label: 'Complete Guide' },
+    { value: 'OTHERS', label: 'Others' },
+];

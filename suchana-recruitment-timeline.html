@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indian Navy SSC Executive IT Recruitment 2026 — Suchana</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:      #0c0f17;
+  --ink2:     #161b2e;
+  --ink3:     #1e2640;
+  --paper:    #f5f2eb;
+  --paper2:   #ede9df;
+  --gold:     #c9860a;
+  --gold-lt:  #f0a813;
+  --sky:      #1a4fbd;
+  --sky-lt:   #4272d4;
+  --mint:     #0e7c5a;
+  --rose:     #c0392b;
+  --violet:   #5c34b5;
+  --text:     #1c2235;
+  --text2:    #4a5270;
+  --text3:    #8b94b0;
+  --border:   #d8d3c8;
+  --hd:       'Playfair Display', Georgia, serif;
+  --body:     'Sora', sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+/* ─── TOPBAR ─── */
+.topbar {
+  background: var(--ink);
+  color: rgba(255,255,255,.55);
+  font-size: 11px; font-family: var(--mono);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 24px; gap: 16px; flex-wrap: wrap;
+  letter-spacing: .3px;
+}
+.topbar a { color: rgba(255,255,255,.55); transition: color .2s; }
+.topbar a:hover { color: var(--gold-lt); }
+.tb-left { display: flex; gap: 16px; align-items: center; }
+.tb-right { display: flex; gap: 14px; align-items: center; }
+.tb-live {
+  background: var(--rose); color: #fff;
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  padding: 2px 7px; border-radius: 3px;
+  animation: blink 1.6s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* ─── MASTHEAD ─── */
+.masthead {
+  background: var(--ink);
+  border-bottom: 3px solid var(--gold);
+  padding: 18px 24px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center; gap: 16px;
+}
+.mh-brand {
+  font-family: var(--hd);
+  font-size: 44px; font-weight: 900;
+  color: #fff; letter-spacing: -1px; line-height: 1;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.mh-brand .dot { color: var(--gold); }
+.mh-tagline {
+  font-size: 10px; font-family: var(--mono);
+  color: rgba(255,255,255,.4); letter-spacing: 1.5px;
+  text-transform: uppercase; margin-top: 3px;
+}
+.mh-search {
+  display: flex;
+  border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
+  overflow: hidden; background: rgba(255,255,255,.05);
+}
+.mh-search input {
+  background: none; border: none; outline: none;
+  padding: 9px 14px; color: #fff; font-family: var(--body);
+  font-size: 13px; width: 260px;
+}
+.mh-search input::placeholder { color: rgba(255,255,255,.3); }
+.mh-search button {
+  background: var(--gold); border: none; cursor: pointer;
+  padding: 9px 16px; color: var(--ink); font-weight: 700;
+  font-family: var(--body); font-size: 12px; transition: background .2s;
+}
+.mh-search button:hover { background: var(--gold-lt); }
+.mh-right { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+.mh-stat { text-align: center; padding: 4px 12px; border-left: 1px solid rgba(255,255,255,.1); }
+.mh-stat .n { font-family: var(--hd); font-size: 18px; color: var(--gold-lt); display: block; }
+.mh-stat .l { font-size: 9px; color: rgba(255,255,255,.4); letter-spacing: 1px; text-transform: uppercase; }
+
+/* ─── NAV ─── */
+.nav-strip {
+  background: var(--ink2);
+  display: flex; align-items: stretch;
+  overflow-x: auto; scrollbar-width: none;
+}
+.nav-strip::-webkit-scrollbar { display: none; }
+.ns-item {
+  font-family: var(--body); font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,.6);
+  padding: 11px 16px; white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,.07);
+  transition: all .2s; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+}
+.ns-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+.ns-item.active { color: var(--gold-lt); border-bottom: 2px solid var(--gold); }
+.ns-item .badge {
+  background: var(--rose); color: #fff;
+  font-size: 9px; padding: 1px 5px; border-radius: 10px; font-weight: 700;
+}
+.ns-right { margin-left: auto; padding: 8px 16px; display: flex; align-items: center; }
+.btn-alert {
+  background: var(--gold); color: var(--ink); border: none;
+  padding: 6px 14px; border-radius: 6px; font-size: 11px;
+  font-weight: 700; cursor: pointer; font-family: var(--body); transition: all .2s;
+}
+.btn-alert:hover { background: var(--gold-lt); transform: translateY(-1px); }
+
+/* ─── TICKER ─── */
+.ticker-bar {
+  background: var(--gold);
+  display: flex; align-items: center; overflow: hidden; height: 34px;
+}
+.tk-head {
+  background: var(--ink); color: var(--gold-lt);
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; padding: 0 14px; height: 100%;
+  display: flex; align-items: center; white-space: nowrap; flex-shrink: 0;
+}
+.tk-scroll { overflow: hidden; flex: 1; }
+.tk-inner {
+  display: flex; animation: scroll 35s linear infinite;
+  white-space: nowrap; align-items: center; height: 34px;
+}
+.tk-inner span {
+  color: var(--ink); font-size: 12px; font-weight: 600;
+  padding: 0 24px; border-right: 1px solid rgba(0,0,0,.15);
+  height: 100%; display: inline-flex; align-items: center; gap: 6px;
+}
+.tk-inner span em { font-style: normal; font-size: 10px; background: var(--ink); color: var(--gold-lt); padding: 1px 6px; border-radius: 3px; font-family: var(--mono); }
+@keyframes scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+/* ─── BREADCRUMB ─── */
+.breadcrumb-bar {
+  background: var(--paper2);
+  border-bottom: 1px solid var(--border);
+  padding: 9px 24px;
+}
+.breadcrumb {
+  max-width: 1300px; margin: 0 auto;
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+}
+.breadcrumb a { color: var(--sky); transition: color .2s; }
+.breadcrumb a:hover { color: var(--sky-lt); }
+.breadcrumb .sep { color: var(--text3); }
+.breadcrumb .current { color: var(--text2); font-weight: 600; }
+
+/* ─── LAYOUT ─── */
+.wrap { max-width: 1300px; margin: 0 auto; padding: 0 20px; }
+.page-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 28px;
+  padding: 28px 0 48px;
+  align-items: start;
+}
+.content-col { min-width: 0; display: flex; flex-direction: column; gap: 24px; }
+.sidebar-col { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 0; }
+
+/* ─── ARTICLE HERO HEADER ─── */
+.recruit-header {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.recruit-hero-band {
+  background: linear-gradient(135deg, #0f1f4a 0%, #1a3a7c 50%, #0c2240 100%);
+  padding: 28px 28px 24px;
+  position: relative; overflow: hidden;
+}
+.recruit-hero-band::before {
+  content: '';
+  position: absolute; inset: 0; opacity: .05;
+  background-image: repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%);
+  background-size: 12px 12px;
+}
+.recruit-hero-band::after {
+  content: '⚓';
+  position: absolute; right: 28px; top: 50%; transform: translateY(-50%);
+  font-size: 80px; opacity: .07;
+}
+.rh-cats { display: flex; gap: 8px; margin-bottom: 14px; }
+.rh-cat {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 3px;
+}
+.rh-cat-nat { background: rgba(26,79,189,.3); color: #93c5fd; border: 1px solid rgba(147,197,253,.3); }
+.rh-cat-def { background: rgba(255,255,255,.08); color: rgba(255,255,255,.55); border: 1px solid rgba(255,255,255,.15); }
+.recruit-h1 {
+  font-family: var(--hd); font-size: 30px; font-weight: 900;
+  color: #fff; line-height: 1.2; margin-bottom: 10px;
+  position: relative; z-index: 1;
+}
+.recruit-org {
+  font-size: 12px; color: rgba(255,255,255,.5); font-family: var(--mono);
+  letter-spacing: .5px; position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 6px;
+}
+.recruit-org::before { content: '🏛️'; font-size: 13px; }
+
+.recruit-meta-bar {
+  padding: 14px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+  border-top: 1px solid var(--border);
+}
+.status-pill {
+  display: inline-flex; align-items: center; gap: 7px;
+  border-radius: 20px; padding: 6px 14px;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  letter-spacing: .5px; border: 1.5px solid;
+}
+.status-open {
+  background: #f0fdf4; color: #166534;
+  border-color: #86efac;
+}
+.status-open .dot-pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #16a34a;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.3)} }
+.status-tbd { background: var(--paper2); color: var(--text3); border-color: var(--border); }
+.status-done { background: #f5f3ff; color: #5b21b6; border-color: #c4b5fd; }
+
+.recruit-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.action-btn {
+  display: flex; align-items: center; gap: 6px;
+  border: 1px solid var(--border); border-radius: 6px;
+  padding: 7px 14px; font-size: 11px; font-weight: 600;
+  cursor: pointer; transition: all .2s; background: var(--paper);
+  font-family: var(--body); color: var(--text2);
+}
+.action-btn:hover { border-color: var(--ink); color: var(--ink); background: var(--paper2); }
+.action-btn.icon-only { padding: 7px 10px; }
+
+/* ─── QUICK STATS ROW ─── */
+.quick-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
+  border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
+  background: var(--border);
+}
+.qs-item {
+  background: #fff; padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 3px;
+}
+.qs-label {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  color: var(--text3); letter-spacing: 1px; text-transform: uppercase;
+}
+.qs-val {
+  font-family: var(--hd); font-size: 18px; font-weight: 700; color: var(--ink);
+}
+.qs-sub { font-size: 11px; color: var(--text2); }
+
+/* ─── VERTICAL TIMELINE ─── */
+.timeline-section {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.tls-head {
+  background: var(--ink);
+  padding: 14px 24px;
+  display: flex; align-items: center; gap: 10px;
+  justify-content: space-between;
+}
+.tls-head-title {
+  font-family: var(--hd); font-size: 18px; font-weight: 700;
+  color: #fff; display: flex; align-items: center; gap: 10px;
+}
+.tls-head-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.tls-head-meta {
+  font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.4);
+  letter-spacing: .5px;
+}
+.tls-body { padding: 24px 24px 12px; }
+
+/* vertical timeline items */
+.vtl { display: flex; flex-direction: column; }
+.vtl-item {
+  display: flex; gap: 0; position: relative;
+}
+.vtl-item:last-child .vtl-line { display: none; }
+
+/* left column: icon + line */
+.vtl-left {
+  display: flex; flex-direction: column; align-items: center;
+  width: 52px; flex-shrink: 0; padding-top: 2px;
+}
+.vtl-dot-wrap {
+  position: relative; z-index: 2;
+}
+.vtl-dot {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; border: 2px solid;
+  transition: all .3s;
+}
+.vtl-dot-active {
+  background: #ede9fe; border-color: #a78bfa;
+  box-shadow: 0 0 0 4px rgba(167,139,250,.15);
+}
+.vtl-dot-done {
+  background: #f0fdf4; border-color: #86efac;
+}
+.vtl-dot-tbd {
+  background: var(--paper2); border-color: var(--border);
+}
+.vtl-line {
+  width: 2px; background: var(--border);
+  flex: 1; min-height: 20px; margin: 6px 0;
+  position: relative;
+}
+.vtl-line-active { background: linear-gradient(to bottom, #a78bfa, var(--border)); }
+.vtl-line-done { background: #86efac; }
+
+/* right column: content */
+.vtl-right {
+  flex: 1; padding: 0 0 28px 20px;
+}
+.vtl-item-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px; margin-bottom: 4px;
+}
+.vtl-title {
+  font-family: var(--hd); font-size: 17px; font-weight: 700;
+  color: var(--ink); line-height: 1.3;
+}
+.vtl-sub {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--text3); margin-bottom: 6px;
+}
+.vtl-sub-active { color: #7c3aed; }
+.vtl-sub-done { color: var(--mint); }
+
+.vtl-badge {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 4px 10px; border-radius: 4px; letter-spacing: 1px;
+  text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+  border: 1px solid;
+}
+.badge-active { background: #ede9fe; color: #6d28d9; border-color: #c4b5fd; }
+.badge-tbd    { background: var(--paper2); color: var(--text3); border-color: var(--border); }
+.badge-done   { background: #f0fdf4; color: #166534; border-color: #86efac; }
+.badge-closed { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }
+.badge-live   { background: #fee2e2; color: #991b1b; border-color: #fca5a5;
+  animation: blink 1.6s ease-in-out infinite; }
+
+.vtl-date {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--text2);
+  margin-bottom: 10px;
+  font-family: var(--mono);
+}
+.vtl-date-icon { font-size: 12px; color: var(--text3); }
+.vtl-date-active { color: #7c3aed; }
+
+.vtl-desc {
+  font-size: 13px; color: var(--text2);
+  line-height: 1.75; margin-bottom: 12px;
+}
+
+.vtl-cta {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 9px 20px; border-radius: 5px;
+  font-family: var(--body); font-size: 13px; font-weight: 700;
+  cursor: pointer; border: none; transition: all .2s;
+  text-decoration: none;
+}
+.cta-violet { background: var(--violet); color: #fff; }
+.cta-violet:hover { background: #6d28d9; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(92,52,181,.35); }
+.cta-gold { background: var(--gold); color: var(--ink); }
+.cta-gold:hover { background: var(--gold-lt); transform: translateY(-1px); }
+.cta-outline-ink {
+  background: transparent; color: var(--text2);
+  border: 1px solid var(--border); border-radius: 5px;
+  padding: 9px 16px; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all .2s;
+  font-family: var(--body);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.cta-outline-ink:hover { border-color: var(--ink); color: var(--ink); }
+
+.vtl-note {
+  margin-top: 10px;
+  background: var(--paper); border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: 3px; padding: 9px 13px;
+  font-size: 12px; color: var(--text2); line-height: 1.6;
+}
+.vtl-note strong { color: var(--ink); }
+
+/* ─── INFO TABLE ─── */
+.info-table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 4px; overflow: hidden;
+}
+.info-table th {
+  background: var(--ink); color: var(--gold-lt);
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 10px 14px; text-align: left;
+}
+.info-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top; line-height: 1.5;
+}
+.info-table tr:last-child td { border-bottom: none; }
+.info-table tr:nth-child(even) td { background: var(--paper); }
+.info-table .td-key { font-weight: 600; color: var(--text); width: 200px; font-size: 12px; }
+.info-table .td-val { color: var(--text2); font-size: 13px; }
+
+.pill {
+  display: inline-block; font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 2px 7px; border-radius: 3px; letter-spacing: .5px; margin-right: 4px;
+}
+.pill-green { background: #d1fae5; color: #065f46; }
+.pill-blue  { background: #dbeafe; color: #1e40af; }
+.pill-amber { background: #fef3c7; color: #92400e; }
+.pill-red   { background: #fee2e2; color: #991b1b; }
+.pill-violet{ background: #ede9fe; color: #5b21b6; }
+
+/* ─── SECTION HEADER ─── */
+.sh {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 2px solid var(--ink); padding-bottom: 8px; margin-bottom: 16px;
+}
+.sh-title {
+  font-family: var(--hd); font-size: 20px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px; color: var(--ink);
+}
+.sh-title .cat-tag {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  background: var(--ink); color: var(--gold-lt);
+  padding: 2px 8px; border-radius: 3px; letter-spacing: 1px;
+}
+.sh-link {
+  font-size: 11px; font-family: var(--mono); color: var(--sky); font-weight: 600;
+  letter-spacing: .5px; transition: color .2s;
+}
+.sh-link:hover { color: var(--sky-lt); }
+
+/* related articles */
+.art-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.art-card {
+  cursor: pointer; transition: all .2s;
+  border: 1px solid var(--border); border-radius: 4px; overflow: hidden; background: #fff;
+}
+.art-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.1); transform: translateY(-2px); }
+.art-thumb { height: 110px; background: var(--ink3); position: relative; overflow: hidden; }
+.art-thumb-bg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 42px; opacity: .15;
+}
+.art-body-card { padding: 12px 14px 14px; }
+.art-cat {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; display: inline-block;
+}
+.art-title { font-family: var(--hd); font-size: 13px; font-weight: 700; line-height: 1.35; color: var(--ink); margin-bottom: 6px; }
+.art-foot { display: flex; justify-content: space-between; align-items: center; font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.art-foot .read-more { color: var(--sky); font-weight: 700; }
+
+/* ─── SIDEBAR WIDGETS ─── */
+.sw { background: #fff; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
+.sw-head {
+  background: var(--ink); padding: 10px 14px;
+  font-family: var(--hd); font-size: 14px; font-weight: 700; color: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sw-head span { color: var(--gold-lt); }
+.sw-body { padding: 12px 14px; }
+.dl-item { display: flex; gap: 10px; align-items: start; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.dl-item:last-child { border-bottom: none; }
+.dl-days { min-width: 38px; text-align: center; background: var(--ink); color: var(--gold-lt); border-radius: 4px; padding: 4px; font-family: var(--mono); font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.dl-days.urgent { background: var(--rose); color: #fff; }
+.dl-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 2px; }
+.dl-date { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.score-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+.score-item:last-child { border-bottom: none; }
+.sc-rank { font-family: var(--mono); font-size: 13px; font-weight: 700; color: var(--text3); min-width: 22px; }
+.sc-exam { font-size: 12px; font-weight: 600; flex: 1; line-height: 1.3; }
+.sc-status { font-family: var(--mono); font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 3px; white-space: nowrap; }
+.ss-open { background: #d1fae5; color: #065f46; }
+.ss-exam { background: #fee2e2; color: #991b1b; }
+.ss-admit{ background: #dbeafe; color: #1e40af; }
+.ss-result{background:#ede9fe;color:#5b21b6;}
+.nl-form input { width: 100%; border: 1px solid var(--border); border-radius: 4px; padding: 8px 12px; font-family: var(--body); font-size: 12px; margin-bottom: 7px; outline: none; transition: border-color .2s; background: var(--paper); }
+.nl-form input:focus { border-color: var(--gold); }
+.nl-form button { width: 100%; background: var(--ink); color: var(--gold-lt); border: none; border-radius: 4px; padding: 9px; font-family: var(--hd); font-size: 14px; font-weight: 700; cursor: pointer; transition: all .2s; }
+.nl-form button:hover { background: var(--ink2); }
+.nl-note { font-size: 10px; color: var(--text3); text-align: center; margin-top: 6px; font-family: var(--mono); }
+.ad-sidebar { background: var(--paper2); border: 1px solid var(--border); border-radius: 4px; display: flex; align-items: center; justify-content: center; position: relative; }
+.ad-s-250 { min-height: 250px; }
+.ad-label { position: absolute; top: 4px; right: 8px; font-size: 9px; color: var(--text3); font-family: var(--mono); letter-spacing: .5px; text-transform: uppercase; }
+.ad-inner { text-align: center; color: var(--text3); font-size: 12px; }
+.ad-inner b { display: block; font-family: var(--mono); font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+.tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tool-btn { background: var(--paper); border: 1px solid var(--border); border-radius: 4px; padding: 9px 8px; text-align: center; font-size: 11px; font-weight: 600; cursor: pointer; transition: all .2s; color: var(--text); font-family: var(--body); display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.tool-btn:hover { background: var(--ink); color: var(--gold-lt); border-color: var(--ink); }
+.tool-icon { font-size: 18px; }
+.sb-art-list { display: flex; flex-direction: column; }
+.sb-art-item { display: flex; gap: 10px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.sb-art-item:last-child { border-bottom: none; }
+.sb-art-item:hover .sb-art-title { color: var(--sky); }
+.sb-art-num { font-family: var(--mono); font-size: 16px; font-weight: 700; color: var(--border); min-width: 24px; }
+.sb-art-title { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.4; transition: color .2s; }
+.sb-art-cat { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: .5px; margin-top: 3px; }
+
+/* ─── FOOTER ─── */
+footer { background: var(--ink); color: rgba(255,255,255,.6); padding: 36px 24px 20px; }
+.ft-grid { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 30px; margin-bottom: 28px; }
+.ft-brand .logo { font-family: var(--hd); font-size: 28px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+.ft-brand .logo span { color: var(--gold-lt); }
+.ft-brand p { font-size: 12px; line-height: 1.8; max-width: 220px; }
+.ft-col h4 { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--gold-lt); letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,.1); }
+.ft-col a { display: block; font-size: 12px; margin-bottom: 7px; transition: color .2s; }
+.ft-col a:hover { color: var(--gold-lt); }
+.ft-bottom { max-width: 1300px; margin: 0 auto; border-top: 1px solid rgba(255,255,255,.1); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.ft-bottom p { font-size: 11px; font-family: var(--mono); }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width: 1024px) {
+  .page-grid { grid-template-columns: 1fr; }
+  .sidebar-col { position: static; }
+  .art-row { grid-template-columns: 1fr 1fr; }
+  .ft-grid { grid-template-columns: 1fr 1fr 1fr; }
+}
+@media(max-width: 768px) {
+  .masthead { grid-template-columns: 1fr; gap: 12px; }
+  .mh-search { display: none; }
+  .mh-brand { font-size: 32px; }
+  .mh-right { justify-content: flex-start; }
+  .recruit-h1 { font-size: 22px; }
+  .quick-stats { grid-template-columns: repeat(2,1fr); }
+  .art-row { grid-template-columns: 1fr; }
+  .ft-grid { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width: 520px) {
+  .quick-stats { grid-template-columns: 1fr 1fr; }
+  .recruit-hero-band { padding: 20px 18px; }
+  .tls-body { padding: 16px 16px 8px; }
+  .vtl-left { width: 38px; }
+  .vtl-dot { width: 36px; height: 36px; font-size: 15px; }
+  .vtl-right { padding-left: 14px; }
+  .ft-grid { grid-template-columns: 1fr; }
+}
+.fade-up { animation: fadeUp .5s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.d1{animation-delay:.05s} .d2{animation-delay:.1s} .d3{animation-delay:.15s}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-live">LIVE</span>
+    <span>Mon, 18 May 2026</span>
+    <a href="#">📢 Navy SSC IT Application Open</a>
+    <a href="#">🎫 UPSC Prelims Admit Card Out</a>
+  </div>
+  <div class="tb-right">
+    <a href="#">Login</a>
+    <a href="#">Register</a>
+    <a href="#">🔔 Alerts</a>
+  </div>
+</div>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div>
+    <div class="mh-brand">Suchana<span class="dot">.</span></div>
+    <div class="mh-tagline">India's Exam Intelligence Hub</div>
+  </div>
+  <div class="mh-search">
+    <input type="text" placeholder="Search exams, results, syllabus…">
+    <button>Search</button>
+  </div>
+  <div class="mh-right">
+    <div class="mh-stat"><span class="n">512</span><span class="l">Exams Live</span></div>
+    <div class="mh-stat"><span class="n">2.1L</span><span class="l">Alerts Sent</span></div>
+    <div class="mh-stat"><span class="n">100%</span><span class="l">Official Data</span></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav-strip">
+  <div class="ns-item">🏠 Home</div>
+  <div class="ns-item active">🎖️ Defence Jobs <span class="badge">HOT</span></div>
+  <div class="ns-item">📢 Notifications</div>
+  <div class="ns-item">🎫 Admit Cards</div>
+  <div class="ns-item">📋 Results</div>
+  <div class="ns-item">🔑 Answer Keys</div>
+  <div class="ns-item">✂️ Cut-off Marks</div>
+  <div class="ns-item">📚 Syllabus</div>
+  <div class="ns-item">📄 PYQ Papers</div>
+  <div class="ns-item">📰 Current Affairs</div>
+  <div class="ns-right">
+    <button class="btn-alert">🔔 Get Free Alerts</button>
+  </div>
+</nav>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="tk-head">BREAKING</div>
+  <div class="tk-scroll">
+    <div class="tk-inner">
+      <span>Indian Navy SSC Executive IT 2026 Registration Open Till 1 Jun <em>APPLY NOW</em></span>
+      <span>UPSC IAS Prelims Admit Card Released — Exam on 25 May <em>DOWNLOAD</em></span>
+      <span>SSC GD Constable Exam 2026 Ongoing — May 20–31 <em>LIVE</em></span>
+      <span>IBPS PO 2026 Notification Expected June 2026 <em>SOON</em></span>
+      <span>RRB ALP 2026 Application Open till June 10 <em>APPLY</em></span>
+      <span>Indian Navy SSC Executive IT 2026 Registration Open Till 1 Jun <em>APPLY NOW</em></span>
+      <span>UPSC IAS Prelims Admit Card Released — Exam on 25 May <em>DOWNLOAD</em></span>
+      <span>SSC GD Constable Exam 2026 Ongoing — May 20–31 <em>LIVE</em></span>
+      <span>IBPS PO 2026 Notification Expected June 2026 <em>SOON</em></span>
+    </div>
+  </div>
+</div>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb-bar">
+  <div class="breadcrumb">
+    <a href="#">Home</a>
+    <span class="sep">›</span>
+    <a href="#">Defence Jobs</a>
+    <span class="sep">›</span>
+    <span class="current">Indian Navy SSC Executive IT 2026</span>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="wrap">
+  <div class="page-grid">
+
+    <!-- CONTENT COLUMN -->
+    <div class="content-col fade-up">
+
+      <!-- RECRUIT HEADER CARD -->
+      <div class="recruit-header">
+        <div class="recruit-hero-band">
+          <div class="rh-cats">
+            <span class="rh-cat rh-cat-nat">NATIONAL</span>
+            <span class="rh-cat rh-cat-def">DEFENCE</span>
+          </div>
+          <div class="recruit-h1">Indian Navy SSC Executive IT Recruitment 2026</div>
+          <div class="recruit-org">Indian Navy</div>
+        </div>
+        <div class="recruit-meta-bar">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div class="status-pill status-open">
+              <div class="dot-pulse"></div>
+              REGISTRATION OPEN
+            </div>
+            <div style="font-family:var(--mono);font-size:10px;color:var(--text3);">Last Date: <strong style="color:var(--rose)">1 Jun 2026</strong></div>
+          </div>
+          <div class="recruit-actions">
+            <button class="action-btn">⭐ Follow on Google</button>
+            <button class="action-btn">↗ Share</button>
+            <button class="action-btn icon-only">💬</button>
+            <button class="action-btn icon-only">🔖</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK STATS -->
+      <div class="quick-stats d1">
+        <div class="qs-item">
+          <div class="qs-label">Total Vacancies</div>
+          <div class="qs-val">50+</div>
+          <div class="qs-sub">SSC Executive IT Branch</div>
+        </div>
+        <div class="qs-item">
+          <div class="qs-label">Apply Before</div>
+          <div class="qs-val" style="color:var(--rose);">1 Jun</div>
+          <div class="qs-sub">2026 · 14 days left</div>
+        </div>
+        <div class="qs-item">
+          <div class="qs-label">Qualification</div>
+          <div class="qs-val" style="font-size:14px;padding-top:4px;">B.E / B.Tech</div>
+          <div class="qs-sub">CS / IT / ECE stream</div>
+        </div>
+        <div class="qs-item">
+          <div class="qs-label">Age Limit</div>
+          <div class="qs-val">19–25</div>
+          <div class="qs-sub">Years (as of Jul 2026)</div>
+        </div>
+      </div>
+
+      <!-- COMPLETE EXAM TIMELINE -->
+      <div class="timeline-section d2">
+        <div class="tls-head">
+          <div class="tls-head-title">
+            <div class="tls-head-icon">📅</div>
+            Complete Exam Timeline
+          </div>
+          <div class="tls-head-meta">6 STAGES · UPDATED TODAY</div>
+        </div>
+        <div class="tls-body">
+          <div class="vtl">
+
+            <!-- STAGE 1: Online Application — ACTIVE -->
+            <div class="vtl-item">
+              <div class="vtl-left">
+                <div class="vtl-dot-wrap">
+                  <div class="vtl-dot vtl-dot-active">📝</div>
+                </div>
+                <div class="vtl-line vtl-line-active"></div>
+              </div>
+              <div class="vtl-right">
+                <div class="vtl-item-head">
+                  <div>
+                    <div class="vtl-sub vtl-sub-active">REGISTRATION</div>
+                    <div class="vtl-title">Online Application</div>
+                  </div>
+                  <span class="vtl-badge badge-active">ACTIVE</span>
+                </div>
+                <div class="vtl-date">
+                  <span class="vtl-date-icon">📅</span>
+                  <span class="vtl-date-active">16 May 2026 – 1 Jun 2026</span>
+                </div>
+                <div class="vtl-desc">Candidates can apply for the Indian Navy SSC Executive IT Recruitment 2026. Ensure to complete your application before the deadline. Applications submitted after the closing date will not be accepted under any circumstances.</div>
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+                  <a href="#" class="vtl-cta cta-violet">Apply Online →</a>
+                  <a href="#" class="cta-outline-ink">📋 View Notification PDF</a>
+                </div>
+                <div class="vtl-note">
+                  <strong>Note:</strong> Candidates must have a valid <strong>Aadhaar-linked mobile number</strong> and active email address for OTP-based registration on joinindiannavy.gov.in
+                </div>
+              </div>
+            </div>
+
+            <!-- STAGE 2: Application Correction — TBD -->
+            <div class="vtl-item">
+              <div class="vtl-left">
+                <div class="vtl-dot-wrap">
+                  <div class="vtl-dot vtl-dot-tbd">✏️</div>
+                </div>
+                <div class="vtl-line"></div>
+              </div>
+              <div class="vtl-right">
+                <div class="vtl-item-head">
+                  <div>
+                    <div class="vtl-sub">CORRECTION WINDOW</div>
+                    <div class="vtl-title">Application Form Correction</div>
+                  </div>
+                  <span class="vtl-badge badge-tbd">TBD</span>
+                </div>
+                <div class="vtl-date">
+                  <span class="vtl-date-icon">📅</span>
+                  <span>(To Be Announced)</span>
+                </div>
+                <div class="vtl-desc">A short correction window will be opened after the registration deadline closes. Candidates can edit selected fields such as date of birth, category, and photograph. No changes to branch/stream preference will be allowed.</div>
+              </div>
+            </div>
+
+            <!-- STAGE 3: Admit Card — TBD -->
+            <div class="vtl-item">
+              <div class="vtl-left">
+                <div class="vtl-dot-wrap">
+                  <div class="vtl-dot vtl-dot-tbd">🎫</div>
+                </div>
+                <div class="vtl-line"></div>
+              </div>
+              <div class="vtl-right">
+                <div class="vtl-item-head">
+                  <div>
+                    <div class="vtl-sub">ADMIT CARD</div>
+                    <div class="vtl-title">Admit Card Release</div>
+                  </div>
+                  <span class="vtl-badge badge-tbd">TBD</span>
+                </div>
+                <div class="vtl-date">
+                  <span class="vtl-date-icon">📅</span>
+                  <span>(TBA)</span>
+                </div>
+                <div class="vtl-desc">Admit cards will be available for download before the exam date. Candidates must carry a printout of the e-Admit Card along with an original photo ID to the examination hall. Stay updated for the release announcement.</div>
+              </div>
+            </div>
+
+            <!-- STAGE 4: Exam Date — TBD -->
+            <div class="vtl-item">
+              <div class="vtl-left">
+                <div class="vtl-dot-wrap">
+                  <div class="vtl-dot vtl-dot-tbd">📝</div>
+                </div>
+                <div class="vtl-line"></div>
+              </div>
+              <div class="vtl-right">
+                <div class="vtl-item-head">
+                  <div>
+                    <div class="vtl-sub">WRITTEN EXAM</div>
+                    <div class="vtl-title">Exam Date</div>
+                  </div>
+                  <span class="vtl-badge badge-tbd">TBD</span>
+                </div>
+                <div class="vtl-date">
+                  <span class="vtl-date-icon">📅</span>
+                  <span>(TBA — Tentatively Jul–Aug 2026)</span>
+                </div>
+                <div class="vtl-desc">The Computer Based Test (CBT) will cover English, Reasoning, Quantitative Aptitude, and domain-specific subjects for the IT branch. Exact date and city-wise schedule will be published with the admit card.</div>
+                <div class="vtl-note">
+                  <strong>Exam Pattern:</strong> 100 questions · 100 marks · 60 minutes · Negative marking applies (¼ mark per wrong answer)
+                </div>
+              </div>
+            </div>
+
+            <!-- STAGE 5: SSB Interview — TBD -->
+            <div class="vtl-item">
+              <div class="vtl-left">
+                <div class="vtl-dot-wrap">
+                  <div class="vtl-dot vtl-dot-tbd">🧠</div>
+                </div>
+                <div class="vtl-line"></div>
+              </div>
+              <div class="vtl-right">
+                <div class="vtl-item-head">
+                  <div>
+                    <div class="vtl-sub">SSB INTERVIEW</div>
+                    <div class="vtl-title">SSB / Intelligence Test</div>
+                  </div>
+                  <span class="vtl-badge badge-tbd">TBD</span>
+                </div>
+                <div class="vtl-date">
+                  <span class="vtl-date-icon">📅</span>
+                  <span>(TBA)</span>
+                </div>
+                <div class="vtl-desc">Shortlisted candidates from the written exam will be called for the Services Selection Board (SSB) interview, which is a 5-day psychological and personality assessment conducted at Naval SSB centres. No TA/DA is provided for Stage 1 of SSB.</div>
+              </div>
+            </div>
+
+            <!-- STAGE 6: Final Result & Merit List — TBD -->
+            <div class="vtl-item">
+              <div class="vtl-left">
+                <div class="vtl-dot-wrap">
+                  <div class="vtl-dot vtl-dot-tbd">🏆</div>
+                </div>
+                <!-- No line after last item -->
+              </div>
+              <div class="vtl-right">
+                <div class="vtl-item-head">
+                  <div>
+                    <div class="vtl-sub">FINAL RESULT</div>
+                    <div class="vtl-title">Merit List & Joining</div>
+                  </div>
+                  <span class="vtl-badge badge-tbd">TBD</span>
+                </div>
+                <div class="vtl-date">
+                  <span class="vtl-date-icon">📅</span>
+                  <span>(TBA)</span>
+                </div>
+                <div class="vtl-desc">The final merit list will be published on joinindiannavy.gov.in based on combined SSB scores and medical fitness. Selected candidates will receive joining letters for training at INS Zamorin, Ezhimala. Training commencement is expected in early 2027.</div>
+              </div>
+            </div>
+
+          </div><!-- /vtl -->
+        </div>
+      </div>
+
+      <!-- ELIGIBILITY TABLE -->
+      <div style="background:#fff;border:1px solid var(--border);border-radius:4px;overflow:hidden;" class="d3">
+        <div style="background:var(--ink);padding:14px 24px;display:flex;align-items:center;gap:10px;">
+          <div style="font-family:var(--hd);font-size:18px;font-weight:700;color:#fff;display:flex;align-items:center;gap:10px;">
+            <div style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:15px;">📋</div>
+            Eligibility Criteria
+          </div>
+        </div>
+        <div style="padding:20px 24px;">
+          <table class="info-table">
+            <tr>
+              <th>Parameter</th>
+              <th>Details</th>
+            </tr>
+            <tr>
+              <td class="td-key">Post Name</td>
+              <td class="td-val">Short Service Commission (SSC) Officer — Executive Branch (IT)</td>
+            </tr>
+            <tr>
+              <td class="td-key">Nationality</td>
+              <td class="td-val">Indian Citizens only</td>
+            </tr>
+            <tr>
+              <td class="td-key">Gender</td>
+              <td class="td-val">Male & Female (both eligible)</td>
+            </tr>
+            <tr>
+              <td class="td-key">Age Limit</td>
+              <td class="td-val">19 to 25 years as on <strong>1 Jul 2026</strong> (born between 2 Jul 2001 – 1 Jul 2007)</td>
+            </tr>
+            <tr>
+              <td class="td-key">Educational Qualification</td>
+              <td class="td-val">B.E / B.Tech in <span class="pill pill-violet">Computer Science</span> <span class="pill pill-violet">Information Technology</span> <span class="pill pill-violet">ECE</span> or MCA with minimum 60% aggregate marks</td>
+            </tr>
+            <tr>
+              <td class="td-key">Marital Status</td>
+              <td class="td-val">Unmarried at the time of joining training</td>
+            </tr>
+            <tr>
+              <td class="td-key">Physical Standards</td>
+              <td class="td-val">Minimum height: 157 cm (Male), 152 cm (Female) · Weight proportionate to height · Good eyesight required</td>
+            </tr>
+            <tr>
+              <td class="td-key">Service Duration</td>
+              <td class="td-val">10 years (extendable to 14 years based on performance)</td>
+            </tr>
+            <tr>
+              <td class="td-key">Application Fee</td>
+              <td class="td-val"><span class="pill pill-green">NIL</span> No application fee for any category</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- RELATED ARTICLES -->
+      <div>
+        <div class="sh">
+          <div class="sh-title"><span class="cat-tag">RELATED</span> More Defence Jobs</div>
+          <a href="#" class="sh-link">ALL DEFENCE →</a>
+        </div>
+        <div class="art-row">
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#1a3a7c,#0c1a3a)"><div class="art-thumb-bg">⚓</div></div>
+            <div class="art-body-card">
+              <span class="art-cat" style="color:var(--sky)">Recruitment · Navy</span>
+              <div class="art-title">Indian Navy Tradesman Mate 2026 — 1,531 Vacancies Notification</div>
+              <div class="art-foot"><span>Group C</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#3a1a00,#1a0c00)"><div class="art-thumb-bg">🪖</div></div>
+            <div class="art-body-card">
+              <span class="art-cat" style="color:#b45309">Recruitment · Army</span>
+              <div class="art-title">Indian Army TES 52 Entry 2026 — 10+2 Technical Entry Scheme</div>
+              <div class="art-foot"><span>10+2 Entry</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#065f46,#022c20)"><div class="art-thumb-bg">✈️</div></div>
+            <div class="art-body-card">
+              <span class="art-cat" style="color:var(--mint)">Recruitment · Air Force</span>
+              <div class="art-title">IAF AFCAT 02/2026 — Flying & Ground Duty Branch Notification</div>
+              <div class="art-foot"><span>AFCAT</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content col -->
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-col">
+
+      <!-- Apply Now CTA -->
+      <div style="background:var(--ink);border-radius:4px;padding:20px;border:1px solid var(--ink3);">
+        <div style="font-family:var(--hd);font-size:16px;font-weight:700;color:#fff;margin-bottom:6px;">⚓ Apply Before Deadline</div>
+        <div style="font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.4);margin-bottom:14px;letter-spacing:.5px;">REGISTRATION CLOSES IN <span style="color:var(--rose);font-weight:700;">14 DAYS</span></div>
+        <div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:4px;padding:12px;margin-bottom:14px;">
+          <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+            <span style="font-size:11px;color:rgba(255,255,255,.45);font-family:var(--mono);">Start Date</span>
+            <span style="font-size:11px;color:rgba(255,255,255,.7);font-family:var(--mono);font-weight:700;">16 May 2026</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="font-size:11px;color:rgba(255,255,255,.45);font-family:var(--mono);">Last Date</span>
+            <span style="font-size:11px;color:var(--rose);font-family:var(--mono);font-weight:700;">1 Jun 2026</span>
+          </div>
+        </div>
+        <button style="width:100%;background:var(--violet);color:#fff;border:none;border-radius:4px;padding:11px;font-family:var(--hd);font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:8px;" onmouseover="this.style.background='#6d28d9'" onmouseout="this.style.background='var(--violet)'">Apply Online →</button>
+        <button style="width:100%;background:transparent;color:rgba(255,255,255,.55);border:1px solid rgba(255,255,255,.15);border-radius:4px;padding:9px;font-family:var(--body);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;" onmouseover="this.style.borderColor='rgba(255,255,255,.4)'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)'">📋 Download Notification PDF</button>
+      </div>
+
+      <!-- Sidebar Ad -->
+      <div class="ad-sidebar ad-s-250">
+        <div class="ad-label">Advertisement</div>
+        <div class="ad-inner"><b>300 × 250</b><span style="font-size:11px">AdSense rectangle unit</span></div>
+      </div>
+
+      <!-- Deadlines -->
+      <div class="sw">
+        <div class="sw-head">⏰ Closing Soon <span style="font-size:11px;font-family:var(--body);color:rgba(255,255,255,.4)">Deadlines</span></div>
+        <div class="sw-body">
+          <div class="dl-item">
+            <div class="dl-days urgent">7d</div>
+            <div><div class="dl-name">UPSC IAS Prelims 2026</div><div class="dl-date">Exam: 25 May 2026</div></div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-days urgent">8d</div>
+            <div><div class="dl-name">CRPF Constable Tradesman 2026</div><div class="dl-date">Last Date: 25 May 2026</div></div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-days">14d</div>
+            <div><div class="dl-name">Indian Navy SSC IT 2026</div><div class="dl-date">Last Date: 1 Jun 2026</div></div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-days">24d</div>
+            <div><div class="dl-name">RRB ALP Recruitment 2026</div><div class="dl-date">Last Date: 10 June 2026</div></div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-days">29d</div>
+            <div><div class="dl-name">BPSC 72nd Prelims 2026</div><div class="dl-date">Last Date: 15 June 2026</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Board -->
+      <div class="sw">
+        <div class="sw-head">📋 Exam Status Board</div>
+        <div class="sw-body">
+          <div class="score-item">
+            <div class="sc-rank">01</div>
+            <div class="sc-exam">UPSC IAS Prelims 2026</div>
+            <span class="sc-status ss-admit">Admit Card</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">02</div>
+            <div class="sc-exam">Indian Navy SSC IT 2026</div>
+            <span class="sc-status ss-open">Apply Open</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">03</div>
+            <div class="sc-exam">SSC GD Constable 2026</div>
+            <span class="sc-status ss-exam">Exam Live</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">04</div>
+            <div class="sc-exam">RRB ALP 2026</div>
+            <span class="sc-status ss-open">Apply Open</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">05</div>
+            <div class="sc-exam">IBPS PO 2026</div>
+            <span class="sc-status ss-result">Result Soon</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">06</div>
+            <div class="sc-exam">MPSC Group B</div>
+            <span class="sc-status ss-exam">Exam Live</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Also Read -->
+      <div class="sw">
+        <div class="sw-head">📰 Also Read — Defence</div>
+        <div class="sw-body">
+          <div class="sb-art-list">
+            <div class="sb-art-item">
+              <div class="sb-art-num">01</div>
+              <div>
+                <div class="sb-art-title">Navy Tradesman Mate 1531 Vacancies — Notification Out</div>
+                <div class="sb-art-cat">RECRUITMENT · TODAY</div>
+              </div>
+            </div>
+            <div class="sb-art-item">
+              <div class="sb-art-num">02</div>
+              <div>
+                <div class="sb-art-title">AFCAT 02/2026 — Apply Online, Eligibility & Syllabus</div>
+                <div class="sb-art-cat">RECRUITMENT · 2 DAYS AGO</div>
+              </div>
+            </div>
+            <div class="sb-art-item">
+              <div class="sb-art-num">03</div>
+              <div>
+                <div class="sb-art-title">Indian Army TES 52 — 10+2 Technical Entry 2026</div>
+                <div class="sb-art-cat">RECRUITMENT · 4 DAYS AGO</div>
+              </div>
+            </div>
+            <div class="sb-art-item">
+              <div class="sb-art-num">04</div>
+              <div>
+                <div class="sb-art-title">CAPF AC 2026 Notification — Apply at upsc.gov.in</div>
+                <div class="sb-art-cat">RECRUITMENT · 1 WEEK AGO</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Free Alerts -->
+      <div class="sw">
+        <div class="sw-head">🔔 Free Exam Alerts</div>
+        <div class="sw-body">
+          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7">Get instant alerts for every exam update. 2 lakh+ students trust Suchana.</p>
+          <div class="nl-form">
+            <input type="email" placeholder="Your email address">
+            <input type="text" placeholder="e.g. Navy, UPSC, SSC">
+            <button>Subscribe Free →</button>
+          </div>
+          <div class="nl-note">No spam · Unsubscribe anytime</div>
+        </div>
+      </div>
+
+      <!-- Tools -->
+      <div class="sw">
+        <div class="sw-head">🛠️ Free Tools</div>
+        <div class="sw-body">
+          <div class="tool-grid">
+            <a href="#" class="tool-btn"><span class="tool-icon">🎂</span>Age Calculator</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">💰</span>Salary Calc</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">📅</span>Exam Calendar</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">🗺️</span>State Jobs</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">📊</span>Cut-off Tracker</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">📋</span>Mock Test</a>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft-grid">
+    <div class="ft-brand">
+      <div class="logo">Suchana<span>.</span></div>
+      <p>India's most trusted government exam intelligence platform. Real-time lifecycle tracking for 500+ exams from 100+ official agencies. Official data only — no rumours.</p>
+    </div>
+    <div class="ft-col">
+      <h4>Updates</h4>
+      <a href="#">Notifications</a>
+      <a href="#">Admit Cards</a>
+      <a href="#">Results</a>
+      <a href="#">Answer Keys</a>
+      <a href="#">Cutoff Marks</a>
+    </div>
+    <div class="ft-col">
+      <h4>Study</h4>
+      <a href="#">Syllabus PDFs</a>
+      <a href="#">PYQ Papers</a>
+      <a href="#">Exam Analysis</a>
+      <a href="#">Best Books</a>
+      <a href="#">Prep Strategy</a>
+    </div>
+    <div class="ft-col">
+      <h4>Knowledge</h4>
+      <a href="#">Static GK</a>
+      <a href="#">Current Affairs</a>
+      <a href="#">Daily CA</a>
+      <a href="#">Monthly CA PDF</a>
+      <a href="#">Exam News</a>
+    </div>
+    <div class="ft-col">
+      <h4>Platform</h4>
+      <a href="#">About Suchana</a>
+      <a href="#">Age Calculator</a>
+      <a href="#">Salary Calculator</a>
+      <a href="#">All Exams</a>
+      <a href="#">State Jobs</a>
+      <a href="#">Advertise</a>
+      <a href="#">Privacy Policy</a>
+    </div>
+  </div>
+  <div class="ft-bottom">
+    <p>© 2026 Suchana Intelligence · Data sourced from official government gazettes</p>
+    <p>🔒 Official Sources Only · No Rumours · No Fake News</p>
+  </div>
+</footer>
+
+</body>
+</html>

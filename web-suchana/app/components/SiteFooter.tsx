@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { EXAM_CATEGORIES, EXAM_STATUSES } from "../lib/enums";
-import { enumToSlug, cleanLabel, slugToEnum } from "../lib/types";
 
 export default function SiteFooter() {
   const [currentYear, setCurrentYear] = useState(2026);
@@ -12,212 +10,103 @@ export default function SiteFooter() {
   }, []);
 
   return (
-    <footer className="footer" id="main-footer">
-      <div className="container">
-        <div className="footer-top-row">
-          <div className="footer-grid">
-            {/* ─── Brand & Summary ─── */}
-            <div className="footer-brand">
-              <Link href="/" className="logo-footer">
-                <div className="logo-text-footer">
-                  <span className="brand-primary">Exam</span>
-                  <span className="brand-secondary">Suchana</span>
-                </div>
-              </Link>
-              <p className="footer-brand-desc">
-                India&apos;s most structured government exam lifecycle tracker.
-                Real-time status updates for 500+ exams from 100+ official agencies.
-              </p>
-
-            </div>
-
-            {/* ─── Column 2: By Category ─── */}
-            <div className="footer-col">
-              <div className="footer-col-title">By Category</div>
-              <ul className="footer-links">
-                {EXAM_CATEGORIES.slice(0, 8).map((cat) => (
-                  <li key={cat}>
-                    <Link href={`/c/${enumToSlug(cat)}`}>{cleanLabel(cat)}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* ─── Column 3: By Status ─── */}
-            <div className="footer-col">
-              <div className="footer-col-title">By Status</div>
-              <ul className="footer-links">
-                {EXAM_STATUSES.filter(s => s !== 'ARCHIVED' && s !== 'ACTIVE').map((status) => (
-                  <li key={status}>
-                    <Link href={`/s/${enumToSlug(status)}`}>{cleanLabel(status)}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* ─── Column 4: By State ─── */}
-            <div className="footer-col">
-              <div className="footer-col-title">By State</div>
-              <ul className="footer-links">
-                <li>
-                  <Link href="/state" className="text-accent font-bold">Browse All 28 States &rarr;</Link>
-                </li>
-              </ul>
-            </div>
-
-            {/* ─── Column 5: Platform ─── */}
-            <div className="footer-col">
-              <div className="footer-col-title">Platform</div>
-              <ul className="footer-links">
-                <li><Link href="/about">About</Link></li>
-                <li><Link href="/contact">Contact</Link></li>
-                <li><Link href="/salary-calculator">Salary Calculator</Link></li>
-                <li><Link href="/age-calculator">Age Calculator</Link></li>
-                <li><Link href="/privacy">Privacy Policy</Link></li>
-                <li><Link href="/terms">Terms of Service</Link></li>
-                <li><Link href="/disclaimer">Disclaimer</Link></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div className="footer-bottom">
-          <div className="footer-bottom-left">
-            <span className="footer-copy">
-              © {currentYear} Exam Suchana Intelligence. Data aggregated from official gazettes.
-            </span>
-          </div>
-          <div className="footer-bottom-right">
-            <a href="#" className="back-to-top" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-              Back to Top &uarr;
-            </a>
-            <div className="footer-tagline">
-              Precision Tracking for <span>Indian Civil Servants</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <>
       <style dangerouslySetInnerHTML={{
         __html: `
-        .footer-top-row {
-          padding-bottom: 40px;
+        /* ─── FOOTER ─── */
+        .footer-wrap {
+          background: #0c0f17; color: rgba(255,255,255,.6);
+          padding: 36px 24px 20px;
+          font-family: 'Sora', sans-serif;
         }
-        .logo-icon-wrapper {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: rgba(var(--accent-rgb), 0.05);
-          border-radius: 12px;
-          padding: 4px;
+        .footer-wrap a {
+          text-decoration: none; color: inherit;
         }
-        .social-link {
-          width: 36px;
-          height: 36px;
-          border-radius: 8px;
-          background: var(--bg-secondary);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          transition: all 0.2s;
-          border: 1px solid var(--border);
+        .ft-grid {
+          max-width: 1300px; margin: 0 auto;
+          display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+          gap: 30px; margin-bottom: 28px;
         }
-        .social-link:hover {
-          background: var(--accent);
-          border-color: var(--accent);
-          transform: translateY(-2px);
+        .ft-brand .logo {
+          font-family: 'Playfair Display', Georgia, serif; font-size: 28px; font-weight: 900;
+          color: #fff; margin-bottom: 8px;
         }
-        .footer-socials {
-          display: flex;
-          gap: 12px;
-          margin-top: 24px;
+        .ft-brand .logo span { color: #d8b4fe; } /* Purple theme */
+        .ft-brand p { font-size: 12px; line-height: 1.8; max-width: 220px; }
+        .ft-col h4 {
+          font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700;
+          color: #d8b4fe; letter-spacing: 1.5px; text-transform: uppercase; /* Purple theme */
+          margin-bottom: 12px; padding-bottom: 6px;
+          border-bottom: 1px solid rgba(255,255,255,.1);
         }
-        .footer-col-title {
-          font-family: 'Space Grotesk', sans-serif;
-          letter-spacing: 0.5px;
-          color: var(--text-primary);
+        .ft-col a { display: block; font-size: 12px; margin-bottom: 7px; transition: color .2s; }
+        .ft-col a:hover { color: #d8b4fe; } /* Purple theme */
+        .ft-bottom {
+          max-width: 1300px; margin: 0 auto;
+          border-top: 1px solid rgba(255,255,255,.1); padding-top: 16px;
+          display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
         }
-        .back-to-top {
-          font-size: 13px;
-          font-weight: 700;
-          color: var(--text-muted);
-          text-decoration: none;
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          transition: all 0.2s;
-          margin-right: 24px;
+        .ft-bottom p { font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+
+        @media(max-width: 1024px) {
+          .ft-grid { grid-template-columns: 1fr 1fr 1fr; }
         }
-        .back-to-top:hover {
-          color: var(--accent);
-          transform: translateY(-2px);
+        @media(max-width: 768px) {
+          .footer-wrap { padding: 32px 16px 20px; }
+          .ft-grid { grid-template-columns: 1fr 1fr; gap: 24px 16px; }
+          .ft-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
         }
-        .footer-tagline {
-          font-weight: 500;
-          font-size: 13px;
-        }
-        .logo-footer {
-          display: flex;
-          align-items: center;
-          gap: 12px;
-          text-decoration: none;
-          margin-bottom: 20px;
-        }
-        .logo-icon-footer {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: #fff;
-          border-radius: 10px;
-          padding: 4px;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-        }
-        .logo-text-footer {
-          display: flex;
-          flex-direction: column;
-          line-height: 1;
-        }
-        .brand-primary {
-          font-size: 20px;
-          font-weight: 800;
-          color: var(--text-primary);
-          letter-spacing: -0.5px;
-        }
-        .brand-secondary {
-          font-size: 16px;
-          font-weight: 600;
-          color: var(--accent);
-          margin-top: 2px;
-        }
-        .footer-brand-desc {
-          font-size: 14px;
-          line-height: 1.6;
-          color: var(--text-muted);
-          max-width: 320px;
-          margin-bottom: 24px;
-        }
-        .footer-badge {
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 6px 14px;
-          background: rgba(var(--accent-rgb), 0.04);
-          border: 1px solid rgba(var(--accent-rgb), 0.1);
-          border-radius: 100px;
-          font-size: 11px;
-          font-weight: 700;
-          color: var(--accent);
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-        .badge-dot {
-          width: 5px;
-          height: 5px;
-          background: var(--accent);
-          border-radius: 50%;
-          box-shadow: 0 0 8px var(--accent);
+        @media(max-width: 520px) {
+          .ft-grid { grid-template-columns: 1fr; gap: 24px; }
         }
       `}} />
-    </footer>
+
+      <footer className="footer-wrap">
+        <div className="ft-grid">
+          <div className="ft-brand">
+            <Link href="/" className="logo">Suchana<span>.</span></Link>
+            <p>India's most trusted government exam intelligence platform. Real-time lifecycle tracking for 500+ exams from 100+ official agencies. Official data only — no rumours.</p>
+          </div>
+          <div className="ft-col">
+            <h4>Updates</h4>
+            <Link href="/s/notification">Notifications</Link>
+            <Link href="/s/admit-card">Admit Cards</Link>
+            <Link href="/s/result">Results</Link>
+            <Link href="/s/answer-key">Answer Keys</Link>
+            <Link href="/c/exam-analysis">Cutoff Marks</Link>
+          </div>
+          <div className="ft-col">
+            <h4>Study</h4>
+            <Link href="/c/syllabus">Syllabus PDFs</Link>
+            <Link href="/c/previous-year-papers">PYQ Papers</Link>
+            <Link href="/c/exam-analysis">Exam Analysis</Link>
+            <Link href="/c/preparation-guides">Best Books</Link>
+            <Link href="/c/preparation-guides">Prep Strategy</Link>
+          </div>
+          <div className="ft-col">
+            <h4>Knowledge</h4>
+            <Link href="/c/gk-static">Static GK</Link>
+            <Link href="/c/current-affairs">Current Affairs</Link>
+            <Link href="/c/current-affairs">Daily CA</Link>
+            <Link href="/c/current-affairs">Monthly CA PDF</Link>
+            <Link href="/articles">Exam News</Link>
+          </div>
+          <div className="ft-col">
+            <h4>Platform</h4>
+            <Link href="/about">About Us</Link>
+            <Link href="/contact">Contact Us</Link>
+            <Link href="/privacy">Privacy Policy</Link>
+            <Link href="/disclaimer">Disclaimer</Link>
+            <Link href="/terms">Terms &amp; Conditions</Link>
+            <Link href="/age-calculator">Age Calculator</Link>
+            <Link href="/salary-calculator">Salary Calculator</Link>
+          </div>
+        </div>
+        <div className="ft-bottom">
+          <p>© {currentYear} Suchana Intelligence · Data sourced from official government gazettes</p>
+          <p>🔒 Official Sources Only · No Rumours · No Fake News</p>
+        </div>
+      </footer>
+    </>
   );
 }

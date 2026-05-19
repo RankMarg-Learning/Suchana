@@ -90,3 +90,25 @@ export interface RegisterUserPayload {
     appVersion?: string;
     notificationsEnabled?: boolean;
 }
+export interface SeoPage {
+    id: string;
+    slug: string;
+    title: string;
+    metaTitle?: string;
+    metaDescription?: string;
+    content: string;
+    keywords?: string[];
+    ogImage?: string;
+    canonicalUrl?: string;
+    isPublished: boolean;
+    faqs?: { question: string; answer: string }[];
+    category?: string;
+    exam?: Exam;
+    author?: {
+        name: string;
+        slug: string;
+        image?: string;
+    };
+    createdAt: string;
+    updatedAt: string;
+}

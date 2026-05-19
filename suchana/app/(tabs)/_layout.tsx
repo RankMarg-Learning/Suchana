@@ -1,8 +1,9 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Bell, Bookmark, User } from 'lucide-react-native';
+import { Bell, Bookmark, User, FileText } from 'lucide-react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { Navbar } from '@/components/Navbar';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -16,7 +17,8 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerShown: false,
+        headerShown: true,
+        header: () => <Navbar />,
         tabBarActiveTintColor: activeColor,
         tabBarInactiveTintColor: inactiveColor,
         tabBarStyle: {
@@ -52,6 +54,15 @@ export default function TabLayout() {
           title: 'Updates',
           tabBarIcon: ({ color, size }) => (
             <Bell size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="articles"
+        options={{
+          title: 'Articles',
+          tabBarIcon: ({ color, size }) => (
+            <FileText size={size} color={color} />
           ),
         }}
       />

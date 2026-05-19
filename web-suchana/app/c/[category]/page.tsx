@@ -53,7 +53,7 @@ export default async function CategoryListingPage({ params }: Props) {
   });
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
+    <HydrationBoundary state={dehydrate(queryClient)} >
       <ExamListingClient
         title={`${label} Exams`}
         category={catEnum}

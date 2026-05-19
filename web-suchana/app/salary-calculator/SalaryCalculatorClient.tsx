@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Calculator, TrendingUp, IndianRupee, PieChart, Info, ChevronDown, Check, Building2 } from 'lucide-react';
 
 const JOB_PROFILES = [
@@ -17,7 +17,7 @@ const JOB_PROFILES = [
   // RRB / Railway
   { id: 'rrb_station_master', name: 'RRB NTPC - Station Master (Level 6)', basicPay: 35400, hraType: 'Y', taAmount: 3600, daPercent: 50, otherAllowances: 0, otherDeductions: 500 },
   { id: 'rrb_commercial_clerk', name: 'RRB NTPC - Commercial Clerk (Level 3)', basicPay: 21700, hraType: 'Y', taAmount: 1350, daPercent: 50, otherAllowances: 0, otherDeductions: 500 },
-  { id: 'rrb_alp', name: 'RRB ALP - Asst. Loco Pilot (Level 2)', basicPay: 19900, hraType: 'Y', taAmount: 1350, daPercent: 50, otherAllowances: 2000, otherDeductions: 500 }, // Approx running allowance
+  { id: 'rrb_alp', name: 'RRB ALP - Asst. Loco Pilot (Level 2)', basicPay: 19900, hraType: 'Y', taAmount: 1350, daPercent: 50, otherAllowances: 2000, otherDeductions: 500 },
   { id: 'rrb_group_d', name: 'RRB Group D (Level 1)', basicPay: 18000, hraType: 'Z', taAmount: 1350, daPercent: 50, otherAllowances: 0, otherDeductions: 500 },
 
   // State PSC & Police
@@ -91,14 +91,15 @@ export default function SalaryCalculatorClient() {
   }, [basicPay, daPercent, hraType, taAmount, otherAllowances, otherDeductions, hraPercent]);
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: '24px', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', width: '100%' }}>
 
-      <div className="feature-card" style={{ padding: 'clamp(20px, 4vw, 32px)', position: 'relative', zIndex: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(var(--accent-rgb), 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)' }}>
-            <Calculator size={20} />
+      {/* Profile Selector Input */}
+      <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '24px', position: 'relative', zIndex: 20 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '36px', height: '36px', borderRadius: '6px', background: 'rgba(124,58,237,0.06)', color: 'var(--accent)' }}>
+            <Calculator size={18} />
           </div>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>Select Government Job</h2>
+          <h2 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--ink)', margin: 0 }}>Select Government Job Profile</h2>
         </div>
 
         <div style={{ position: 'relative', width: '100%' }}>
@@ -109,33 +110,24 @@ export default function SalaryCalculatorClient() {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: '16px 20px',
-              backgroundColor: 'var(--bg-card)',
-              border: '2px solid rgba(var(--accent-rgb), 0.4)',
-              borderRadius: '12px',
+              padding: '14px 18px',
+              backgroundColor: '#fff',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
               cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '16px',
-              color: 'var(--text-primary)',
-              boxShadow: '0 4px 12px rgba(var(--accent-rgb), 0.08)',
-              transition: 'all 0.2s',
+              fontWeight: 700,
+              fontSize: '15px',
+              color: 'var(--ink)',
               textAlign: 'left'
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
-              <div style={{ background: 'rgba(var(--accent-rgb), 0.1)', padding: '8px', borderRadius: '8px', flexShrink: 0 }}>
-                <Building2 size={18} className="text-accent" />
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
-                <span style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Selected Profile
-                </span>
-                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', width: '100%', display: 'block' }}>
-                  {selectedProfile?.name}
-                </span>
-              </div>
+              <Building2 size={16} className="text-purple-500" style={{ flexShrink: 0 }} />
+              <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {selectedProfile?.name}
+              </span>
             </div>
-            <ChevronDown size={20} className="text-accent" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: '0.2s', flexShrink: 0 }} />
+            <ChevronDown size={16} color="var(--text-muted)" style={{ transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', transition: '0.2s', flexShrink: 0 }} />
           </button>
 
           {isDropdownOpen && (
@@ -149,22 +141,21 @@ export default function SalaryCalculatorClient() {
                 top: '100%',
                 left: 0,
                 right: 0,
-                marginTop: '8px',
-                background: 'var(--bg-primary)',
+                marginTop: '6px',
+                background: '#fff',
                 border: '1px solid var(--border)',
-                borderRadius: '12px',
-                boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
+                borderRadius: '6px',
+                boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
                 zIndex: 10,
-                maxHeight: '350px',
+                maxHeight: '300px',
                 overflowY: 'auto',
-                padding: '8px'
+                padding: '6px'
               }}>
                 {JOB_PROFILES.map(p => {
                   const isSelected = p.id === selectedProfileId;
                   return (
                     <button
                       key={p.id}
-                      className="dropdown-option"
                       onClick={() => {
                         setSelectedProfileId(p.id);
                         setIsDropdownOpen(false);
@@ -172,9 +163,9 @@ export default function SalaryCalculatorClient() {
                       style={{
                         width: '100%',
                         textAlign: 'left',
-                        padding: '12px 16px',
-                        borderRadius: '8px',
-                        backgroundColor: isSelected ? 'rgba(var(--accent-rgb), 0.1)' : 'transparent',
+                        padding: '10px 14px',
+                        borderRadius: '4px',
+                        backgroundColor: isSelected ? 'rgba(124,58,237,0.06)' : 'transparent',
                         border: 'none',
                         cursor: 'pointer',
                         display: 'flex',
@@ -183,15 +174,15 @@ export default function SalaryCalculatorClient() {
                         transition: '0.1s'
                       }}
                     >
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingRight: '12px' }}>
-                        <span style={{ fontWeight: isSelected ? 700 : 500, color: isSelected ? 'var(--accent)' : 'var(--text-primary)', fontSize: '14px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', paddingRight: '12px' }}>
+                        <span style={{ fontWeight: isSelected ? 800 : 600, color: isSelected ? 'var(--accent)' : 'var(--ink)', fontSize: '13.5px' }}>
                           {p.name}
                         </span>
                         <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-                          Basic: ₹{p.basicPay.toLocaleString('en-IN')} | HRA: {p.hraType} Class City
+                          Basic: ₹{p.basicPay.toLocaleString('en-IN')} | HRA City: {p.hraType} Class
                         </span>
                       </div>
-                      {isSelected && <Check size={18} className="text-accent" style={{ flexShrink: 0 }} />}
+                      {isSelected && <Check size={16} className="text-accent" style={{ flexShrink: 0 }} />}
                     </button>
                   );
                 })}
@@ -200,100 +191,94 @@ export default function SalaryCalculatorClient() {
           )}
         </div>
 
-        <div style={{ marginTop: '16px', display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px' }}>
-          <Info size={16} className="text-accent" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
-            Calculations are based on 7th Pay Commission. Assumes current DA at {daPercent}% and standard City HRA (Tier {hraType}).
+        <div style={{ marginTop: '14px', display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '12px', background: 'rgba(124,58,237,0.04)', borderRadius: '4px' }}>
+          <Info size={15} className="text-purple-500" style={{ flexShrink: 0, marginTop: '2px' }} />
+          <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
+            Calculations are based on the official 7th Pay Commission Matrix. Assumes current DA at {daPercent}% and standard City HRA (Tier {hraType}).
           </p>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="calculator-grid">
-        {/* Main Result Card */}
-        <div className="feature-card" style={{ padding: '0', overflow: 'hidden', background: 'var(--accent)', color: 'white', gridColumn: '1 / -1' }}>
-          <div style={{ padding: 'clamp(20px, 4vw, 32px)', position: 'relative' }}>
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "radial-gradient(circle at top right, rgba(255,255,255,0.2) 0%, transparent 60%)",
-                zIndex: 0
-              }}
-            />
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.9, marginBottom: '8px' }}>
-                Estimated In-Hand Salary
-              </div>
-              <div style={{ fontSize: 'clamp(36px, 8vw, 48px)', fontWeight: 800, fontFamily: 'var(--font-heading)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <IndianRupee size={32} /> {calculations.inHandSalary.toLocaleString('en-IN')}
-              </div>
-              <div style={{ marginTop: '16px', display: 'flex', flexWrap: 'wrap', gap: '8px 24px', fontSize: '14px', fontWeight: 500, opacity: 0.9 }}>
-                <div>Gross: ₹{calculations.grossSalary.toLocaleString('en-IN')}</div>
-                <div>Deductions: ₹{calculations.totalDeductions.toLocaleString('en-IN')}</div>
-              </div>
+      {/* Results grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        
+        {/* Estimated In-Hand Salary display banner */}
+        <div style={{ background: 'var(--accent)', border: '1px solid var(--accent)', borderRadius: '8px', padding: '24px', color: '#fff', gridColumn: '1 / -1', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at top right, rgba(255,255,255,0.15) 0%, transparent 60%)', zIndex: 0 }} />
+          <div style={{ position: 'relative', zIndex: 1 }}>
+            <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.9 }}>
+              Estimated In-Hand Salary
+            </div>
+            <div style={{ fontSize: '36px', fontWeight: 800, fontFamily: 'var(--hd)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
+              <IndianRupee size={28} /> {calculations.inHandSalary.toLocaleString('en-IN')}
+            </div>
+            <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '13px', fontWeight: 700, opacity: 0.9 }}>
+              <div>Gross: ₹{calculations.grossSalary.toLocaleString('en-IN')}</div>
+              <div style={{ width: '1px', background: 'rgba(255,255,255,0.2)' }} />
+              <div>Deductions: ₹{calculations.totalDeductions.toLocaleString('en-IN')}</div>
             </div>
           </div>
         </div>
 
-        {/* Breakdown Card */}
-        <div className="feature-card" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-            <PieChart size={18} className="text-accent" />
-            <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Salary Breakdown</h3>
+        {/* Salary Breakdown table */}
+        <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <PieChart size={16} className="text-purple-500" />
+            <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--ink)', margin: 0 }}>Salary Breakdown</h3>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '14px' }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13.5px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
               <span>Basic Pay</span>
-              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>₹{basicPay.toLocaleString('en-IN')}</span>
+              <span style={{ fontWeight: 800, color: 'var(--ink)' }}>₹{basicPay.toLocaleString('en-IN')}</span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
               <span>Dearness Allowance ({daPercent}%)</span>
-              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>₹{calculations.daAmount.toLocaleString('en-IN')}</span>
+              <span style={{ fontWeight: 800, color: 'var(--ink)' }}>₹{calculations.daAmount.toLocaleString('en-IN')}</span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
               <span>HRA ({hraPercent}%)</span>
-              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>₹{calculations.hraAmount.toLocaleString('en-IN')}</span>
+              <span style={{ fontWeight: 800, color: 'var(--ink)' }}>₹{calculations.hraAmount.toLocaleString('en-IN')}</span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
               <span>Transport Allowance (TA+DA)</span>
-              <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>₹{(taAmount + calculations.taDaAmount).toLocaleString('en-IN')}</span>
+              <span style={{ fontWeight: 800, color: 'var(--ink)' }}>₹{(taAmount + calculations.taDaAmount).toLocaleString('en-IN')}</span>
             </div>
-            <div style={{ height: '1px', background: 'var(--border)', margin: '8px 0' }} />
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', justifyContent: 'space-between', color: 'var(--text-secondary)' }}>
+            <div style={{ height: '1px', background: 'var(--border)', margin: '4px 0' }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
               <span>NPS Deduction (10%)</span>
-              <span style={{ fontWeight: 600, color: '#ef4444' }}>- ₹{calculations.npsDeduction.toLocaleString('en-IN')}</span>
+              <span style={{ fontWeight: 800, color: '#ef4444' }}>- ₹{calculations.npsDeduction.toLocaleString('en-IN')}</span>
             </div>
           </div>
         </div>
 
-        {/* Promotion Growth Card */}
-        <div className="feature-card" style={{ padding: '24px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-            <TrendingUp size={18} className="text-accent" />
-            <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>5-Year Growth Projection</h3>
+        {/* 5-Year Growth Table */}
+        <div style={{ background: '#fff', border: '1px solid var(--border)', borderRadius: '8px', padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+            <TrendingUp size={16} className="text-purple-500" />
+            <h3 style={{ fontSize: '15px', fontWeight: 800, color: 'var(--ink)', margin: 0 }}>5-Year Growth Projection</h3>
           </div>
-          <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '16px' }}>
+          <p style={{ fontSize: '11.5px', color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
             Assumes standard 3% annual increment and estimated DA hikes.
           </p>
 
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12.5px', textAlign: 'left' }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  <th style={{ padding: '8px 0', color: 'var(--text-secondary)', fontWeight: 600 }}>Year</th>
-                  <th style={{ padding: '8px 0', color: 'var(--text-secondary)', fontWeight: 600 }}>Basic Pay</th>
-                  <th style={{ padding: '8px 0', color: 'var(--text-secondary)', fontWeight: 600 }}>Est. DA</th>
-                  <th style={{ padding: '8px 0', color: 'var(--text-secondary)', fontWeight: 600, textAlign: 'right' }}>In-Hand</th>
+                  <th style={{ padding: '6px 0', color: 'var(--text-muted)', fontWeight: 700 }}>Year</th>
+                  <th style={{ padding: '6px 0', color: 'var(--text-muted)', fontWeight: 700 }}>Basic Pay</th>
+                  <th style={{ padding: '6px 0', color: 'var(--text-muted)', fontWeight: 700 }}>Est. DA</th>
+                  <th style={{ padding: '6px 0', color: 'var(--text-muted)', fontWeight: 700, textAlign: 'right' }}>In-Hand</th>
                 </tr>
               </thead>
               <tbody>
                 {calculations.projection.map((row) => (
-                  <tr key={row.year} style={{ borderBottom: '1px solid var(--border-light)' }}>
-                    <td style={{ padding: '10px 0', fontWeight: 600 }}>{row.year}</td>
-                    <td style={{ padding: '10px 0' }}>₹{row.basic.toLocaleString('en-IN')}</td>
-                    <td style={{ padding: '10px 0' }}>{row.da}%</td>
-                    <td style={{ padding: '10px 0', textAlign: 'right', fontWeight: 700, color: 'var(--accent)' }}>
+                  <tr key={row.year} style={{ borderBottom: '1px solid #f9fafb' }}>
+                    <td style={{ padding: '8px 0', fontWeight: 800, color: 'var(--ink)' }}>{row.year}</td>
+                    <td style={{ padding: '8px 0', color: 'var(--text-muted)' }}>₹{row.basic.toLocaleString('en-IN')}</td>
+                    <td style={{ padding: '8px 0', color: 'var(--text-muted)' }}>{row.da}%</td>
+                    <td style={{ padding: '8px 0', textAlign: 'right', fontWeight: 800, color: 'var(--accent)' }}>
                       ₹{row.inHand.toLocaleString('en-IN')}
                     </td>
                   </tr>
@@ -304,19 +289,6 @@ export default function SalaryCalculatorClient() {
         </div>
 
       </div>
-
-      {/* Utility Styles */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @media (max-width: 900px) {
-          .calculator-grid {
-            grid-template-columns: minmax(0, 1fr) !important;
-          }
-        }
-        .dropdown-option:hover {
-          background-color: rgba(var(--accent-rgb), 0.05) !important;
-        }
-      `}} />
     </div>
   );
 }

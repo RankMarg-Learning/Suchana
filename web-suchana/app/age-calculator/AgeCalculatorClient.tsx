@@ -1,9 +1,13 @@
 "use client";
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { Calendar, Clock, AlertCircle, CalendarDays, Activity, Info } from 'lucide-react';
+import Link from 'next/link';
+import {
+  Calendar, Clock, AlertCircle, CalendarDays, Activity, Info,
+  CheckCircle2, Award, ClipboardCheck, Wrench, Folder, FileText, Mail, Map
+} from 'lucide-react';
 
-export default function AgeCalculatorClient() {
+export default function AgeCalculatorClient({ children }: { children?: React.ReactNode }) {
   const [dob, setDob] = useState<string>('2000-01-01');
   const [targetDate, setTargetDate] = useState<string>(() => {
     const today = new Date();
@@ -33,7 +37,6 @@ export default function AgeCalculatorClient() {
 
     if (days < 0) {
       months -= 1;
-      // Get days in the previous month of the target date
       const prevMonth = new Date(d2.getFullYear(), d2.getMonth(), 0);
       days += prevMonth.getDate();
     }
@@ -42,7 +45,6 @@ export default function AgeCalculatorClient() {
       months += 12;
     }
 
-    // Convert to UTC to accurately calculate absolute differences without DST issues
     const utc1 = Date.UTC(d1.getFullYear(), d1.getMonth(), d1.getDate());
     const utc2 = Date.UTC(d2.getFullYear(), d2.getMonth(), d2.getDate());
 
@@ -62,149 +64,295 @@ export default function AgeCalculatorClient() {
     };
   }, [dob, targetDate]);
 
-  if (!mounted) return <div style={{ minHeight: '500px' }} />;
+  if (!mounted) return <div style={{ minHeight: '600px' }} />;
 
   return (
-    <div suppressHydrationWarning style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', maxWidth: '800px', margin: '0 auto', width: '100%' }}>
+    <>
 
-      {/* Input Section */}
-      <div className="feature-card" style={{ padding: 'clamp(20px, 4vw, 32px)', position: 'relative', zIndex: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-          <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(var(--accent-rgb), 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)' }}>
-            <Calendar size={20} />
-          </div>
-          <h2 style={{ fontSize: '20px', fontWeight: 800, margin: 0 }}>Calculate Your Exact Age</h2>
-        </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              Date of Birth
-            </label>
-            <input
-              type="date"
-              className="form-input"
-              style={{ padding: '14px 16px', fontSize: '16px', fontWeight: 600, background: 'var(--bg-card)' }}
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
-            />
-          </div>
-          <div className="form-group" style={{ marginBottom: 0 }}>
-            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>
-              Age As On Date (Target Cut-off)
-            </label>
-            <input
-              type="date"
-              className="form-input"
-              style={{ padding: '14px 16px', fontSize: '16px', fontWeight: 600, background: 'var(--bg-card)' }}
-              value={targetDate}
-              onChange={(e) => setTargetDate(e.target.value)}
-            />
-          </div>
-        </div>
+      <div className="wrap-home" style={{ marginTop: '24px' }}>
+        <div className="page-grid">
 
-        <div style={{ marginTop: '20px', display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px' }}>
-          <Info size={16} className="text-accent" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.5 }}>
-            Government exams usually specify a crucial cutoff date (e.g., "Age as on 1st August 2024"). Adjust the "Age As On Date" field to check your exact eligibility for specific exams.
-          </p>
+          {/* CONTENT COL */}
+          <div className="content-col">
+
+            {/* CALCULATOR MAIN FORM CARD */}
+            <div className="fade-up d1">
+              <div className="sh">
+                <div className="sh-title"><span className="cat-tag">UTILITY</span> Age Calculator</div>
+                <div className="sh-link">ELIGIBILITY TOOL</div>
+              </div>
+
+              <div className="featured-grid" style={{ gridTemplateColumns: '1fr', cursor: 'default' }}>
+                <div className="feat-main" style={{ minHeight: 'auto', padding: '24px' }}>
+                  <div className="feat-bg" style={{ background: 'linear-gradient(135deg,#1f2937,#111827)' }}></div>
+                  <div className="feat-bg-pattern"></div>
+                  <div className="feat-main-inner" style={{ position: 'relative', zIndex: 5 }}>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', width: '100%' }}>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--gold-lt)' }}>
+                          DATE OF BIRTH
+                        </label>
+                        <input
+                          type="date"
+                          className="form-input"
+                          style={{
+                            width: '100%',
+                            padding: '12px 14px',
+                            fontSize: '16px',
+                            fontWeight: 700,
+                            background: '#1f2937',
+                            border: '1px solid #374151',
+                            borderRadius: '4px',
+                            color: '#fff'
+                          }}
+                          value={dob}
+                          onChange={(e) => setDob(e.target.value)}
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label style={{ display: 'block', marginBottom: '8px', fontSize: '13px', fontWeight: 700, color: 'var(--gold-lt)' }}>
+                          AGE AS ON DATE (CUT-OFF)
+                        </label>
+                        <input
+                          type="date"
+                          className="form-input"
+                          style={{
+                            width: '100%',
+                            padding: '12px 14px',
+                            fontSize: '16px',
+                            fontWeight: 700,
+                            background: '#1f2937',
+                            border: '1px solid #374151',
+                            borderRadius: '4px',
+                            color: '#fff'
+                          }}
+                          value={targetDate}
+                          onChange={(e) => setTargetDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ marginTop: '20px', display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.1)' }}>
+                      <Info size={16} className="text-yellow-400" style={{ flexShrink: 0, marginTop: '2px' }} />
+                      <p style={{ fontSize: '16px', color: '#e5e7eb', margin: 0, lineHeight: 1.5 }}>
+                        Government exams usually specify a crucial cutoff date (e.g., "Age as on 1st August 2026"). Adjust the <b>"Age As On Date"</b> field to verify your exact eligibility.
+                      </p>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RESULTS VIEW */}
+            {results && !('error' in results) ? (
+              <div className="fade-up" style={{ marginTop: '32px' }}>
+                <div className="sh">
+                  <div className="sh-title"><span className="cat-tag">RESULTS</span> Calculation Output</div>
+                  <div className="sh-link" style={{ color: 'var(--mint)' }}>ACCURATE ✔</div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px' }}>
+
+                  {/* GIANT DOCK SCOREBOARD STYLE CARDS */}
+                  <div className="featured-grid" style={{ gridTemplateColumns: '1fr', cursor: 'default' }}>
+                    <div className="feat-main" style={{ minHeight: '160px', padding: '32px 24px', textAlign: 'center' }}>
+                      <div className="feat-bg" style={{ background: 'linear-gradient(135deg,#7c3aed,#4c1d95)' }}></div>
+                      <div className="feat-bg-pattern"></div>
+                      <div className="feat-main-inner" style={{ alignItems: 'center' }}>
+                        <div style={{ fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.5px', color: 'var(--gold-lt)', marginBottom: '12px' }}>
+                          Your Calculated Exact Age
+                        </div>
+
+                        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'center', gap: '20px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <span style={{ fontSize: '42px', fontWeight: 800, fontFamily: 'var(--hd)', lineHeight: 1, color: '#fff' }}>{results.years}</span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--gold-lt)', textTransform: 'uppercase', marginTop: '4px' }}>Years</span>
+                          </div>
+                          <span style={{ fontSize: '32px', fontWeight: 800, opacity: 0.5, color: '#fff', paddingBottom: '16px' }}>:</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <span style={{ fontSize: '42px', fontWeight: 800, fontFamily: 'var(--hd)', lineHeight: 1, color: '#fff' }}>{results.months}</span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--gold-lt)', textTransform: 'uppercase', marginTop: '4px' }}>Months</span>
+                          </div>
+                          <span style={{ fontSize: '32px', fontWeight: 800, opacity: 0.5, color: '#fff', paddingBottom: '16px' }}>:</span>
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <span style={{ fontSize: '42px', fontWeight: 800, fontFamily: 'var(--hd)', lineHeight: 1, color: '#fff' }}>{results.days}</span>
+                            <span style={{ fontSize: '12px', fontWeight: 700, color: 'var(--gold-lt)', textTransform: 'uppercase', marginTop: '4px' }}>Days</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ALTERNATIVE BREAKDOWNS (Like 3 column article rows) */}
+                  <div className="art-row">
+                    <div className="art-card" style={{ cursor: 'default' }}>
+                      <div className="art-thumb" style={{ background: 'linear-gradient(135deg,#1e3a5f,#0a1a30)', height: '100px' }}>
+                        <div className="art-thumb-bg"><Calendar size={36} /></div>
+                      </div>
+                      <div className="art-body" style={{ padding: '16px' }}>
+                        <span className="art-cat" style={{ color: 'var(--sky)' }}>MONTHS</span>
+                        <div className="art-title" style={{ fontSize: '24px', fontWeight: 800, color: 'var(--ink)' }}>{results.totalMonths}</div>
+                        <div className="art-excerpt" style={{ fontSize: '16px', marginTop: '4px' }}>Total completed calendar months elapsed between dates.</div>
+                      </div>
+                    </div>
+
+                    <div className="art-card" style={{ cursor: 'default' }}>
+                      <div className="art-thumb" style={{ background: 'linear-gradient(135deg,#3b1f5e,#1a0a2e)', height: '100px' }}>
+                        <div className="art-thumb-bg"><Clock size={36} /></div>
+                      </div>
+                      <div className="art-body" style={{ padding: '16px' }}>
+                        <span className="art-cat" style={{ color: 'var(--rose)' }}>WEEKS</span>
+                        <div className="art-title" style={{ fontSize: '24px', fontWeight: 800, color: 'var(--ink)' }}>
+                          {results.totalWeeks} <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-muted)' }}>+ {results.remainingDaysAfterWeeks} d</span>
+                        </div>
+                        <div className="art-excerpt" style={{ fontSize: '16px', marginTop: '4px' }}>Total weeks elapsed with remaining days remaining.</div>
+                      </div>
+                    </div>
+
+                    <div className="art-card" style={{ cursor: 'default' }}>
+                      <div className="art-thumb" style={{ background: 'linear-gradient(135deg,#064e3b,#065f46)', height: '100px' }}>
+                        <div className="art-thumb-bg"><CalendarDays size={36} /></div>
+                      </div>
+                      <div className="art-body" style={{ padding: '16px' }}>
+                        <span className="art-cat" style={{ color: 'var(--mint)' }}>DAYS</span>
+                        <div className="art-title" style={{ fontSize: '24px', fontWeight: 800, color: 'var(--ink)' }}>{results.totalDays.toLocaleString('en-IN')}</div>
+                        <div className="art-excerpt" style={{ fontSize: '16px', marginTop: '4px' }}>Absolute mathematical day count between dates.</div>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            ) : (
+              results && 'error' in results && (
+                <div className="fade-up" style={{ marginTop: '32px' }}>
+                  <div className="feature-card" style={{ padding: '24px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '4px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#991b1b' }}>
+                      <AlertCircle size={20} />
+                      <span style={{ fontWeight: 700 }}>{results.error}</span>
+                    </div>
+                  </div>
+                </div>
+              )
+            )}
+
+            {/* AD BANNER DISPLAY */}
+            <div className="ad-leader" style={{ margin: '32px 0 0' }}>
+              <div className="ad-label">Advertisement</div>
+              <div className="ad-inner">
+                <b className="hidden md:block">728 × 90 — Leaderboard Placement</b>
+                <b className="block md:hidden">320 × 50 — Mobile Leaderboard Placement</b>
+                <span style={{ fontSize: 11 }}>Sarkari Mock Test Series & Books Partners Only</span>
+              </div>
+            </div>
+
+            {children}
+
+          </div>
+
+          {/* SIDEBAR COL */}
+          <div className="sidebar-col">
+
+            {/* SW - Popular Cutoffs (Like Deadlines) */}
+            <div className="sw" style={{ marginTop: 0 }}>
+              <div className="sw-head flex items-center gap-1.5">
+                <Clock size={16} className="text-amber-500" /> Crucial Cut-Off Dates (2026)
+              </div>
+              <div className="sw-body">
+                <div className="dl-item" style={{ cursor: 'default' }}>
+                  <div className="dl-days">Aug 1</div>
+                  <div>
+                    <div className="dl-name">UPSC CSE 2026 Cutoff</div>
+                    <div className="dl-date">Age criteria computed as on date</div>
+                  </div>
+                </div>
+                <div className="dl-item" style={{ cursor: 'default' }}>
+                  <div className="dl-days">Aug 1</div>
+                  <div>
+                    <div className="dl-name">SSC CGL 2026 Cutoff</div>
+                    <div className="dl-date">Age criteria computed as on date</div>
+                  </div>
+                </div>
+                <div className="dl-item" style={{ cursor: 'default' }}>
+                  <div className="dl-days urgent">Jul 1</div>
+                  <div>
+                    <div className="dl-name">IBPS PO 2026 Cutoff</div>
+                    <div className="dl-date">Age criteria computed as on date</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* SW - General Limits (Like Status Board) */}
+            <div className="sw">
+              <div className="sw-head flex items-center gap-1.5">
+                <ClipboardCheck size={16} className="text-blue-400" /> General Age Limit Limits
+              </div>
+              <div className="sw-body">
+                <div className="score-item" style={{ cursor: 'default' }}>
+                  <div className="sc-rank">01</div>
+                  <div className="sc-exam">UPSC Civil Services</div>
+                  <span className="sc-status ss-open" style={{ fontFamily: 'var(--mono)', fontSize: '11px' }}>21 - 32 Years</span>
+                </div>
+                <div className="score-item" style={{ cursor: 'default' }}>
+                  <div className="sc-rank">02</div>
+                  <div className="sc-exam">SSC CGL Officers</div>
+                  <span className="sc-status ss-open" style={{ fontFamily: 'var(--mono)', fontSize: '11px' }}>18 - 30 Years</span>
+                </div>
+                <div className="score-item" style={{ cursor: 'default' }}>
+                  <div className="sc-rank">03</div>
+                  <div className="sc-exam">NDA / Naval Academy</div>
+                  <span className="sc-status ss-open" style={{ fontFamily: 'var(--mono)', fontSize: '11px' }}>16.5 - 19.5 Yrs</span>
+                </div>
+                <div className="score-item" style={{ cursor: 'default' }}>
+                  <div className="sc-rank">04</div>
+                  <div className="sc-exam">CDS Defence Service</div>
+                  <span className="sc-status ss-open" style={{ fontFamily: 'var(--mono)', fontSize: '11px' }}>20 - 24 Years</span>
+                </div>
+              </div>
+            </div>
+
+            {/* SW - Alert Info checklist */}
+            <div className="sw">
+              <div className="sw-head flex items-center gap-1.5">
+                <Award size={16} className="text-yellow-400" /> Eligibility Verification Checklist
+              </div>
+              <div className="sw-body">
+                <ul style={{ paddingLeft: '16px', margin: 0, fontSize: '16px', color: 'var(--text2)', lineHeight: 1.8 }}>
+                  <li>Date of Birth matches Class 10/Matriculation Certificate precisely.</li>
+                  <li>Check reservation guidelines for category-wise relaxation (OBC, SC, ST, PwD).</li>
+                  <li>Verify cutoff dates for each specific post notification separately.</li>
+                </ul>
+              </div>
+            </div>
+
+            {/* QUICK TOOLS */}
+            <div className="sw">
+              <div className="sw-head flex items-center gap-1.5">
+                <Wrench size={16} className="text-purple-400" /> Platform Utility Hub
+              </div>
+              <div className="sw-body">
+                <div className="tool-grid" style={{ gridTemplateColumns: '1fr' }}>
+                  <Link href="/salary-calculator" className="tool-btn">
+                    <span className="tool-icon"><FileText size={14} className="text-emerald-500" /></span>Salary Calculator
+                  </Link>
+                  <Link href="/syllabus" className="tool-btn">
+                    <span className="tool-icon"><Map size={14} className="text-sky-500" /></span>Syllabus Directories
+                  </Link>
+                  <Link href="/contact" className="tool-btn">
+                    <span className="tool-icon"><Mail size={14} className="text-rose-500" /></span>Contact Help Desk
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
-
-      {/* Results Section */}
-      {results && !('error' in results) ? (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }} className="calculator-grid">
-
-          {/* Main Exact Age Card */}
-          <div className="feature-card" style={{ padding: '0', overflow: 'hidden', background: 'var(--accent)', color: 'white', gridColumn: '1 / -1' }}>
-            <div style={{ padding: 'clamp(20px, 4vw, 32px)', position: 'relative' }}>
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "radial-gradient(circle at top right, rgba(255,255,255,0.2) 0%, transparent 60%)",
-                  zIndex: 0
-                }}
-              />
-              <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '1px', opacity: 0.9, marginBottom: '16px' }}>
-                  Your Exact Age
-                </div>
-
-                <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 'clamp(12px, 3vw, 24px)' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <span style={{ fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 800, fontFamily: 'var(--font-heading)', lineHeight: 1 }}>{results.years}</span>
-                    <span style={{ fontSize: '14px', fontWeight: 600, opacity: 0.9 }}>Years</span>
-                  </div>
-                  <div style={{ fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 800, opacity: 0.5, lineHeight: 1 }}>:</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <span style={{ fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 800, fontFamily: 'var(--font-heading)', lineHeight: 1 }}>{results.months}</span>
-                    <span style={{ fontSize: '14px', fontWeight: 600, opacity: 0.9 }}>Months</span>
-                  </div>
-                  <div style={{ fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 800, opacity: 0.5, lineHeight: 1 }}>:</div>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <span style={{ fontSize: 'clamp(36px, 8vw, 56px)', fontWeight: 800, fontFamily: 'var(--font-heading)', lineHeight: 1 }}>{results.days}</span>
-                    <span style={{ fontSize: '14px', fontWeight: 600, opacity: 0.9 }}>Days</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Breakdown Card */}
-          <div className="feature-card" style={{ padding: '24px', gridColumn: '1 / -1' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-              <Activity size={18} className="text-accent" />
-              <h3 style={{ fontSize: '16px', fontWeight: 700, margin: 0 }}>Alternative Breakdowns</h3>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '16px' }}>
-
-              <div style={{ padding: '16px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                  {results.totalMonths}
-                </div>
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Total Months</div>
-              </div>
-
-              <div style={{ padding: '16px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                  {results.totalWeeks} <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-muted)' }}>+ {results.remainingDaysAfterWeeks} d</span>
-                </div>
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Total Weeks</div>
-              </div>
-
-              <div style={{ padding: '16px', background: 'var(--bg-primary)', borderRadius: '8px', border: '1px solid var(--border)', textAlign: 'center' }}>
-                <div style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>
-                  {results.totalDays.toLocaleString('en-IN')}
-                </div>
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', fontWeight: 600 }}>Total Days</div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      ) : (
-        results && 'error' in results && (
-          <div className="feature-card" style={{ padding: '24px', background: '#fef2f2', border: '1px solid #fecaca' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: '#991b1b' }}>
-              <AlertCircle size={20} />
-              <span style={{ fontWeight: 600 }}>{results.error}</span>
-            </div>
-          </div>
-        )
-      )}
-
-      {/* Utility Styles */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @media (max-width: 900px) {
-          .calculator-grid {
-            grid-template-columns: minmax(0, 1fr) !important;
-          }
-        }
-      `}} />
-    </div>
+    </>
   );
 }

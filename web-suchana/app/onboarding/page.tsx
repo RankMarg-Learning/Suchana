@@ -108,112 +108,148 @@ export default function OnboardingPage() {
   };
 
   return (
-    <div className="onboarding-root">
-      <div className="app-shell" style={{ maxWidth: 640, margin: "auto", minHeight: "100vh", display: "flex", flexDirection: "column", padding: "40px 20px" }}>
+    <div className="onboarding-root" style={{ background: '#f8fafc', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 20px' }}>
+      
+      <div style={{
+        width: '100%',
+        maxWidth: '560px',
+        background: '#fff',
+        border: '1px solid var(--border)',
+        borderRadius: '8px',
+        padding: '36px',
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
         
         {/* Top Progress & Skip */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: '28px' }}>
+          <div style={{ display: "flex", gap: '6px' }}>
             {STEPS.map((_, i) => (
-              <div key={i} className={`progress-dot ${i <= step ? "active" : ""}`} />
+              <div
+                key={i}
+                style={{
+                  width: i === step ? '20px' : '6px',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: i <= step ? 'var(--accent)' : 'var(--border)',
+                  transition: '0.3s ease',
+                }}
+              />
             ))}
           </div>
-          <button className="btn btn-ghost" onClick={() => router.push("/")}>Skip</button>
+          <button
+            onClick={() => router.push("/")}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--text-muted)',
+              fontSize: '13px',
+              fontWeight: 700,
+              cursor: 'pointer',
+            }}
+          >
+            Skip
+          </button>
         </div>
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-          <StepIcon size={28} color="var(--accent-light)" />
-          <h1 style={{ fontSize: 26, margin: 0, fontWeight: 800 }}>{STEPS[step].label}</h1>
+        <div style={{ display: "flex", alignItems: "center", gap: '12px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '6px', background: 'rgba(124,58,237,0.06)', color: 'var(--accent)' }}>
+            <StepIcon size={20} />
+          </div>
+          <h1 style={{ fontSize: '22px', margin: 0, fontWeight: 800, color: 'var(--ink)', fontFamily: 'var(--hd)' }}>
+            {STEPS[step].label}
+          </h1>
         </div>
-        <p style={{ color: "var(--text-muted)", fontSize: 14, marginBottom: 32 }}>Optional · for personalised exam recommendations</p>
+        <p style={{ color: "var(--text-muted)", fontSize: '13.5px', marginBottom: '28px', margin: '0 0 28px 0' }}>
+          Optional · for personalised exam recommendations
+        </p>
 
         {/* Form Body */}
         <div style={{ flex: 1 }}>
           {step === 0 && (
             <div className="onb-slide">
-              <label className="onb-label">Your Name</label>
+              <label className="onb-label" style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--ink)', marginBottom: '8px' }}>Your Name</label>
               <input 
                 className="onb-input" 
                 placeholder="Ravi Kumar"
-                value={name} onChange={(e) => setName(e.target.value)} 
+                value={name} 
+                onChange={(e) => setName(e.target.value)} 
+                style={{
+                  width: '100%',
+                  background: '#fff',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  padding: '12px 16px',
+                  color: 'var(--ink)',
+                  fontSize: '15px',
+                  marginBottom: '20px',
+                  outline: 'none',
+                }}
               />
 
-              <label className="onb-label">Mobile Number</label>
-              <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-                <div className="onb-input-prefix">+91</div>
+              <label className="onb-label" style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--ink)', marginBottom: '8px' }}>Mobile Number</label>
+              <div style={{ display: "flex", gap: '10px', marginBottom: '16px' }}>
+                <div style={{
+                  background: '#fff',
+                  border: '1px solid var(--border)',
+                  borderRadius: '6px',
+                  padding: '12px 16px',
+                  color: 'var(--text-muted)',
+                  fontSize: '15px',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                }}>
+                  +91
+                </div>
                 <input 
-                  className="onb-input" style={{ flex: 1, marginBottom: 0 }}
-                  placeholder="9876543210" maxLength={10} type="tel"
-                  value={phone} onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                  className="onb-input" 
+                  placeholder="9876543210" 
+                  maxLength={10} 
+                  type="tel"
+                  value={phone} 
+                  onChange={(e) => setPhone(e.target.value.replace(/\D/g, ""))}
+                  style={{
+                    flex: 1,
+                    background: '#fff',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    padding: '12px 16px',
+                    color: 'var(--ink)',
+                    fontSize: '15px',
+                    outline: 'none',
+                  }}
                 />
               </div>
-              <p className="onb-hint">Your number is your identity — no OTP needed. We'll use it to sync your profile across devices.</p>
+              <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', lineHeight: 1.5, margin: 0 }}>
+                Your number is your identity — no OTP needed. We'll use it to sync your profile across devices.
+              </p>
             </div>
           )}
 
           {step === 1 && (
             <div className="onb-slide">
-              <label className="onb-label">Select your State / UT</label>
-              <div className="onb-grid">
-                {INDIA_STATES.map((s) => (
-                  <button 
-                    key={s} 
-                    className={`onb-chip ${state === s ? "active" : ""}`}
-                    onClick={() => setState(state === s ? "" : s)}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 2 && (
-            <div className="onb-slide">
-              <label className="onb-label">Which exams are you preparing for?</label>
-              <p className="onb-sublabel">Select all that apply</p>
-              <div className="onb-grid">
-                {CATEGORIES.map((c) => (
-                  <button
-                    key={c.value}
-                    className={`onb-chip ${categories.includes(c.value) ? "active" : ""}`}
-                    onClick={() => toggleCategory(c.value)}
-                  >
-                    <span style={{ marginRight: 6 }}>{c.icon}</span> {c.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {step === 3 && (
-            <div className="onb-slide">
-              <label className="onb-label">Gender</label>
-              <div className="onb-row">
-                {[{ v: "MALE", l: "Male" }, { v: "FEMALE", l: "Female" }, { v: "OTHER", l: "Other" }].map((g) => (
-                  <button key={g.v} className={`onb-btn ${gender === g.v ? "active" : ""}`} onClick={() => setGender(gender === g.v ? "" : g.v)}>
-                    <User size={14} style={{ marginRight: 6 }} /> {g.l}
-                  </button>
-                ))}
-              </div>
-
-              <label className="onb-label">Qualification</label>
-              <div className="onb-row">
-                {[{ v: "TEN_PASS", l: "10th" }, { v: "TWELVE_PASS", l: "12th" }, { v: "GRADUATE", l: "Graduate" }, { v: "POST_GRADUATE", l: "PG" }].map((q) => (
-                  <button key={q.v} className={`onb-btn ${qualification === q.v ? "active" : ""}`} onClick={() => setQualification(qualification === q.v ? "" : q.v)}>
-                    {q.l}
-                  </button>
-                ))}
-              </div>
-
-              <label className="onb-label">Employment Status</label>
-              <div className="onb-row">
-                {[{ v: "STUDENT", l: "Student", i: GraduationCap }, { v: "EMPLOYED", l: "Employed", i: Briefcase }, { v: "UNEMPLOYED", l: "Job Seeking", i: Search }].map((e) => {
-                  const Icon = e.i;
+              <label className="onb-label" style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--ink)', marginBottom: '12px' }}>Select your State / UT</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxHeight: '240px', overflowY: 'auto', paddingRight: '4px' }}>
+                {INDIA_STATES.map((s) => {
+                  const isSelected = state === s;
                   return (
-                    <button key={e.v} className={`onb-btn ${employment === e.v ? "active" : ""}`} onClick={() => setEmployment(employment === e.v ? "" : e.v)}>
-                      <Icon size={14} style={{ marginRight: 6 }} /> {e.l}
+                    <button 
+                      key={s} 
+                      onClick={() => setState(isSelected ? "" : s)}
+                      style={{
+                        background: isSelected ? 'var(--accent)' : '#fff',
+                        border: isSelected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                        borderRadius: '4px',
+                        padding: '8px 12px',
+                        color: isSelected ? '#fff' : 'var(--text2)',
+                        fontSize: '13px',
+                        fontWeight: isSelected ? 800 : 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {s}
                     </button>
                   );
                 })}
@@ -221,96 +257,273 @@ export default function OnboardingPage() {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 2 && (
             <div className="onb-slide">
-              <label className="onb-label">Your Degree / Diploma</label>
-              <div className="onb-grid">
-                {DEGREES.map((d) => (
-                  <button key={d} className={`onb-chip ${degree === d ? "active" : ""}`} onClick={() => setDegree(degree === d ? "" : d)}>
-                    {d}
-                  </button>
-                ))}
+              <label className="onb-label" style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--ink)', marginBottom: '4px' }}>Which exams are you preparing for?</label>
+              <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: '0 0 16px 0' }}>Select all that apply</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {CATEGORIES.map((c) => {
+                  const isSelected = categories.includes(c.value);
+                  return (
+                    <button
+                      key={c.value}
+                      onClick={() => toggleCategory(c.value)}
+                      style={{
+                        background: isSelected ? 'var(--accent)' : '#fff',
+                        border: isSelected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                        borderRadius: '4px',
+                        padding: '8px 12px',
+                        color: isSelected ? '#fff' : 'var(--text2)',
+                        fontSize: '13px',
+                        fontWeight: isSelected ? 800 : 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}
+                    >
+                      <span>{c.icon}</span> {c.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="onb-slide" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div>
+                <label className="onb-label" style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--ink)', marginBottom: '8px' }}>Gender</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {[{ v: "MALE", l: "Male" }, { v: "FEMALE", l: "Female" }, { v: "OTHER", l: "Other" }].map((g) => {
+                    const isSelected = gender === g.v;
+                    return (
+                      <button
+                        key={g.v}
+                        onClick={() => setGender(isSelected ? "" : g.v)}
+                        style={{
+                          background: isSelected ? 'var(--accent)' : '#fff',
+                          border: isSelected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                          borderRadius: '4px',
+                          padding: '10px 14px',
+                          color: isSelected ? '#fff' : 'var(--text2)',
+                          fontSize: '13.5px',
+                          fontWeight: isSelected ? 800 : 600,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <User size={13} /> {g.l}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
 
-              <label className="onb-label" style={{ marginTop: 24 }}>Branch / Specialisation</label>
-              <div className="onb-grid">
-                {SPECIALIZATIONS.map((s) => (
-                  <button key={s} className={`onb-chip ${specialization === s ? "active" : ""}`} onClick={() => setSpecialization(specialization === s ? "" : s)}>
-                    {s}
-                  </button>
-                ))}
+              <div>
+                <label className="onb-label" style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--ink)', marginBottom: '8px' }}>Qualification</label>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {[{ v: "TEN_PASS", l: "10th" }, { v: "TWELVE_PASS", l: "12th" }, { v: "GRADUATE", l: "Graduate" }, { v: "POST_GRADUATE", l: "PG" }].map((q) => {
+                    const isSelected = qualification === q.v;
+                    return (
+                      <button
+                        key={q.v}
+                        onClick={() => setQualification(isSelected ? "" : q.v)}
+                        style={{
+                          background: isSelected ? 'var(--accent)' : '#fff',
+                          border: isSelected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                          borderRadius: '4px',
+                          padding: '10px 14px',
+                          color: isSelected ? '#fff' : 'var(--text2)',
+                          fontSize: '13.5px',
+                          fontWeight: isSelected ? 800 : 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {q.l}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <p className="onb-hint" style={{ marginTop: 16 }}>
-                Help us show you exact "Job Roles" that match your {degree || "Degree"} {specialization ? `in ${specialization}` : ""}.
+
+              <div>
+                <label className="onb-label" style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--ink)', marginBottom: '8px' }}>Employment Status</label>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {[{ v: "STUDENT", l: "Student", i: GraduationCap }, { v: "EMPLOYED", l: "Employed", i: Briefcase }, { v: "UNEMPLOYED", l: "Job Seeking", i: Search }].map((e) => {
+                    const isSelected = employment === e.v;
+                    const Icon = e.i;
+                    return (
+                      <button
+                        key={e.v}
+                        onClick={() => setEmployment(isSelected ? "" : e.v)}
+                        style={{
+                          background: isSelected ? 'var(--accent)' : '#fff',
+                          border: isSelected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                          borderRadius: '4px',
+                          padding: '10px 14px',
+                          color: isSelected ? '#fff' : 'var(--text2)',
+                          fontSize: '13.5px',
+                          fontWeight: isSelected ? 800 : 600,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                        }}
+                      >
+                        <Icon size={13} /> {e.l}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="onb-slide">
+              <label className="onb-label" style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--ink)', marginBottom: '8px' }}>Your Degree / Diploma</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxHeight: '120px', overflowY: 'auto' }}>
+                {DEGREES.map((d) => {
+                  const isSelected = degree === d;
+                  return (
+                    <button
+                      key={d}
+                      onClick={() => setDegree(isSelected ? "" : d)}
+                      style={{
+                        background: isSelected ? 'var(--accent)' : '#fff',
+                        border: isSelected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                        borderRadius: '4px',
+                        padding: '8px 12px',
+                        color: isSelected ? '#fff' : 'var(--text2)',
+                        fontSize: '13px',
+                        fontWeight: isSelected ? 800 : 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {d}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <label className="onb-label" style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: 'var(--ink)', marginBottom: '8px', marginTop: '24px' }}>Branch / Specialisation</label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', maxHeight: '120px', overflowY: 'auto' }}>
+                {SPECIALIZATIONS.map((s) => {
+                  const isSelected = specialization === s;
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setSpecialization(isSelected ? "" : s)}
+                      style={{
+                        background: isSelected ? 'var(--accent)' : '#fff',
+                        border: isSelected ? '1px solid var(--accent)' : '1px solid var(--border)',
+                        borderRadius: '4px',
+                        padding: '8px 12px',
+                        color: isSelected ? '#fff' : 'var(--text2)',
+                        fontSize: '13px',
+                        fontWeight: isSelected ? 800 : 600,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {s}
+                    </button>
+                  );
+                })}
+              </div>
+              <p style={{ fontSize: '12.5px', color: 'var(--text-muted)', lineHeight: 1.5, marginTop: '16px', margin: '16px 0 0 0' }}>
+                Help us show you exact &quot;Job Roles&quot; that match your {degree || "Degree"} {specialization ? `in ${specialization}` : ""}.
               </p>
             </div>
           )}
         </div>
 
         {/* Footer actions */}
-        <div style={{ display: "flex", gap: 12, marginTop: 40, borderTop: "1px solid var(--border)", paddingTop: 24 }}>
+        <div style={{ display: "flex", gap: '12px', marginTop: '36px', borderTop: "1px solid var(--border)", paddingTop: '24px' }}>
           {step > 0 && (
-            <button className="onb-nav-btn back" onClick={() => setStep(s => s - 1)}>
-              <ChevronLeft size={18} /> Back
+            <button
+              onClick={() => setStep(s => s - 1)}
+              style={{
+                flex: 1,
+                background: '#fff',
+                border: '1px solid var(--border)',
+                borderRadius: '6px',
+                padding: '12px',
+                color: 'var(--text2)',
+                fontSize: '14.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+              }}
+            >
+              <ChevronLeft size={16} /> Back
             </button>
           )}
 
           {step < STEPS.length - 1 ? (
-            <button className="onb-nav-btn next" onClick={handleNext} disabled={!canProceed() || loading}>
-              {loading ? <RefreshCw size={18} className="spin-icon" /> : <>Next <ChevronRight size={18} /></>}
+            <button
+              onClick={handleNext}
+              disabled={!canProceed() || loading}
+              style={{
+                flex: 2,
+                background: 'var(--accent)',
+                border: '1px solid var(--accent)',
+                borderRadius: '6px',
+                padding: '12px',
+                color: '#fff',
+                fontSize: '14.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '4px',
+                opacity: (!canProceed() || loading) ? 0.5 : 1,
+              }}
+            >
+              {loading ? <RefreshCw size={16} className="spin-icon" style={{ animation: 'spin 1s linear infinite' }} /> : <>Next <ChevronRight size={16} /></>}
             </button>
           ) : (
-            <button className="onb-nav-btn next" onClick={handleFinish} disabled={loading}>
-              {loading ? <RefreshCw size={18} className="spin-icon" /> : <>Let's Go <Rocket size={18} style={{ marginLeft: 8 }} /></>}
+            <button
+              onClick={handleFinish}
+              disabled={loading}
+              style={{
+                flex: 2,
+                background: 'var(--accent)',
+                border: '1px solid var(--accent)',
+                borderRadius: '6px',
+                padding: '12px',
+                color: '#fff',
+                fontSize: '14.5px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                opacity: loading ? 0.5 : 1,
+              }}
+            >
+              {loading ? <RefreshCw size={16} className="spin-icon" style={{ animation: 'spin 1s linear infinite' }} /> : <>Let's Go <Rocket size={16} /></>}
             </button>
           )}
         </div>
 
       </div>
 
-      <style jsx global>{`
-        .onboarding-root { background: var(--bg-deep); min-height: 100vh; color: var(--text-main); }
-        .progress-dot { width: 8px; height: 8px; border-radius: 4px; background: var(--surface-light); transition: 0.3s ease; }
-        .progress-dot.active { width: 24px; background: var(--accent); }
-        .onb-label { display: block; color: var(--text-muted); font-size: 13px; font-weight: 600; margin-bottom: 8px; margin-top: 16px; }
-        .onb-sublabel { color: var(--text-dim); font-size: 12px; margin-top: -6px; margin-bottom: 12px; }
-        .onb-hint { color: var(--text-dim); font-size: 12px; line-height: 1.5; }
-        .onb-input {
-          width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-          padding: 14px 16px; color: var(--text-main); font-size: 16px; margin-bottom: 16px; outline: none;
-        }
-        .onb-input:focus { border-color: var(--accent); }
-        .onb-input-prefix {
-          background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
-          padding: 14px 16px; display: flex; align-items: center; color: var(--text-muted); font-size: 16px;
-        }
-        .onb-grid { display: flex; flex-wrap: wrap; gap: 8px; }
-        .onb-chip {
-          background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
-          padding: 8px 12px; color: var(--text-muted); font-size: 13px; cursor: pointer;
-          transition: all 0.2s ease; display: inline-flex; align-items: center;
-        }
-        .onb-chip:hover { border-color: rgba(124, 58, 237, 0.4); }
-        .onb-chip.active { background: #3b0764; border-color: var(--accent); color: var(--accent-light); font-weight: 700; }
-        .onb-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-        .onb-btn {
-          background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-          padding: 10px 14px; color: var(--text-muted); font-size: 13px; cursor: pointer;
-          display: inline-flex; align-items: center; transition: all 0.2s ease;
-        }
-        .onb-btn.active { background: #3b0764; border-color: var(--accent); color: var(--accent-light); font-weight: 700; }
-        .onb-nav-btn {
-          border-radius: 14px; padding: 16px; font-size: 16px; font-weight: 700; cursor: pointer;
-          display: flex; align-items: center; justify-content: center; outline: none; border: none; transition: 0.2s;
-        }
-        .onb-nav-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .onb-nav-btn.back { flex: 1; background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
-        .onb-nav-btn.back:hover { background: var(--surface-light); }
-        .onb-nav-btn.next { flex: 2; background: var(--accent); color: #fff; }
-        .onb-nav-btn.next:hover { background: #6d28d9; }
-        .onb-slide { animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+          }
+        `
+      }} />
     </div>
   );
 }

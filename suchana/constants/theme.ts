@@ -6,14 +6,14 @@ const tintColorDark = '#A78BFA';
 
 export const Colors = {
   light: {
-    text: '#09090B',
-    textMuted: '#71717A',
+    text: '#0F172A', // Slate 900 (matches web)
+    textMuted: '#64748B', // Slate 500 (matches web)
     background: '#FFFFFF',
-    card: '#F4F4F5',
-    border: '#E4E4E7',
+    card: '#F8FAFC', // Slate 50 (softer than Zinc)
+    border: '#F1F5F9', // Slate 100
     tint: tintColorLight,
-    icon: '#71717A',
-    tabIconDefault: '#71717A',
+    icon: '#64748B',
+    tabIconDefault: '#64748B',
     tabIconSelected: tintColorLight,
     accent: '#F5F3FF',
     success: '#10B981',
@@ -21,14 +21,14 @@ export const Colors = {
     error: '#EF4444',
   },
   dark: {
-    text: '#FAFAFA',
-    textMuted: '#A1A1AA',
-    background: '#09090B',
-    card: '#18181B',
-    border: '#27272A',
+    text: '#F8FAFC', // Slate 50
+    textMuted: '#94A3B8', // Slate 400
+    background: '#020617', // Slate 950
+    card: '#0F172A', // Slate 900
+    border: '#1E293B', // Slate 800
     tint: tintColorDark,
-    icon: '#A1A1AA',
-    tabIconDefault: '#A1A1AA',
+    icon: '#94A3B8',
+    tabIconDefault: '#94A3B8',
     tabIconSelected: tintColorDark,
     accent: '#2E1065',
     success: '#059669',

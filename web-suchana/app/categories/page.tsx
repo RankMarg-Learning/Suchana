@@ -3,13 +3,25 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  ArrowRight, Landmark, ClipboardList, Building2, TrainFront,
-  ShieldCheck, GraduationCap, Building, Settings, Stethoscope,
-  Briefcase, Scale, Smartphone, Bell, ChevronLeft, ChevronRight
+  ArrowRight, 
+  Landmark, 
+  ClipboardList, 
+  Building2, 
+  TrainFront,
+  ShieldCheck, 
+  GraduationCap, 
+  Building, 
+  Settings, 
+  Stethoscope,
+  Briefcase, 
+  Scale,
+  Calendar,
+  Coins,
+  BookOpen,
+  Wrench
 } from 'lucide-react';
 import { ExamCategory } from '../lib/enums';
 import { enumToSlug } from '../lib/types';
-import { LeaderboardAd, SidebarAd } from "../components/AdUnits";
 
 const CATEGORY_DISPLAY = [
   { id: ExamCategory.UPSC, name: "UPSC", icon: Landmark, desc: "Civil Services, IAS & IFS" },
@@ -19,7 +31,7 @@ const CATEGORY_DISPLAY = [
   { id: ExamCategory.DEFENCE_JOBS, name: "Defence", icon: ShieldCheck, desc: "NDA, CDS, AFCAT & Agniveer" },
   { id: ExamCategory.TEACHING_ELIGIBILITY, name: "Teaching", icon: GraduationCap, desc: "CTET, NET, KVS & States" },
   { id: ExamCategory.STATE_PSC, name: "State PSC", icon: Building, desc: "BPSC, UPPCS, MPSC & Others" },
-  { id: ExamCategory.ENGINEERING_EXAM, name: "Engineering", icon: Settings, desc: "JEE Main, Advanced & BITSET" },
+  { id: ExamCategory.ENGINEERING_EXAM, name: "Engineering", icon: Settings, desc: "JEE Main, Advanced & BITSAT" },
   { id: ExamCategory.MEDICAL_EXAM, name: "Medical", icon: Stethoscope, desc: "NEET UG, PG & AIIMS" },
   { id: ExamCategory.LAW_EXAM, name: "Law / Judiciary", icon: Scale, desc: "CLAT, AILET & State PCS-J" },
   { id: ExamCategory.MBA_EXAM, name: "Management", icon: Briefcase, desc: "CAT, MAT, XAT & GMAT" },
@@ -31,113 +43,135 @@ export default function CategoriesPage() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  if (!mounted) return (
-    <main className="min-h-screen bg-slate-50/50 pt-8 pb-16">
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-8 flex">
-        <section className="flex-1">
-          <div className="h-8 w-48 bg-slate-200 animate-pulse rounded-md mb-4" />
-          <div className="h-4 w-96 bg-slate-200 animate-pulse rounded-md mb-8" />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[1, 2, 3, 4, 5, 6].map(i => <div key={i} className="h-[88px] bg-slate-200 animate-pulse rounded-xl" />)}
+  if (!mounted) {
+    return (
+      <div className="wrap-home" style={{ marginTop: '24px', marginBottom: '60px', opacity: 0.2 }}>
+        <div className="page-grid">
+          <div className="content-col">
+            <div className="skeleton" style={{ height: '40px', width: '250px', marginBottom: '24px' }} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} className="skeleton" style={{ height: '88px', width: '100%', borderRadius: '6px' }} />
+              ))}
+            </div>
           </div>
-        </section>
+          <div className="sidebar-col">
+            <div className="skeleton" style={{ height: '300px', width: '100%', borderRadius: '4px' }} />
+          </div>
+        </div>
       </div>
-    </main>
-  );
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-slate-50/50 pt-8 pb-20">
-      <div className="max-w-[1200px] mx-auto px-4 lg:px-8">
-
-        {/* Ads top */}
-        {/* <div className="mb-8 hidden md:block">
-          <LeaderboardAd id="cat-top-leaderboard" />
-        </div> */}
-
-        <div className="flex flex-col lg:flex-row gap-6">
-
-          {/* Main Content */}
-          <section className="flex-1">
-
-            {/* Breadcrumb */}
-            <nav className="flex items-center text-sm font-medium text-slate-500 mb-6">
-              <Link href="/" className="hover:text-slate-900 transition-colors">Home</Link>
-              <ChevronRight size={14} className="mx-2 text-slate-400" />
-              <span className="text-slate-900">Categories</span>
-            </nav>
-
-            {/* Header */}
-            <div className="flex flex-col space-y-2 mb-8">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900">Explore by Category</h1>
-              <p className="text-slate-500 max-w-[600px] text-[15px]">
-                Browse our comprehensive database of government exams and opportunities categorized by sector and industry.
-              </p>
+    <div className="wrap-home" style={{ marginTop: '24px', marginBottom: '60px' }}>
+      <div className="page-grid">
+        
+        {/* LEFT COLUMN: MAIN CONTENT */}
+        <div className="content-col">
+          
+          {/* HEADER */}
+          <div className="sh">
+            <div className="sh-title">
+              <span className="cat-tag">EXPLORE</span> Browse Exams by Sector
             </div>
+            <div className="sh-link" style={{ color: 'var(--accent)' }}>
+              {CATEGORY_DISPLAY.length} SECTORS
+            </div>
+          </div>
 
-            {/* Category Grid - Shadcn Minimalist Style */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {CATEGORY_DISPLAY.map((cat) => (
+          {/* GRID OF CATEGORIES */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {CATEGORY_DISPLAY.map((cat) => {
+              const Icon = cat.icon;
+              return (
                 <Link
                   key={cat.id}
                   href={`/c/${enumToSlug(cat.id)}`}
-                  className="group flex items-center justify-between p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all"
+                  className="exam-card-modern"
+                  style={{ 
+                    display: 'flex', 
+                    flexDirection: 'row', 
+                    alignItems: 'center', 
+                    gap: '16px', 
+                    textDecoration: 'none',
+                    padding: '16px 20px'
+                  }}
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-slate-100 bg-slate-50 text-slate-600 group-hover:text-slate-900 group-hover:bg-slate-100 transition-colors">
-                      <cat.icon size={22} strokeWidth={2} />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <h3 className="font-semibold text-slate-900 text-[15px] leading-none tracking-tight">{cat.name}</h3>
-                      <p className="text-[13px] text-slate-500 leading-none">{cat.desc}</p>
-                    </div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '6px',
+                    background: 'rgba(124,58,237,0.06)',
+                    color: 'var(--accent)',
+                    flexShrink: 0
+                  }}>
+                    <Icon size={20} strokeWidth={2} />
                   </div>
-                  <ChevronRight size={18} className="text-slate-300 group-hover:text-slate-600 transition-colors" />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{
+                      fontFamily: 'var(--hd)',
+                      fontSize: '16px',
+                      fontWeight: 800,
+                      color: 'var(--ink)',
+                      margin: 0
+                    }}>
+                      {cat.name}
+                    </h3>
+                    <p style={{
+                      fontSize: '13px',
+                      color: 'var(--text-muted)',
+                      margin: '4px 0 0 0'
+                    }}>
+                      {cat.desc}
+                    </p>
+                  </div>
+                  <ArrowRight size={15} color="var(--text-muted)" style={{ flexShrink: 0 }} />
                 </Link>
-              ))}
+              );
+            })}
+          </div>
+
+        </div>
+
+        {/* RIGHT COLUMN: SIDEBAR */}
+        <div className="sidebar-col">
+          
+          {/* ASPIRANT TOOLSET */}
+          <div className="sw" style={{ marginTop: 0 }}>
+            <div className="sw-head flex items-center gap-1.5">
+              <Wrench size={16} className="text-purple-400" /> Aspirant Toolset
             </div>
-
-            <div className="mt-12">
-              <Link href="/" className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-slate-950 border border-slate-200 bg-white hover:bg-slate-100 hover:text-slate-900 h-9 px-4 py-2">
-                <ChevronLeft size={16} className="mr-2" /> Back to Dashboard
-              </Link>
+            <div className="sw-body">
+              <div className="tool-grid" style={{ gridTemplateColumns: '1fr' }}>
+                <Link href="/age-calculator" className="tool-btn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none' }}>
+                  <span className="tool-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Calendar size={18} />
+                  </span>
+                  Age Calculator
+                </Link>
+                <Link href="/salary-calculator" className="tool-btn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none' }}>
+                  <span className="tool-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Coins size={18} />
+                  </span>
+                  Salary Calculator
+                </Link>
+                <Link href="/syllabus" className="tool-btn" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '6px', textDecoration: 'none' }}>
+                  <span className="tool-icon" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <BookOpen size={18} />
+                  </span>
+                  Syllabus Maps
+                </Link>
+              </div>
             </div>
+          </div>
 
-          </section>
-
-          {/* Right Sidebar - Shadcn Sidebar Style */}
-          <aside className="w-full lg:w-[320px] shrink-0 flex flex-col gap-6">
-
-            <SidebarAd id="cat-right-ad-1" />
-
-            {/* Shadcn Card for App Prompt */}
-            {/* <div className="rounded-xl border border-slate-200 bg-white text-slate-950 shadow-sm flex flex-col">
-              <div className="flex flex-col space-y-1.5 p-6 pb-4">
-                <div className="flex items-center gap-2 font-semibold leading-none tracking-tight mb-2">
-                  <Smartphone size={18} className="text-slate-500" />
-                  Get the App
-                </div>
-                <p className="text-sm text-slate-500">
-                  Receive instant push notifications for new exam dates and admit cards.
-                </p>
-              </div>
-              <div className="p-6 pt-0">
-                <a
-                  href="https://play.google.com/store"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors bg-slate-900 text-slate-50 hover:bg-slate-900/90 h-10 px-4 py-2 w-full"
-                >
-                  Coming Soon
-                </a>
-              </div>
-            </div> */}
-
-            <SidebarAd id="cat-right-ad-2" tall />
-
-          </aside>
         </div>
 
       </div>
-    </main>
+    </div>
   );
 }

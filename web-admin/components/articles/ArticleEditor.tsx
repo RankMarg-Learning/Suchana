@@ -45,7 +45,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
-import { SeoPage, Exam, examService, Tag, tagService, authorService } from '@/lib/api';
+import { SeoPage, Exam, examService, Tag, tagService, authorService, seoService } from '@/lib/api';
 import { SeoPageCategory } from '../../constants/enums';
 import {
     Popover,
@@ -277,6 +277,34 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
         cat.value.toLowerCase().includes(categorySearch.toLowerCase())
     );
 
+    const [readMoreSearch, setReadMoreSearch] = useState('');
+    const [isReadMorePopoverOpen, setIsReadMorePopoverOpen] = useState(false);
+    const [searchResults, setSearchResults] = useState<SeoPage[]>([]);
+    const [isSearchingArticles, setIsSearchingArticles] = useState(false);
+
+    useEffect(() => {
+        if (!isReadMorePopoverOpen || !readMoreSearch.trim()) {
+            setSearchResults([]);
+            return;
+        }
+
+        const t = setTimeout(async () => {
+            setIsSearchingArticles(true);
+            try {
+                const res = await seoService.getAllPages({ search: readMoreSearch, limit: 10 });
+                if (res.success) {
+                    setSearchResults(res.data.pages);
+                }
+            } catch (err) {
+                console.error('Search failed:', err);
+            } finally {
+                setIsSearchingArticles(false);
+            }
+        }, 500);
+
+        return () => clearTimeout(t);
+    }, [readMoreSearch, isReadMorePopoverOpen]);
+
 
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
 
@@ -482,20 +510,75 @@ export default function ArticleEditor({ initialData, isSaving, onSave, title }: 
                                                             </TooltipTrigger>
                                                             <TooltipContent>H3</TooltipContent>
                                                         </Tooltip>
+                                                        <Tooltip>
+                                                            <TooltipTrigger asChild>
+                                                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => insertTemplate('\n![Alt Text](https://image-url.jpg)')}>
+                                                                    <ImageIcon className="w-4 h-4 text-emerald-500" />
+                                                                </Button>
+                                                            </TooltipTrigger>
+                                                            <TooltipContent>Insert Image</TooltipContent>
+                                                        </Tooltip>
                                                     </div>
 
                                                     <Separator orientation="vertical" className="h-6 mx-0.5" />
 
-                                                    <div className="flex items-center gap-1 px-2 border-x">
-                                                        <Tooltip>
-                                                            <TooltipTrigger asChild>
-                                                                <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800" onClick={() => insertTemplate('\n[READMORE: Label Name | /slug-url]')}>
-                                                                    <ArrowRightCircle className="w-3 h-3" />
-                                                                    READ MORE
-                                                                </Button>
-                                                            </TooltipTrigger>
-                                                            <TooltipContent>Insert Related Article Link</TooltipContent>
-                                                        </Tooltip>
+                                                     <div className="flex items-center gap-1 px-2 border-x">
+                                                        <Popover open={isReadMorePopoverOpen} onOpenChange={setIsReadMorePopoverOpen}>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <PopoverTrigger asChild>
+                                                                        <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold gap-1 px-2 bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800">
+                                                                            <ArrowRightCircle className="w-3 h-3" />
+                                                                            READ MORE
+                                                                        </Button>
+                                                                    </PopoverTrigger>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent>Search & Insert Related Article</TooltipContent>
+                                                            </Tooltip>
+                                                            <PopoverContent className="w-80 p-0 shadow-2xl border-border" align="start">
+                                                                <div className="flex items-center border-b px-3 py-2 bg-muted/30">
+                                                                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50 text-muted-foreground" />
+                                                                    <input
+                                                                        placeholder="Search articles..."
+                                                                        className="flex h-8 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground"
+                                                                        value={readMoreSearch}
+                                                                        onChange={(e) => setReadMoreSearch(e.target.value)}
+                                                                        autoFocus
+                                                                    />
+                                                                </div>
+                                                                <ScrollArea className="h-[300px] py-1">
+                                                                    {isSearchingArticles ? (
+                                                                        <div className="p-4 text-xs text-center text-muted-foreground flex items-center justify-center gap-2">
+                                                                            <RefreshCw className="w-3 h-3 animate-spin" />
+                                                                            Searching...
+                                                                        </div>
+                                                                    ) : searchResults.length === 0 ? (
+                                                                        <p className="p-4 text-xs text-center text-muted-foreground">
+                                                                            {readMoreSearch ? "No articles found." : "Type to search articles..."}
+                                                                        </p>
+                                                                    ) : (
+                                                                        <div className="px-1">
+                                                                            {searchResults.map((page) => (
+                                                                                <button
+                                                                                    key={page.id}
+                                                                                    className="relative flex w-full cursor-default select-none items-center rounded-sm py-2 px-3 text-sm outline-none hover:bg-accent hover:text-accent-foreground transition-colors text-left"
+                                                                                    onClick={() => {
+                                                                                        insertTemplate(`\n[READMORE: ${page.title} | /${page.slug}]`);
+                                                                                        setIsReadMorePopoverOpen(false);
+                                                                                        setReadMoreSearch('');
+                                                                                    }}
+                                                                                >
+                                                                                    <div className="flex flex-col gap-0.5">
+                                                                                        <span className="font-medium line-clamp-1">{page.title}</span>
+                                                                                        <span className="text-[10px] text-muted-foreground font-mono">/{page.slug}</span>
+                                                                                    </div>
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </ScrollArea>
+                                                            </PopoverContent>
+                                                        </Popover>
 
                                                         <Tooltip>
                                                             <TooltipTrigger asChild>

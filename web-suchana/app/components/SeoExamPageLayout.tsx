@@ -14,7 +14,16 @@ import {
   Bell,
   Info,
   ExternalLink,
-  ChevronRight
+  ChevronRight,
+  Landmark,
+  Edit3,
+  Share2,
+  MessageCircle,
+  Pin,
+  Activity,
+  Link as LinkIcon,
+  Hourglass,
+  ClipboardList
 } from 'lucide-react';
 import MarkdownRenderer from './MarkdownRenderer';
 import { LeaderboardAd, SidebarAd, InFeedAd } from './AdUnits';
@@ -71,6 +80,35 @@ export default function SeoExamPageLayout({
 
   const liveEvent = getLiveEvent();
 
+  const handleShare = (platform: string) => {
+    const shareUrl = typeof window !== 'undefined' ? window.location.href : '';
+    const shareTitle = seoPage.title;
+    const url = encodeURIComponent(shareUrl);
+    const title = encodeURIComponent(shareTitle);
+
+    let shareLink = '';
+    switch (platform) {
+      case 'twitter':
+        shareLink = `https://twitter.com/intent/tweet?url=${url}&text=${title}`;
+        break;
+      case 'whatsapp':
+        shareLink = `https://api.whatsapp.com/send?text=${title}%20${url}`;
+        break;
+      case 'generic':
+        if (navigator.share) {
+          navigator.share({ title: shareTitle, url: shareUrl }).catch(() => { });
+          return;
+        } else {
+          navigator.clipboard.writeText(shareUrl);
+          alert('Link copied to clipboard!');
+          return;
+        }
+    }
+    if (shareLink) {
+      window.open(shareLink, '_blank', 'width=600,height=400');
+    }
+  };
+
   // Breadcrumbs
   const breadcrumbs = [
     { label: "Home", href: "/" },
@@ -96,162 +134,127 @@ export default function SeoExamPageLayout({
   });
 
   return (
-    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
-
-      {/* Top Banner Ad */}
-      <div className="leaderboard-wrap" style={{ paddingTop: 80 }}>
-        <LeaderboardAd id="seo-exam-top-leaderboard" />
+    <div style={{ minHeight: '100vh' }}>
+      {/* Breadcrumb */}
+      <div className="breadcrumb-bar">
+        <div className="breadcrumb">
+          {breadcrumbs.map((crumb, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <span className="sep">›</span>}
+              {i < breadcrumbs.length - 1 ? (
+                <Link href={crumb.href}>{crumb.label}</Link>
+              ) : (
+                <span className="current">{crumb.label}</span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
-      <div className="app-shell" style={{ paddingTop: 8 }}>
-        {/* ─── Left Sidebar ─── */}
-        <aside className="sidebar-left">
-          <div className="sidebar-widget">
-            <Link
-              href={`/exam/${exam.slug}`}
-              className="back-btn"
-              style={{ fontSize: '0.85rem' }}
-              onClick={() => trackFunnelStep('article_to_timeline_click', {
-                article_slug: seoPage.slug,
-                exam_slug: exam.slug
-              })}
-            >
-              <ChevronLeft size={16} /> Full Timeline
-            </Link>
+      <div className="wrap">
+        <div className="ad-leader" style={{ margin: '16px 0 24px' }}>
+          <div className="ad-label">Advertisement</div>
+          <div className="ad-inner">
+            <b>728 × 90 — Leaderboard</b>
+            <span style={{ fontSize: 11 }}>Place AdSense responsive leaderboard unit here</span>
           </div>
-          <SidebarAd id="seo-left-ad-1" />
-          <SidebarAd id="seo-left-ad-2" tall />
-        </aside>
+        </div>
 
-        {/* ─── Main Content ─── */}
-        <main className="feed-main">
-          {/* Breadcrumb */}
-          <nav className="breadcrumb" aria-label="Breadcrumb">
-            <ol className="breadcrumb-list">
-              {breadcrumbs.map((crumb, i) => (
-                <li key={i} className="breadcrumb-item">
-                  {i < breadcrumbs.length - 1 ? (
-                    <>
-                      <Link href={crumb.href} className="breadcrumb-link">{crumb.label}</Link>
-                      <ChevronRight size={12} className="breadcrumb-sep" />
-                    </>
-                  ) : (
-                    <span className="breadcrumb-current" aria-current="page">{crumb.label}</span>
-                  )}
-                </li>
-              ))}
-            </ol>
-          </nav>
+        <div className="article-grid">
+          {/* ARTICLE COLUMN */}
+          <div className="fade-up">
 
-          <article className="seo-article-v2" itemScope itemType="https://schema.org/Article">
-            <header className="article-header" style={{ marginBottom: 'clamp(24px, 5vh, 40px)' }}>
-              {seoPage.category && (
-                <div className="article-tag" style={{ marginBottom: 12 }}>
-                  <span className="exam-tag">{cleanLabel(seoPage.category)}</span>
-                </div>
-              )}
-              <h1 className="article-title" style={{
-                fontSize: 'clamp(1.75rem, 5vw, 2.5rem)',
-                fontWeight: 800,
-                lineHeight: 1.1,
-                marginBottom: '1.5rem',
-                color: 'var(--text-primary)',
-                letterSpacing: '-0.03em'
-              }}>
-                {seoPage.title}
-              </h1>
-
-              <div className="article-meta" style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 24, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
-                {seoPage.author && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <Link 
-                      href={`/author/${seoPage.author.slug}`} 
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
-                      className="group"
-                    >
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                        <img 
-                          src={seoPage.author.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(seoPage.author.name)}&background=7c3aed&color=fff`} 
-                          alt={seoPage.author.name} 
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                      <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem', transition: 'color 0.2s' }} className="group-hover:text-accent">
-                        {seoPage.author.name}
-                      </span>
-                    </Link>
-                    <span style={{ width: 1, height: 14, background: 'var(--border)', opacity: 0.8 }} />
+            {/* HERO */}
+            <div className="art-hero">
+              <div className="art-hero-top">
+                <div className="art-hero-pattern"></div>
+                <div className="art-hero-emoji"><FileText size={64} color="var(--gold)" /></div>
+                <div className="art-hero-overlay"></div>
+                <div className="art-hero-bottom">
+                  <div className="art-hero-cat">
+                    {seoPage.category && <span className="tag-pill">{cleanLabel(seoPage.category)}</span>}
+                    {exam.shortTitle || exam.title}
                   </div>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Link
-                    href={`/s/${enumToSlug(exam.status)}`}
-                    className={`status-badge status-${exam.status}`}
-                  >
-                    <div className="status-dot" />
-                    {statusLabel}
-                  </Link>
-
-                  <div style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                    • {new Date(seoPage.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  </div>
+                  <div className="art-hero-h1">{seoPage.title}</div>
                 </div>
               </div>
+              <div className="art-hero-meta-bar">
+                <div className="art-meta-left">
+                  {exam.conductingBody && (
+                    <div className="art-meta-item"><Landmark size={14} className="mr-1.5 opacity-70" /> <strong>{exam.conductingBody}</strong></div>
+                  )}
+                  {exam.state && (
+                    <div className="art-meta-item"><MapPin size={14} className="mr-1.5 opacity-70" /> <strong>{exam.state}</strong></div>
+                  )}
+                  {seoPage.author && (
+                    <div className="art-meta-item"><Edit3 size={14} className="mr-1.5 opacity-70" /> By <strong>{seoPage.author.name}</strong></div>
+                  )}
+                  <div className="art-meta-item"><Calendar size={14} className="mr-1.5 opacity-70" /> <strong>{new Date(seoPage.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></div>
+                </div>
+                <div className="art-meta-right">
+                  <button onClick={() => handleShare('generic')} className="share-btn flex items-center gap-1.5"><Share2 size={14} /> Share</button>
+                </div>
+              </div>
+            </div>
 
-              {/* LIVE / Primary Action CTA (Rule 1.3) */}
+            {/* STATUS BADGES */}
+            <div className="status-badge-row">
+              <div className="sb sb-blue">
+                <span className="sb-icon"><Pin size={16} /></span>
+                <div>
+                  <span className="sb-label">Status</span>
+                  <span className="sb-val">{statusLabel}</span>
+                </div>
+              </div>
               {liveEvent && (
-                <div style={{
-                  background: 'rgba(16, 185, 129, 0.08)',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
-                  padding: 'clamp(16px, 4vw, 24px)',
-                  borderRadius: 16,
-                  marginBottom: 32,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 16
-                }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    <div style={{ color: 'var(--green)', fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1 }}>
-                      <span className="hero-badge-live-dot" style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--green)', marginRight: 8 }} />
-                      Action Available
-                    </div>
-                    <div style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.3 }}>
-                      {liveEvent.actionLabel || `Access ${cleanLabel(liveEvent.stage)} Portal`}
-                    </div>
+                <div className="sb sb-green">
+                  <span className="sb-icon"><Activity size={16} /></span>
+                  <div>
+                    <span className="sb-label">Live Event</span>
+                    <span className="sb-val">{cleanLabel(liveEvent.stage)}</span>
                   </div>
-                  <a
-                    href={liveEvent.actionUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn btn-primary"
-                    style={{ width: '100%', justifyContent: 'center', padding: '14px 20px', fontSize: '0.9rem' }}
-                    onClick={() => trackConversion('article_live_action_click', {
-                      article_slug: seoPage.slug,
-                      exam_slug: exam.slug,
-                      url: liveEvent.actionUrl
-                    })}
-                  >
-                    Open Official Link <ArrowRight size={18} />
-                  </a>
                 </div>
               )}
-            </header>
+            </div>
 
-            {/* Featured Image if available */}
+            {/* LIVE / Primary Action CTA */}
+            {liveEvent && (
+              <div className="highlights-box" style={{ background: '#f0fdf4', borderLeftColor: '#059669' }}>
+                <div className="hb-head" style={{ color: '#059669' }}>ACTION AVAILABLE</div>
+                <div style={{ fontSize: '16px', fontWeight: 700, marginBottom: '12px', color: '#065f46' }}>
+                  {liveEvent.actionLabel || `Access ${cleanLabel(liveEvent.stage)} Portal`}
+                </div>
+                <a
+                  href={liveEvent.actionUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-gold"
+                  style={{ display: 'inline-block', background: '#059669', color: '#fff' }}
+                  onClick={() => trackConversion('article_live_action_click', {
+                    article_slug: seoPage.slug,
+                    exam_slug: exam.slug,
+                    url: liveEvent.actionUrl
+                  })}
+                >
+                  Open Official Link →
+                </a>
+              </div>
+            )}
+
             {seoPage.ogImage && (
-              <div style={{ marginBottom: 32, borderRadius: 12, overflow: 'hidden', border: '1px solid var(--border)' }}>
+              <div className="article-featured-image" style={{ marginBottom: '24px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border)' }}>
                 <img src={seoPage.ogImage} alt={seoPage.title} style={{ width: '100%', height: 'auto', display: 'block' }} />
               </div>
             )}
 
-            <div className="seo-content" style={{ marginBottom: 60 }}>
+            <div className="art-body-wrap">
               <MarkdownRenderer content={seoPage.content} />
             </div>
 
             {seoPage.faqs && seoPage.faqs.length > 0 && (
+
               <FAQSection faqs={seoPage.faqs} />
             )}
-
 
             {latestArticles.length > 0 && (
               <LatestArticlesSection
@@ -259,92 +262,62 @@ export default function SeoExamPageLayout({
                 articles={latestArticles}
               />
             )}
-
-            {/* Inline Ad */}
-            <div style={{ margin: '40px 0' }}>
-              <InFeedAd id="seo-inline-ad" index={1} />
-            </div>
-          </article>
-        </main>
-
-        {/* ─── Right Sidebar ─── */}
-        <aside className="sidebar-right">
-          <SidebarAd id="seo-right-ad-1" tall />
-
-          {/* Exam Summary Widget */}
-          <div className="sidebar-widget">
-            <h3 className="widget-title" style={{ fontSize: '0.9rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 16 }}>
-              Exam Overview
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ background: 'var(--bg-secondary)', padding: 8, borderRadius: 8, height: 'fit-content' }}>
-                  <Globe size={16} color="var(--accent-2)" />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Organization</div>
-                  <Link
-                    href={`/conduct/${(exam.conductingBody || "ALL").toLowerCase().replace(/ /g, "-")}`}
-                    style={{
-                      color: 'var(--text-primary)',
-                      textDecoration: 'none',
-                      transition: 'color 0.2s',
-                    }}
-                    onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent)'}
-                    onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-primary)'}
-                  >
-                    <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{exam.conductingBody}</div>
-                  </Link>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', gap: 12 }}>
-                <div style={{ background: 'var(--bg-secondary)', padding: 8, borderRadius: 8, height: 'fit-content' }}>
-                  <MapPin size={16} color="var(--green)" />
-                </div>
-                <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Location</div>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{exam.state || "India (National)"}</div>
-                </div>
-              </div>
-            </div>
-
-            {exam.officialWebsite && (
-              <a
-                href={exam.officialWebsite}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-ghost"
-                style={{ width: '100%', marginTop: 20, justifyContent: 'center', fontSize: '0.8rem' }}
-                onClick={() => trackConversion('article_official_site_click', {
-                  article_slug: seoPage.slug,
-                  exam_slug: exam.slug
-                })}
-              >
-                <ExternalLink size={14} /> Visit Official Site
-              </a>
-            )}
           </div>
 
-          <SidebarAd id="seo-right-ad-2" />
-
-          {/* App Download CTA */}
-          {/* <div className="app-download-widget">
-            <div className="app-widget-icon">
-              <Smartphone size={18} color="var(--accent-light)" />
+          {/* SIDEBAR */}
+          <div className="sidebar-col">
+            <div className="sw">
+              <div className="sw-head"><LinkIcon size={18} /> Exam Links</div>
+              <div className="sw-body">
+                <div className="doc-list">
+                  <Link
+                    href={`/exam/${exam.slug}`}
+                    className="doc-item"
+                    onClick={() => trackFunnelStep('article_to_timeline_click', {
+                      article_slug: seoPage.slug,
+                      exam_slug: exam.slug
+                    })}
+                  >
+                    <span className="doc-icon"><Hourglass size={14} className="opacity-70" /></span>
+                    <span className="doc-name">Full Exam Timeline</span>
+                    <span className="doc-badge" style={{ background: 'var(--ink)', color: 'var(--gold-lt)' }}>VIEW</span>
+                  </Link>
+                  {exam.officialWebsite && (
+                    <a href={exam.officialWebsite} target="_blank" className="doc-item">
+                      <span className="doc-icon"><ExternalLink size={14} className="opacity-70" /></span>
+                      <span className="doc-name">Official Website</span>
+                      <span className="doc-badge" style={{ background: '#dbeafe', color: '#1e40af' }}>LINK</span>
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
-            <div className="app-widget-title" style={{ fontSize: '1rem' }}>Get Local Alerts</div>
-            <div className="app-widget-sub" style={{ fontSize: '0.8rem' }}>
-              Download the Suchana app for real-time push notifications on this exam.
-            </div>
-            <a href="#" className="app-widget-btn" style={{ fontSize: '0.85rem' }}>
-              Check for Updates <ArrowRight size={14} />
-            </a>
-          </div> */}
 
-          <SidebarAd id="seo-right-ad-3" tall />
-        </aside>
+            <div className="ad-sidebar ad-s-250">
+              <div className="ad-label">Advertisement</div>
+              <div className="ad-inner">
+                <b>300 × 250</b>
+                <span style={{ fontSize: 11 }}>AdSense rectangle unit</span>
+              </div>
+            </div>
+
+            <div className="sw">
+              <div className="sw-head"><ClipboardList size={18} /> Overview</div>
+              <div className="sw-body" style={{ fontSize: '13px' }}>
+                <div style={{ marginBottom: '12px' }}>
+                  <div style={{ fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Organization</div>
+                  <div style={{ fontWeight: 600 }}>{exam.conductingBody}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '10px', color: 'var(--text3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Location</div>
+                  <div style={{ fontWeight: 600 }}>{exam.state || "India (National)"}</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
-    </div>
+    </div >
   );
 }

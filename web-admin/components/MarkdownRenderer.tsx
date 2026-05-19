@@ -1,5 +1,8 @@
 import { useMemo, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
@@ -49,10 +52,9 @@ export default function MarkdownRenderer({
     final = final.replace(/\[BUTTON:\s*(.*?)\s*\|\s*(.*?)(?:\s*\|\s*(left|center|right))?\s*\]/gi, '<div data-custom="button" data-label="$1" data-url="$2" data-align="$3"></div>');
 
     // 8. MCQ: [MCQ: Question | Opt1; Opt2; Opt3; Opt4 | AnswerIndex | Solution]
-    final = final.replace(/\[MCQ:\s*(.*?)\s*\|\s*(.*?)\s*\|\s*(\d+)\s*\|\s*(.*?)\s*\]/gi, (match, q, opts, ans, sol) => {
-      const encodedOpts = opts.replace(/"/g, '&quot;');
-      const encodedSol = sol.replace(/"/g, '&quot;');
-      return `<div data-custom="mcq" data-question="${q}" data-options="${encodedOpts}" data-answer="${ans}" data-solution="${encodedSol}"></div>`;
+    final = final.replace(/\[MCQ:\s*([\s\S]*?)\s*\|\s*([\s\S]*?)\s*\|\s*(\d+)\s*\|\s*([\s\S]*?)\s*\]/gi, (match, q, opts, ans, sol) => {
+      const escape = (s: string) => s.replace(/\n/g, '\\n').replace(/"/g, '&quot;');
+      return `\n\n<div data-custom="mcq" data-question="${escape(q)}" data-options="${escape(opts)}" data-answer="${ans}" data-solution="${escape(sol)}"></div>\n\n`;
     });
 
     return formatDatesInText(final, includeTime);
@@ -63,8 +65,8 @@ export default function MarkdownRenderer({
   return (
     <div className={`markdown-renderer ${variant}-variant ${className}`}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkBreaks]}
-        rehypePlugins={[rehypeRaw]}
+        remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
+        rehypePlugins={[rehypeRaw, rehypeKatex]}
         components={{
           h2: ({ children }) => <h2 id={generateHeadingId(children)}>{children}</h2>,
           h3: ({ children }) => <h3 id={generateHeadingId(children)}>{children}</h3>,
@@ -88,23 +90,40 @@ export default function MarkdownRenderer({
               );
             }
             if (custom === 'mcq') {
-              const question = props['data-question'];
-              const options = props['data-options']?.split(';').map((o: string) => o.trim()).filter(Boolean) || [];
+              const unescape = (s: string) => s?.replace(/\\n/g, '\n') || '';
+              
+              // Handle new format (data-content) for transition period, or fallback to individual attributes
+              const rawContent = props['data-content'] || '';
+              if (rawContent) {
+                const decoded = rawContent.replace(/__BR__/g, '\n');
+                const parts = decoded.split('|').map((s: string) => s.trim());
+                if (parts.length >= 3) {
+                  const question = parts[0];
+                  const options = parts[1]?.split(';').map((o: string) => o.trim()).filter(Boolean) || [];
+                  const answerIndex = parseInt(parts[2]) - 1;
+                  const solution = parts[3] || '';
+                  return <MCQItem question={question} options={options} answerIndex={answerIndex} solution={solution} />;
+                }
+              }
+
+              // Default: Use individual attributes (backward compatible)
+              const question = unescape(props['data-question']);
+              const options = unescape(props['data-options'])?.split(';').map((o: string) => o.trim()).filter(Boolean) || [];
               const answerIndex = parseInt(props['data-answer']) - 1;
-              const solution = props['data-solution'];
+              const solution = unescape(props['data-solution']);
 
               return <MCQItem question={question} options={options} answerIndex={answerIndex} solution={solution} />;
             }
             if (custom === 'read-more') {
               return (
-                <div className="callout-box callout-related !border-l-0 !pl-0 !items-start gap-3">
+                <div className="callout-box callout-related !border-x-0 !border-y !border-border !rounded-none !shadow-none !bg-transparent !py-3 !my-4 !pl-0 !items-center gap-3 hover:!translate-x-0 transition-none">
                   <div className="flex-shrink-0 mt-1">
                     <span className="bg-primary text-primary-foreground text-[9px] font-bold px-2 py-1 rounded uppercase tracking-wider">
                       Read More
                     </span>
                   </div>
                   <div className="callout-content">
-                    <a href={url} className="underline underline-offset-4 font-bold decoration-primary/40">{label}</a>
+                    <a href={url} className="font-bold hover:text-primary hover:underline underline-offset-4 decoration-primary/40 transition-colors duration-200">{label}</a>
                   </div>
                 </div>
               );
@@ -264,12 +283,28 @@ export default function MarkdownRenderer({
 function MCQItem({ question, options, answerIndex, solution }: { question: string, options: string[], answerIndex: number, solution: string }) {
   const [selected, setSelected] = useState<number | null>(null);
 
+  const markdownComponents = {
+    p: ({ children }: any) => <span className="block mb-1 last:mb-0">{children}</span>,
+    u: ({ children }: any) => <span className="underline underline-offset-2 decoration-1">{children}</span>,
+    a: ({ node, href, children, ...props }: any) => (
+      <a {...props} href={href} className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">
+        {children}
+      </a>
+    ),
+  };
+
   return (
     <div className="my-2 gap-2 text-left">
       <div className="flex gap-0 mb-2">
-        <h5 className="text-base font-bold text-slate-900 leading-tight  m-0">
-          {question}
-        </h5>
+        <div className="text-base font-bold text-slate-900 leading-tight m-0">
+          <ReactMarkdown
+            remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
+            rehypePlugins={[rehypeRaw, rehypeKatex]}
+            components={markdownComponents}
+          >
+            {question}
+          </ReactMarkdown>
+        </div>
       </div>
 
       <div className="space-y-2 mb-6">
@@ -302,7 +337,15 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
                 }`}>
                 {String.fromCharCode(65 + idx)}
               </div>
-              <span className="text-sm font-semibold leading-snug">{opt}</span>
+              <span className="text-sm font-semibold leading-snug">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
+                  rehypePlugins={[rehypeRaw, rehypeKatex]}
+                  components={markdownComponents}
+                >
+                  {opt}
+                </ReactMarkdown>
+              </span>
               {showResult && isCorrect && <CheckCircle size={20} className="ml-auto text-emerald-600" />}
               {showResult && isSelected && !isCorrect && <AlertTriangle size={20} className="ml-auto text-rose-600" />}
             </button>
@@ -320,7 +363,12 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
             <ChevronDown size={20} className="transition-transform group-open:rotate-180" />
           </summary>
           <div className="mt-5 p-5 bg-slate-50 border border-slate-100 rounded-2xl text-base text-slate-700 leading-relaxed">
-            {solution}
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
+              rehypePlugins={[rehypeRaw, rehypeKatex]}
+            >
+              {solution}
+            </ReactMarkdown>
           </div>
         </details>
       )}

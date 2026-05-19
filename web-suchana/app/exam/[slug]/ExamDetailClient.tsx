@@ -31,7 +31,8 @@ import {
   UserSquare2,
   Layers,
   Star,
-  Calculator
+  Calculator,
+  MessageCircle
 } from "lucide-react";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 import {
@@ -351,240 +352,181 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
 
   return (
     <main className="min-h-screen">
-      {/* Top leaderboard ad */}
-      <div className="leaderboard-wrap" style={{ paddingTop: 80 }}>
-        <LeaderboardAd id="exam-top-leaderboard" />
+      <div className="breadcrumb-bar">
+        <div className="breadcrumb">
+          {breadcrumbs.map((crumb, i) => (
+            <React.Fragment key={i}>
+              {i > 0 && <span className="sep">›</span>}
+              {i < breadcrumbs.length - 1 ? (
+                <Link href={crumb.href}>{crumb.label}</Link>
+              ) : (
+                <span className="current">{crumb.label}</span>
+              )}
+            </React.Fragment>
+          ))}
+        </div>
       </div>
 
-      <div className="app-shell">
-        <aside className="sidebar-left">
-          <SidebarAd id="detail-left-ad-1" tall />
-          <SidebarAd id="detail-left-ad-2" />
-
-          {/* Calculators CTA */}
-          <div className="desktop-only feature-card" style={{ padding: '16px', marginTop: '24px', background: 'var(--bg-primary)' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px', color: 'var(--text-secondary)' }}>
-              Useful Tools
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link href="/salary-calculator" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px', textDecoration: 'none' }} className="hover:bg-accent/10 transition-colors">
-                <div style={{ background: 'var(--accent)', color: 'white', padding: '8px', borderRadius: '6px' }}>
-                  <Calculator size={16} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Salary Calculator</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Check in-hand pay</div>
-                </div>
-              </Link>
-              <Link href="/age-calculator" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px', textDecoration: 'none' }} className="hover:bg-accent/10 transition-colors">
-                <div style={{ background: 'var(--accent)', color: 'white', padding: '8px', borderRadius: '6px' }}>
-                  <Calendar size={16} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Age Calculator</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Verify eligibility</div>
-                </div>
-              </Link>
-            </div>
+      <div className="wrap">
+        <div className="ad-leader" style={{ margin: '16px 0 24px' }}>
+          <div className="ad-label">Advertisement</div>
+          <div className="ad-inner">
+            <b>728 × 90 — Leaderboard</b>
+            <span style={{ fontSize: 11 }}>Place AdSense responsive leaderboard unit here</span>
           </div>
-        </aside>
-        <section className="feed-main" id="exam-detail" itemScope itemType="https://schema.org/Article">
-          <div className="exam-detail-header-wrap">
-            <nav className="breadcrumb" aria-label="Breadcrumb">
-              <ol className="breadcrumb-list">
-                {breadcrumbs.map((crumb, i) => (
-                  <li key={i} className="breadcrumb-item">
-                    {i < breadcrumbs.length - 1 ? (
-                      <>
-                        <Link href={crumb.href} className="breadcrumb-link">{crumb.label}</Link>
-                        <span className="breadcrumb-sep">/</span>
-                      </>
-                    ) : (
-                      <span className="breadcrumb-current" aria-current="page">{crumb.label}</span>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            </nav>
+        </div>
 
-            <div className="exam-detail-header">
-              <div className="exam-detail-tags">
-                <span className={`exam-tag level-${(exam.examLevel ?? "national").toLowerCase()}`}>
-                  {cleanLabel(exam.examLevel)}
-                </span>
-                <Link
-                  href={`/c/${enumToSlug(exam.category)}`}
-                  className={`exam-tag cat-${(exam.category ?? "").toLowerCase()}`}
-                  style={{ textDecoration: "none" }}
-                >
-                  {CATEGORIES.find(c => c.value === exam.category)?.label || cleanLabel(exam.category)}
-                </Link>
-                {exam.state && (
-                  <span className="exam-tag">
-                    <MapPin size={10} style={{ display: "inline", marginRight: 2 }} />{exam.state}
-                  </span>
-                )}
+        <div className="article-grid">
+          <div className="fade-up">
+            <div className="art-hero">
+              <div className="art-hero-top">
+                <div className="art-hero-pattern"></div>
+                <div className="art-hero-emoji">🏛️</div>
+                <div className="art-hero-overlay"></div>
+                <div className="art-hero-bottom">
+                  <div className="art-hero-cat">
+                    <span className="tag-pill">{cleanLabel(exam.examLevel ?? "national")}</span>
+                    {CATEGORIES.find(c => c.value === exam.category)?.label || cleanLabel(exam.category)}
+                  </div>
+                  <div className="art-hero-h1">{exam.title}</div>
+                </div>
               </div>
-              <h1 className="exam-detail-title" itemProp="name">{exam.title}</h1>
-              <Link
-                href={`/conduct/${(exam.conductingBody || "ALL").toLowerCase().replace(/ /g, "-")}`}
-                className="exam-detail-org"
-                itemProp="author"
-              >
-                {exam.conductingBody}
-              </Link>
-
-              <div className="exam-detail-status-row">
-                <Link
-                  href={`/s/${enumToSlug(exam.status)}`}
-                  className={`status-badge status-${exam.status}`}
-                >
-                  <div className="status-dot" />
-                  {statusLabel}
-                </Link>
-
-                <div className="exam-share-actions">
-                  <a
-                    href="https://www.google.com/preferences/source?q=examsuchana.in"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="detail-action-btn"
-                    title="Add as a preferred source on Google News"
+              <div className="art-hero-meta-bar">
+                <div className="art-meta-left">
+                  <div className="art-meta-item">🏛️ <strong>{exam.conductingBody}</strong></div>
+                  {exam.state && <div className="art-meta-item">📍 <strong>{exam.state}</strong></div>}
+                </div>
+                <div className="art-meta-right" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button
+                    className="share-btn"
+                    onClick={handleWhatsAppShare}
+                    title="Share on WhatsApp"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px',
+                      padding: 0,
+                      borderRadius: '50%',
+                      border: '1px solid var(--border)',
+                      background: '#fff',
+                      flex: 'none'
+                    }}
                   >
-                    <Star size={14} fill="currentColor" /> <span className="btn-label">Follow on Google</span>
-                  </a>
-                  <button className="detail-action-btn" onClick={handleShare} id="share-btn">
-                    <Share2 size={14} /> <span className="btn-label">{copied ? "Copied!" : "Share"}</span>
-                  </button>
-                  <button className="detail-action-btn whatsapp-btn" onClick={handleWhatsAppShare} title="Share on WhatsApp">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" /></svg>
+                    <MessageCircle size={15} className="text-emerald-500 fill-emerald-500/10" />
                   </button>
                   <button
-                    className={`detail-action-btn ${isSaved ? "detail-action-btn-saved" : ""}`}
-                    onClick={handleSaveToggle}
-                    id="save-btn"
-                    disabled={toggleMutation.isPending}
+                    className="share-btn"
+                    onClick={handleShare}
+                    title="Copy Link"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px',
+                      padding: 0,
+                      borderRadius: '50%',
+                      border: copied ? '1px solid #10b981' : '1px solid var(--border)',
+                      background: copied ? 'rgba(16, 185, 129, 0.1)' : '#fff',
+                      color: copied ? '#10b981' : 'inherit',
+                      flex: 'none'
+                    }}
                   >
-                    {isSaved ? <BookmarkCheck size={14} /> : <BookmarkPlus size={14} />}
+                    <Share2 size={15} />
+                  </button>
+                  <button
+                    className="share-btn"
+                    onClick={handleSaveToggle}
+                    disabled={toggleMutation.isPending}
+                    title={isSaved ? "Saved" : "Save Exam"}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      width: '32px',
+                      height: '32px',
+                      padding: 0,
+                      borderRadius: '50%',
+                      border: isSaved ? '1px solid var(--gold)' : '1px solid var(--border)',
+                      background: isSaved ? 'rgba(245, 158, 11, 0.1)' : '#fff',
+                      color: isSaved ? 'var(--gold)' : 'inherit',
+                      flex: 'none'
+                    }}
+                  >
+                    {isSaved ? <BookmarkCheck size={15} /> : <BookmarkPlus size={15} />}
                   </button>
                 </div>
               </div>
             </div>
-          </div>
 
-          {sorted.length > 0 && (
-            <section className="exam-detail-section" aria-labelledby="timeline-heading">
-              <h2 id="timeline-heading" className="exam-detail-section-title">
-                <Calendar size={18} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
-                Complete Exam Timeline
-              </h2>
-              <div className="tl-container">
-                {sorted.map((event, i) => {
-                  const nextEventWithDate = sorted.slice(i + 1).find(e => e.startsAt);
-                  return (
-                    <TimelineItem
-                      key={event.id}
-                      event={event}
-                      position={i + 1}
-                      isLast={i === sorted.length - 1}
-                      now={mounted ? now : 0}
-                      examSlug={exam.slug}
-                      nextEventStartsAt={!event.endsAt ? (nextEventWithDate?.startsAt ?? null) : null}
-                    />
-                  );
-                })}
-              </div>
-            </section>
-          )}
-          {exam.totalVacancies && (
-            <section className="exam-detail-section" aria-labelledby="vac-heading">
-              <h2 id="vac-heading" className="exam-detail-section-title">Vacancies</h2>
-              <div className="fact-content"><MarkdownRenderer content={exam.totalVacancies ?? "TBA"} variant="fact" /></div>
-            </section>
-          )}
-          {exam.salary && (
-            <section className="exam-detail-section" aria-labelledby="salary-heading">
-              <h2 id="salary-heading" className="exam-detail-section-title">Salary</h2>
-              <div className="fact-content"><MarkdownRenderer content={exam.salary} variant="fact" /></div>
-            </section>
-          )}
 
-          <section className="exam-detail-section" aria-labelledby="elig-heading">
-            <h2 id="elig-heading" className="exam-detail-section-title">Eligibility</h2>
-            <div className="eligibility-container">
-              {exam.age && (
-                <div className="fee-card eligibility-card">
-                  <div className="fee-card-title">
-                    Age Limit
-                  </div>
-                  <div className="exam-detail-desc">
-                    <MarkdownRenderer
-                      content={exam.age}
-                      variant="default"
-                    />
-                  </div>
-                </div>
-              )}
-              <div className="fee-card eligibility-card">
-                <div className="fee-card-title">Qualification Criteria</div>
-                <div className="exam-detail-desc">
-                  <MarkdownRenderer
-                    content={exam.qualificationCriteria || "Please refer to the official notification for detailed qualification requirements."}
-                    variant="default"
-                  />
+
+            {sorted.length > 0 && (
+              <div className="art-body-wrap">
+                <h2 id="timeline-heading">Complete Exam Timeline</h2>
+                <div className="tl-container">
+                  {sorted.map((event, i) => {
+                    const nextEventWithDate = sorted.slice(i + 1).find(e => e.startsAt);
+                    return (
+                      <TimelineItem
+                        key={event.id}
+                        event={event}
+                        position={i + 1}
+                        isLast={i === sorted.length - 1}
+                        now={mounted ? now : 0}
+                        examSlug={exam.slug}
+                        nextEventStartsAt={!event.endsAt ? (nextEventWithDate?.startsAt ?? null) : null}
+                      />
+                    );
+                  })}
                 </div>
               </div>
-            </div>
-          </section>
+            )}
 
-          {/* Mobile-only Calculators CTA */}
-          <div className="mobile-only feature-card" style={{ padding: '16px', marginBottom: '32px', background: 'var(--bg-primary)', flexDirection: 'column' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '16px', color: 'var(--text-secondary)' }}>
-              Useful Tools
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <Link href="/salary-calculator" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px', textDecoration: 'none' }} className="hover:bg-accent/10 transition-colors">
-                <div style={{ background: 'var(--accent)', color: 'white', padding: '8px', borderRadius: '6px' }}>
-                  <Calculator size={16} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Salary Calculator</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Check in-hand pay</div>
-                </div>
-              </Link>
-              <Link href="/age-calculator" style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', background: 'rgba(var(--accent-rgb), 0.05)', borderRadius: '8px', textDecoration: 'none' }} className="hover:bg-accent/10 transition-colors">
-                <div style={{ background: 'var(--accent)', color: 'white', padding: '8px', borderRadius: '6px' }}>
-                  <Calendar size={16} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Age Calculator</div>
-                  <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Verify eligibility</div>
-                </div>
-              </Link>
-            </div>
-          </div>
+            {(exam.salary || exam.age || exam.qualificationCriteria || exam.applicationFee) && (
+              <div className="art-body-wrap">
+                {exam.salary && (
+                  <>
+                    <h2 id="salary-heading">Salary Details</h2>
+                    <MarkdownRenderer content={exam.salary} />
+                  </>
+                )}
 
-          {exam.applicationFee && (
-            <section className="exam-detail-section" aria-labelledby="fee-heading">
-              <h2 id="fee-heading" className="exam-detail-section-title">
-                <Calendar size={18} style={{ display: "inline", marginRight: 8, verticalAlign: "middle" }} />
-                Application Fee
-              </h2>
-              <div className="exam-detail-desc"><MarkdownRenderer content={exam.applicationFee ?? "N/A"} variant="default" /></div>
-            </section>
-          )}
+                {exam.age && (
+                  <>
+                    <h2 id="elig-heading">Age Limit</h2>
+                    <MarkdownRenderer content={exam.age} />
+                  </>
+                )}
 
-          {exam.additionalDetails && (
-            <section className="exam-detail-section" aria-labelledby="add-heading">
-              <h2 id="add-heading" className="exam-detail-section-title">Additional Details</h2>
-              <div className="exam-detail-desc"><MarkdownRenderer content={exam.additionalDetails} variant="default" /></div>
-            </section>
-          )}
+                {exam.qualificationCriteria && (
+                  <>
+                    <h2>Qualification Criteria</h2>
+                    <MarkdownRenderer content={exam.qualificationCriteria || "Please refer to the official notification."} />
+                  </>
+                )}
 
-          {exam.description && (
-            <section className="exam-detail-section" aria-labelledby="desc-heading">
-              <h2 id="desc-heading" className="exam-detail-section-title">About this Exam</h2>
-              <div className="exam-detail-desc" itemProp="description">
+                {exam.applicationFee && (
+                  <>
+                    <h2 id="fee-heading">Application Fee</h2>
+                    <MarkdownRenderer content={exam.applicationFee} />
+                  </>
+                )}
+              </div>
+            )}
+
+            {exam.additionalDetails && (
+              <div className="art-body-wrap">
+                <h2 id="add-heading">Additional Details</h2>
+                <MarkdownRenderer content={exam.additionalDetails} />
+              </div>
+            )}
+
+            {exam.description && (
+              <div className="art-body-wrap">
+                <h2 id="desc-heading">About this Exam</h2>
                 <div
                   style={{
                     display: "-webkit-box",
@@ -605,186 +547,93 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                   </button>
                 )}
               </div>
-            </section>
-          )}
+            )}
 
-          {exam.faqs && exam.faqs.length > 0 && (
-            <FAQSection faqs={exam.faqs} />
-          )}
+            {exam.faqs && exam.faqs.length > 0 && (
 
-          <section className="exam-detail-section" aria-labelledby="links-heading">
-            <h2 id="links-heading" className="exam-detail-section-title">Official Resources</h2>
-            <div className="official-links">
-              {exam.officialWebsite && (
-                <a
-                  href={exam.officialWebsite}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="official-link-btn"
-                  onClick={() => trackConversion('official_website_click', { exam_slug: exam.slug })}
-                >
-                  <Globe size={16} /> Official Website
-                </a>
-              )}
-              {exam.notificationUrl && (
-                <a
-                  href={exam.notificationUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="official-link-btn primary"
-                  onClick={() => trackConversion('official_notification_click', { exam_slug: exam.slug })}
-                >
-                  <FileText size={16} /> Official Notification
-                </a>
-              )}
-            </div>
-          </section>
+              <FAQSection faqs={exam.faqs} />
+            )}
 
-          <div style={{ marginBottom: 24 }}><InFeedAd id="detail-inline-ad-3" index={2} /></div>
-
-          <div style={{ marginTop: 64, marginBottom: 8 }}>
-            <Link href="/" className="btn btn-ghost" style={{ padding: '12px 20px', borderRadius: '12px' }}>
-              <ChevronLeft size={16} /> Back to All Careers
-            </Link>
+            <div style={{ marginBottom: 24 }}><InFeedAd id="detail-inline-ad-3" index={2} /></div>
           </div>
 
-          {exam.seoPages && exam.seoPages.length > 0 && (
-            <section className="exam-detail-section mobile-only" aria-labelledby="related-guides-mobile-heading" style={{ marginTop: 32, flexDirection: 'column' }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: 20 }}>
-                <h2 id="related-guides-mobile-heading" className="exam-detail-section-title" style={{ marginBottom: 0, fontSize: '18px' }}>
-                  <BookOpen size={16} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle', marginTop: '-2px' }} />
-                  Related Guides
-                </h2>
-              </div>
-              <div className="latest-articles-list">
-                {exam.seoPages.map((p: any) => (
-                  <Link key={p.slug} href={`/${p.slug}`} className="article-list-item">
-                    <div className="article-list-content">
-                      <h4 className="article-list-title" style={{ fontSize: '15px' }}>{p.title}</h4>
-                    </div>
-                    <ArrowRight size={16} className="article-list-arrow" />
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {latestArticles.length > 0 && (
-            <section className="exam-detail-section" aria-labelledby="latest-articles-heading" style={{ marginTop: 64 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <h2 id="latest-articles-heading" className="exam-detail-section-title" style={{ marginBottom: 0, fontSize: '18px' }}>
-                  Latest Articles
-                </h2>
-                <Link href="/articles" className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 700 }}>
-                  View All  <ArrowRight size={14} style={{ marginLeft: 6 }} />
-                </Link>
-              </div>
-              <div className="latest-articles-list">
-                {latestArticles.map(article => (
-                  <Link key={article.id} href={`/${article.slug}`} className="article-list-item">
-                    <div className="article-list-content">
-                      <h4 className="article-list-title">{article.title}</h4>
-                      <div className="article-list-meta">
-                        <span className="article-list-tag">{cleanLabel(article.category || "") || "Guide"}</span>
-                        <span className="article-list-date">{new Date(article.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
-                      </div>
-                    </div>
-                    <ArrowRight size={16} className="article-list-arrow" />
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
-
-        </section>
-
-        <aside className="sidebar-right">
-          <div className="app-download-widget" style={{ background: 'linear-gradient(135deg, #0088cc 0%, #00aaff 100%)', border: 'none' }}>
-            <div className="app-widget-icon" >
-              <Bell size={18} color="white" />
-            </div>
-            <div className="app-widget-title" style={{ color: 'white' }}>Join Telegram</div>
-            <div className="app-widget-sub" style={{ color: 'rgba(255,255,255,0.9)' }}>Get the fastest exam notifications directly on your phone.</div>
-            <a
-              href="https://t.me/examsuchana"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="app-widget-btn"
-              style={{ background: 'white', color: '#0088cc' }}
-              onClick={() => trackConversion('telegram_join_click', { source: 'sidebar_widget' })}
-            >
-              <ArrowRight size={14} /> Join Now
-            </a>
-          </div>
-          {exam.seoPages && exam.seoPages.length > 0 && (
-            <div className="sidebar-widget" style={{ padding: '32px 0 16px' }}>
-              <div className="sidebar-widget-title" style={{ padding: '0 24px 16px' }}>
-                <BookOpen size={14} /> Related Guides
-              </div>
-              <div className="sidebar-links">
-                {exam.seoPages.map((p: any) => (
-                  <Link key={p.slug} href={`/${p.slug}`} className="article-link">
-                    <FileText size={14} style={{ marginTop: 2, flexShrink: 0, opacity: 0.7 }} />
-                    <span>{p.title}</span>
-                  </Link>
-                ))}
+          {/* SIDEBAR */}
+          <div className="sidebar-col">
+            <div className="sw">
+              <div className="sw-head">🔗 Official Links</div>
+              <div className="sw-body">
+                <div className="doc-list">
+                  {exam.officialWebsite && (
+                    <a
+                      href={exam.officialWebsite}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="doc-item"
+                      onClick={() => trackConversion('official_website_click', { exam_slug: exam.slug })}
+                    >
+                      <span className="doc-icon">🌐</span>
+                      <span className="doc-name">Official Website</span>
+                      <span className="doc-badge" style={{ background: '#dbeafe', color: '#1e40af' }}>LINK</span>
+                    </a>
+                  )}
+                  {exam.notificationUrl && (
+                    <a
+                      href={exam.notificationUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="doc-item"
+                      onClick={() => trackConversion('official_notification_click', { exam_slug: exam.slug })}
+                    >
+                      <span className="doc-icon">📄</span>
+                      <span className="doc-name">Official Notification</span>
+                      <span className="doc-badge" style={{ background: 'var(--ink)', color: 'var(--gold-lt)' }}>PDF</span>
+                    </a>
+                  )}
+                </div>
               </div>
             </div>
-          )}
 
-
-
-          <SidebarAd id="detail-right-ad-1" />
-          <SidebarAd id="detail-right-ad-2" />
-
-          {/* <div className="app-download-widget">
-            <div className="app-widget-icon">
-              <Smartphone size={18} color="var(--accent-light)" />
-            </div>
-            <div className="app-widget-title">Get the App</div>
-            <div className="app-widget-sub">Push notifications for every exam update. Never miss a deadline.</div>
-            <a
-              href="https://play.google.com/store"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="app-widget-btn"
-              id="detail-app-download"
-              onClick={() => trackConversion('app_download_click', { source: 'sidebar_widget' })}
-            >
-              <ArrowRight size={14} /> Coming Soon
-            </a>
-          </div> */}
-
-
-          <SidebarAd id="detail-right-ad-3" tall />
-        </aside>
-      </div>
-
-      {relatedExams && relatedExams.length > 0 && (
-        <section className="related-bottom-wrap" aria-labelledby="related-heading">
-          <div className="container">
-            <h2 id="related-heading" className="section-title" style={{ fontSize: '22px', marginBottom: '20px' }}>
-              <Layers size={24} style={{ display: "inline", marginRight: 12, verticalAlign: "middle" }} />
-              Recommended Careers
-            </h2>
-            <div className="related-exams-grid">
-              {relatedExams.map(re => (
-                <Link key={re.id} href={`/exam/${re.slug}`} className="simple-related-card">
-                  <div className="simple-card-top">
-                    <div className={`simple-status-dot dot-${re.status.toLowerCase()}`} title={STATUS_LABELS[re.status]} />
-                    <span className="simple-card-cat">{CATEGORIES.find(c => c.value === re.category)?.label || "Other"}</span>
+            {exam.seoPages && exam.seoPages.length > 0 && (
+              <div className="sw">
+                <div className="sw-head">📚 Related Guides</div>
+                <div className="sw-body">
+                  <div className="doc-list">
+                    {exam.seoPages.map((p: any) => (
+                      <Link key={p.slug} href={`/${p.slug}`} className="doc-item">
+                        <span className="doc-icon">📖</span>
+                        <span className="doc-name">{p.title}</span>
+                      </Link>
+                    ))}
                   </div>
-                  <h3 className="simple-card-title">{re.shortTitle || re.title}</h3>
-                  <div className="simple-card-org">{re.conductingBody}</div>
-                </Link>
-              ))}
+                </div>
+              </div>
+            )}
+
+            <div className="sw">
+              <div className="sw-head">🧮 Useful Tools</div>
+              <div className="sw-body">
+                <div className="doc-list">
+                  <Link href="/salary-calculator" className="doc-item">
+                    <span className="doc-icon">💰</span>
+                    <span className="doc-name">Salary Calculator</span>
+                  </Link>
+                  <Link href="/age-calculator" className="doc-item">
+                    <span className="doc-icon">⏳</span>
+                    <span className="doc-name">Age Calculator</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            <div className="ad-sidebar ad-s-250">
+              <div className="ad-label">Advertisement</div>
+              <div className="ad-inner">
+                <b>300 × 250</b>
+                <span style={{ fontSize: 11 }}>AdSense rectangle unit</span>
+              </div>
             </div>
           </div>
-        </section>
-      )}
-
-      <div className="leaderboard-wrap">
-        <LeaderboardAd id="exam-bottom-leaderboard" />
+        </div>
       </div>
     </main>
   );
