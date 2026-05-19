@@ -1,53 +1,60 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import {
-  Info, Zap, Award, Bell, ArrowRight,
-  Landmark, ClipboardList, Building2, TrainFront,
-  ShieldCheck, GraduationCap, Building, Settings, Stethoscope,
-  Search, Sparkles, Smartphone, BookOpen, FileText, Star, Layers
-} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
-import { ExamListRow, SkeletonRow } from "./components/ExamCard";
-import { fetchTrendingContent, fetchSeoPages } from "./lib/api";
-import { enumToSlug } from "./lib/types";
-import { trackFunnelStep, trackConversion } from "./lib/telemetry";
-import { useScrollTracking } from "./hooks/useScrollTracking";
-import { ExamCategory } from "./lib/enums";
-import SiteNav from "./components/SiteNav";
-import SiteFooter from "./components/SiteFooter";
-
-const CATEGORY_DISPLAY = [
-  { id: ExamCategory.UPSC, name: "UPSC", icon: Landmark, desc: "Civil Services & IAS", color: "#3b82f6" },
-  { id: ExamCategory.SSC, name: "SSC", icon: ClipboardList, desc: "CGL, CHSL & MTS", color: "#10b981" },
-  { id: ExamCategory.BANKING_JOBS, name: "Banking", icon: Building2, desc: "IBPS, SBI & RBI", color: "#6366f1" },
-  { id: ExamCategory.RAILWAY_JOBS, name: "Railways", icon: TrainFront, desc: "RRB NTPC & Group D", color: "#f59e0b" },
-  { id: ExamCategory.DEFENCE_JOBS, name: "Defence", icon: ShieldCheck, desc: "NDA, CDS & AFCAT", color: "#ef4444" },
-  { id: ExamCategory.TEACHING_ELIGIBILITY, name: "Teaching", icon: GraduationCap, desc: "CTET, NET & SET", color: "#8b5cf6" },
-  { id: ExamCategory.STATE_PSC, name: "State PSC", icon: Building, desc: "Provincial Services", color: "#06b6d4" },
-  { id: ExamCategory.ENGINEERING_EXAM, name: "Engineering", icon: Settings, desc: "JEE Main & Advanced", color: "#ec4899" },
-  { id: ExamCategory.MEDICAL_EXAM, name: "Medical", icon: Stethoscope, desc: "NEET UG & PG", color: "#f43f5e" },
-];
+import {
+  fetchTrendingContent,
+  fetchHomeTrendingNews,
+  fetchHomePyq,
+  fetchHomeArticles,
+  fetchHomeStrategy,
+  fetchHomeClosingSoon
+} from "./lib/api";
+import {
+  Activity,
+  Folder,
+  Clock,
+  Megaphone,
+  Trophy,
+  Ticket,
+  FileText,
+  FileEdit,
+  BarChart2,
+  Globe,
+  Newspaper
+} from "lucide-react";
+import HomeSidebar from "./components/home/HomeSidebar";
+import { STAGE_LABELS, cleanLabel } from "./lib/types";
 
 export default function HomePage() {
-  useScrollTracking("homepage");
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
   }, []);
 
   const { data: trendingData, isLoading: trendingLoading } = useQuery({
-    queryKey: ["trending-content"],
-    queryFn: fetchTrendingContent,
+    queryKey: ["home-trending"],
+    queryFn: () => fetchTrendingContent(6),
   });
 
-  const { data: latestArticles = [] } = useQuery({
-    queryKey: ["latestSeoPages"],
-    queryFn: async () => {
-      const { pages } = await fetchSeoPages(1, 5);
-      return pages;
-    }
+  const { data: trendingNews = [] } = useQuery({
+    queryKey: ["home-trending-news"],
+    queryFn: () => fetchHomeTrendingNews(3, 1),
+  });
+
+
+
+  const { data: caArticles = [] } = useQuery({
+    queryKey: ["home-articles"],
+    queryFn: () => fetchHomeArticles(3),
+  });
+
+
+
+  const { data: closingSoon = [] } = useQuery({
+    queryKey: ["home-closing-soon"],
+    queryFn: () => fetchHomeClosingSoon(5),
   });
 
   const trendingExams = trendingData?.exams || [];
@@ -55,217 +62,237 @@ export default function HomePage() {
   if (!mounted) return null;
 
   return (
-    <div className="min-h-screen bg-white">
-
-      <main>
-        {/* 1. Hero Gateway Section */}
-        <section className="page-header-expansive">
-          <div className="design-grid-bg" />
-          <div className="orb-v6 orb-v6-primary" style={{ animation: 'orb-float 20s infinite alternate' }} />
-          <div className="orb-v6 orb-v6-secondary" style={{ animation: 'orb-float 20s infinite alternate-reverse' }} />
-
-          <div className="container relative z-10 text-center">
-            <div className="max-w-5xl mx-auto">
-              <div className="hero-badge-v6 animate-fade-in">
-                <Sparkles size={12} className="text-blue-500" /> Live Tracker 2026
-              </div>
-
-              <h1 className="hero-title-v6 animate-slide-up">
-                All India <span className="gradient-text">Exam Tracking</span> Center
-              </h1>
-
-              <p className="hero-desc-v6 animate-slide-up" style={{ animationDelay: '100ms', maxWidth: '800px', margin: '0 auto 40px', fontSize: '1.25rem' }}>
-                The comprehensive dashboard for 1000+ national and state level exams. Discover your next career opportunity with precision tracking.
-              </p>
-
-              {/* Integrated Status Controls (Collabs with Desc) */}
-              <div className="status-hub-neo animate-slide-up" >
-                {[
-                  { label: "Recruitment", title: "Latest Exams", icon: Bell, color: "#2563eb", bg: "#eff6ff", href: "/latest-jobs" },
-                  { label: "Hall Ticket", title: "Admit Cards", icon: Zap, color: "#ea580c", bg: "#fff7ed", href: "/s/admit-card-out" },
-                  { label: "Examination", title: "Results", icon: Award, color: "#059669", bg: "#ecfdf5", href: "/s/result-declared" },
-                  { label: "Verified", title: "Answer Keys", icon: Info, color: "#7c3aed", bg: "#f5f3ff", href: "/s/answer-key-out" }
-                ].map((hub) => (
-                  <Link key={hub.title} href={hub.href} className="status-card-premium group tap-effect">
-                    <div className="status-icon-box" style={{ background: hub.bg }}>
-                      <hub.icon size={22} color={hub.color} />
-                    </div>
-                    <div className="flex-1 text-left">
-                      <span className="status-label-small">{hub.label}</span>
-                      <h3 className="status-label-title">{hub.title}</h3>
-                    </div>
-                    <ArrowRight size={20} className="text-slate-200 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
-                  </Link>
-                ))}
-              </div>
+    <>
+      <div className="home-body">
+        {/* LEADERBOARD AD */}
+        <div className="wrap-home">
+          <div className="ad-leader" style={{ margin: '16px 0 0' }}>
+            <div className="ad-label">Advertisement</div>
+            <div className="ad-inner">
+              <b className="hidden md:block">728 × 90 — Leaderboard</b>
+              <b className="block md:hidden">320 × 50 — Mobile Leaderboard</b>
+              <span style={{ fontSize: 11 }}>Place AdSense responsive leaderboard unit here</span>
             </div>
           </div>
-        </section>
+        </div>
 
-        {/* 3. App Shell Layout (Consistency with Detail Page) */}
-        <div className="app-shell" style={{ paddingTop: '60px' }}>
+        {/* MAIN PAGE */}
+        <div className="wrap-home">
+          <div className="page-grid">
+            {/* CONTENT */}
+            <div className="content-col">
 
-          {/* Left Sidebar: Discovery Filters */}
-          <aside className="sidebar-left desktop-only">
-            <div className="sidebar-widget" style={{ border: 'none', background: 'transparent' }}>
-              <div className="sidebar-widget-title">
-                <Layers size={14} /> Quick Category
-              </div>
-              <div className="category-list">
-                {CATEGORY_DISPLAY.map((cat) => (
-                  <Link
-                    key={cat.id}
-                    href={`/c/${enumToSlug(cat.id)}`}
-                    prefetch={false}
-                    className="category-btn"
-                  >
-                    <cat.icon size={16} strokeWidth={2.4} style={{ color: cat.color }} />
-                    <span>{cat.name}</span>
-                  </Link>
-                ))}
-                <Link href="/categories" className="category-btn" style={{ marginTop: '8px', color: 'var(--accent)' }}>
-                  <ArrowRight size={16} />
-                  <span className="font-bold">View All categories</span>
-                </Link>
-              </div>
-            </div>
-          </aside>
-
-          {/* Main Feed: Featured Updates */}
-          <section className="feed-main">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-              <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-orange-50 text-orange-600 text-[10px] font-bold uppercase tracking-wider mb-3 border border-orange-100">
-                  <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse" /> Live Trending
-                </div>
-                <h2 className="section-title" style={{ fontSize: '28px', marginBottom: '4px' }}>Featured Updates</h2>
-                <p className="section-desc" style={{ fontSize: '14px' }}>The most active exam notifications across India today</p>
-              </div>
-            </div>
-
-            {trendingLoading ? (
-              <div className="exam-list">
-                {[1, 2, 3, 4, 5, 6].map(i => <SkeletonRow key={i} />)}
-              </div>
-            ) : trendingExams.length === 0 ? (
-              <div className="empty-state py-16 text-center bg-slate-50 rounded-[32px] border border-dashed border-slate-200">
-                <Info size={48} className="text-slate-300 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-slate-900">No trending exams found</h3>
-                <p className="text-slate-500">Check back later for updates.</p>
-              </div>
-            ) : (
-              <div className="exam-list-modern shadow-sm shadow-blue-500/5">
-                {trendingExams.map((exam) => (
-                  <ExamListRow key={exam.id} exam={exam} />
-                ))}
-              </div>
-            )}
-
-            <div className="mt-12 text-center">
-              <Link href="/all-exams" className="btn btn-ghost" style={{ padding: '12px 32px', borderRadius: '14px' }}>
-                Browse All 1000+ Exams <ArrowRight size={16} style={{ marginLeft: '8px' }} />
-              </Link>
-            </div>
-
-            {/* Mobile-only Latest Guides */}
-            {latestArticles.length > 0 && (
-              <div className="mobile-only flex-col mt-4 mb-4">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-                  <h2 className="text-2xl font-bold tracking-tight text-slate-900 m-0 flex items-center gap-2">
-                    <BookOpen size={20} className="text-slate-500" />
-                    Latest Guides
-                  </h2>
-                  <Link href="/articles" className="btn btn-ghost" style={{ fontSize: '13px', fontWeight: 700 }}>
-                    View All  <ArrowRight size={14} style={{ marginLeft: 6 }} />
-                  </Link>
-                </div>
-                <div className="latest-articles-list">
-                  {latestArticles.map((article) => (
-                    <Link key={article.id} href={`/${article.slug}`} className="article-list-item">
-                      <div className="article-list-content">
-                        <h4 className="article-list-title">{article.title}</h4>
-                        <div className="article-list-meta">
-                          <span className="article-list-tag">{article.category ? article.category.replace(/_/g, ' ') : "Guide"}</span>
-                          <span className="article-list-date">{new Date(article.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</span>
+              {/* FEATURED */}
+              {
+                trendingNews.length > 0 && (<div className="fade-up d1">
+                  <div className="sh">
+                    <div className="sh-title"><span className="cat-tag">TOP STORIES</span> Today's Highlights</div>
+                    <Link href="/articles" className="sh-link">ALL NEWS →</Link>
+                  </div>
+                  <div className="featured-grid">
+                    <Link href={trendingNews[0] ? `/${trendingNews[0].slug}` : "#"} className="feat-main">
+                      <div className="feat-bg"></div>
+                      <div className="feat-bg-pattern"></div>
+                      <div className="feat-main-inner">
+                        <div className="feat-cat flex items-center gap-1.5"><Activity size={14} className="text-red-500 animate-pulse" /> Breaking · {trendingNews[0]?.category?.replace(/_/g, ' ') || 'Notification'}</div>
+                        <div className="feat-title">{trendingNews[0]?.title || 'UPSC CSE 2026 Prelims Admit Card Released — Exam on 25 May, Centres Allotted'}</div>
+                        <div className="feat-meta">
+                          <span className="flex items-center gap-1"><Folder size={12} className="opacity-80" /> {trendingNews[0]?.exam?.conductingBody || 'UPSC'}</span>
+                          <span className="flex items-center gap-1"><Clock size={12} className="opacity-80" /> {trendingNews[0] ? new Date(trendingNews[0].updatedAt).toLocaleDateString() : '2 hours ago'}</span>
                         </div>
                       </div>
-                      <ArrowRight size={16} className="article-list-arrow" />
                     </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Right Sidebar: Utility Widgets */}
-          <aside className="sidebar-right desktop-only">
-            {/* Telegram Widget */}
-            <div className="app-download-widget" style={{ background: 'linear-gradient(135deg, #0088cc 0%, #00aaff 100%)', border: 'none' }}>
-              <div className="app-widget-icon" >
-                <Bell size={18} color="white" />
-              </div>
-              <div className="app-widget-title" style={{ color: 'white' }}>Join Telegram</div>
-              <div className="app-widget-sub" style={{ color: 'rgba(255,255,255,0.9)' }}>Fastest exam notifications directly on your phone.</div>
-              <a
-                href="https://t.me/examsuchana"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="app-widget-btn"
-                style={{ background: 'white', color: '#0088cc' }}
-                onClick={() => trackConversion('telegram_join_click', { source: 'homepage' })}
-              >
-                Join Now <ArrowRight size={14} />
-              </a>
-            </div>
-
-            {/* Latest Guides Widget */}
-            {latestArticles.length > 0 && (
-              <div className="sidebar-widget" style={{ padding: '24px 0 0 0', border: 'none', background: 'transparent' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                  <h2 className="text-lg font-bold text-slate-900 m-0 flex items-center gap-2">
-                    <BookOpen size={16} className="text-slate-500" />
-                    Latest Guides
-                  </h2>
-                </div>
-                <div className="latest-articles-list">
-                  {latestArticles.map((article) => (
-                    <Link key={article.id} href={`/${article.slug}`} className="article-list-item" style={{ padding: '16px', background: 'white' }}>
-                      <div className="article-list-content">
-                        <h4 className="article-list-title" style={{ fontSize: '14px', lineHeight: 1.4 }}>{article.title}</h4>
+                    <Link href={trendingNews[1] ? `/${trendingNews[1].slug}` : "#"} className="feat-side">
+                      <div>
+                        <div className="fs-cat" style={{ color: 'var(--rose)' }}>{trendingNews[1]?.category?.replace(/_/g, ' ')}</div>
+                        <div className="fs-title">{trendingNews[1]?.title}</div>
                       </div>
-                      <ArrowRight size={14} className="article-list-arrow" />
+                      <div className="fs-meta">{trendingNews[1] && new Date(trendingNews[1].updatedAt).toLocaleDateString()}</div>
                     </Link>
-                  ))}
+                    <Link href={trendingNews[2] && `/${trendingNews[2].slug}`} className="feat-side">
+                      <div>
+                        <div className="fs-cat" style={{ color: 'var(--mint)' }}>{trendingNews[2]?.category?.replace(/_/g, ' ')}</div>
+                        <div className="fs-title">{trendingNews[2]?.title}</div>
+                      </div>
+                      <div className="fs-meta">{trendingNews[2] ? new Date(trendingNews[2].updatedAt).toLocaleDateString() : 'Today'}</div>
+                    </Link>
+                  </div>
                 </div>
-                <Link href="/articles" className="btn btn-ghost w-full" style={{ marginTop: '12px', fontSize: '13px', fontWeight: 700, justifyContent: 'center' }}>
-                  View All Guides <ArrowRight size={14} style={{ marginLeft: 6 }} />
-                </Link>
+
+                )
+              }
+
+              {/* EXAM TIMELINE BOARD */}
+              <div className="fade-up d2">
+                <div className="sh">
+                  <div className="sh-title"><span className="cat-tag">TRACKER</span> Exam Life Cycle</div>
+                  <Link href="/all-exams" className="sh-link">ALL EXAMS →</Link>
+                </div>
+                <div className="timeline-board">
+
+                  {trendingExams.slice(0, 5).map((exam: any) => {
+                    let stages: any[] = [];
+                    if (exam.lifecycleEvents && exam.lifecycleEvents.length > 0) {
+                      let reachedActive = false;
+                      stages = exam.lifecycleEvents.slice(0, 6).map((e: any) => {
+                        const isTBD = !!e.isTBD;
+                        let isDone = false;
+                        let isActive = false;
+
+                        if (!isTBD) {
+                          const now = new Date();
+                          const endsAtDate = e.endsAt ? new Date(e.endsAt) : null;
+                          const startsAtDate = e.startsAt ? new Date(e.startsAt) : null;
+
+                          isDone = !reachedActive && !!endsAtDate && endsAtDate < now;
+                          isActive = !isDone && !reachedActive && !!(
+                            (startsAtDate && startsAtDate <= now && (!endsAtDate || endsAtDate >= now)) ||
+                            (!startsAtDate && endsAtDate && endsAtDate >= now)
+                          );
+                          if (isActive) reachedActive = true;
+                        }
+
+                        const stageTitle = STAGE_LABELS[e.stage] || cleanLabel(e.stage) || e.title || "";
+                        return { title: stageTitle, done: isDone, active: isActive, isTBD };
+                      });
+                    }
+
+                    return (
+                      <Link href={`/exam/${exam.slug}`} key={exam.id} className="tl-exam">
+                        <div>
+                          <div className="tl-name">{exam.title}</div>
+                          <div className="tl-org">{exam.conductingBody}</div>
+                        </div>
+                        <div className="tl-track">
+                          {stages.map((st: any, i: number) => (
+                            <div key={i} className={`tl-step ${st.isTBD ? 'tbd next' : st.done ? 'done' : st.active ? 'active' : 'next'}`}>
+                              <div className="tl-dot">{st.isTBD ? '?' : st.done ? '✓' : st.active ? '●' : '○'}</div>
+                              <div className="tl-slabel">{st.title}</div>
+                              <div className="tl-sstatus" style={{ fontSize: '7px', opacity: 0.6, marginTop: '2px', textTransform: 'uppercase', fontFamily: 'var(--mono)', color: st.isTBD ? '#a8a29e' : st.done ? 'var(--gold-lt)' : st.active ? '#f87171' : 'rgba(255, 255, 255, 0.3)' }}>
+                                {st.isTBD ? 'TBD' : st.done ? 'Done' : st.active ? 'Live' : 'Next'}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="tl-action">
+                          <button className="tl-cta cta-gold">View Details ↗</button>
+                          <span className="tl-days days-soon">{exam.status?.replace(/_/g, ' ')}</span>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            )}
 
-
-
-            {/* App Download Widget */}
-            {/* <div className="app-download-widget">
-              <div className="app-widget-icon">
-                <Smartphone size={18} color="var(--accent-light)" />
+              {/* CATEGORIES HUB */}
+              <div className="fade-up d3">
+                <div className="sh">
+                  <div className="sh-title"><span className="cat-tag">EXPLORE</span> All Content Categories</div>
+                  <Link href="/categories" className="sh-link">BROWSE ALL →</Link>
+                </div>
+                <div className="cat-hub">
+                  <Link href="/topic/notification" className="cat-card cc-notif">
+                    <div className="cc-icon text-blue-500"><Megaphone size={24} /></div>
+                    <div className="cc-name">Notifications</div>
+                    <div className="cc-desc" style={{ color: '#4a6fa5' }}>New vacancies, official recruitment ads</div>
+                  </Link>
+                  <Link href="/topic/result" className="cat-card cc-result">
+                    <div className="cc-icon text-red-500"><Trophy size={24} /></div>
+                    <div className="cc-name">Results</div>
+                    <div className="cc-desc" style={{ color: '#9b2c2c' }}>Merit lists, score cards, cut-off marks</div>
+                  </Link>
+                  <Link href="/topic/admit-card" className="cat-card cc-admit">
+                    <div className="cc-icon text-emerald-600"><Ticket size={24} /></div>
+                    <div className="cc-name">Admit Cards</div>
+                    <div className="cc-desc" style={{ color: '#065f46' }}>Hall tickets, exam city slips, centre details</div>
+                  </Link>
+                  <Link href="/topic/syllabus" className="cat-card cc-syllab">
+                    <div className="cc-icon text-amber-600"><FileText size={24} /></div>
+                    <div className="cc-name">Syllabus & Pattern</div>
+                    <div className="cc-desc" style={{ color: '#92400e' }}>Official syllabus, exam pattern, marking</div>
+                  </Link>
+                  <Link href="/topic/previous-year-papers" className="cat-card cc-pyq">
+                    <div className="cc-icon text-purple-600"><FileEdit size={24} /></div>
+                    <div className="cc-name">Previous Year Q.</div>
+                    <div className="cc-desc" style={{ color: '#5b21b6' }}>PYQ papers with solutions, topic-wise</div>
+                  </Link>
+                  <Link href="/topic/exam-analysis" className="cat-card cc-analysis">
+                    <div className="cc-icon text-orange-500"><BarChart2 size={24} /></div>
+                    <div className="cc-name">Exam Analysis</div>
+                    <div className="cc-desc" style={{ color: '#92400e' }}>Difficulty, good attempts, expected cutoff</div>
+                  </Link>
+                  <Link href="/topic/static-gk" className="cat-card cc-gk">
+                    <div className="cc-icon text-sky-600"><Globe size={24} /></div>
+                    <div className="cc-name">Static GK</div>
+                    <div className="cc-desc" style={{ color: '#0e4f75' }}>History, geography, polity, economy</div>
+                  </Link>
+                  <Link href="/topic/current-affairs" className="cat-card cc-ca">
+                    <div className="cc-icon text-gray-600"><Newspaper size={24} /></div>
+                    <div className="cc-name">Current Affairs</div>
+                    <div className="cc-desc" style={{ color: '#4b5563' }}>Daily, weekly, monthly CA for exams</div>
+                  </Link>
+                </div>
               </div>
-              <div className="app-widget-title">Get the App</div>
-              <div className="app-widget-sub">Push notifications for every exam update.</div>
-              <a
-                href="https://play.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="app-widget-btn"
-                onClick={() => trackConversion('app_download_click', { source: 'homepage' })}
-              >
-                Download Free <ArrowRight size={14} />
-              </a>
-            </div> */}
-          </aside>
+
+              {/* IN-CONTENT AD */}
+              <div className="ad-leader" style={{ margin: '24px 0' }}>
+                <div className="ad-label">Advertisement</div>
+                <div className="ad-inner">
+                  <b className="hidden md:block">728 × 90 — Mid-Content</b>
+                  <b className="block md:hidden">320 × 50 — Mobile Mid-Content</b>
+                  <span style={{ fontSize: 11 }}>Place responsive AdSense unit here</span>
+                </div>
+              </div>
+
+              {/* LATEST ARTICLES */}
+              {caArticles.length > 0 && (
+                <div className="fade-up">
+                  <div className="sh">
+                    <div className="sh-title"><span className="cat-tag">LATEST</span> Fresh Articles</div>
+                    <Link href="/articles" className="sh-link">ALL ARTICLES →</Link>
+                  </div>
+                  <div className="art-row">
+                    {caArticles.map((art: any, idx: number) => {
+                      const colors = [
+                        'linear-gradient(135deg,#1a3a6c,#0c1a3a)',
+                        'linear-gradient(135deg,#7c1d1d,#3a0c0c)',
+                        'linear-gradient(135deg,#0e5c3a,#062b1c)'
+                      ];
+                      const Icons = [FileText, BarChart2, Globe];
+                      const ActiveIcon = Icons[idx % 3];
+                      return (
+                        <Link href={`/${art.slug}`} key={art.id} className="art-card">
+                          <div className="art-thumb" style={{ background: colors[idx % 3] }}>
+                            <div className="art-thumb-bg"><ActiveIcon size={48} /></div>
+                          </div>
+                          <div className="art-body">
+                            <span className="art-cat" style={{ color: 'var(--sky)' }}>{art.category?.replace(/_/g, ' ') || 'Article'}</span>
+                            <div className="art-title">{art.title}</div>
+                            <div className="art-excerpt">{art.metaDescription || art.title}</div>
+                            <div className="art-foot">
+                              <span>{new Date(art.updatedAt).toLocaleDateString()}</span>
+                              <span className="read-more">Read →</span>
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+
+
+
+
+            </div>{/* /content */}
+
+            {/* SIDEBAR */}
+            <HomeSidebar closingSoon={closingSoon} trendingExams={trendingExams} />
+          </div>
         </div>
-      </main>
 
-    </div>
+      </div>
+    </>
   );
 }

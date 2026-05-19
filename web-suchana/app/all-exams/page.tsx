@@ -8,10 +8,13 @@ export const metadata: Metadata = {
 
 export default function AllExamsPage() {
   return (
-    <ExamListingClient
-      title="All Government Exams"
-      category="ALL"
-      status="ALL"
-    />
+    <main className="min-h-screen">
+
+      <ExamListingClient
+        title="All Government Exams"
+        category="ALL"
+        status="ALL"
+      />
+    </main>
   );
 }

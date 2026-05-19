@@ -14,6 +14,7 @@ import { seoRouter } from './seo.routes';
 import { eventsRouter } from './events.routes';
 import { tagRouter } from './tag.routes';
 import authorRouter from './author.routes';
+import { homeRouter } from './home.routes';
 
 const router = Router();
 const v = env.API_VERSION; // "v1"
@@ -28,5 +29,6 @@ router.use(`/api/${v}/config`, configRouter);
 router.use(`/api/${v}/seo-pages`, seoRouter);
 router.use(`/api/${v}/tags`, tagRouter);
 router.use(`/api/${v}/authors`, authorRouter);
+router.use(`/api/${v}/home`, homeRouter);
 
 export { router };

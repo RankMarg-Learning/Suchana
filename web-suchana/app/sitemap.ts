@@ -1,14 +1,12 @@
 import { MetadataRoute } from "next";
-import { SITE_URL, fetchAllExamSlugs, fetchAllSeoPageSlugs } from "./lib/api";
-import { EXAM_CATEGORIES } from "./lib/enums";
+import { SITE_URL, fetchAllSeoPageSlugs } from "./lib/api";
 import { enumToSlug } from "./lib/types";
 
 export const dynamic = "force-dynamic";
 
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [examSlugs, seoSlugs] = await Promise.all([
-    fetchAllExamSlugs(),
+  const [seoSlugs] = await Promise.all([
     fetchAllSeoPageSlugs(),
   ]);
 
@@ -36,12 +34,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/age-calculator`, lastModified: now, changeFrequency: "weekly", priority: 0.8 },
   ];
 
-  const examPages: MetadataRoute.Sitemap = examSlugs.map((slug) => ({
-    url: `${SITE_URL}/exam/${slug}`,
-    lastModified: now,
-    changeFrequency: "daily" as const,
-    priority: 0.9,
-  }));
+
 
   const seoPages: MetadataRoute.Sitemap = seoSlugs.map((slug) => ({
     url: `${SITE_URL}/${slug}`,
@@ -76,7 +69,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticPages,
-    ...examPages,
     ...seoPages,
     ...statusPages,
     // ...categoryPages,

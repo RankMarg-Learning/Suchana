@@ -294,6 +294,10 @@ export async function getTrendingContent() {
                 id: true, title: true, shortTitle: true, slug: true,
                 category: true, conductingBody: true, status: true,
                 updatedAt: true,
+                lifecycleEvents: {
+                    orderBy: { stageOrder: 'asc' },
+                    select: { stage: true, stageOrder: true, title: true, isTBD: true, startsAt: true, endsAt: true, actionUrl: true }
+                }
             }
         });
 
@@ -314,13 +318,48 @@ export async function getTrendingContent() {
                     id: true, title: true, shortTitle: true, slug: true,
                     category: true, conductingBody: true, status: true,
                     updatedAt: true,
+                    lifecycleEvents: {
+                        orderBy: { stageOrder: 'asc' },
+                        select: { stage: true, stageOrder: true, title: true, isTBD: true, startsAt: true, endsAt: true, actionUrl: true }
+                    }
                 }
             });
             finalExams = [...finalExams, ...resultExams];
         }
 
+        const [latestArticles, pyqArticles, caArticles, guideArticles] = await Promise.all([
+            prisma.seoPage.findMany({
+                where: { isPublished: true },
+                take: 4,
+                orderBy: { updatedAt: 'desc' },
+                include: { exam: { select: { conductingBody: true } } }
+            }),
+            prisma.seoPage.findMany({
+                where: { isPublished: true, category: 'PREVIOUS_YEAR_PAPERS' },
+                take: 2,
+                orderBy: { updatedAt: 'desc' },
+                include: { exam: { select: { conductingBody: true } } }
+            }),
+            prisma.seoPage.findMany({
+                where: { isPublished: true, category: 'CURRENT_AFFAIRS' },
+                take: 3,
+                orderBy: { updatedAt: 'desc' },
+                include: { exam: { select: { conductingBody: true } } }
+            }),
+            prisma.seoPage.findMany({
+                where: { isPublished: true, category: 'PREPARATION_GUIDES' },
+                take: 3,
+                orderBy: { updatedAt: 'desc' },
+                include: { exam: { select: { conductingBody: true } } }
+            })
+        ]);
+
         return {
-            exams: finalExams
+            exams: finalExams,
+            latestArticles,
+            pyqArticles,
+            caArticles,
+            guideArticles
         };
     };
 

@@ -17,15 +17,18 @@ export function ImportantLinksWidget() {
   ];
 
   return (
-    <div className="sidebar-widget">
-      <h3 className="sidebar-widget-title">Quick Links</h3>
-      <div className="sidebar-links">
-        {links.map((link, idx) => (
-          <Link key={idx} href={link.url} className="sidebar-link-item group">
-            <span className="sidebar-link-icon">{link.icon}</span>
-            <span className="sidebar-link-text">{link.label}</span>
-          </Link>
-        ))}
+    <div className="sw">
+      <div className="sw-head">🔗 Important Links</div>
+      <div className="sw-body">
+        <div className="doc-list">
+          {links.map((link, idx) => (
+            <Link key={idx} href={link.url} className="doc-item no-underline">
+              <span className="doc-icon">{link.icon}</span>
+              <span className="doc-name">{link.label}</span>
+              <span className="doc-badge">GO</span>
+            </Link>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -36,19 +39,23 @@ export function CategoryWidget() {
   const displayCats = CATEGORIES.filter(c => c.value !== 'ALL').slice(0, 8);
 
   return (
-    <div className="sidebar-widget">
-      <h3 className="sidebar-widget-title">Exams By Category</h3>
-      <div className="sidebar-category-grid">
-        {displayCats.map((cat, idx) => (
-          <Link key={idx} href={`/c/${slugify(cat.value)}`} className="sidebar-cat-item group">
-            <span className="cat-icon">{cat.icon}</span>
-            <span className="cat-label">{cat.label}</span>
-          </Link>
-        ))}
+    <div className="sw">
+      <div className="sw-head">📁 Categories <span>{displayCats.length}</span></div>
+      <div className="sw-body">
+        <div className="sb-art-list">
+          {displayCats.map((cat, idx) => (
+            <Link key={idx} href={`/c/${slugify(cat.value)}`} className="sb-art-item no-underline" style={{ padding: '8px 0' }}>
+              <span className="sb-art-num">{cat.icon}</span>
+              <div className="flex flex-col">
+                <span className="sb-art-title" style={{ fontSize: '13px' }}>{cat.label}</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+        <Link href="/categories" className="btn-outline w-full text-center mt-4 no-underline block" style={{ borderColor: 'var(--border)', color: 'var(--text)' }}>
+          View All Categories <ChevronRight size={12} className="inline-block" />
+        </Link>
       </div>
-      <Link href="/categories" className="view-more-link mt-4">
-        View All Categories <ChevronRight size={12} />
-      </Link>
     </div>
   );
 }
@@ -71,34 +78,26 @@ export function RelatedArticlesWidget({ tags, currentSlug }: RelatedProps) {
   if (!mainTag || (!isLoading && related.length === 0)) return null;
 
   return (
-    <div className="sidebar-widget">
-      <h3 className="sidebar-widget-title">Suggested Guides</h3>
-      <div className="sidebar-related-list">
-        {isLoading ? (
-          [...Array(3)].map((_, i) => (
-            <div key={i} className="related-skeleton h-16 w-full bg-muted/20 animate-pulse rounded-xl mb-3" />
-          ))
-        ) : (
-          related.map((article) => (
-            <Link key={article.id} href={`/${article.slug}`} className="related-item group">
-              <div className="related-thumb">
-                <img
-                  src={article.ogImage || `https://ui-avatars.com/api/?name=${encodeURIComponent(article.title)}&background=7c3aed&color=fff&size=100`}
-                  alt={article.title}
-                />
-              </div>
-              <div className="related-info">
-                <h4 className="related-title line-clamp-2 group-hover:text-primary transition-colors">
-                  {article.title}
-                </h4>
-                <div className="related-meta">
-                  <Clock size={10} />
-                  <span>5 min read</span>
+    <div className="sw">
+      <div className="sw-head">📚 Suggested Guides</div>
+      <div className="sw-body">
+        <div className="sb-art-list">
+          {isLoading ? (
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="related-skeleton h-16 w-full bg-muted/20 animate-pulse mb-3" />
+            ))
+          ) : (
+            related.map((article, idx) => (
+              <Link key={article.id} href={`/${article.slug}`} className="sb-art-item no-underline">
+                <span className="sb-art-num">0{idx + 1}</span>
+                <div className="flex flex-col">
+                  <span className="sb-art-title">{article.title}</span>
+                  <span className="sb-art-cat">{mainTag?.name || 'Guide'}</span>
                 </div>
-              </div>
-            </Link>
-          ))
-        )}
+              </Link>
+            ))
+          )}
+        </div>
       </div>
     </div>
   );
@@ -116,33 +115,36 @@ export function ExamTimelineWidget({ exam }: TimelineProps) {
   const now = Date.now();
 
   return (
-    <div className="sidebar-widget">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="sidebar-widget-title !mb-0">Exam Timeline</h3>
-        <span className="text-[10px] font-bold text-primary bg-primary/5 px-2 py-0.5 rounded-full uppercase tracking-tighter">Live</span>
-      </div>
-      <div className="mini-timeline">
-        {events.map((event, idx) => {
-          const state = getStageState(event, now);
-          return (
-            <div key={event.id} className={`timeline-step ${state}`}>
-              <div className="step-indicator">
-                <div className="step-dot" />
-                {idx !== events.length - 1 && <div className="step-line" />}
+    <div className="sw">
+      <div className="sw-head">⏳ Exam Timeline <span>Live</span></div>
+      <div className="sw-body !p-0">
+        <div className="flex flex-col">
+          {events.map((event, idx) => {
+            const state = getStageState(event, now);
+            const isDone = state === 'done';
+            const isActive = state === 'active';
+
+            return (
+              <div key={event.id} className="dl-item px-4">
+                <div className={`dl-days ${isActive ? 'urgent' : ''}`}>
+                  {isDone ? '✓' : (isActive ? 'NOW' : 'TBD')}
+                </div>
+                <div className="flex flex-col flex-1">
+                  <span className="dl-name">{event.title}</span>
+                  <span className="dl-date">
+                    {event.isTBD ? 'To Be Announced' : formatDate(event.startsAt || event.endsAt)}
+                  </span>
+                </div>
               </div>
-              <div className="step-content">
-                <span className="step-label">{event.title}</span>
-                <span className="step-date">
-                  {event.isTBD ? 'To Be Announced' : formatDate(event.startsAt || event.endsAt)}
-                </span>
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        <div className="p-4 border-t border-[var(--border)] bg-[var(--paper)]">
+          <Link href={`/exams/${exam.slug}`} className="btn-outline w-full text-center no-underline block" style={{ borderColor: 'var(--border)', color: 'var(--text)' }}>
+            View Full Details <ExternalLink size={12} className="inline-block" />
+          </Link>
+        </div>
       </div>
-      <Link href={`/exams/${exam.slug}`} className="timeline-footer-link">
-        View Full Details <ExternalLink size={12} />
-      </Link>
     </div>
   );
 }

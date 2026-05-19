@@ -17,13 +17,41 @@ import {
   Wallet,
   HelpCircle,
   TrendingUp,
-  Award
+  Award,
+  FileEdit,
+  BarChart2,
+  Globe
 } from 'lucide-react';
 
 import { getMetadataForCategory } from '../topic-metadata';
 
 interface Props {
   params: Promise<{ category: string }>;
+}
+
+function mapSlugToCategoryEnum(slug: string): SeoPageCategory | null {
+  const norm = slug.toLowerCase();
+
+  if (norm === 'previous-year-papers' || norm === 'previous-year-paper') {
+    return SeoPageCategory.PREVIOUS_YEAR_PAPER;
+  }
+  if (norm === 'exam-analysis' || norm === 'analysis') {
+    return SeoPageCategory.ANALYSIS;
+  }
+  if (norm === 'static-gk' || norm === 'gk-static') {
+    return SeoPageCategory.GK_STATIC;
+  }
+  if (norm === 'preparation-guides' || norm === 'preparation-strategy') {
+    return SeoPageCategory.PREPARATION_STRATEGY;
+  }
+
+  const standard = norm.toUpperCase().replace(/-/g, '_');
+  const exists = ARTICLE_CATEGORIES.some(c => c.value === standard);
+  if (exists) {
+    return standard as SeoPageCategory;
+  }
+
+  return null;
 }
 
 function getCategoryUI(cat: SeoPageCategory) {
@@ -82,20 +110,67 @@ function getCategoryUI(cat: SeoPageCategory) {
         subtitle: "Comprehensive vacancy details and post-wise breakdown.",
         trendingTitle: "Mega Vacancies"
       };
+    case SeoPageCategory.PREVIOUS_YEAR_PAPER:
+      return {
+        icon: <FileEdit size={28} />,
+        subtitle: "Practice with previous years' solved papers and actual exam questions.",
+        trendingTitle: "Trending PYQ Papers"
+      };
+    case SeoPageCategory.ANALYSIS:
+      return {
+        icon: <BarChart2 size={28} />,
+        subtitle: "Detailed exam reviews, difficulty levels, and expected cutoff analysis.",
+        trendingTitle: "Latest Exam Analyses"
+      };
+    case SeoPageCategory.GK_STATIC:
+      return {
+        icon: <Globe size={28} />,
+        subtitle: "Comprehensive static general knowledge updates and subject notes.",
+        trendingTitle: "GK Resources"
+      };
+    case SeoPageCategory.PREPARATION_STRATEGY:
+      return {
+        icon: <TrendingUp size={28} />,
+        subtitle: "Expert-curated exam strategy, preparation schedules, and tips.",
+        trendingTitle: "Popular Guides"
+      };
     default:
       return base;
   }
 }
 
 export async function generateStaticParams() {
-  return ARTICLE_CATEGORIES.map((cat) => ({
-    category: enumToSlug(cat.value),
+  const slugs = new Set<string>();
+  ARTICLE_CATEGORIES.forEach((cat) => {
+    const stdSlug = enumToSlug(cat.value);
+    slugs.add(stdSlug);
+
+    // Add common prettier/pluralized aliases used in menus and urls
+    if (cat.value === SeoPageCategory.PREVIOUS_YEAR_PAPER) {
+      slugs.add('previous-year-papers');
+    } else if (cat.value === SeoPageCategory.ANALYSIS) {
+      slugs.add('exam-analysis');
+    } else if (cat.value === SeoPageCategory.GK_STATIC) {
+      slugs.add('static-gk');
+    } else if (cat.value === SeoPageCategory.PREPARATION_STRATEGY) {
+      slugs.add('preparation-guides');
+    }
+  });
+
+  return Array.from(slugs).map(slug => ({
+    category: slug,
   }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category: catSlug } = await params;
-  const catEnum = slugToEnum(catSlug) as SeoPageCategory;
+  const catEnum = mapSlugToCategoryEnum(catSlug);
+
+  if (!catEnum) {
+    return {
+      title: 'Page Not Found | Exam Suchana',
+    };
+  }
 
   const categoryData = ARTICLE_CATEGORIES.find(c => c.value === catEnum);
   const label = categoryData?.label || cleanLabel(catEnum);
@@ -105,35 +180,52 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DynamicCategoryPage({ params }: Props) {
   const { category: catSlug } = await params;
-  const catEnum = slugToEnum(catSlug) as SeoPageCategory;
+  const catEnum = mapSlugToCategoryEnum(catSlug);
+
+  if (!catEnum) notFound();
 
   const categoryData = ARTICLE_CATEGORIES.find(c => c.value === catEnum);
   if (!categoryData) notFound();
 
   const label = categoryData.label;
   const ui = getCategoryUI(catEnum);
-  console.log("label", label);
-  console.log("catEnum", catEnum);
 
   return (
     <Suspense fallback={
-      <main className="min-h-screen">
-        <div className="app-shell" style={{ opacity: 0.1 }}>
-          <aside className="sidebar-left"><div className="sidebar-widget"><div className="skeleton" style={{ height: '300px', borderRadius: '16px' }} /></div></aside>
-          <section className="feed-main">
-            <div className="feed-header"><div className="skeleton" style={{ height: '120px', borderRadius: '16px' }} /></div>
-            <div className="article-skeleton-list" style={{ marginTop: '32px' }}>
-              {[1, 2, 3].map(i => (
-                <div key={i} className="article-skeleton-item">
-                  <div className="skeleton" style={{ height: '24px', width: '60%', borderRadius: '4px', marginBottom: '12px' }} />
-                  <div className="skeleton" style={{ height: '14px', width: '40%', borderRadius: '4px' }} />
-                </div>
-              ))}
-            </div>
-          </section>
-          <aside className="sidebar-right"><div className="sidebar-widget"><div className="skeleton" style={{ height: '400px', borderRadius: '16px' }} /></div></aside>
+      <div className="home-body min-h-screen">
+        <div className="wrap-home" style={{ marginTop: '20px' }}>
+          <div className="ad-leader animate-pulse" style={{ height: '90px', background: 'var(--border)' }} />
         </div>
-      </main>
+        <div className="wrap-home">
+          <div className="page-grid" style={{ opacity: 0.15 }}>
+            <div className="content-col">
+              <div className="sh">
+                <div className="skeleton" style={{ height: '36px', width: '45%', borderRadius: '4px' }} />
+              </div>
+              <div className="skeleton" style={{ height: '16px', width: '70%', borderRadius: '4px', marginBottom: '24px' }} />
+              <div className="skeleton" style={{ height: '42px', borderRadius: '4px', marginBottom: '24px' }} />
+              <div className="article-skeleton-list">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="article-skeleton-item" style={{ padding: '20px 8px', borderBottom: '1px solid var(--border)' }}>
+                    <div className="skeleton" style={{ height: '24px', width: '65%', borderRadius: '4px', marginBottom: '12px' }} />
+                    <div className="skeleton" style={{ height: '14px', width: '25%', borderRadius: '4px' }} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="sidebar-col">
+              <div className="sw animate-pulse" style={{ height: '220px', border: '1px solid var(--border)' }}>
+                <div className="sw-head flex items-center gap-1.5">
+                  <div className="skeleton" style={{ height: '16px', width: '120px' }} />
+                </div>
+                <div className="sw-body">
+                  <div className="skeleton" style={{ height: '120px' }} />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     }>
       <CategoryFeedClient
         category={catEnum}

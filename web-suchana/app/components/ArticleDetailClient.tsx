@@ -4,10 +4,9 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeoPages } from '../lib/api';
 import LatestArticlesSection from './LatestArticlesSection';
-import { Share2, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { Share2, MessageCircle, FileText, Landmark, MapPin, Edit3, Calendar, Clock, Bookmark } from 'lucide-react';
 import { SeoPage } from '../lib/types';
 import MarkdownRenderer from './MarkdownRenderer';
-import { LeaderboardAd, SidebarAd } from './AdUnits';
 import { cleanLabel } from '../lib/types';
 import FAQSection from './FAQSection';
 import { ImportantLinksWidget, RelatedArticlesWidget, ExamTimelineWidget, CategoryWidget } from './SidebarWidgets';
@@ -56,96 +55,76 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
   };
 
   return (
-    <div style={{ background: 'var(--bg-primary)', minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh' }}>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(articleJsonLd) }} />
 
-      <div className="leaderboard-wrap" style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
-        <LeaderboardAd id="article-top-leaderboard" />
-      </div>
+      {/* Breadcrumb could go here if we wanted */}
 
-      <div className="app-shell">
-        <aside className="sidebar-left">
-          <ImportantLinksWidget />
+      <div className="wrap">
+        <div className="ad-leader" style={{ margin: '16px 0 24px' }}>
+          <div className="ad-label">Advertisement</div>
+          <div className="ad-inner">
+            <b>728 × 90 — Leaderboard</b>
+            <span style={{ fontSize: 11 }}>Place AdSense responsive leaderboard unit here</span>
+          </div>
+        </div>
 
-          <SidebarAd id="article-left-ad-1" tall />
-        </aside>
+        <div className="article-grid">
+          {/* ARTICLE COLUMN */}
+          <div className="fade-up">
 
-        <main className="feed-main">
-          <article className="seo-article-v3" >
-            <header className="article-header" style={{ marginBottom: '4rem' }}>
-              {page.category && (
-                <div className="article-tag" style={{ marginBottom: 20 }}>
-                  <span className="exam-tag">{cleanLabel(page.category)}</span>
-                </div>
-              )}
-              <h1 className="article-title" style={{
-                fontSize: 'clamp(1.75rem, 4vw, 2.25rem)',
-                fontWeight: 800,
-                lineHeight: 1.1,
-                marginBottom: '1.5rem',
-                color: 'var(--text-primary)',
-                letterSpacing: '-0.03em'
-              }}>
-                {page.title}
-              </h1>
-              <div className="article-meta" style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 20, color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: 40, borderBottom: '1px solid var(--border)', paddingBottom: 32 }}>
-                {page.author && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <Link
-                      href={`/author/${page.author.slug}`}
-                      style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}
-                      className="group"
-                    >
-                      <div style={{ width: 28, height: 28, borderRadius: '50%', overflow: 'hidden', border: '1px solid var(--border)' }}>
-                        <img
-                          src={page.author.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(page.author.name)}&background=7c3aed&color=fff`}
-                          alt={page.author.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                        />
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ fontWeight: 700, color: 'var(--text-primary)', fontSize: '0.9rem', transition: 'color 0.2s' }} className="group-hover:text-accent">
-                          {page.author.name}
-                        </span>
-                      </div>
-                    </Link>
-                    <span style={{ width: 1, height: 14, background: 'var(--border)', opacity: 0.8 }} />
+            {/* HERO */}
+            <div className="art-hero">
+              <div className="art-hero-top">
+                <div className="art-hero-pattern"></div>
+                <div className="art-hero-emoji"><FileText size={64} color="var(--gold)" /></div>
+                <div className="art-hero-overlay"></div>
+                <div className="art-hero-bottom">
+                  <div className="art-hero-cat">
+                    {page.category && <span className="tag-pill">{cleanLabel(page.category)}</span>}
+                    {page.exam && <span>{page.exam.shortTitle || page.exam.title}</span>}
                   </div>
-                )}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
-                  <span>Updated {new Date(page.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  <span>•</span>
-                  <span>5 min read</span>
-                </div>
-                {/* Social Share Bar */}
-                <div className="share-bar" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Share:</span>
-                  <button onClick={() => handleShare('twitter')} className="share-btn twitter"><Twitter size={16} /></button>
-                  <button onClick={() => handleShare('facebook')} className="share-btn facebook"><Facebook size={16} /></button>
-                  <button onClick={() => handleShare('whatsapp')} className="share-btn whatsapp"><MessageCircle size={16} /></button>
-                  <button onClick={() => handleShare('generic')} className="share-btn generic"><Share2 size={16} /></button>
+                  <div className="art-hero-h1">{page.title}</div>
                 </div>
               </div>
-
-
-            </header>
+              <div className="art-hero-meta-bar">
+                <div className="art-meta-left">
+                  {page.exam?.conductingBody && (
+                    <div className="art-meta-item"><Landmark size={14} className="mr-1.5 opacity-70" /> <strong>{page.exam.conductingBody}</strong></div>
+                  )}
+                  {page.exam?.state && (
+                    <div className="art-meta-item"><MapPin size={14} className="mr-1.5 opacity-70" /> <strong>{page.exam.state}</strong></div>
+                  )}
+                  {page.author && (
+                    <div className="art-meta-item">
+                      <Edit3 size={14} className="mr-1.5 opacity-70" /> By&nbsp;
+                      <Link href={`/author/${page.author.slug}`} style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 700 }}>
+                        {page.author.name}
+                      </Link>
+                    </div>
+                  )}
+                  <div className="art-meta-item"><Calendar size={14} className="mr-1.5 opacity-70" /> <strong>{new Date(page.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></div>
+                  <div className="art-meta-item"><Clock size={14} className="mr-1.5 opacity-70" /> <strong>5 min</strong>&nbsp;read</div>
+                </div>
+                <div className="art-meta-right">
+                  <button onClick={() => handleShare('generic')} className="share-btn flex items-center gap-1.5"><Share2 size={14} /> Share</button>
+                </div>
+              </div>
+            </div>
 
             {page.ogImage && (
-              <div className="article-featured-image" style={{ marginBottom: '4rem', borderRadius: 24, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: '0 20px 50px rgba(0,0,0,0.04)' }}>
+              <div className="article-featured-image" style={{ marginBottom: '24px', borderRadius: '4px', overflow: 'hidden', border: '1px solid var(--border)' }}>
                 <img src={page.ogImage} alt={page.title} style={{ width: '100%', height: 'auto', display: 'block' }} />
               </div>
             )}
 
-            <div className="article-body" style={{ marginBottom: 80 }}>
+            <div className="art-body-wrap">
               <MarkdownRenderer content={page.content} />
             </div>
 
             {page.faqs && page.faqs.length > 0 && (
-              <div style={{ marginBottom: 80 }}>
-                <FAQSection faqs={page.faqs} />
-              </div>
+              <FAQSection faqs={page.faqs} />
             )}
-
 
             {latestData && latestData.length > 0 && (
               <LatestArticlesSection
@@ -153,14 +132,25 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
                 articles={latestData}
               />
             )}
-          </article>
-        </main>
+          </div>
 
-        <aside className="sidebar-right">
-          <CategoryWidget />
-          <SidebarAd id="article-right-ad-1" />
-          <SidebarAd id="article-right-ad-2" tall />
-        </aside>
+          {/* SIDEBAR */}
+          <div className="sidebar-col">
+            <ImportantLinksWidget />
+            <CategoryWidget />
+
+            <div className="ad-sidebar ad-s-250">
+              <div className="ad-label">Advertisement</div>
+              <div className="ad-inner">
+                <b>300 × 250</b>
+                <span style={{ fontSize: 11 }}>AdSense rectangle unit</span>
+              </div>
+            </div>
+
+            <ExamTimelineWidget exam={page.exam as any} />
+            <RelatedArticlesWidget tags={page.tags} currentSlug={page.slug} />
+          </div>
+        </div>
       </div>
     </div>
   );

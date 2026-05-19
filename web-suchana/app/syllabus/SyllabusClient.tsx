@@ -31,7 +31,7 @@ export default function SyllabusClient({ initialPages, initialTotal }: Props) {
     const reqPage = reset ? 1 : (pageNo ?? page);
     try {
       const result = await fetchSeoPages(reqPage, 10, 'SYLLABUS', debouncedSearch || undefined);
-      
+
       if (reset) {
         setPagesList(result.pages);
         setPage(1);
@@ -48,10 +48,7 @@ export default function SyllabusClient({ initialPages, initialTotal }: Props) {
     }
   }, [debouncedSearch, page]);
 
-  // When debounced search changes, reset and load from API
   useEffect(() => {
-    // Only trigger if we actually typed something or cleared heavily
-    // Since initial pages cover the empty search state, skip the very first empty search reload
     if (debouncedSearch !== '' || pagesList.length === 0) {
       loadData(true);
     } else if (debouncedSearch === '' && pagesList.length !== initialPages.length && !loading) {
@@ -77,7 +74,7 @@ export default function SyllabusClient({ initialPages, initialTotal }: Props) {
         <section className="feed-main">
           <div className="category-header" style={{ marginBottom: 32 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', background: 'var(--accent-glow)', color: 'var(--accent)', borderRadius: 20, fontSize: '0.85rem', fontWeight: 700, marginBottom: 16 }}>
-               <BookOpen size={16} /> Syllabus & Pattern
+              <BookOpen size={16} /> Syllabus & Pattern
             </div>
             <h1 style={{ fontSize: 'clamp(2rem, 5vw, 2.8rem)', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1.1, marginBottom: 16, fontFamily: "var(--font-space-grotesk), sans-serif" }}>
               Official Syllabus Centre
@@ -89,9 +86,9 @@ export default function SyllabusClient({ initialPages, initialTotal }: Props) {
 
           <div style={{ position: 'relative', marginBottom: 32 }}>
             <Search size={20} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-            <input 
-              type="text" 
-              placeholder="Search syllabus by exam name..." 
+            <input
+              type="text"
+              placeholder="Search syllabus by exam name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               style={{ width: '100%', padding: '16px 16px 16px 48px', borderRadius: 12, border: '1px solid var(--border)', background: 'var(--bg-secondary)', fontSize: '1rem', color: 'var(--text-primary)', outline: 'none' }}
@@ -115,7 +112,7 @@ export default function SyllabusClient({ initialPages, initialTotal }: Props) {
                       </div>
                       <ArrowRight size={18} color="var(--border-strong)" style={{ flexShrink: 0 }} />
                     </Link>
-                    
+
                     {/* Insert an InFeed text ad every 5 results */}
                     {(index + 1) % 5 === 0 && (
                       <div style={{ padding: '16px 0', borderBottom: '1px solid var(--border)' }}>
@@ -127,8 +124,8 @@ export default function SyllabusClient({ initialPages, initialTotal }: Props) {
 
                 {hasMore && (
                   <div style={{ textAlign: 'center', marginTop: 16 }}>
-                    <button 
-                      className="btn btn-ghost btn-lg" 
+                    <button
+                      className="btn btn-ghost btn-lg"
                       onClick={() => { setPage(p => p + 1); loadData(false, page + 1); }}
                       disabled={loading}
                       style={{ padding: '12px 24px', fontSize: '1rem', width: '100%', justifyContent: 'center' }}

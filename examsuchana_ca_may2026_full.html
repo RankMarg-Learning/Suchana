@@ -1,0 +1,445 @@
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  .page { background: var(--color-background-tertiary); font-family: var(--font-sans); }
+
+  .site-header {
+    background: #7c3aed; padding: 0 1.5rem;
+    display: flex; align-items: center; justify-content: space-between; height: 52px;
+  }
+  .logo { color: #fff; font-size: 17px; font-weight: 500; }
+  .logo span { opacity: 0.65; font-size: 12px; font-weight: 400; margin-left: 6px; }
+  .back-btn { color: rgba(255,255,255,0.75); font-size: 12px; text-decoration: none; display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .back-btn:hover { color: #fff; }
+
+  .sub-bar {
+    background: #5b21b6; padding: 6px 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .count-tag { font-size: 11px; color: rgba(255,255,255,0.7); }
+  .count-tag b { color: #fbbf24; }
+
+  .filter-row { display: flex; gap: 6px; padding: 12px 1.5rem 8px; flex-wrap: wrap; background: var(--color-background-primary); border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .ftab { padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--color-border-secondary); background: transparent; color: var(--color-text-secondary); transition: all 0.15s; }
+  .ftab.active { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+  .ftab:hover:not(.active) { border-color: #7c3aed; color: #7c3aed; }
+
+  .body { padding: 12px 1.5rem; }
+
+  .week-header {
+    font-size: 10px; font-weight: 500; color: var(--color-text-tertiary); text-transform: uppercase;
+    letter-spacing: 0.8px; padding: 10px 0 6px; border-bottom: 0.5px solid var(--color-border-tertiary); margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .week-header::after { content: ''; flex: 1; height: 0.5px; background: var(--color-border-tertiary); }
+
+  .news-list { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); margin-bottom: 14px; overflow: hidden; }
+
+  .news-row {
+    display: flex; align-items: flex-start; gap: 10px; padding: 10px 14px;
+    border-bottom: 0.5px solid var(--color-border-tertiary); cursor: pointer;
+    transition: background 0.1s;
+  }
+  .news-row:last-child { border-bottom: none; }
+  .news-row:hover { background: var(--color-background-secondary); }
+
+  .badge { font-size: 9px; font-weight: 500; padding: 2px 7px; border-radius: 3px; white-space: nowrap; flex-shrink: 0; margin-top: 3px; }
+  .b-polity { background: #ede9fe; color: #5b21b6; }
+  .b-economy { background: #dcfce7; color: #166534; }
+  .b-intl { background: #dbeafe; color: #1e40af; }
+  .b-science { background: #fef3c7; color: #92400e; }
+  .b-enviro { background: #d1fae5; color: #065f46; }
+  .b-defence { background: #fee2e2; color: #991b1b; }
+  .b-sports { background: #fae8ff; color: #7e22ce; }
+  .b-awards { background: #fff7ed; color: #9a3412; }
+  .b-health { background: #ecfeff; color: #155e75; }
+  .b-society { background: #fdf2f8; color: #9d174d; }
+
+  .news-main { flex: 1; }
+  .news-title { font-size: 12.5px; color: var(--color-text-primary); line-height: 1.45; }
+  .news-meta { font-size: 10px; color: var(--color-text-tertiary); margin-top: 2px; }
+  .imp-dot { width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; flex-shrink: 0; margin-top: 6px; }
+  .imp-dot.high { background: #ef4444; }
+
+  .legend { display: flex; align-items: center; gap: 12px; padding: 0 1.5rem 10px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--color-text-secondary); }
+  .dot-r { width: 6px; height: 6px; border-radius: 50%; background: #ef4444; }
+  .dot-y { width: 6px; height: 6px; border-radius: 50%; background: #f59e0b; }
+</style>
+
+<div class="page">
+  <div class="site-header">
+    <div class="logo">ExamSuchana <span>Current Affairs — May 2026</span></div>
+    <div class="back-btn"><i class="ti ti-arrow-left" style="font-size:13px;" aria-hidden="true"></i> Back to Home</div>
+  </div>
+  <div class="sub-bar">
+    <div class="count-tag"><b>42</b> headlines &nbsp;·&nbsp; May 1–17, 2026</div>
+    <div class="count-tag">Sources: The Hindu · PIB · Indian Express · GKToday</div>
+  </div>
+
+  <div class="filter-row">
+    <div class="ftab active" onclick="filter(this,'all')">All</div>
+    <div class="ftab" onclick="filter(this,'polity')">Polity</div>
+    <div class="ftab" onclick="filter(this,'economy')">Economy</div>
+    <div class="ftab" onclick="filter(this,'intl')">International</div>
+    <div class="ftab" onclick="filter(this,'science')">Science & Tech</div>
+    <div class="ftab" onclick="filter(this,'defence')">Defence</div>
+    <div class="ftab" onclick="filter(this,'enviro')">Environment</div>
+    <div class="ftab" onclick="filter(this,'health')">Health</div>
+    <div class="ftab" onclick="filter(this,'sports')">Sports & Awards</div>
+  </div>
+
+  <div class="body">
+    <div class="legend">
+      <div class="legend-item"><div class="dot-r"></div> High importance (UPSC Prelims likely)</div>
+      <div class="legend-item"><div class="dot-y"></div> Moderate importance</div>
+    </div>
+
+    <div class="week-header">Week 3 &nbsp;·&nbsp; May 12–17</div>
+    <div class="news-list" id="list">
+
+      <div class="news-row" data-cat="polity">
+        <div class="imp-dot high"></div>
+        <span class="badge b-polity">Polity</span>
+        <div class="news-main">
+          <div class="news-title">Supreme Court (Number of Judges) Amendment Bill 2026 — SC strength to increase from 34 to 38 judges</div>
+          <div class="news-meta">May 16 &nbsp;·&nbsp; PIB &nbsp;·&nbsp; Art. 124 basis</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="polity">
+        <div class="imp-dot high"></div>
+        <span class="badge b-polity">Polity</span>
+        <div class="news-main">
+          <div class="news-title">NEET-UG 2026 re-test ordered for 22.79 lakh candidates after NTA admits paper leak of 120 out of 410 questions</div>
+          <div class="news-meta">May 14 &nbsp;·&nbsp; NTA / SC &nbsp;·&nbsp; NTA reform + GS-2 governance</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="intl">
+        <div class="imp-dot high"></div>
+        <span class="badge b-intl">International</span>
+        <div class="news-main">
+          <div class="news-title">BRICS Foreign Ministers meet in New Delhi; reaffirm support for Palestinian state within pre-1967 borders</div>
+          <div class="news-meta">May 15 &nbsp;·&nbsp; MEA &nbsp;·&nbsp; East Jerusalem as capital</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="economy">
+        <div class="imp-dot high"></div>
+        <span class="badge b-economy">Economy</span>
+        <div class="news-main">
+          <div class="news-title">Gold & silver import duty raised from 6% to 15% to curb non-essential imports amid West Asia crisis and rupee pressure</div>
+          <div class="news-meta">May 14 &nbsp;·&nbsp; Ministry of Finance &nbsp;·&nbsp; Forex conservation</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="science">
+        <div class="imp-dot"></div>
+        <span class="badge b-science">Science</span>
+        <div class="news-main">
+          <div class="news-title">IMD launches block-level monsoon forecast system ("Bharat Forecast System") at 6-km resolution; 1-km pilot for UP</div>
+          <div class="news-meta">May 14 &nbsp;·&nbsp; IMD &nbsp;·&nbsp; Hyper-local weather for farmers</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="intl">
+        <div class="imp-dot"></div>
+        <span class="badge b-intl">International</span>
+        <div class="news-main">
+          <div class="news-title">Netherlands returns 11th-century Anaimangalam copper plates to India</div>
+          <div class="news-meta">May 15 &nbsp;·&nbsp; GKToday &nbsp;·&nbsp; Cultural repatriation</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="economy">
+        <div class="imp-dot"></div>
+        <span class="badge b-economy">Economy</span>
+        <div class="news-main">
+          <div class="news-title">India revises export duties on petrol, diesel, and Aviation Turbine Fuel effective May 16</div>
+          <div class="news-meta">May 15 &nbsp;·&nbsp; GKToday &nbsp;·&nbsp; Petroleum sector</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="polity">
+        <div class="imp-dot"></div>
+        <span class="badge b-polity">Polity</span>
+        <div class="news-main">
+          <div class="news-title">CCPA issues notices to Amazon, Flipkart, Meesho and JioMart over alleged sale of banned herbicide products</div>
+          <div class="news-meta">May 16 &nbsp;·&nbsp; GKToday &nbsp;·&nbsp; Consumer protection</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="science">
+        <div class="imp-dot"></div>
+        <span class="badge b-science">Science</span>
+        <div class="news-main">
+          <div class="news-title">CSIR-NGRI scientists identify ancient underground river channel beneath Prayagraj-Kanpur stretch</div>
+          <div class="news-meta">May 16 &nbsp;·&nbsp; GKToday &nbsp;·&nbsp; Geology & groundwater</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="enviro">
+        <div class="imp-dot high"></div>
+        <span class="badge b-enviro">Enviro</span>
+        <div class="news-main">
+          <div class="news-title">MoEFCC adds caracal to Recovery Programme for Critically Endangered Species; Rajasthan launches Project Caracal</div>
+          <div class="news-meta">May 13 &nbsp;·&nbsp; PMF IAS &nbsp;·&nbsp; WPA Schedule I species</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="science">
+        <div class="imp-dot high"></div>
+        <span class="badge b-science">Science</span>
+        <div class="news-main">
+          <div class="news-title">Scientists identify oldest directly dated ice sample on Earth from Allan Hills region, East Antarctica</div>
+          <div class="news-meta">May 16 &nbsp;·&nbsp; GKToday &nbsp;·&nbsp; Climate science</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="intl">
+        <div class="imp-dot"></div>
+        <span class="badge b-intl">International</span>
+        <div class="news-main">
+          <div class="news-title">India–Uzbekistan hold 17th Foreign Office Consultations in New Delhi; strategic partnership reviewed</div>
+          <div class="news-meta">May 14 &nbsp;·&nbsp; Insights IAS &nbsp;·&nbsp; Central Asia diplomacy</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="week-header">Week 2 &nbsp;·&nbsp; May 5–11</div>
+    <div class="news-list">
+
+      <div class="news-row" data-cat="health">
+        <div class="imp-dot high"></div>
+        <span class="badge b-health">Health</span>
+        <div class="news-main">
+          <div class="news-title">PM Modi launches SEHAT Mission — integrates agriculture, nutrition & healthcare under ICAR + ICMR; targets malnutrition and lifestyle diseases</div>
+          <div class="news-meta">May 11 &nbsp;·&nbsp; PIB &nbsp;·&nbsp; Food-as-medicine approach</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="polity">
+        <div class="imp-dot high"></div>
+        <span class="badge b-polity">Polity</span>
+        <div class="news-main">
+          <div class="news-title">India becomes world's 3rd largest country in installed renewable energy capacity; non-fossil fuel crosses 262.7 GW (50%+ of total)</div>
+          <div class="news-meta">May 11 &nbsp;·&nbsp; Insights IAS &nbsp;·&nbsp; Morgan Stanley report</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="polity">
+        <div class="imp-dot"></div>
+        <span class="badge b-polity">Polity</span>
+        <div class="news-main">
+          <div class="news-title">Jan Suraksha Schemes (PMJJBY, PMSBY, APY) complete 11 years; APY enrolments reach 8.96 crore with ₹51,400 crore assets</div>
+          <div class="news-meta">May 11 &nbsp;·&nbsp; Insights IAS &nbsp;·&nbsp; Financial inclusion milestone</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="health">
+        <div class="imp-dot"></div>
+        <span class="badge b-health">Health</span>
+        <div class="news-main">
+          <div class="news-title">MoHFW launches Swasth Bharat Portal to unify fragmented digital health program systems into one platform</div>
+          <div class="news-meta">May 8 &nbsp;·&nbsp; AffairsCloud &nbsp;·&nbsp; 10th National Health Summit, Chandigarh</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="economy">
+        <div class="imp-dot high"></div>
+        <span class="badge b-economy">Economy</span>
+        <div class="news-main">
+          <div class="news-title">Cabinet approves Mission for Cotton Productivity (2026–31) with ₹5,659 crore outlay; target 498 lakh bales under 5F vision</div>
+          <div class="news-meta">May 8 &nbsp;·&nbsp; PIB &nbsp;·&nbsp; Kasturi Cotton Bharat brand</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="economy">
+        <div class="imp-dot"></div>
+        <span class="badge b-economy">Economy</span>
+        <div class="news-main">
+          <div class="news-title">CCEA raises sugarcane FRP to ₹365/quintal for 2026-27 season, up 2.81% from ₹355 last year</div>
+          <div class="news-meta">May 8 &nbsp;·&nbsp; AffairsCloud &nbsp;·&nbsp; Effective Oct 1, 2026</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="defence">
+        <div class="imp-dot high"></div>
+        <span class="badge b-defence">Defence</span>
+        <div class="news-main">
+          <div class="news-title">DRDO unveils TARA — India's first indigenous glide weapon kit that converts unguided bombs into precision-guided munitions</div>
+          <div class="news-meta">May 8 &nbsp;·&nbsp; Insights IAS &nbsp;·&nbsp; Atmanirbhar Bharat in defence</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="intl">
+        <div class="imp-dot"></div>
+        <span class="badge b-intl">International</span>
+        <div class="news-main">
+          <div class="news-title">India–EU launch ₹169 crore joint initiative for EV battery recycling under Trade & Technology Council (TTC)</div>
+          <div class="news-meta">May 5 &nbsp;·&nbsp; AffairsCloud &nbsp;·&nbsp; Lithium, cobalt recovery focus</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="polity">
+        <div class="imp-dot"></div>
+        <span class="badge b-polity">Polity</span>
+        <div class="news-main">
+          <div class="news-title">Ministry of Labour notifies 1% Construction Welfare Cess from May 1 to fund social security for informal construction workers</div>
+          <div class="news-meta">May 7 &nbsp;·&nbsp; BankersAdda &nbsp;·&nbsp; Charged on total construction cost</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="enviro">
+        <div class="imp-dot high"></div>
+        <span class="badge b-enviro">Enviro</span>
+        <div class="news-main">
+          <div class="news-title">IOM World Migration Report 2026: International migrants reach 304 million (3.7% of global population); India 2nd highest disaster displacement in Asia (5 million+)</div>
+          <div class="news-meta">May 6 &nbsp;·&nbsp; PMF IAS &nbsp;·&nbsp; Forced displacement 120 mn globally</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="science">
+        <div class="imp-dot"></div>
+        <span class="badge b-science">Science</span>
+        <div class="news-main">
+          <div class="news-title">India's geothermal resources estimated at 11,000 GW; coal gasification declared priority sector by Ministry of Coal</div>
+          <div class="news-meta">May 9 &nbsp;·&nbsp; Vision IAS &nbsp;·&nbsp; Energy diversification</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="polity">
+        <div class="imp-dot"></div>
+        <span class="badge b-polity">Polity</span>
+        <div class="news-main">
+          <div class="news-title">SAMARTH Panchayat Portal expanded to Assam, UP, and Maharashtra by Ministry of Panchayati Raj</div>
+          <div class="news-meta">May 6 &nbsp;·&nbsp; PMF IAS &nbsp;·&nbsp; After Chhattisgarh, HP pilots</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="science">
+        <div class="imp-dot"></div>
+        <span class="badge b-science">Science</span>
+        <div class="news-main">
+          <div class="news-title">India joins Project Freedom: Naval task force operating in Strait of Hormuz to ensure safe maritime passage</div>
+          <div class="news-meta">May 8 &nbsp;·&nbsp; Insights IAS &nbsp;·&nbsp; Freedom of navigation, West Asia</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="intl">
+        <div class="imp-dot high"></div>
+        <span class="badge b-intl">International</span>
+        <div class="news-main">
+          <div class="news-title">NITI Aayog releases decade report on India's school education (2014–25) under NEP 2020; PM-SHRI scheme targets 14,500+ model schools</div>
+          <div class="news-meta">May 8 &nbsp;·&nbsp; Insights IAS &nbsp;·&nbsp; Viksit Bharat @2047 roadmap</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="week-header">Week 1 &nbsp;·&nbsp; May 1–4</div>
+    <div class="news-list">
+
+      <div class="news-row" data-cat="polity">
+        <div class="imp-dot high"></div>
+        <span class="badge b-polity">Polity</span>
+        <div class="news-main">
+          <div class="news-title">Cabinet approves Supreme Court (No. of Judges) Amendment Bill 2026 — SC strength to rise from 34 to 38 under Article 124</div>
+          <div class="news-meta">May 6 &nbsp;·&nbsp; PIB &nbsp;·&nbsp; Last increased in 2019</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="polity">
+        <div class="imp-dot"></div>
+        <span class="badge b-polity">Polity</span>
+        <div class="news-main">
+          <div class="news-title">India plans "Made in India Brand Scheme" with certification logo for ~100 products; aligns with Make in India, PLI, and Atmanirbhar Bharat</div>
+          <div class="news-meta">May 5 &nbsp;·&nbsp; BankersAdda &nbsp;·&nbsp; Automobile axles, motorcycle parts listed</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="health">
+        <div class="imp-dot"></div>
+        <span class="badge b-health">Health</span>
+        <div class="news-main">
+          <div class="news-title">WHO releases World Health Statistics Report 2026; highlights widening global health inequities post-COVID</div>
+          <div class="news-meta">May 4 &nbsp;·&nbsp; Vision IAS &nbsp;·&nbsp; Annual WHO flagship report</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="economy">
+        <div class="imp-dot high"></div>
+        <span class="badge b-economy">Economy</span>
+        <div class="news-main">
+          <div class="news-title">MGNREGS gets record budget allocation of ₹95,692 crore for 2026-27; focus on direct DBT, Gram Panchayat governance</div>
+          <div class="news-meta">May 2 &nbsp;·&nbsp; BankersAdda &nbsp;·&nbsp; Rural jobs, infrastructure push</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="intl">
+        <div class="imp-dot"></div>
+        <span class="badge b-intl">International</span>
+        <div class="news-main">
+          <div class="news-title">Canada's Cape Breton University signs 3 MoUs with Indian universities including BML Munjal — student exchange & joint research</div>
+          <div class="news-meta">May 8 &nbsp;·&nbsp; AffairsCloud &nbsp;·&nbsp; New Delhi, Gurugram, Noida, Vadodara</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="science">
+        <div class="imp-dot high"></div>
+        <span class="badge b-science">Science</span>
+        <div class="news-main">
+          <div class="news-title">TERI report: India needs ₹23–25 lakh crore investment and rapid SMR adoption to achieve 100 GW nuclear power by 2047</div>
+          <div class="news-meta">May 3 &nbsp;·&nbsp; Sanskriti IAS &nbsp;·&nbsp; Nuclear Energy Vision report</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="enviro">
+        <div class="imp-dot"></div>
+        <span class="badge b-enviro">Enviro</span>
+        <div class="news-main">
+          <div class="news-title">International Day of Plant Health (May 12) — 2026 theme: "Plant Biosecurity for Food Security"; coordinated by FAO & IPPC</div>
+          <div class="news-meta">May 12 &nbsp;·&nbsp; BankersAdda &nbsp;·&nbsp; One Health approach</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="economy">
+        <div class="imp-dot"></div>
+        <span class="badge b-economy">Economy</span>
+        <div class="news-main">
+          <div class="news-title">Currency in circulation surges 137% to ₹42.12 lakh crore as of May 2026 despite digital push; Gujarat top hotspot for fake currency seizures</div>
+          <div class="news-meta">May 11 &nbsp;·&nbsp; Insights IAS &nbsp;·&nbsp; CICN, RBI report</div>
+        </div>
+      </div>
+
+      <div class="news-row" data-cat="defence">
+        <div class="imp-dot"></div>
+        <span class="badge b-defence">Defence</span>
+        <div class="news-main">
+          <div class="news-title">NCB's Operation Ragepill — India's first seizure of Captagon tablets valued at ₹182 crore</div>
+          <div class="news-meta">May 3 &nbsp;·&nbsp; GKToday &nbsp;·&nbsp; Narcotics interdiction</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="text-align: center; padding: 12px 0 4px;">
+      <button style="background: #7c3aed; color: #fff; border: none; border-radius: var(--border-radius-md); padding: 9px 24px; font-size: 12px; cursor: pointer;" onclick="sendPrompt('Give me a UPSC-style MCQ quiz on May 2026 current affairs')">Practice Quiz on May 2026 ↗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function filter(el, cat) {
+  document.querySelectorAll('.ftab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.news-row').forEach(row => {
+    if (cat === 'all') { row.style.display = 'flex'; return; }
+    const match = row.dataset.cat === cat ||
+      (cat === 'sports' && (row.dataset.cat === 'sports' || row.dataset.cat === 'awards'));
+    row.style.display = match ? 'flex' : 'none';
+  });
+}
+</script>

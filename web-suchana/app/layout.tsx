@@ -191,7 +191,7 @@ export default async function RootLayout({
       </head>
       <body className={`${hasLiveUpdate ? 'has-live-update' : ''} ${inter.variable} ${spaceGrotesk.variable} antialiased`}>
         <Providers>
-          <SiteNav trendingExams={trendingExams} />
+          <SiteNav />
           {children}
           <SiteFooter />
         </Providers>

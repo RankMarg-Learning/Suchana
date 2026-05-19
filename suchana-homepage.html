@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suchana — India's Exam Intelligence Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink:      #0c0f17;
+  --ink2:     #161b2e;
+  --ink3:     #1e2640;
+  --paper:    #f5f2eb;
+  --paper2:   #ede9df;
+  --gold:     #c9860a;
+  --gold-lt:  #f0a813;
+  --sky:      #1a4fbd;
+  --sky-lt:   #4272d4;
+  --mint:     #0e7c5a;
+  --rose:     #c0392b;
+  --violet:   #5c34b5;
+  --text:     #1c2235;
+  --text2:    #4a5270;
+  --text3:    #8b94b0;
+  --border:   #d8d3c8;
+  --hd:       'Playfair Display', Georgia, serif;
+  --body:     'Sora', sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+a { text-decoration: none; color: inherit; }
+img { display: block; max-width: 100%; }
+
+/* ─── TOPBAR ─── */
+.topbar {
+  background: var(--ink);
+  color: rgba(255,255,255,.55);
+  font-size: 11px; font-family: var(--mono);
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 24px; gap: 16px; flex-wrap: wrap;
+  letter-spacing: .3px;
+}
+.topbar a { color: rgba(255,255,255,.55); transition: color .2s; }
+.topbar a:hover { color: var(--gold-lt); }
+.tb-left { display: flex; gap: 16px; align-items: center; }
+.tb-right { display: flex; gap: 14px; align-items: center; }
+.tb-live {
+  background: var(--rose); color: #fff;
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  padding: 2px 7px; border-radius: 3px;
+  animation: blink 1.6s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* ─── MASTHEAD ─── */
+.masthead {
+  background: var(--ink);
+  border-bottom: 3px solid var(--gold);
+  padding: 18px 24px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center; gap: 16px;
+}
+.mh-brand {
+  font-family: var(--hd);
+  font-size: 44px; font-weight: 900;
+  color: #fff; letter-spacing: -1px;
+  line-height: 1;
+  display: flex; align-items: baseline; gap: 8px;
+}
+.mh-brand .dot { color: var(--gold); }
+.mh-tagline {
+  font-size: 10px; font-family: var(--mono);
+  color: rgba(255,255,255,.4); letter-spacing: 1.5px;
+  text-transform: uppercase; margin-top: 3px;
+}
+.mh-search {
+  display: flex; gap: 0;
+  border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
+  overflow: hidden; background: rgba(255,255,255,.05);
+}
+.mh-search input {
+  background: none; border: none; outline: none;
+  padding: 9px 14px; color: #fff; font-family: var(--body);
+  font-size: 13px; width: 260px;
+}
+.mh-search input::placeholder { color: rgba(255,255,255,.3); }
+.mh-search button {
+  background: var(--gold); border: none; cursor: pointer;
+  padding: 9px 16px; color: var(--ink); font-weight: 700;
+  font-family: var(--body); font-size: 12px; transition: background .2s;
+}
+.mh-search button:hover { background: var(--gold-lt); }
+.mh-right { display: flex; justify-content: flex-end; align-items: center; gap: 10px; }
+.mh-stat {
+  text-align: center; padding: 4px 12px;
+  border-left: 1px solid rgba(255,255,255,.1);
+}
+.mh-stat .n { font-family: var(--hd); font-size: 18px; color: var(--gold-lt); display: block; }
+.mh-stat .l { font-size: 9px; color: rgba(255,255,255,.4); letter-spacing: 1px; text-transform: uppercase; }
+
+/* ─── NAV ─── */
+.nav-strip {
+  background: var(--ink2);
+  display: flex; align-items: stretch;
+  overflow-x: auto; gap: 0;
+  scrollbar-width: none;
+}
+.nav-strip::-webkit-scrollbar { display: none; }
+.ns-item {
+  font-family: var(--body); font-size: 12px; font-weight: 600;
+  color: rgba(255,255,255,.6);
+  padding: 11px 16px; white-space: nowrap;
+  border-right: 1px solid rgba(255,255,255,.07);
+  transition: all .2s; cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  letter-spacing: .2px;
+}
+.ns-item:hover { background: rgba(255,255,255,.06); color: #fff; }
+.ns-item.active { color: var(--gold-lt); border-bottom: 2px solid var(--gold); }
+.ns-item .badge {
+  background: var(--rose); color: #fff;
+  font-size: 9px; padding: 1px 5px; border-radius: 10px;
+  font-weight: 700;
+}
+.ns-right {
+  margin-left: auto; padding: 8px 16px;
+  display: flex; align-items: center; gap: 8px;
+}
+.btn-alert {
+  background: var(--gold); color: var(--ink); border: none;
+  padding: 6px 14px; border-radius: 6px; font-size: 11px;
+  font-weight: 700; cursor: pointer; white-space: nowrap;
+  font-family: var(--body); transition: all .2s;
+}
+.btn-alert:hover { background: var(--gold-lt); transform: translateY(-1px); }
+
+/* ─── TICKER ─── */
+.ticker-bar {
+  background: var(--gold);
+  display: flex; align-items: center; overflow: hidden; height: 34px;
+}
+.tk-head {
+  background: var(--ink); color: var(--gold-lt);
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; padding: 0 14px; height: 100%;
+  display: flex; align-items: center; white-space: nowrap;
+  flex-shrink: 0;
+}
+.tk-scroll { overflow: hidden; flex: 1; }
+.tk-inner {
+  display: flex; animation: scroll 35s linear infinite;
+  white-space: nowrap; align-items: center; height: 34px;
+}
+.tk-inner span {
+  color: var(--ink); font-size: 12px; font-weight: 600;
+  padding: 0 24px; border-right: 1px solid rgba(0,0,0,.15);
+  height: 100%; display: inline-flex; align-items: center; gap: 6px;
+}
+.tk-inner span em { font-style: normal; font-size: 10px; background: var(--ink); color: var(--gold-lt); padding: 1px 6px; border-radius: 3px; font-family: var(--mono); }
+@keyframes scroll { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+/* ─── AD: LEADERBOARD ─── */
+.ad-leader {
+  background: var(--paper2); border: 1px solid var(--border);
+  border-top: none;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 90px; position: relative;
+}
+.ad-label {
+  position: absolute; top: 4px; right: 8px;
+  font-size: 9px; color: var(--text3); font-family: var(--mono);
+  letter-spacing: .5px; text-transform: uppercase;
+}
+.ad-inner { text-align: center; color: var(--text3); font-size: 12px; }
+.ad-inner b { display: block; font-family: var(--mono); font-size: 11px; color: var(--text2); margin-bottom: 3px; }
+
+/* ─── LAYOUT ─── */
+.wrap { max-width: 1300px; margin: 0 auto; padding: 0 20px; }
+.page-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 28px;
+  padding: 24px 0 40px;
+  align-items: start;
+}
+.content-col { display: flex; flex-direction: column; gap: 32px; min-width: 0; }
+.sidebar-col { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 0; }
+
+/* ─── SECTION HEADERS ─── */
+.sh {
+  display: flex; justify-content: space-between; align-items: baseline;
+  border-bottom: 2px solid var(--ink); padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+.sh-title {
+  font-family: var(--hd); font-size: 20px; font-weight: 700;
+  display: flex; align-items: center; gap: 8px;
+  color: var(--ink);
+}
+.sh-title .cat-tag {
+  font-family: var(--mono); font-size: 10px; font-weight: 600;
+  background: var(--ink); color: var(--gold-lt);
+  padding: 2px 8px; border-radius: 3px; letter-spacing: 1px;
+}
+.sh-link {
+  font-size: 11px; font-family: var(--mono);
+  color: var(--sky); font-weight: 600;
+  letter-spacing: .5px; transition: color .2s;
+}
+.sh-link:hover { color: var(--sky-lt); }
+
+/* ─── FEATURED GRID ─── */
+.featured-grid {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 2px;
+  border: 2px solid var(--ink);
+  overflow: hidden; border-radius: 4px;
+}
+.feat-main {
+  grid-row: 1/3;
+  background: var(--ink2);
+  position: relative; overflow: hidden;
+  min-height: 340px; cursor: pointer;
+  display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 24px;
+}
+.feat-main::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(12,15,23,.95) 30%, rgba(12,15,23,.3) 100%);
+}
+.feat-bg {
+  position: absolute; inset: 0;
+  background: linear-gradient(135deg, #1a3a6c 0%, #0c1a3a 50%, #1a0c2e 100%);
+}
+.feat-bg-pattern {
+  position: absolute; inset: 0; opacity: .08;
+  background-image: repeating-linear-gradient(45deg, #fff 0, #fff 1px, transparent 0, transparent 50%);
+  background-size: 12px 12px;
+}
+.feat-main-inner { position: relative; z-index: 1; }
+.feat-cat {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--gold-lt); margin-bottom: 8px;
+}
+.feat-title {
+  font-family: var(--hd); font-size: 24px; font-weight: 700;
+  color: #fff; line-height: 1.25; margin-bottom: 10px;
+}
+.feat-meta { font-size: 11px; color: rgba(255,255,255,.45); display: flex; gap: 12px; flex-wrap: wrap; }
+
+.feat-side {
+  background: var(--paper2); border-left: 2px solid var(--ink);
+  padding: 16px; cursor: pointer; transition: background .2s;
+  display: flex; flex-direction: column; justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+}
+.feat-side:last-child { border-bottom: none; }
+.feat-side:hover { background: var(--paper); }
+.fs-cat { font-family: var(--mono); font-size: 9px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+.fs-title { font-family: var(--hd); font-size: 15px; font-weight: 700; line-height: 1.3; color: var(--ink); margin-bottom: 6px; }
+.fs-meta { font-size: 11px; color: var(--text3); }
+
+/* ─── EXAM TIMELINE ─── */
+.timeline-board {
+  background: var(--ink);
+  border-radius: 8px; overflow: hidden;
+  border: 2px solid var(--ink3);
+}
+.tb-head {
+  padding: 16px 20px 12px;
+  background: var(--ink2); border-bottom: 1px solid rgba(255,255,255,.1);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.tb-head-title {
+  font-family: var(--hd); font-size: 18px; color: #fff;
+  display: flex; align-items: center; gap: 8px;
+}
+.tb-head-title span { color: var(--gold-lt); }
+.tb-filters {
+  display: flex; gap: 6px;
+}
+.tbf {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 4px 10px; border-radius: 4px; cursor: pointer;
+  border: 1px solid rgba(255,255,255,.15); color: rgba(255,255,255,.5);
+  background: transparent; transition: all .2s;
+  letter-spacing: .5px;
+}
+.tbf:hover, .tbf.on { background: var(--gold); color: var(--ink); border-color: var(--gold); }
+
+.tl-exam {
+  border-bottom: 1px solid rgba(255,255,255,.07);
+  padding: 14px 20px;
+  display: grid;
+  grid-template-columns: 180px 1fr auto;
+  gap: 16px; align-items: center;
+  transition: background .2s; cursor: pointer;
+}
+.tl-exam:hover { background: rgba(255,255,255,.04); }
+.tl-exam:last-child { border-bottom: none; }
+
+.tl-name { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.3; }
+.tl-org  { font-family: var(--mono); font-size: 10px; color: rgba(255,255,255,.35); margin-top: 3px; }
+
+/* timeline track */
+.tl-track { display: flex; align-items: center; gap: 0; }
+.tl-step {
+  display: flex; flex-direction: column; align-items: center;
+  flex: 1; position: relative;
+}
+.tl-step:not(:last-child)::after {
+  content: '';
+  position: absolute; top: 10px; left: 50%; right: -50%;
+  height: 2px; background: rgba(255,255,255,.1); z-index: 0;
+}
+.tl-step.done::after { background: rgba(201,134,10,.4); }
+.tl-step.active::after { background: rgba(201,134,10,.3); }
+.tl-dot {
+  width: 20px; height: 20px; border-radius: 50%;
+  border: 2px solid rgba(255,255,255,.15);
+  background: var(--ink3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 8px; position: relative; z-index: 1;
+  transition: all .2s;
+}
+.tl-step.done .tl-dot { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+.tl-step.active .tl-dot { background: var(--rose); border-color: var(--rose); color: #fff; box-shadow: 0 0 10px rgba(192,57,43,.5); }
+.tl-step.next .tl-dot { border-color: rgba(255,255,255,.3); color: rgba(255,255,255,.3); }
+.tl-slabel { font-size: 8px; font-family: var(--mono); color: rgba(255,255,255,.3); margin-top: 4px; text-align: center; letter-spacing: .3px; }
+.tl-step.done .tl-slabel { color: var(--gold-lt); }
+.tl-step.active .tl-slabel { color: #f87171; }
+
+.tl-action { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+.tl-cta {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  padding: 5px 12px; border-radius: 4px; cursor: pointer;
+  border: none; transition: all .2s; white-space: nowrap; letter-spacing: .5px;
+}
+.cta-gold { background: var(--gold); color: var(--ink); }
+.cta-gold:hover { background: var(--gold-lt); }
+.cta-outline { background: transparent; color: rgba(255,255,255,.4); border: 1px solid rgba(255,255,255,.15); }
+.cta-outline:hover { border-color: rgba(255,255,255,.4); color: rgba(255,255,255,.7); }
+.tl-days {
+  font-family: var(--mono); font-size: 9px; color: rgba(255,255,255,.3);
+  letter-spacing: .5px;
+}
+.days-soon { color: #f87171; }
+
+/* ─── CATEGORIES HUB ─── */
+.cat-hub { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; border: 2px solid var(--ink); border-radius: 4px; overflow: hidden; }
+.cat-card {
+  padding: 18px 14px; cursor: pointer;
+  transition: all .2s; position: relative;
+  overflow: hidden;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.cat-card::before { content: ''; position: absolute; inset: 0; opacity: 0; transition: opacity .2s; }
+.cat-card:hover::before { opacity: 1; }
+.cc-icon { font-size: 22px; margin-bottom: 2px; }
+.cc-name { font-family: var(--hd); font-size: 14px; font-weight: 700; line-height: 1.2; }
+.cc-count { font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: .5px; }
+.cc-desc { font-size: 11px; line-height: 1.5; margin-top: 2px; }
+
+/* individual cat colors */
+.cc-notif { background: #eef2ff; } .cc-notif::before { background: #dde5ff; } .cc-notif .cc-name { color: var(--sky); } .cc-notif .cc-count { color: var(--sky-lt); }
+.cc-result{ background: #fef3f2; } .cc-result::before{ background: #fde4e2; } .cc-result .cc-name{ color: var(--rose); } .cc-result .cc-count{ color: #e05c4d; }
+.cc-admit { background: #f0faf5; } .cc-admit::before{ background: #def5e8; } .cc-admit .cc-name{ color: var(--mint); } .cc-admit .cc-count{ color: #18a077; }
+.cc-syllab{ background: #fffbec; } .cc-syllab::before{ background: #fff4cc; } .cc-syllab .cc-name{ color: var(--gold); } .cc-syllab .cc-count{ color: var(--gold-lt); }
+.cc-pyq   { background: #f5f0fe; } .cc-pyq::before  { background: #ede0fe; } .cc-pyq .cc-name  { color: var(--violet); } .cc-pyq .cc-count  { color: #7c52d6; }
+.cc-analysis{background:#fff8f0;} .cc-analysis::before{background:#ffe8d0;} .cc-analysis .cc-name{color:#b45309;} .cc-analysis .cc-count{color:#d97706;}
+.cc-gk    { background: #f0f9ff; } .cc-gk::before   { background: #dbeeff; } .cc-gk .cc-name   { color: #0e6fa5; } .cc-gk .cc-count   { color: #1d8bc5; }
+.cc-ca    { background: #fafafa; } .cc-ca::before   { background: #efefef; } .cc-ca .cc-name   { color: #374151; } .cc-ca .cc-count   { color: #6b7280; }
+
+/* ─── ARTICLE ROWS ─── */
+.art-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.art-card {
+  cursor: pointer; transition: all .2s;
+  border: 1px solid var(--border); border-radius: 4px; overflow: hidden;
+  background: #fff;
+}
+.art-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,.1); transform: translateY(-2px); }
+.art-thumb {
+  height: 130px; background: var(--ink3); position: relative; overflow: hidden;
+}
+.art-thumb-bg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px; opacity: .15;
+}
+.art-thumb-overlay {
+  position: absolute; inset: 0;
+}
+.art-body { padding: 12px 14px 14px; }
+.art-cat {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 5px; display: inline-block;
+}
+.art-title {
+  font-family: var(--hd); font-size: 14px; font-weight: 700;
+  line-height: 1.35; color: var(--ink); margin-bottom: 6px;
+}
+.art-excerpt { font-size: 11px; color: var(--text2); line-height: 1.6; margin-bottom: 8px; }
+.art-foot {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 10px; color: var(--text3);
+}
+.art-foot .read-more { color: var(--sky); font-weight: 700; }
+
+/* wide art card */
+.art-wide {
+  display: grid; grid-template-columns: 160px 1fr;
+  border: 1px solid var(--border); border-radius: 4px;
+  overflow: hidden; background: #fff; cursor: pointer; transition: all .2s;
+  margin-bottom: 10px;
+}
+.art-wide:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); transform: translateY(-1px); }
+.aw-thumb { background: var(--ink3); position: relative; overflow: hidden; }
+.aw-thumb-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 42px; opacity: .12; }
+.aw-body { padding: 12px 14px; display: flex; flex-direction: column; justify-content: space-between; }
+
+/* ─── AD SIDEBAR ─── */
+.ad-sidebar {
+  background: var(--paper2); border: 1px solid var(--border);
+  border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.ad-s-250 { min-height: 250px; }
+.ad-s-120 { min-height: 120px; }
+
+/* ─── SIDEBAR WIDGETS ─── */
+.sw {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: 4px; overflow: hidden;
+}
+.sw-head {
+  background: var(--ink); padding: 10px 14px;
+  font-family: var(--hd); font-size: 14px; font-weight: 700; color: #fff;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sw-head span { color: var(--gold-lt); }
+.sw-body { padding: 12px 14px; }
+
+/* deadline items */
+.dl-item {
+  display: flex; gap: 10px; align-items: start;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.dl-item:last-child { border-bottom: none; }
+.dl-days {
+  min-width: 38px; text-align: center;
+  background: var(--ink); color: var(--gold-lt);
+  border-radius: 4px; padding: 4px 4px;
+  font-family: var(--mono); font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+}
+.dl-days.urgent { background: var(--rose); color: #fff; }
+.dl-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.35; margin-bottom: 2px; }
+.dl-date { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+
+/* score strip */
+.score-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 0; border-bottom: 1px solid var(--border);
+}
+.score-item:last-child { border-bottom: none; }
+.sc-rank {
+  font-family: var(--mono); font-size: 13px; font-weight: 700;
+  color: var(--text3); min-width: 22px;
+}
+.sc-exam { font-size: 12px; font-weight: 600; flex: 1; line-height: 1.3; }
+.sc-status {
+  font-family: var(--mono); font-size: 9px; font-weight: 700;
+  padding: 2px 7px; border-radius: 3px; white-space: nowrap;
+}
+.ss-open { background: #d1fae5; color: #065f46; }
+.ss-exam { background: #fee2e2; color: #991b1b; }
+.ss-admit{ background: #dbeafe; color: #1e40af; }
+.ss-result{background:#ede9fe;color:#5b21b6;}
+
+/* newsletter */
+.nl-form input {
+  width: 100%; border: 1px solid var(--border); border-radius: 4px;
+  padding: 8px 12px; font-family: var(--body); font-size: 12px;
+  margin-bottom: 7px; outline: none; transition: border-color .2s; background: var(--paper);
+}
+.nl-form input:focus { border-color: var(--gold); }
+.nl-form button {
+  width: 100%; background: var(--ink); color: var(--gold-lt);
+  border: none; border-radius: 4px; padding: 9px;
+  font-family: var(--hd); font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all .2s;
+}
+.nl-form button:hover { background: var(--ink2); }
+.nl-note { font-size: 10px; color: var(--text3); text-align: center; margin-top: 6px; font-family: var(--mono); }
+
+/* tools */
+.tool-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.tool-btn {
+  background: var(--paper); border: 1px solid var(--border);
+  border-radius: 4px; padding: 9px 8px; text-align: center;
+  font-size: 11px; font-weight: 600; cursor: pointer; transition: all .2s;
+  color: var(--text); font-family: var(--body);
+}
+.tool-btn:hover { background: var(--ink); color: var(--gold-lt); border-color: var(--ink); }
+.tool-icon { font-size: 18px; display: block; margin-bottom: 3px; }
+
+/* ─── FOOTER ─── */
+footer {
+  background: var(--ink); color: rgba(255,255,255,.6);
+  padding: 36px 24px 20px;
+}
+.ft-grid {
+  max-width: 1300px; margin: 0 auto;
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+  gap: 30px; margin-bottom: 28px;
+}
+.ft-brand .logo {
+  font-family: var(--hd); font-size: 28px; font-weight: 900;
+  color: #fff; margin-bottom: 8px;
+}
+.ft-brand .logo span { color: var(--gold-lt); }
+.ft-brand p { font-size: 12px; line-height: 1.8; max-width: 220px; }
+.ft-col h4 {
+  font-family: var(--mono); font-size: 10px; font-weight: 700;
+  color: var(--gold-lt); letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 12px; padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.ft-col a { display: block; font-size: 12px; margin-bottom: 7px; transition: color .2s; }
+.ft-col a:hover { color: var(--gold-lt); }
+.ft-bottom {
+  max-width: 1300px; margin: 0 auto;
+  border-top: 1px solid rgba(255,255,255,.1); padding-top: 16px;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;
+}
+.ft-bottom p { font-size: 11px; font-family: var(--mono); }
+
+/* ─── RESPONSIVE ─── */
+@media(max-width: 1024px) {
+  .page-grid { grid-template-columns: 1fr; }
+  .sidebar-col { position: static; }
+  .ft-grid { grid-template-columns: 1fr 1fr 1fr; }
+  .tl-exam { grid-template-columns: 140px 1fr; }
+  .tl-action { grid-column: 1/-1; flex-direction: row; justify-content: flex-start; }
+}
+@media(max-width: 768px) {
+  .masthead { grid-template-columns: 1fr; gap: 12px; }
+  .mh-search { display: none; }
+  .mh-brand { font-size: 32px; }
+  .mh-right { justify-content: flex-start; }
+  .cat-hub { grid-template-columns: repeat(2, 1fr); }
+  .art-row { grid-template-columns: 1fr 1fr; }
+  .featured-grid { grid-template-columns: 1fr; }
+  .feat-main { min-height: 240px; }
+  .feat-side { border-left: none; border-top: 2px solid var(--ink); }
+  .ft-grid { grid-template-columns: 1fr 1fr; }
+  .tl-track { display: none; }
+  .tl-exam { grid-template-columns: 1fr auto; }
+}
+@media(max-width: 520px) {
+  .art-row { grid-template-columns: 1fr; }
+  .cat-hub { grid-template-columns: repeat(2,1fr); }
+  .tool-grid { grid-template-columns: repeat(2,1fr); }
+  .ft-grid { grid-template-columns: 1fr; }
+}
+
+/* ─── FADE IN ─── */
+.fade-up { animation: fadeUp .5s ease both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.d1{animation-delay:.05s} .d2{animation-delay:.1s} .d3{animation-delay:.15s} .d4{animation-delay:.2s}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="tb-left">
+    <span class="tb-live">LIVE</span>
+    <span>Sun, 17 May 2026</span>
+    <a href="#">📢 SSC GD Exam Ongoing</a>
+    <a href="#">🎫 UPSC Prelims Admit Card Out</a>
+  </div>
+  <div class="tb-right">
+    <a href="#">About</a>
+    <a href="#">Contact</a>
+    <a href="#">Privacy</a>
+    <a href="#">Advertise</a>
+  </div>
+</div>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div>
+    <div class="mh-brand">Suchana<span class="dot">.</span></div>
+    <div class="mh-tagline">India's Govt Exam Intelligence Hub — Official Data Only</div>
+  </div>
+  <div class="mh-search">
+    <input type="text" placeholder="Search exams, syllabus, PYQ, GK...">
+    <button>Search</button>
+  </div>
+  <div class="mh-right">
+    <div class="mh-stat"><span class="n">500+</span><span class="l">Exams</span></div>
+    <div class="mh-stat"><span class="n">12K+</span><span class="l">Articles</span></div>
+    <div class="mh-stat"><span class="n">2L+</span><span class="l">Subscribers</span></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav-strip">
+  <a href="#" class="ns-item active">🏠 Home</a>
+  <a href="#" class="ns-item">📢 Notifications <span class="badge">9</span></a>
+  <a href="#" class="ns-item">🎫 Admit Cards</a>
+  <a href="#" class="ns-item">🏆 Results</a>
+  <a href="#" class="ns-item">🔑 Answer Keys</a>
+  <a href="#" class="ns-item">📄 Syllabus</a>
+  <a href="#" class="ns-item">📝 PYQ Papers</a>
+  <a href="#" class="ns-item">📊 Analysis</a>
+  <a href="#" class="ns-item">🌍 Static GK</a>
+  <a href="#" class="ns-item">📰 Current Affairs</a>
+  <a href="#" class="ns-item">📚 Prep Guide</a>
+  <a href="#" class="ns-item">🗺️ State Jobs</a>
+  <a href="#" class="ns-item">🏛️ All Exams</a>
+  <div class="ns-right">
+    <button class="btn-alert">🔔 Free Alerts</button>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker-bar">
+  <div class="tk-head">UPDATES</div>
+  <div class="tk-scroll">
+    <div class="tk-inner">
+      <span>SSC GD Constable 2026 <em>EXAM LIVE</em></span>
+      <span>UPSC IAS Prelims 2026 — Admit Card Available <em>DOWNLOAD</em></span>
+      <span>RRB ALP — Registration till 10 June <em>OPEN</em></span>
+      <span>BPSC 72nd Prelims — Apply Now <em>OPEN</em></span>
+      <span>MPSC Group B — Exam Ongoing <em>LIVE</em></span>
+      <span>CTET Sep 2026 — Registration Open <em>OPEN</em></span>
+      <span>CRPF Constable — Last Date 25 May <em>URGENT</em></span>
+      <span>SBI Trade Finance Officer <em>OPEN</em></span>
+      <!-- repeat for loop -->
+      <span>SSC GD Constable 2026 <em>EXAM LIVE</em></span>
+      <span>UPSC IAS Prelims 2026 — Admit Card Available <em>DOWNLOAD</em></span>
+      <span>RRB ALP — Registration till 10 June <em>OPEN</em></span>
+      <span>BPSC 72nd Prelims — Apply Now <em>OPEN</em></span>
+      <span>MPSC Group B — Exam Ongoing <em>LIVE</em></span>
+      <span>CTET Sep 2026 — Registration Open <em>OPEN</em></span>
+    </div>
+  </div>
+</div>
+
+<!-- LEADERBOARD AD -->
+<div class="wrap">
+  <div class="ad-leader" style="margin: 16px 0 0; border-radius:4px; border:1px solid var(--border);">
+    <div class="ad-label">Advertisement</div>
+    <div class="ad-inner">
+      <b>728 × 90 — Leaderboard</b>
+      <!-- AdSense: ca-pub-XXXXXXXX | Slot: XXXXXXXX -->
+      <span style="font-size:11px">Place AdSense responsive leaderboard unit here</span>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN PAGE -->
+<div class="wrap">
+  <div class="page-grid">
+    <!-- CONTENT -->
+    <div class="content-col">
+
+      <!-- FEATURED -->
+      <div class="fade-up d1">
+        <div class="sh">
+          <div class="sh-title"><span class="cat-tag">TOP STORIES</span> Today's Highlights</div>
+          <a href="#" class="sh-link">ALL NEWS →</a>
+        </div>
+        <div class="featured-grid">
+          <div class="feat-main">
+            <div class="feat-bg"></div>
+            <div class="feat-bg-pattern"></div>
+            <div class="feat-main-inner">
+              <div class="feat-cat">🔴 Breaking · Notification</div>
+              <div class="feat-title">UPSC CSE 2026 Prelims Admit Card Released — Exam on 25 May, Centres Allotted</div>
+              <div class="feat-meta">
+                <span>📁 UPSC</span>
+                <span>🕐 2 hours ago</span>
+                <span>📖 3 min read</span>
+              </div>
+            </div>
+          </div>
+          <div class="feat-side">
+            <div>
+              <div class="fs-cat" style="color:var(--rose)">Result</div>
+              <div class="fs-title">SSC CHSL 2025 Final Result Declared — Merit List & Marks Available</div>
+            </div>
+            <div class="fs-meta">SSC · 5 hrs ago · 2 min</div>
+          </div>
+          <div class="feat-side">
+            <div>
+              <div class="fs-cat" style="color:var(--mint)">Analysis</div>
+              <div class="fs-title">RRB NTPC CBT-1 Analysis: Expected Cutoff, Difficulty Level & Good Attempts</div>
+            </div>
+            <div class="fs-meta">Railway · Today · 4 min</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXAM TIMELINE BOARD -->
+      <div class="fade-up d2">
+        <div class="sh">
+          <div class="sh-title"><span class="cat-tag">TRACKER</span> Exam Life Cycle</div>
+          <a href="#" class="sh-link">ALL EXAMS →</a>
+        </div>
+        <div class="timeline-board">
+          <div class="tb-head">
+            <div class="tb-head-title">Active Exams — <span>Live Timeline</span></div>
+            <div class="tb-filters">
+              <button class="tbf on">All</button>
+              <button class="tbf">UPSC</button>
+              <button class="tbf">SSC</button>
+              <button class="tbf">Railway</button>
+              <button class="tbf">Banking</button>
+              <button class="tbf">State</button>
+            </div>
+          </div>
+
+          <!-- Exam row 1 -->
+          <div class="tl-exam">
+            <div>
+              <div class="tl-name">UPSC IAS / IFS 2026</div>
+              <div class="tl-org">UPSC · Civil Services</div>
+            </div>
+            <div class="tl-track">
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Notif.</div></div>
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Apply</div></div>
+              <div class="tl-step active"><div class="tl-dot">●</div><div class="tl-slabel">Admit</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Exam</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Key</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Result</div></div>
+            </div>
+            <div class="tl-action">
+              <button class="tl-cta cta-gold">Download Admit Card</button>
+              <span class="tl-days days-soon">Exam: 25 May · 8 days</span>
+            </div>
+          </div>
+
+          <!-- Exam row 2 -->
+          <div class="tl-exam">
+            <div>
+              <div class="tl-name">SSC GD Constable 2026</div>
+              <div class="tl-org">SSC · Constable</div>
+            </div>
+            <div class="tl-track">
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Notif.</div></div>
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Apply</div></div>
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Admit</div></div>
+              <div class="tl-step active"><div class="tl-dot">●</div><div class="tl-slabel">Exam</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Key</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Result</div></div>
+            </div>
+            <div class="tl-action">
+              <button class="tl-cta cta-gold">View Schedule</button>
+              <span class="tl-days days-soon">Exam Live Now</span>
+            </div>
+          </div>
+
+          <!-- Exam row 3 -->
+          <div class="tl-exam">
+            <div>
+              <div class="tl-name">RRB ALP Recruitment 2026</div>
+              <div class="tl-org">Railway · Assistant Loco Pilot</div>
+            </div>
+            <div class="tl-track">
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Notif.</div></div>
+              <div class="tl-step active"><div class="tl-dot">●</div><div class="tl-slabel">Apply</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Admit</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Exam</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Key</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Result</div></div>
+            </div>
+            <div class="tl-action">
+              <button class="tl-cta cta-gold">Apply Now ↗</button>
+              <span class="tl-days days-soon">Last date: 10 Jun</span>
+            </div>
+          </div>
+
+          <!-- Exam row 4 -->
+          <div class="tl-exam">
+            <div>
+              <div class="tl-name">IBPS PO 2026</div>
+              <div class="tl-org">IBPS · Probationary Officer</div>
+            </div>
+            <div class="tl-track">
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Notif.</div></div>
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Apply</div></div>
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Admit</div></div>
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Exam</div></div>
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Key</div></div>
+              <div class="tl-step active"><div class="tl-dot">●</div><div class="tl-slabel">Result</div></div>
+            </div>
+            <div class="tl-action">
+              <button class="tl-cta cta-gold">Check Result</button>
+              <span class="tl-days">Result Soon</span>
+            </div>
+          </div>
+
+          <!-- Exam row 5 -->
+          <div class="tl-exam">
+            <div>
+              <div class="tl-name">BPSC 72nd Prelims 2026</div>
+              <div class="tl-org">BPSC · Bihar</div>
+            </div>
+            <div class="tl-track">
+              <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-slabel">Notif.</div></div>
+              <div class="tl-step active"><div class="tl-dot">●</div><div class="tl-slabel">Apply</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Admit</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Exam</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Key</div></div>
+              <div class="tl-step next"><div class="tl-dot">○</div><div class="tl-slabel">Result</div></div>
+            </div>
+            <div class="tl-action">
+              <button class="tl-cta cta-gold">Apply Online ↗</button>
+              <span class="tl-days">Last date: 15 Jun</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CATEGORIES HUB -->
+      <div class="fade-up d3">
+        <div class="sh">
+          <div class="sh-title"><span class="cat-tag">EXPLORE</span> All Content Categories</div>
+          <a href="#" class="sh-link">BROWSE ALL →</a>
+        </div>
+        <div class="cat-hub">
+          <a href="#" class="cat-card cc-notif">
+            <div class="cc-icon">📢</div>
+            <div class="cc-name">Notifications</div>
+            <div class="cc-count">342 active</div>
+            <div class="cc-desc" style="color:#4a6fa5">New vacancies, official recruitment ads, apply links</div>
+          </a>
+          <a href="#" class="cat-card cc-result">
+            <div class="cc-icon">🏆</div>
+            <div class="cc-name">Results</div>
+            <div class="cc-count">128 recent</div>
+            <div class="cc-desc" style="color:#9b2c2c">Merit lists, score cards, cut-off marks</div>
+          </a>
+          <a href="#" class="cat-card cc-admit">
+            <div class="cc-icon">🎫</div>
+            <div class="cc-name">Admit Cards</div>
+            <div class="cc-count">67 live</div>
+            <div class="cc-desc" style="color:#065f46">Hall tickets, exam city slips, centre details</div>
+          </a>
+          <a href="#" class="cat-card cc-syllab">
+            <div class="cc-icon">📄</div>
+            <div class="cc-name">Syllabus & Pattern</div>
+            <div class="cc-count">200+ PDFs</div>
+            <div class="cc-desc" style="color:#92400e">Official syllabus, exam pattern, marking scheme</div>
+          </a>
+          <a href="#" class="cat-card cc-pyq">
+            <div class="cc-icon">📝</div>
+            <div class="cc-name">Previous Year Q.</div>
+            <div class="cc-count">10 yr archive</div>
+            <div class="cc-desc" style="color:#5b21b6">PYQ papers with solutions, topic-wise sets</div>
+          </a>
+          <a href="#" class="cat-card cc-analysis">
+            <div class="cc-icon">📊</div>
+            <div class="cc-name">Exam Analysis</div>
+            <div class="cc-count">Shift-wise</div>
+            <div class="cc-desc" style="color:#92400e">Difficulty, good attempts, expected cutoff</div>
+          </a>
+          <a href="#" class="cat-card cc-gk">
+            <div class="cc-icon">🌍</div>
+            <div class="cc-name">Static GK</div>
+            <div class="cc-count">4000+ facts</div>
+            <div class="cc-desc" style="color:#0e4f75">History, geography, polity, economy, science</div>
+          </a>
+          <a href="#" class="cat-card cc-ca">
+            <div class="cc-icon">📰</div>
+            <div class="cc-name">Current Affairs</div>
+            <div class="cc-count">Daily updates</div>
+            <div class="cc-desc" style="color:#4b5563">Daily, weekly, monthly CA for all exams</div>
+          </a>
+        </div>
+      </div>
+
+      <!-- IN-CONTENT AD -->
+      <div class="ad-leader" style="border-radius:4px;border:1px solid var(--border);">
+        <div class="ad-label">Advertisement</div>
+        <div class="ad-inner">
+          <b>728 × 90 — Mid-Content</b>
+          <span style="font-size:11px">Place responsive AdSense unit here</span>
+        </div>
+      </div>
+
+      <!-- LATEST ARTICLES -->
+      <div class="fade-up">
+        <div class="sh">
+          <div class="sh-title"><span class="cat-tag">LATEST</span> Fresh Articles</div>
+          <a href="#" class="sh-link">ALL ARTICLES →</a>
+        </div>
+        <div class="art-row">
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#1a3a6c,#0c1a3a)">
+              <div class="art-thumb-bg">📄</div>
+              <div class="art-thumb-overlay"></div>
+            </div>
+            <div class="art-body">
+              <span class="art-cat" style="color:var(--sky)">Syllabus</span>
+              <div class="art-title">UPSC CSE 2026 Complete Syllabus — GS Paper I to IV with Topic Breakdown</div>
+              <div class="art-excerpt">Official UPSC syllabus decoded section by section. Includes optional subject list and Mains structure.</div>
+              <div class="art-foot"><span>May 14, 2026</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#7c1d1d,#3a0c0c)">
+              <div class="art-thumb-bg">📊</div>
+            </div>
+            <div class="art-body">
+              <span class="art-cat" style="color:var(--rose)">Analysis</span>
+              <div class="art-title">SSC CGL Tier-1 2026 Shift 2 Full Analysis — Difficulty Level & Good Attempts</div>
+              <div class="art-excerpt">Detailed shift-wise analysis with subject-wise difficulty, expected cutoff and student reactions.</div>
+              <div class="art-foot"><span>May 16, 2026</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#0e5c3a,#062b1c)">
+              <div class="art-thumb-bg">🌍</div>
+            </div>
+            <div class="art-body">
+              <span class="art-cat" style="color:var(--mint)">Static GK</span>
+              <div class="art-title">Important Dams of India — State-wise List with Rivers & Capacity</div>
+              <div class="art-excerpt">Comprehensive GK notes on major dams. Frequently asked in SSC, Railway, and State PCS exams.</div>
+              <div class="art-foot"><span>May 15, 2026</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PYQ SECTION -->
+      <div>
+        <div class="sh">
+          <div class="sh-title"><span class="cat-tag">PYQ</span> Previous Year Papers</div>
+          <a href="#" class="sh-link">ALL PAPERS →</a>
+        </div>
+        <div class="art-wide">
+          <div class="aw-thumb"><div class="aw-thumb-bg">📝</div></div>
+          <div class="aw-body">
+            <div>
+              <span class="art-cat" style="color:var(--violet)">PYQ · UPSC</span>
+              <div style="font-family:var(--hd);font-size:15px;font-weight:700;color:var(--ink);margin:4px 0 6px;line-height:1.35">UPSC IAS Prelims 2015–2025 — GS Paper 1 Complete Set with Official Answer Keys</div>
+              <div style="font-size:11px;color:var(--text2)">10 years of official UPSC GS-1 papers. Includes explanations, topic tagging, and difficulty rating per question.</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+              <button style="background:var(--violet);color:#fff;border:none;border-radius:4px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--body)">Download PDF ↗</button>
+              <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">Free · 10 Papers · PDF + Online</span>
+            </div>
+          </div>
+        </div>
+        <div class="art-wide">
+          <div class="aw-thumb" style="background:linear-gradient(135deg,#1a3a6c,#0c1a3a)"><div class="aw-thumb-bg">📝</div></div>
+          <div class="aw-body">
+            <div>
+              <span class="art-cat" style="color:var(--sky)">PYQ · SSC CGL</span>
+              <div style="font-family:var(--hd);font-size:15px;font-weight:700;color:var(--ink);margin:4px 0 6px;line-height:1.35">SSC CGL Tier-1 & Tier-2 PYQ 2016–2025 — All Shifts Compiled</div>
+              <div style="font-size:11px;color:var(--text2)">All shifts, all years. Categorized by subject — Quant, English, Reasoning, GK. With explanations.</div>
+            </div>
+            <div style="display:flex;gap:12px;align-items:center;margin-top:10px">
+              <button style="background:var(--sky);color:#fff;border:none;border-radius:4px;padding:7px 16px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--body)">Download PDF ↗</button>
+              <span style="font-size:11px;color:var(--text3);font-family:var(--mono)">Free · 9 Years</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CURRENT AFFAIRS -->
+      <div>
+        <div class="sh">
+          <div class="sh-title"><span class="cat-tag">CURRENT AFFAIRS</span> Daily Updates</div>
+          <a href="#" class="sh-link">ALL CA →</a>
+        </div>
+        <div class="art-row">
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#374151,#111827)">
+              <div class="art-thumb-bg">📰</div>
+            </div>
+            <div class="art-body">
+              <span class="art-cat" style="color:#6b7280">CA · Daily</span>
+              <div class="art-title">Daily Current Affairs — 17 May 2026 | National & International</div>
+              <div class="art-excerpt">Top news of the day curated for UPSC, SSC, Banking and all govt exam aspirants.</div>
+              <div class="art-foot"><span>Today</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#1e3a5f,#0a1a30)">
+              <div class="art-thumb-bg">📅</div>
+            </div>
+            <div class="art-body">
+              <span class="art-cat" style="color:#0e6fa5">CA · Weekly</span>
+              <div class="art-title">Weekly Current Affairs — 11–17 May 2026 Compilation PDF</div>
+              <div class="art-excerpt">7-day comprehensive CA capsule. Download PDF or read online. All key events covered.</div>
+              <div class="art-foot"><span>This Week</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#3b1f5e,#1a0a2e)">
+              <div class="art-thumb-bg">📆</div>
+            </div>
+            <div class="art-body">
+              <span class="art-cat" style="color:var(--violet)">CA · Monthly</span>
+              <div class="art-title">Monthly Current Affairs — April 2026 Full PDF with MCQs</div>
+              <div class="art-excerpt">Complete April 2026 CA with 150+ MCQs for practice. Ideal for Prelims revision.</div>
+              <div class="art-foot"><span>April 2026</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PREP GUIDES -->
+      <div>
+        <div class="sh">
+          <div class="sh-title"><span class="cat-tag">PREP GUIDE</span> Toppers' Strategy</div>
+          <a href="#" class="sh-link">ALL GUIDES →</a>
+        </div>
+        <div class="art-row">
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#7c3a00,#3a1a00)"><div class="art-thumb-bg">🎯</div></div>
+            <div class="art-body">
+              <span class="art-cat" style="color:#b45309">Guide · UPSC</span>
+              <div class="art-title">How to Start UPSC Preparation from Zero — 12-Month Roadmap 2026</div>
+              <div class="art-excerpt">Step-by-step preparation strategy, books list, and monthly milestone tracker.</div>
+              <div class="art-foot"><span>Beginner</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#0e5c3a,#062b1c)"><div class="art-thumb-bg">📚</div></div>
+            <div class="art-body">
+              <span class="art-cat" style="color:var(--mint)">Guide · SSC CGL</span>
+              <div class="art-title">SSC CGL 2026 Best Books — Subject-wise Recommendations by Toppers</div>
+              <div class="art-excerpt">The definitive SSC CGL book list for Tier 1 and Tier 2. Tried & tested by 100+ rank holders.</div>
+              <div class="art-foot"><span>Books List</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+          <div class="art-card">
+            <div class="art-thumb" style="background:linear-gradient(135deg,#1a4fbd,#0c2560)"><div class="art-thumb-bg">🏦</div></div>
+            <div class="art-body">
+              <span class="art-cat" style="color:var(--sky)">Guide · Banking</span>
+              <div class="art-title">IBPS PO 2026 Study Plan — 90-Day Preparation Schedule PDF</div>
+              <div class="art-excerpt">Daily schedule, mock test strategy, and weak area analysis plan for IBPS PO aspirants.</div>
+              <div class="art-foot"><span>90 Days</span><span class="read-more">Read →</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+
+    <!-- SIDEBAR -->
+    <div class="sidebar-col">
+
+      <!-- Sidebar Ad 300x250 -->
+      <div class="ad-sidebar ad-s-250">
+        <div class="ad-label">Advertisement</div>
+        <div class="ad-inner">
+          <b>300 × 250</b>
+          <span style="font-size:11px">AdSense rectangle unit</span>
+        </div>
+      </div>
+
+      <!-- Deadlines -->
+      <div class="sw">
+        <div class="sw-head">⏰ Closing Soon <span style="font-size:11px;font-family:var(--body);color:rgba(255,255,255,.4)">Deadlines</span></div>
+        <div class="sw-body">
+          <div class="dl-item">
+            <div class="dl-days urgent">8d</div>
+            <div><div class="dl-name">CRPF Constable Tradesman 2026</div><div class="dl-date">Last Date: 25 May 2026</div></div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-days urgent">14d</div>
+            <div><div class="dl-name">Jharkhand Home Guard 2026</div><div class="dl-date">Last Date: 31 May 2026</div></div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-days">24d</div>
+            <div><div class="dl-name">RRB ALP Recruitment 2026</div><div class="dl-date">Last Date: 10 June 2026</div></div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-days">29d</div>
+            <div><div class="dl-name">BPSC 72nd Prelims 2026</div><div class="dl-date">Last Date: 15 June 2026</div></div>
+          </div>
+          <div class="dl-item">
+            <div class="dl-days">34d</div>
+            <div><div class="dl-name">SBI Trade Finance Officer</div><div class="dl-date">Last Date: 20 June 2026</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Status Board -->
+      <div class="sw">
+        <div class="sw-head">📋 Exam Status Board</div>
+        <div class="sw-body">
+          <div class="score-item">
+            <div class="sc-rank">01</div>
+            <div class="sc-exam">UPSC IAS Prelims 2026</div>
+            <span class="sc-status ss-admit">Admit Card</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">02</div>
+            <div class="sc-exam">SSC GD Constable 2026</div>
+            <span class="sc-status ss-exam">Exam Live</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">03</div>
+            <div class="sc-exam">RRB ALP 2026</div>
+            <span class="sc-status ss-open">Apply Open</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">04</div>
+            <div class="sc-exam">IBPS PO 2026</div>
+            <span class="sc-status ss-result">Result Soon</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">05</div>
+            <div class="sc-exam">CTET Sep 2026</div>
+            <span class="sc-status ss-open">Apply Open</span>
+          </div>
+          <div class="score-item">
+            <div class="sc-rank">06</div>
+            <div class="sc-exam">MPSC Group B</div>
+            <span class="sc-status ss-exam">Exam Live</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Free Alerts -->
+      <div class="sw">
+        <div class="sw-head">🔔 Free Exam Alerts</div>
+        <div class="sw-body">
+          <p style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.7">Get instant alerts for every exam update — directly in your email. 2 lakh+ students trust Suchana.</p>
+          <div class="nl-form">
+            <input type="email" placeholder="Your email address">
+            <input type="text" placeholder="Interested exams (e.g. UPSC, SSC)">
+            <button>Subscribe Free →</button>
+          </div>
+          <div class="nl-note">No spam · Unsubscribe anytime</div>
+        </div>
+      </div>
+
+      <!-- Sidebar Ad 2 -->
+      <div class="ad-sidebar ad-s-120">
+        <div class="ad-label">Advertisement</div>
+        <div class="ad-inner">
+          <b>300 × 120</b>
+          <span style="font-size:11px">AdSense unit</span>
+        </div>
+      </div>
+
+      <!-- Tools -->
+      <div class="sw">
+        <div class="sw-head">🛠️ Free Tools</div>
+        <div class="sw-body">
+          <div class="tool-grid">
+            <a href="#" class="tool-btn"><span class="tool-icon">🎂</span>Age Calculator</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">💰</span>Salary Calc</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">📅</span>Exam Calendar</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">🗺️</span>State Jobs</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">📊</span>Cut-off Tracker</a>
+            <a href="#" class="tool-btn"><span class="tool-icon">📋</span>Mock Test</a>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="ft-grid">
+    <div class="ft-brand">
+      <div class="logo">Suchana<span>.</span></div>
+      <p>India's most trusted government exam intelligence platform. Real-time lifecycle tracking for 500+ exams from 100+ official agencies. Official data only — no rumours.</p>
+    </div>
+    <div class="ft-col">
+      <h4>Updates</h4>
+      <a href="#">Notifications</a>
+      <a href="#">Admit Cards</a>
+      <a href="#">Results</a>
+      <a href="#">Answer Keys</a>
+      <a href="#">Cutoff Marks</a>
+    </div>
+    <div class="ft-col">
+      <h4>Study</h4>
+      <a href="#">Syllabus PDFs</a>
+      <a href="#">PYQ Papers</a>
+      <a href="#">Exam Analysis</a>
+      <a href="#">Best Books</a>
+      <a href="#">Prep Strategy</a>
+    </div>
+    <div class="ft-col">
+      <h4>Knowledge</h4>
+      <a href="#">Static GK</a>
+      <a href="#">Current Affairs</a>
+      <a href="#">Daily CA</a>
+      <a href="#">Monthly CA PDF</a>
+      <a href="#">Exam News</a>
+    </div>
+    <div class="ft-col">
+      <h4>Platform</h4>
+      <a href="#">About Suchana</a>
+      <a href="#">Age Calculator</a>
+      <a href="#">Salary Calculator</a>
+      <a href="#">All Exams</a>
+      <a href="#">State Jobs</a>
+      <a href="#">Advertise</a>
+      <a href="#">Privacy Policy</a>
+    </div>
+  </div>
+  <div class="ft-bottom">
+    <p>© 2026 Suchana Intelligence · Data sourced from official government gazettes</p>
+    <p>🔒 Official Sources Only · No Rumours · No Fake News</p>
+  </div>
+</footer>
+
+</body>
+</html>

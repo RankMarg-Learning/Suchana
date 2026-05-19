@@ -40,22 +40,63 @@ async function fetchWithRetry(
 
 // ─── API Functions ────────────────────────────────────────────────────────────
 
-export async function fetchTrendingContent(): Promise<{ exams: Exam[]; articles: SeoPage[] }> {
+export async function fetchTrendingContent(limit = 6): Promise<{ exams: Exam[] }> {
   try {
-    const res = await fetch(`${API_BASE}/exams/trending`, {
-      next: { revalidate: 900 }, // 15 mins - Fast enough for "Live" feel
+    const res = await fetch(`${API_BASE}/home/trending?limit=${limit}`, {
+      next: { revalidate: 900 },
     });
-    if (!res.ok) return { exams: [], articles: [] };
+    if (!res.ok) return { exams: [] };
     const json = await res.json();
-    return json.data ?? { exams: [], articles: [] };
+    return json.data ?? { exams: [] };
   } catch (err) {
-    if (process.env.NODE_ENV === 'development' || process.env.NEXT_PHASE === 'phase-production-build') {
-      console.warn("[API] Could not fetch trending content (Backend likely down). Skipping for build...");
-    } else {
-      console.error("Error fetching trending content:", err);
-    }
-    return { exams: [], articles: [] };
+    return { exams: [] };
   }
+}
+
+export async function fetchHomeTrendingNews(limit = 4, page = 1): Promise<SeoPage[]> {
+  try {
+    const res = await fetch(`${API_BASE}/home/trending-news?limit=${limit}&page=${page}`, { next: { revalidate: 600 } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data?.trendingNews ?? [];
+  } catch { return []; }
+}
+
+export async function fetchHomePyq(limit = 2): Promise<SeoPage[]> {
+  try {
+    const res = await fetch(`${API_BASE}/home/previous-year?limit=${limit}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data?.pyq ?? [];
+  } catch { return []; }
+}
+
+export async function fetchHomeArticles(limit = 3): Promise<SeoPage[]> {
+  try {
+    const res = await fetch(`${API_BASE}/home/articles?limit=${limit}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    console.log(json)
+    return json.data?.articles ?? [];
+  } catch { return []; }
+}
+
+export async function fetchHomeStrategy(limit = 2): Promise<SeoPage[]> {
+  try {
+    const res = await fetch(`${API_BASE}/home/strategy?limit=${limit}`, { next: { revalidate: 3600 } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data?.strategy ?? [];
+  } catch { return []; }
+}
+
+export async function fetchHomeClosingSoon(limit = 5): Promise<LifecycleEvent[]> {
+  try {
+    const res = await fetch(`${API_BASE}/home/lifecycle/closing-soon?limit=${limit}`, { next: { revalidate: 300 } });
+    if (!res.ok) return [];
+    const json = await res.json();
+    return json.data?.closingSoon ?? [];
+  } catch { return []; }
 }
 
 export async function fetchExamsFromAPI(
