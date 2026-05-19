@@ -11,7 +11,8 @@ export default function SiteFooter() {
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         /* ─── FOOTER ─── */
         .footer-wrap {
           background: #0c0f17; color: rgba(255,255,255,.6);
@@ -84,7 +85,7 @@ export default function SiteFooter() {
           </div>
           <div className="ft-col">
             <h4>Knowledge</h4>
-            <Link href="/c/static-gk">Static GK</Link>
+            <Link href="/c/gk-static">Static GK</Link>
             <Link href="/c/current-affairs">Current Affairs</Link>
             <Link href="/c/current-affairs">Daily CA</Link>
             <Link href="/c/current-affairs">Monthly CA PDF</Link>

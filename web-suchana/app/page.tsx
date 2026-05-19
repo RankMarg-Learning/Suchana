@@ -221,7 +221,7 @@ export default function HomePage() {
                     <div className="cc-name">Exam Analysis</div>
                     <div className="cc-desc" style={{ color: '#92400e' }}>Difficulty, good attempts, expected cutoff</div>
                   </Link>
-                  <Link href="/topic/static-gk" className="cat-card cc-gk">
+                  <Link href="/topic/gk-static" className="cat-card cc-gk">
                     <div className="cc-icon text-sky-600"><Globe size={24} /></div>
                     <div className="cc-name">Static GK</div>
                     <div className="cc-desc" style={{ color: '#0e4f75' }}>History, geography, polity, economy</div>

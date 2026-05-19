@@ -103,7 +103,7 @@ export default function ExamListingClient({ title, category, status, conductingB
 
   return (
     <>
-      <div className="wrap-home" style={{ marginTop: '24px', marginBottom: '60px' }}>
+      <div className="wrap-home home-body" style={{ marginTop: '24px', marginBottom: '60px' }}>
         <div className="page-grid">
 
           {/* CONTENT COL */}

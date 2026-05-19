@@ -189,7 +189,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationJsonLd) }}
         />
       </head>
-      <body className={`${hasLiveUpdate ? 'has-live-update' : ''} ${inter.variable} ${spaceGrotesk.variable} antialiased`}>
+      <body className={`${hasLiveUpdate ? 'has-live-update ' : ''} ${inter.variable} ${spaceGrotesk.variable} antialiased`}>
         <Providers>
           <SiteNav />
           {children}

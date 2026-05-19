@@ -63,7 +63,7 @@ export default function SiteNav() {
       {/* MASTHEAD */}
       <div className="masthead">
         <div>
-          <Link href="/" className="mh-brand">Suchana<span className="dot">.</span></Link>
+          <Link href="/" className="mh-brand white">Suchana<span className="dot">.</span></Link>
         </div>
       </div>
 
@@ -77,7 +77,7 @@ export default function SiteNav() {
         <Link href="/topic/syllabus" className="ns-item"><FileText size={14} className="opacity-80" /> Syllabus</Link>
         <Link href="/topic/previous-year-papers" className="ns-item"><FileEdit size={14} className="opacity-80" /> PYQ Papers</Link>
         <Link href="/topic/exam-analysis" className="ns-item"><BarChart2 size={14} className="opacity-80" /> Analysis</Link>
-        <Link href="/topic/static-gk" className="ns-item"><Globe size={14} className="opacity-80" /> Static GK</Link>
+        <Link href="/topic/gk-static" className="ns-item"><Globe size={14} className="opacity-80" /> Static GK</Link>
         <Link href="/topic/current-affairs" className="ns-item"><Newspaper size={14} className="opacity-80" /> Current Affairs</Link>
         <Link href="/topic/preparation-guides" className="ns-item"><BookOpen size={14} className="opacity-80" /> Prep Guide</Link>
         <Link href="/categories" className="ns-item"><Landmark size={14} className="opacity-80" /> All Exams</Link>

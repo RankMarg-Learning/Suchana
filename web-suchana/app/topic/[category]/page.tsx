@@ -38,7 +38,7 @@ function mapSlugToCategoryEnum(slug: string): SeoPageCategory | null {
   if (norm === 'exam-analysis' || norm === 'analysis') {
     return SeoPageCategory.ANALYSIS;
   }
-  if (norm === 'static-gk' || norm === 'gk-static') {
+  if (norm === 'gk-static' || norm === 'gk-static') {
     return SeoPageCategory.GK_STATIC;
   }
   if (norm === 'preparation-guides' || norm === 'preparation-strategy') {
@@ -151,7 +151,7 @@ export async function generateStaticParams() {
     } else if (cat.value === SeoPageCategory.ANALYSIS) {
       slugs.add('exam-analysis');
     } else if (cat.value === SeoPageCategory.GK_STATIC) {
-      slugs.add('static-gk');
+      slugs.add('gk-static');
     } else if (cat.value === SeoPageCategory.PREPARATION_STRATEGY) {
       slugs.add('preparation-guides');
     }

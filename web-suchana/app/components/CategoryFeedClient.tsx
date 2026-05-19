@@ -340,7 +340,7 @@ export default function CategoryFeedClient({
                     { label: "Syllabus", slug: "syllabus" },
                     { label: "PYQ Papers", slug: "previous-year-papers" },
                     { label: "Exam Analysis", slug: "exam-analysis" },
-                    { label: "Static GK", slug: "static-gk" },
+                    { label: "Static GK", slug: "gk-static" },
                     { label: "Current Affairs", slug: "current-affairs" },
                     { label: "Prep Guides", slug: "preparation-guides" }
                   ].map((item) => {
