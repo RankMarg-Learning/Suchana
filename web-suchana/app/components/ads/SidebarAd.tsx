@@ -11,18 +11,30 @@ export default function SidebarAd({ className = "ad-sidebar ad-s-250" }: Sidebar
   const adRef = useRef<HTMLModElement>(null);
 
   useEffect(() => {
-    try {
-      if (adRef.current && !adRef.current.hasAttribute("data-ad-status")) {
-        // @ts-ignore
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
+    let timeoutId: NodeJS.Timeout;
+
+    const pushAd = () => {
+      try {
+        if (adRef.current && !adRef.current.hasAttribute("data-ad-status")) {
+          const width = adRef.current.clientWidth || adRef.current.parentElement?.clientWidth || 0;
+          if (width > 0) {
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+          } else {
+            timeoutId = setTimeout(pushAd, 200);
+          }
+        }
+      } catch (e) {
+        console.error("AdSense error:", e);
       }
-    } catch (e) {
-      console.error("AdSense error:", e);
-    }
+    };
+
+    timeoutId = setTimeout(pushAd, 100);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   return (
-    <div className={className}>
+    <div className={className} style={{ minHeight: "250px", overflow: "hidden" }}>
       <Script
         id="adsbygoogle-init-sidebar"
         strategy="afterInteractive"
@@ -35,7 +47,7 @@ export default function SidebarAd({ className = "ad-sidebar ad-s-250" }: Sidebar
       <ins
         ref={adRef}
         className="adsbygoogle"
-        style={{ display: "block" }}
+        style={{ display: "block", width: "100%", minWidth: "250px" }}
         data-ad-client="ca-pub-6631120605146752"
         data-ad-slot="5246027788"
         data-ad-format="auto"
