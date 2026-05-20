@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Space_Grotesk } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
-import { SITE_URL, fetchTrendingContent } from "./lib/api";
+import { SITE_URL, fetchTickerContent } from "./lib/api";
 import SiteNav from "./components/SiteNav";
 import SiteFooter from "./components/SiteFooter";
 
@@ -169,8 +169,8 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const { exams: trendingExams } = await fetchTrendingContent();
-  const hasLiveUpdate = trendingExams && trendingExams.length > 0;
+  const { exams: tickerExams } = await fetchTickerContent();
+  const hasLiveUpdate = tickerExams && tickerExams.length > 0;
 
   return (
     <html lang="en-IN" suppressHydrationWarning>
@@ -191,7 +191,7 @@ export default async function RootLayout({
       </head>
       <body className={`${hasLiveUpdate ? 'has-live-update ' : ''} ${inter.variable} ${spaceGrotesk.variable} antialiased`}>
         <Providers>
-          <SiteNav />
+          <SiteNav initialTickerExams={tickerExams} />
           {children}
           <SiteFooter />
         </Providers>

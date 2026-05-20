@@ -29,6 +29,7 @@ export default function CategoryFeedClient({
   const [mounted, setMounted] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   // Newsletter state
@@ -138,49 +139,116 @@ export default function CategoryFeedClient({
           {/* CONTENT COLUMN */}
           <div className="content-col">
 
-            {/* SECTION HEADER */}
-            <div className="sh" >
-              <div className="sh-title" style={{ fontFamily: 'var(--hd)' }}>
-                <span className="cat-tag" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                  {icon} {category.replace(/_/g, ' ')}
-                </span>
-                {title}
-              </div>
-              <div className="sh-link" style={{ color: 'var(--accent)' }}>
-                {!isFetching && `${allArticles.length} RESOURCES`}
+            {/* SECTION HEADER BLOCK */}
+            <div style={{ marginBottom: '24px', position: 'relative' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'nowrap', gap: '16px', minHeight: '40px' }}>
+
+                  {/* TITLE AREA (hides when search expands) */}
+                  <div style={{
+                    display: isSearchFocused || search ? 'none' : 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    flex: 1,
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{
+                      width: '40px', height: '40px',
+                      borderRadius: '12px',
+                      background: 'linear-gradient(135deg, var(--gold), var(--violet))',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: 'white',
+                      flexShrink: 0
+                    }}>
+                      <span style={{ transform: 'scale(0.9)' }}>{icon}</span>
+                    </div>
+                    <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ fontFamily: 'var(--mono)', fontSize: '10px', fontWeight: 700, letterSpacing: '1.2px', color: 'var(--violet)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                        {category.replace(/_/g, ' ')}
+                      </div>
+                      <h1 style={{ fontFamily: 'var(--hd)', fontSize: '24px', fontWeight: 800, color: 'var(--ink)', lineHeight: 1.1, letterSpacing: '-0.02em', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {title}
+                      </h1>
+                    </div>
+                  </div>
+
+                  {/* SEARCH BAR (EXPANDABLE) */}
+                  <div style={{
+                    background: '#fff',
+                    borderRadius: '12px',
+                    padding: '4px 8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease',
+                    flex: isSearchFocused || search ? 1 : '0 0 auto',
+                    width: isSearchFocused || search ? '100%' : '40px',
+                    height: '40px',
+                    cursor: isSearchFocused || search ? 'text' : 'pointer'
+                  }}
+                    onClick={() => {
+                      if (!isSearchFocused && !search) {
+                        document.getElementById('category-search-input')?.focus();
+                      }
+                    }}
+                  >
+                    <div style={{ padding: isSearchFocused || search ? '0 8px 0 4px' : '0', display: 'flex', alignItems: 'center', color: 'var(--text-muted)', margin: isSearchFocused || search ? '0' : '0 auto' }}>
+                      <Search size={18} />
+                    </div>
+                    <input
+                      id="category-search-input"
+                      type="search"
+                      placeholder={isSearchFocused || search ? searchPlaceholder : ""}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      onFocus={() => setIsSearchFocused(true)}
+                      onBlur={() => setIsSearchFocused(false)}
+                      aria-label="Search within results"
+                      autoComplete="off"
+                      style={{
+                        flex: 1,
+                        fontSize: '14px',
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        color: 'var(--ink)',
+                        fontFamily: 'var(--body)',
+                        width: isSearchFocused || search ? '100%' : '0px',
+                        padding: isSearchFocused || search ? '0 8px' : '0',
+                        opacity: isSearchFocused || search ? 1 : 0,
+                        transition: 'all 0.3s'
+                      }}
+                    />
+                    {search && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setSearch(""); }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '4px',
+                          color: 'var(--text-muted)'
+                        }}
+                        aria-label="Clear search"
+                      >
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+
+                </div>
+
+                {!(isSearchFocused || search) && subtitle && (
+                  <p style={{ color: 'var(--text2)', fontSize: '14px', margin: '0', lineHeight: 1.5, maxWidth: '800px' }}>
+                    {subtitle}
+                  </p>
+                )}
               </div>
             </div>
-
-            <p style={{ color: 'var(--text2)', fontSize: '14px', marginTop: '0', lineHeight: 1.5 }}>
-              {subtitle}
-            </p>
-
-            {/* SEARCH BAR */}
-            <div className="search-bar" role="search" >
-              <Search size={15} color="var(--text-muted)" />
-              <input
-                type="search"
-                className="search-input"
-                placeholder={searchPlaceholder}
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                aria-label="Search within results"
-                autoComplete="off"
-                style={{ fontSize: '16px', background: 'transparent', border: 'none', width: '100%', outline: 'none' }}
-              />
-              {search && (
-                <button
-                  className="search-clear-btn"
-                  onClick={() => setSearch("")}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '4px' }}
-                  aria-label="Clear search"
-                >
-                  <X size={14} color="var(--text-muted)" />
-                </button>
-              )}
-            </div>
-
-
 
             {/* MAIN FEED LIST */}
             {status === "pending" ? (
@@ -208,24 +276,7 @@ export default function CategoryFeedClient({
                     We couldn't find any articles matching <span className="search-highlight" style={{ fontWeight: 700, color: 'var(--gold)' }}>"{debouncedSearch}"</span>.
                     Try adjusting your keywords or browse other categories.
                   </p>
-                  <button
-                    onClick={() => setSearch("")}
-                    style={{
-                      background: 'var(--gold)',
-                      color: '#fff',
-                      border: 'none',
-                      padding: '10px 20px',
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}
-                  >
-                    <X size={16} /> Clear Search
-                  </button>
+
                 </div>
               </div>
             ) : (

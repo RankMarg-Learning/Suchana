@@ -6,37 +6,24 @@ import {
   Bell,
   BellRing,
   Calendar,
-  FileText,
-  Globe,
-  Clock,
-  MapPin,
   CheckCircle2,
   RefreshCw,
-  ChevronLeft,
   Share2,
   BookmarkPlus,
   BookmarkCheck,
   ArrowRight,
-  Info,
-  Smartphone,
   ClipboardList,
   BookOpen,
   Key,
   Award,
   FolderCheck,
   PartyPopper,
-  XCircle,
-  AlertCircle,
   Pin,
   UserSquare2,
-  Layers,
-  Star,
-  Calculator,
   MessageCircle
 } from "lucide-react";
 import MarkdownRenderer from "@/app/components/MarkdownRenderer";
 import {
-  Exam,
   LifecycleEvent,
   STATUS_LABELS,
   cleanLabel,
@@ -44,15 +31,14 @@ import {
   enumToSlug,
   CATEGORIES,
   getCategoryInfo,
-  slugify,
-  stripMarkdown
 } from "@/app/lib/types";
 import { fetchSavedExams, toggleSavedExam, fetchSeoPages, fetchExamBySlug, fetchExamsFromAPI } from "@/app/lib/api";
-import { LeaderboardAd, SidebarAd, InFeedAd } from "@/app/components/AdUnits";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { trackFunnelStep, trackConversion } from "@/app/lib/telemetry";
 import { useScrollTracking } from "@/app/hooks/useScrollTracking";
 import FAQSection from "@/app/components/FAQSection";
+import SidebarAd from "@/app/components/ads/SidebarAd";
+import LeaderboardAd from "@/app/components/ads/LeaderboardAd";
 
 
 const STAGE_ICONS: Record<string, any> = {
@@ -251,10 +237,10 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
 
   useScrollTracking(`exam_detail:${slug}`);
 
-  const { data: relatedExams = [] } = useQuery({
-    queryKey: ["relatedExams", category],
-    queryFn: () => fetchExamsFromAPI(1, 4, category).then(r => r.exams.filter(e => e.id !== (exam && !('error' in exam) ? exam.id : null)).slice(0, 4)),
-  });
+  // const { data: relatedExams = [] } = useQuery({
+  //   queryKey: ["relatedExams", category],
+  //   queryFn: () => fetchExamsFromAPI(1, 4, category).then(r => r.exams.filter(e => e.id !== (exam && !('error' in exam) ? exam.id : null)).slice(0, 4)),
+  // });
 
   const [now, setNow] = useState(0);
   const [mounted, setMounted] = useState(false);
@@ -297,13 +283,13 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
     },
   });
 
-  const { data: latestArticles = [] } = useQuery({
-    queryKey: ["latestSeoPages"],
-    queryFn: async () => {
-      const { pages } = await fetchSeoPages(1, 5);
-      return pages;
-    }
-  });
+  // const { data: latestArticles = [] } = useQuery({
+  //   queryKey: ["latestSeoPages"],
+  //   queryFn: async () => {
+  //     const { pages } = await fetchSeoPages(1, 5);
+  //     return pages;
+  //   }
+  // });
 
   useEffect(() => {
     setNow(Date.now());
@@ -367,14 +353,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
         </div>
       </div>
 
-      <div className="wrap">
-        <div className="ad-leader" style={{ margin: '16px 0 24px' }}>
-          <div className="ad-label">Advertisement</div>
-          <div className="ad-inner">
-            <b>728 × 90 — Leaderboard</b>
-            <span style={{ fontSize: 11 }}>Place AdSense responsive leaderboard unit here</span>
-          </div>
-        </div>
+      <div className="wrap" style={{ margin: '16px' }}>
 
         <div className="article-grid">
           <div className="fade-up">
@@ -554,7 +533,6 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
               <FAQSection faqs={exam.faqs} />
             )}
 
-            <div style={{ marginBottom: 24 }}><InFeedAd id="detail-inline-ad-3" index={2} /></div>
           </div>
 
           {/* SIDEBAR */}
@@ -625,13 +603,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
               </div>
             </div>
 
-            <div className="ad-sidebar ad-s-250">
-              <div className="ad-label">Advertisement</div>
-              <div className="ad-inner">
-                <b>300 × 250</b>
-                <span style={{ fontSize: 11 }}>AdSense rectangle unit</span>
-              </div>
-            </div>
+            <SidebarAd />
           </div>
         </div>
       </div>

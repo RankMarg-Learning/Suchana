@@ -12,6 +12,16 @@ export const getTrendingExams = async (req: Request, res: Response) => {
     }
 };
 
+export const getTickerExams = async (req: Request, res: Response) => {
+    try {
+        const limit = parseInt(req.query.limit as string) || 6;
+        const data = await homeService.getTickerExams(limit);
+        sendSuccess(res, { exams: data });
+    } catch (error) {
+        sendError(res, 500, 'FETCH_TICKER_ERROR', 'Error fetching ticker exams', error);
+    }
+};
+
 export const getNews = async (req: Request, res: Response) => {
     try {
         const limit = parseInt(req.query.limit as string) || 4;
