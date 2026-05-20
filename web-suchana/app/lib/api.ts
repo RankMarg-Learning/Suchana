@@ -58,7 +58,7 @@ export async function fetchHomeTrendingNews(limit = 4, page = 1): Promise<SeoPag
     const res = await fetch(`${API_BASE}/home/trending-news?limit=${limit}&page=${page}`, { next: { revalidate: 600 } });
     if (!res.ok) return [];
     const json = await res.json();
-    return json.data?.trendingNews ?? [];
+    return json.data?.news ?? [];
   } catch { return []; }
 }
 

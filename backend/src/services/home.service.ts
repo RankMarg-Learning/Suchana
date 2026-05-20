@@ -25,10 +25,16 @@ export const getNews = async (limit: number, page: number) => {
     return cacheService.getOrSet(`home:news:${limit}:${page}`, 600, async () => {
         return prisma.seoPage.findMany({
             where: { isPublished: true, isTrending: true },
+            select: {
+                title: true,
+                slug: true,
+                category: true,
+                exam: { select: { conductingBody: true } },
+                updatedAt: true,
+            },
             take: limit,
             skip,
             orderBy: { updatedAt: 'desc' },
-            include: { exam: { select: { conductingBody: true } } }
         });
     });
 };

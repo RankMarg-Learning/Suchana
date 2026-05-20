@@ -10,6 +10,7 @@ import {
   CalendarDays,
   Map
 } from "lucide-react";
+import SidebarAd from "../ads/SidebarAd";
 
 interface HomeSidebarProps {
   closingSoon: any[];
@@ -20,13 +21,7 @@ export default function HomeSidebar({ closingSoon, trendingExams }: HomeSidebarP
   return (
     <div className="sidebar-col">
       {/* Sidebar Ad 300x250 */}
-      <div className="ad-sidebar ad-s-250">
-        <div className="ad-label">Advertisement</div>
-        <div className="ad-inner">
-          <b>300 × 250</b>
-          <span style={{ fontSize: 11 }}>AdSense rectangle unit</span>
-        </div>
-      </div>
+      <SidebarAd className="ad-sidebar ad-s-250" />
 
       {/* Deadlines */}
       <div className="sw">
@@ -70,30 +65,10 @@ export default function HomeSidebar({ closingSoon, trendingExams }: HomeSidebarP
         </div>
       </div>
 
-      {/* Free Alerts */}
-      <div className="sw">
-        <div className="sw-head flex items-center gap-1.5">
-          <Bell size={16} className="text-yellow-400 animate-swing" /> Free Exam Alerts
-        </div>
-        <div className="sw-body">
-          <p style={{ fontSize: 12, color: 'var(--text2)', marginBottom: 10, lineHeight: 1.7 }}>Get instant alerts for every exam update — directly in your email.</p>
-          <div className="nl-form">
-            <input type="email" placeholder="Your email address" />
-            <input type="text" placeholder="Interested exams" />
-            <button>Subscribe Free →</button>
-          </div>
-          <div className="nl-note">No spam · Unsubscribe anytime</div>
-        </div>
-      </div>
+
 
       {/* Sidebar Ad 2 */}
-      <div className="ad-sidebar ad-s-120">
-        <div className="ad-label">Advertisement</div>
-        <div className="ad-inner">
-          <b>300 × 120</b>
-          <span style={{ fontSize: 11 }}>AdSense unit</span>
-        </div>
-      </div>
+      <SidebarAd className="ad-sidebar ad-s-120" />
 
       {/* Tools */}
       <div className="sw">

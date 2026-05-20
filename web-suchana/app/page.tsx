@@ -6,9 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   fetchTrendingContent,
   fetchHomeTrendingNews,
-  fetchHomePyq,
   fetchHomeArticles,
-  fetchHomeStrategy,
   fetchHomeClosingSoon
 } from "./lib/api";
 import {
@@ -26,6 +24,8 @@ import {
 } from "lucide-react";
 import HomeSidebar from "./components/home/HomeSidebar";
 import { STAGE_LABELS, cleanLabel } from "./lib/types";
+import LeaderboardAd from "./components/ads/LeaderboardAd";
+import MidContentAd from "./components/ads/MidContentAd";
 
 export default function HomePage() {
   const [mounted, setMounted] = useState(false);
@@ -40,14 +40,12 @@ export default function HomePage() {
 
   const { data: trendingNews = [] } = useQuery({
     queryKey: ["home-trending-news"],
-    queryFn: () => fetchHomeTrendingNews(3, 1),
+    queryFn: () => fetchHomeTrendingNews(4, 1),
   });
-
-
 
   const { data: caArticles = [] } = useQuery({
     queryKey: ["home-articles"],
-    queryFn: () => fetchHomeArticles(3),
+    queryFn: () => fetchHomeArticles(6),
   });
 
 
@@ -65,16 +63,7 @@ export default function HomePage() {
     <>
       <div className="home-body">
         {/* LEADERBOARD AD */}
-        <div className="wrap-home">
-          <div className="ad-leader" style={{ margin: '16px 0 0' }}>
-            <div className="ad-label">Advertisement</div>
-            <div className="ad-inner">
-              <b className="hidden md:block">728 × 90 — Leaderboard</b>
-              <b className="block md:hidden">320 × 50 — Mobile Leaderboard</b>
-              <span style={{ fontSize: 11 }}>Place AdSense responsive leaderboard unit here</span>
-            </div>
-          </div>
-        </div>
+        <LeaderboardAd />
 
         {/* MAIN PAGE */}
         <div className="wrap-home">
@@ -89,34 +78,37 @@ export default function HomePage() {
                     <div className="sh-title"><span className="cat-tag">TOP STORIES</span> Today's Highlights</div>
                     <Link href="/articles" className="sh-link">ALL NEWS →</Link>
                   </div>
-                  <div className="featured-grid">
-                    <Link href={trendingNews[0] ? `/${trendingNews[0].slug}` : "#"} className="feat-main">
-                      <div className="feat-bg"></div>
-                      <div className="feat-bg-pattern"></div>
-                      <div className="feat-main-inner">
-                        <div className="feat-cat flex items-center gap-1.5"><Activity size={14} className="text-red-500 animate-pulse" /> Breaking · {trendingNews[0]?.category?.replace(/_/g, ' ') || 'Notification'}</div>
-                        <div className="feat-title">{trendingNews[0]?.title || 'UPSC CSE 2026 Prelims Admit Card Released — Exam on 25 May, Centres Allotted'}</div>
-                        <div className="feat-meta">
-                          <span className="flex items-center gap-1"><Folder size={12} className="opacity-80" /> {trendingNews[0]?.exam?.conductingBody || 'UPSC'}</span>
-                          <span className="flex items-center gap-1"><Clock size={12} className="opacity-80" /> {trendingNews[0] ? new Date(trendingNews[0].updatedAt).toLocaleDateString() : '2 hours ago'}</span>
+                  {trendingNews.length > 0 && (
+                    <div className="featured-grid">
+                      {trendingNews[0] && (
+                        <Link href={`/${trendingNews[0].slug}`} className="feat-main">
+                          <div className="feat-bg"></div>
+                          <div className="feat-bg-pattern"></div>
+                          <div className="feat-main-inner">
+                            <div className="feat-cat flex items-center gap-1.5"><Activity size={14} className="text-red-500 animate-pulse" /> Breaking · {trendingNews[0]?.category?.replace(/_/g, ' ') || 'Notification'}</div>
+                            <div className="feat-title">{trendingNews[0]?.title}</div>
+                            <div className="feat-meta">
+                              <span className="flex items-center gap-1"><Folder size={12} className="opacity-80" /> {trendingNews[0]?.exam?.conductingBody || 'UPSC'}</span>
+                              <span className="flex items-center gap-1"><Clock size={12} className="opacity-80" /> {new Date(trendingNews[0].updatedAt).toLocaleDateString()}</span>
+                            </div>
+                          </div>
+                        </Link>
+                      )}
+                      {trendingNews.length > 1 && (
+                        <div className="flex flex-col h-full w-full">
+                          {trendingNews.slice(1).map((news, idx) => (
+                            <Link key={news.slug} href={`/${news.slug}`} className="feat-side" style={{ flex: 1 }}>
+                              <div>
+                                <div className="fs-cat" style={{ color: idx === 0 ? 'var(--rose)' : 'var(--mint)' }}>{news.category?.replace(/_/g, ' ')}</div>
+                                <div className="fs-title">{news.title}</div>
+                              </div>
+                              <div className="fs-meta">{new Date(news.updatedAt).toLocaleDateString()}</div>
+                            </Link>
+                          ))}
                         </div>
-                      </div>
-                    </Link>
-                    <Link href={trendingNews[1] ? `/${trendingNews[1].slug}` : "#"} className="feat-side">
-                      <div>
-                        <div className="fs-cat" style={{ color: 'var(--rose)' }}>{trendingNews[1]?.category?.replace(/_/g, ' ')}</div>
-                        <div className="fs-title">{trendingNews[1]?.title}</div>
-                      </div>
-                      <div className="fs-meta">{trendingNews[1] && new Date(trendingNews[1].updatedAt).toLocaleDateString()}</div>
-                    </Link>
-                    <Link href={trendingNews[2] && `/${trendingNews[2].slug}`} className="feat-side">
-                      <div>
-                        <div className="fs-cat" style={{ color: 'var(--mint)' }}>{trendingNews[2]?.category?.replace(/_/g, ' ')}</div>
-                        <div className="fs-title">{trendingNews[2]?.title}</div>
-                      </div>
-                      <div className="fs-meta">{trendingNews[2] ? new Date(trendingNews[2].updatedAt).toLocaleDateString() : 'Today'}</div>
-                    </Link>
-                  </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
                 )
@@ -233,16 +225,8 @@ export default function HomePage() {
                   </Link>
                 </div>
               </div>
-
               {/* IN-CONTENT AD */}
-              <div className="ad-leader" style={{ margin: '24px 0' }}>
-                <div className="ad-label">Advertisement</div>
-                <div className="ad-inner">
-                  <b className="hidden md:block">728 × 90 — Mid-Content</b>
-                  <b className="block md:hidden">320 × 50 — Mobile Mid-Content</b>
-                  <span style={{ fontSize: 11 }}>Place responsive AdSense unit here</span>
-                </div>
-              </div>
+              <MidContentAd />
 
               {/* LATEST ARTICLES */}
               {caArticles.length > 0 && (

@@ -6854,6 +6854,7 @@ r .card-branding-icon-box {
   display: flex;
   flex-direction: column;
   min-width: 0;
+  gap: 24px;
 }
 
 .sidebar-col {
