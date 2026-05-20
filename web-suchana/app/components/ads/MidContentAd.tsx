@@ -7,18 +7,30 @@ export default function MidContentAd() {
   const adRef = useRef<HTMLModElement>(null);
 
   useEffect(() => {
-    try {
-      if (adRef.current && !adRef.current.hasAttribute("data-ad-status")) {
-        // @ts-ignore
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
+    let timeoutId: NodeJS.Timeout;
+
+    const pushAd = () => {
+      try {
+        if (adRef.current && !adRef.current.hasAttribute("data-ad-status")) {
+          const width = adRef.current.clientWidth || adRef.current.parentElement?.clientWidth || 0;
+          if (width > 0) {
+            // @ts-ignore
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+          } else {
+            timeoutId = setTimeout(pushAd, 200);
+          }
+        }
+      } catch (e) {
+        console.error("AdSense error:", e);
       }
-    } catch (e) {
-      console.error("AdSense error:", e);
-    }
+    };
+
+    timeoutId = setTimeout(pushAd, 100);
+    return () => clearTimeout(timeoutId);
   }, []);
 
   return (
-    <div className="ad-leader" style={{ margin: "24px 0", textAlign: "center", overflow: "hidden" }}>
+    <div className="ad-leader" style={{ margin: "24px 0", textAlign: "center", overflow: "hidden", minHeight: "90px" }}>
       {/* We only need the Script tag once per page ideally, but next/script handles deduping */}
       <Script
         id="adsbygoogle-init-mid"
@@ -32,7 +44,7 @@ export default function MidContentAd() {
       <ins
         ref={adRef}
         className="adsbygoogle"
-        style={{ display: "block" }}
+        style={{ display: "block", width: "100%", minWidth: "250px" }}
         data-ad-client="ca-pub-6631120605146752"
         data-ad-slot="3262405422"
         data-ad-format="auto"
