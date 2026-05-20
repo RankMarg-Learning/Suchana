@@ -6,6 +6,7 @@ import {
   Calendar, Clock, AlertCircle, CalendarDays, Activity, Info,
   CheckCircle2, Award, ClipboardCheck, Wrench, Folder, FileText, Mail, Map
 } from 'lucide-react';
+import MidContentAd from '../components/ads/MidContentAd';
 
 export default function AgeCalculatorClient({ children }: { children?: React.ReactNode }) {
   const [dob, setDob] = useState<string>('2000-01-01');
@@ -239,15 +240,7 @@ export default function AgeCalculatorClient({ children }: { children?: React.Rea
               )
             )}
 
-            {/* AD BANNER DISPLAY */}
-            <div className="ad-leader" style={{ margin: '32px 0 0' }}>
-              <div className="ad-label">Advertisement</div>
-              <div className="ad-inner">
-                <b className="hidden md:block">728 × 90 — Leaderboard Placement</b>
-                <b className="block md:hidden">320 × 50 — Mobile Leaderboard Placement</b>
-                <span style={{ fontSize: 11 }}>Sarkari Mock Test Series & Books Partners Only</span>
-              </div>
-            </div>
+            <MidContentAd />
 
             {children}
 

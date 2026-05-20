@@ -77,8 +77,8 @@ export default function HomeSidebar({ closingSoon, trendingExams }: HomeSidebarP
         </div>
         <div className="sw-body">
           <div className="tool-grid">
-            <Link href="#" className="tool-btn"><span className="tool-icon"><Calendar size={14} className="text-emerald-500" /></span>Age Calculator</Link>
-            <Link href="#" className="tool-btn"><span className="tool-icon"><CircleDollarSign size={14} className="text-amber-500" /></span>Salary Calc</Link>
+            <Link href="/age-calculator" className="tool-btn"><span className="tool-icon"><Calendar size={14} className="text-emerald-500" /></span>Age Calculator</Link>
+            <Link href="/salary-calculator" className="tool-btn"><span className="tool-icon"><CircleDollarSign size={14} className="text-amber-500" /></span>Salary Calc</Link>
             <Link href="/all-exams" className="tool-btn"><span className="tool-icon"><CalendarDays size={14} className="text-sky-500" /></span>Exam Calendar</Link>
             <Link href="/s/notification" className="tool-btn"><span className="tool-icon"><Map size={14} className="text-rose-500" /></span>State Jobs</Link>
           </div>

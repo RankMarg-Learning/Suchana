@@ -91,10 +91,21 @@ export default function SiteNav() {
         <div className="tk-head">UPDATES</div>
         <div className="tk-scroll">
           <div className="tk-inner">
-            {trendingExams.length > 0 ? trendingExams.map((exam: any) => (
-              <span key={exam.id}>{exam.title} <em>{exam.status?.replace(/_/g, ' ')}</em></span>
-            )) : (
+            {trendingExams.length > 0 ? (
               <>
+                {trendingExams.map((exam: any) => (
+                  <span key={`1-${exam.id}`}><Link href={`/exam/${exam.slug}`}>{exam.title}</Link> <em>{exam.status?.replace(/_/g, ' ')}</em></span>
+                ))}
+                {trendingExams.map((exam: any) => (
+                  <span key={`2-${exam.id}`}><Link href={`/exam/${exam.slug}`}>{exam.title}</Link> <em>{exam.status?.replace(/_/g, ' ')}</em></span>
+                ))}
+              </>
+            ) : (
+              <>
+                <span>SSC GD Constable 2026 <em>EXAM LIVE</em></span>
+                <span>UPSC IAS Prelims 2026 — Admit Card Available <em>DOWNLOAD</em></span>
+                <span>RRB ALP — Registration till 10 June <em>OPEN</em></span>
+                <span>BPSC 72nd Prelims — Apply Now <em>OPEN</em></span>
                 <span>SSC GD Constable 2026 <em>EXAM LIVE</em></span>
                 <span>UPSC IAS Prelims 2026 — Admit Card Available <em>DOWNLOAD</em></span>
                 <span>RRB ALP — Registration till 10 June <em>OPEN</em></span>
