@@ -70,25 +70,22 @@ export default function SiteFooter() {
           <div className="ft-col">
             <h4>Updates</h4>
             <Link href="/s/notification">Notifications</Link>
-            <Link href="/s/admit-card">Admit Cards</Link>
-            <Link href="/s/result">Results</Link>
-            <Link href="/s/answer-key">Answer Keys</Link>
-            <Link href="/c/exam-analysis">Cutoff Marks</Link>
+            <Link href="/s/admit-card-out">Admit Cards</Link>
+            <Link href="/s/result-declared">Results</Link>
+            <Link href="/s/answer-key-out">Answer Keys</Link>
           </div>
           <div className="ft-col">
             <h4>Study</h4>
-            <Link href="/c/syllabus">Syllabus PDFs</Link>
-            <Link href="/c/previous-year-papers">PYQ Papers</Link>
-            <Link href="/c/exam-analysis">Exam Analysis</Link>
-            <Link href="/c/preparation-guides">Best Books</Link>
-            <Link href="/c/preparation-guides">Prep Strategy</Link>
+            <Link href="/topic/syllabus">Syllabus PDFs</Link>
+            <Link href="/topic/previous-year-papers">PYQ Papers</Link>
+            <Link href="/topic/exam-analysis">Exam Analysis</Link>
+            <Link href="/topic/books">Best Books</Link>
+            <Link href="/topic/preparation-guides">Prep Strategy</Link>
           </div>
           <div className="ft-col">
             <h4>Knowledge</h4>
-            <Link href="/c/gk-static">Static GK</Link>
-            <Link href="/c/current-affairs">Current Affairs</Link>
-            <Link href="/c/current-affairs">Daily CA</Link>
-            <Link href="/c/current-affairs">Monthly CA PDF</Link>
+            <Link href="/topic/static-gk">Static GK</Link>
+            <Link href="/topic/current-affairs">Current Affairs</Link>
             <Link href="/articles">Exam News</Link>
           </div>
           <div className="ft-col">
@@ -103,8 +100,7 @@ export default function SiteFooter() {
           </div>
         </div>
         <div className="ft-bottom">
-          <p>© {currentYear} Suchana Intelligence · Data sourced from official government gazettes</p>
-          <p>🔒 Official Sources Only · No Rumours · No Fake News</p>
+          <p>© {currentYear} Exam Suchana · Data sourced from official government gazettes</p>
         </div>
       </footer>
     </>
