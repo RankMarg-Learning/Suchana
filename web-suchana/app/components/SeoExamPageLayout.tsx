@@ -3,22 +3,13 @@
 import React from 'react';
 import Link from 'next/link';
 import {
-  ChevronLeft,
-  Globe,
   FileText,
-  ArrowRight,
   MapPin,
   Calendar,
-  Briefcase,
-  Smartphone,
-  Bell,
-  Info,
   ExternalLink,
-  ChevronRight,
   Landmark,
   Edit3,
   Share2,
-  MessageCircle,
   Pin,
   Activity,
   Link as LinkIcon,
@@ -26,7 +17,6 @@ import {
   ClipboardList
 } from 'lucide-react';
 import MarkdownRenderer from './MarkdownRenderer';
-import { LeaderboardAd, SidebarAd, InFeedAd } from './AdUnits';
 import { Exam, SeoPage, cleanLabel, STATUS_LABELS, getCategoryInfo, enumToSlug } from '../lib/types';
 import { LifecycleStage } from '../lib/enums';
 import LatestArticlesSection from './LatestArticlesSection';
@@ -36,6 +26,8 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchSeoPages } from '../lib/api';
 import { trackFunnelStep, trackConversion } from '../lib/telemetry';
 import { useScrollTracking } from '../hooks/useScrollTracking';
+import SidebarAd from './ads/SidebarAd';
+import LeaderboardAd from './ads/LeaderboardAd';
 
 interface Props {
   exam: Exam;
@@ -152,13 +144,7 @@ export default function SeoExamPageLayout({
       </div>
 
       <div className="wrap">
-        <div className="ad-leader" style={{ margin: '16px 0 24px' }}>
-          <div className="ad-label">Advertisement</div>
-          <div className="ad-inner">
-            <b>728 × 90 — Leaderboard</b>
-            <span style={{ fontSize: 11 }}>Place AdSense responsive leaderboard unit here</span>
-          </div>
-        </div>
+        <LeaderboardAd />
 
         <div className="article-grid">
           {/* ARTICLE COLUMN */}
@@ -293,13 +279,7 @@ export default function SeoExamPageLayout({
               </div>
             </div>
 
-            <div className="ad-sidebar ad-s-250">
-              <div className="ad-label">Advertisement</div>
-              <div className="ad-inner">
-                <b>300 × 250</b>
-                <span style={{ fontSize: 11 }}>AdSense rectangle unit</span>
-              </div>
-            </div>
+            <SidebarAd className="ad-sidebar ad-s-250" />
 
             <div className="sw">
               <div className="sw-head"><ClipboardList size={18} /> Overview</div>

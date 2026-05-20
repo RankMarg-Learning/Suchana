@@ -53,6 +53,19 @@ export async function fetchTrendingContent(limit = 6): Promise<{ exams: Exam[] }
   }
 }
 
+export async function fetchTickerContent(limit = 6): Promise<{ exams: Exam[] }> {
+  try {
+    const res = await fetch(`${API_BASE}/home/ticker?limit=${limit}`, {
+      next: { revalidate: 900 },
+    });
+    if (!res.ok) return { exams: [] };
+    const json = await res.json();
+    return json.data ?? { exams: [] };
+  } catch (err) {
+    return { exams: [] };
+  }
+}
+
 export async function fetchHomeTrendingNews(limit = 4, page = 1): Promise<SeoPage[]> {
   try {
     const res = await fetch(`${API_BASE}/home/trending-news?limit=${limit}&page=${page}`, { next: { revalidate: 600 } });

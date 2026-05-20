@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
-import { fetchTrendingContent } from "../lib/api";
+import { fetchTickerContent } from "../lib/api";
 import {
   Home,
   Megaphone,
@@ -28,8 +28,8 @@ export default function SiteNav() {
   }, []);
 
   const { data: trendingData } = useQuery({
-    queryKey: ["home-trending"],
-    queryFn: () => fetchTrendingContent(6),
+    queryKey: ["home-ticker"],
+    queryFn: () => fetchTickerContent(6),
   });
 
   const trendingExams = trendingData?.exams || [];

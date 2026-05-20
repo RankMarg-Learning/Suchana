@@ -2,21 +2,15 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-    Layers,
     Globe,
     CheckCircle2,
-    XCircle,
     AlertCircle,
     Zap,
     Trash2,
-    Loader2,
     RefreshCw,
     Activity,
     ShieldCheck,
-    Cpu,
-    Database,
-    Fingerprint,
-    Search
+
 } from 'lucide-react';
 import { examService, scraperService } from '@/lib/api';
 import { cn } from '@/lib/utils';

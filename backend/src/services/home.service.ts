@@ -8,13 +8,39 @@ export const getTrendingExams = async (limit: number) => {
             take: limit,
             orderBy: { updatedAt: 'desc' },
             select: {
-                id: true, title: true, shortTitle: true, slug: true,
-                category: true, conductingBody: true, status: true,
-                updatedAt: true,
+                id: true, 
+                title: true, 
+                shortTitle: true, 
+                slug: true,
+                conductingBody: true, 
+                status: true,
                 lifecycleEvents: {
                     orderBy: { stageOrder: 'asc' },
-                    select: { stage: true, stageOrder: true, title: true, isTBD: true, startsAt: true, endsAt: true, actionUrl: true }
+                    take: 6,
+                    select: { 
+                        stage: true, 
+                        title: true, 
+                        isTBD: true, 
+                        startsAt: true, 
+                        endsAt: true 
+                    }
                 }
+            }
+        });
+    });
+};
+
+export const getTickerExams = async (limit: number) => {
+    return cacheService.getOrSet(`home:ticker:${limit}`, 900, async () => {
+        return prisma.exam.findMany({
+            where: { isPublished: true, isTrending: true },
+            take: limit,
+            orderBy: { updatedAt: 'desc' },
+            select: {
+                id: true, 
+                title: true, 
+                slug: true,
+                status: true,
             }
         });
     });
