@@ -60,14 +60,7 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
 
       {/* Breadcrumb could go here if we wanted */}
 
-      <div className="wrap">
-        <div className="ad-leader" style={{ margin: '16px 0 24px' }}>
-          <div className="ad-label">Advertisement</div>
-          <div className="ad-inner">
-            <b>728 × 90 — Leaderboard</b>
-            <span style={{ fontSize: 11 }}>Place AdSense responsive leaderboard unit here</span>
-          </div>
-        </div>
+      <div className="wrap" style={{ paddingTop: "10px" }}>
 
         <div className="article-grid">
           {/* ARTICLE COLUMN */}
@@ -139,13 +132,7 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
             <ImportantLinksWidget />
             <CategoryWidget />
 
-            <div className="ad-sidebar ad-s-250">
-              <div className="ad-label">Advertisement</div>
-              <div className="ad-inner">
-                <b>300 × 250</b>
-                <span style={{ fontSize: 11 }}>AdSense rectangle unit</span>
-              </div>
-            </div>
+
 
             <ExamTimelineWidget exam={page.exam as any} />
             <RelatedArticlesWidget tags={page.tags} currentSlug={page.slug} />
