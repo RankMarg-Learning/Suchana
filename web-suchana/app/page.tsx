@@ -1,8 +1,4 @@
-"use client";
-
-import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import {
   fetchTrendingContent,
   fetchHomeTrendingNews,
@@ -27,37 +23,20 @@ import { STAGE_LABELS, cleanLabel } from "./lib/types";
 import LeaderboardAd from "./components/ads/LeaderboardAd";
 import MidContentAd from "./components/ads/MidContentAd";
 
-export default function HomePage() {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const { data: trendingData, isLoading: trendingLoading } = useQuery({
-    queryKey: ["home-trending"],
-    queryFn: () => fetchTrendingContent(6),
-  });
-
-  const { data: trendingNews = [] } = useQuery({
-    queryKey: ["home-trending-news"],
-    queryFn: () => fetchHomeTrendingNews(4, 1),
-  });
-
-  const { data: caArticles = [] } = useQuery({
-    queryKey: ["home-articles"],
-    queryFn: () => fetchHomeArticles(6),
-  });
-
-
-
-  const { data: closingSoon = [] } = useQuery({
-    queryKey: ["home-closing-soon"],
-    queryFn: () => fetchHomeClosingSoon(5),
-  });
+export default async function HomePage() {
+  const [
+    trendingData,
+    trendingNews,
+    caArticles,
+    closingSoon
+  ] = await Promise.all([
+    fetchTrendingContent(6),
+    fetchHomeTrendingNews(4, 1),
+    fetchHomeArticles(6),
+    fetchHomeClosingSoon(5)
+  ]);
 
   const trendingExams = trendingData?.exams || [];
-
-  if (!mounted) return null;
 
   return (
     <>

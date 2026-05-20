@@ -20,7 +20,11 @@ import {
   Bell
 } from "lucide-react";
 
-export default function SiteNav() {
+interface SiteNavProps {
+  initialTickerExams?: any[];
+}
+
+export default function SiteNav({ initialTickerExams = [] }: SiteNavProps) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -30,9 +34,11 @@ export default function SiteNav() {
   const { data: trendingData } = useQuery({
     queryKey: ["home-ticker"],
     queryFn: () => fetchTickerContent(6),
+    initialData: { exams: initialTickerExams },
+    staleTime: 60 * 1000,
   });
 
-  const trendingExams = trendingData?.exams || [];
+  const trendingExams = trendingData?.exams || initialTickerExams;
 
   const today = new Date().toLocaleDateString('en-GB', {
     weekday: 'short',
