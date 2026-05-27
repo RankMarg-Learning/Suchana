@@ -85,6 +85,15 @@ export default function MarkdownRenderer({
             const label = props['data-label'];
             const url = props['data-url'];
             const image = props['data-image'];
+            const className = props.className || '';
+
+            if (typeof className === 'string' && (className.includes('katex-display') || className.includes('math-display'))) {
+              return (
+                <div className="overflow-x-auto overflow-y-hidden max-w-full pb-2 hide-scrollbar">
+                  <div {...props} />
+                </div>
+              );
+            }
 
             if (custom === 'button') {
               const align = props['data-align']?.toLowerCase() || 'center';
@@ -258,6 +267,16 @@ export default function MarkdownRenderer({
             }
             return <div {...props} />;
           },
+          span: ({ node, className, children, ...props }: any) => {
+            if (typeof className === 'string' && (className.includes('katex-display') || className.includes('math-display'))) {
+              return (
+                <span className="overflow-x-auto overflow-y-hidden max-w-full pb-2 block hide-scrollbar">
+                  <span className={className} {...props}>{children}</span>
+                </span>
+              );
+            }
+            return <span className={className} {...props}>{children}</span>;
+          },
           ul: ({ node, ...props }) => (
             <ul className="hb-list" style={{ marginBottom: '20px' }} {...props} />
           ),
@@ -303,12 +322,32 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
         {children}
       </a>
     ),
+    span: ({ node, className, children, ...props }: any) => {
+      if (typeof className === 'string' && (className.includes('katex-display') || className.includes('math-display'))) {
+        return (
+          <span className="overflow-x-auto overflow-y-hidden max-w-full pb-2 block hide-scrollbar">
+            <span className={className} {...props}>{children}</span>
+          </span>
+        );
+      }
+      return <span className={className} {...props}>{children}</span>;
+    },
+    div: ({ node, className, children, ...props }: any) => {
+      if (typeof className === 'string' && (className.includes('katex-display') || className.includes('math-display'))) {
+        return (
+          <div className="overflow-x-auto overflow-y-hidden max-w-full pb-2 hide-scrollbar">
+            <div className={className} {...props}>{children}</div>
+          </div>
+        );
+      }
+      return <div className={className} {...props}>{children}</div>;
+    },
   };
 
   return (
-    <div className="my-2 gap-2 text-left">
-      <div className="flex gap-0 mb-2">
-        <div className="text-base font-bold text-slate-900 leading-tight m-0">
+    <div className="my-2 gap-2 text-left mb-4 w-full">
+      <div className="flex gap-0 mb-2 w-full">
+        <div className="text-base font-bold text-slate-900 leading-tight m-0 min-w-0 w-full overflow-x-hidden">
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
             rehypePlugins={[rehypeRaw, rehypeKatex]}
@@ -378,6 +417,7 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
               rehypePlugins={[rehypeRaw, rehypeKatex]}
+              components={markdownComponents}
             >
               {solution}
             </ReactMarkdown>
