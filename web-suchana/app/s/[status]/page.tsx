@@ -46,10 +46,19 @@ export default async function StatusListingPage({ params }: Props) {
 
   const queryClient = getQueryClient();
 
+  let fetchStatus = statusEnum;
+  if (statusEnum === 'NOTIFICATION') {
+    fetchStatus = 'NOTIFICATION,REGISTRATION_OPEN';
+  } else if (statusEnum === 'ADMIT_CARD_OUT') {
+    fetchStatus = 'ADMIT_CARD_COMING_SOON,ADMIT_CARD_OUT';
+  } else if (statusEnum === 'RESULT_DECLARED') {
+    fetchStatus = 'RESULT_COMING_SOON,RESULT_DECLARED';
+  }
+
   // Prefetch the first page of exams for this status on the server
   await queryClient.prefetchInfiniteQuery({
-    queryKey: ['exams', { category: undefined, status: statusEnum, conductingBody: undefined, state: undefined, startDate: undefined, endDate: undefined, search: '' }],
-    queryFn: () => fetchExamsFromAPI(1, 10, undefined, statusEnum),
+    queryKey: ['exams', { category: undefined, status: fetchStatus, conductingBody: undefined, state: undefined, startDate: undefined, endDate: undefined, search: '' }],
+    queryFn: () => fetchExamsFromAPI(1, 10, undefined, fetchStatus),
     initialPageParam: 1,
   });
 
@@ -57,7 +66,7 @@ export default async function StatusListingPage({ params }: Props) {
     <HydrationBoundary state={dehydrate(queryClient)}>
       <ExamListingClient
         title={`${label} Exams`}
-        status={statusEnum}
+        status={fetchStatus}
       />
     </HydrationBoundary>
   );
