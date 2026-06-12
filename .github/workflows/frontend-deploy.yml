@@ -1,0 +1,89 @@
+name: Frontend CI/CD (Docker + AWS SSH)
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "web-suchana/**"
+      - ".github/workflows/frontend-deploy.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: frontend-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOCKERHUB_REPO: ${{ vars.DOCKERHUB_FRONTEND_REPO }}
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.DOCKERHUB_REPO }}
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: Build & Push Docker Image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./web-suchana
+          file: ./web-suchana/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          provenance: false
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1' }}
+            NEXT_PUBLIC_SITE_URL=${{ vars.NEXT_PUBLIC_SITE_URL || 'https://examsuchana.in' }}
+            NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION=${{ vars.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || secrets.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION }}
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH and deploy on EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: ${{ secrets.EC2_PORT || 22 }}
+          envs: DOCKERHUB_REPO
+          script: |
+            echo "Pulling latest frontend image: $DOCKERHUB_REPO:latest"
+            sudo docker pull $DOCKERHUB_REPO:latest
+
+            echo "Stopping old frontend container..."
+            sudo docker stop suchana-frontend || true
+            sudo docker rm suchana-frontend || true
+
+            echo "Starting new frontend container..."
+            sudo docker run -d --name suchana-frontend -p 3000:3000 --restart unless-stopped \
+              $DOCKERHUB_REPO:latest
+
+            echo "Cleaning up old images..."
+            sudo docker image prune -f
+
+            echo "Restarting Nginx..."
+            sudo systemctl restart nginx || true
+
+            echo "🚀 Frontend deployment successful!"
