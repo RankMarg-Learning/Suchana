@@ -10,6 +10,7 @@ import MarkdownRenderer from './MarkdownRenderer';
 import { cleanLabel } from '../lib/types';
 import FAQSection from './FAQSection';
 import { ImportantLinksWidget, RelatedArticlesWidget, ExamTimelineWidget, CategoryWidget } from './SidebarWidgets';
+import { ArticleAd } from './AdUnits';
 
 interface Props {
   page: SeoPage;
@@ -111,9 +112,17 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
               </div>
             )}
 
+            {/* ── Article Top Ad ─────────────────────────────────────── */}
+            {/* Enable via: ADS_CONFIG.enableAds = true & placements.articleTop = true */}
+            <ArticleAd slotId="article-top" placementKey="articleTop" />
+
             <div className="art-body-wrap">
               <MarkdownRenderer content={page.content} />
             </div>
+
+            {/* ── Article Bottom Ad ──────────────────────────────────── */}
+            {/* Enable via: ADS_CONFIG.enableAds = true & placements.articleBottom = true */}
+            <ArticleAd slotId="article-bottom" placementKey="articleBottom" />
 
             {page.faqs && page.faqs.length > 0 && (
               <FAQSection faqs={page.faqs} />

@@ -8,6 +8,7 @@ import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
 import { ExternalLink, Info, AlertTriangle, Lightbulb, ArrowRight, Send, Calendar, MessageCircle, BookOpen, ChevronDown, CheckCircle } from "lucide-react";
 import { formatDatesInText, generateHeadingId } from "@/app/lib/types";
+import { ArticleAd } from "./AdUnits";
 
 interface MarkdownRendererProps {
   content: string;
@@ -56,6 +57,19 @@ export default function MarkdownRenderer({
       const escape = (s: string) => s.replace(/\n/g, '\\n').replace(/"/g, '&quot;');
       return `\n\n<div data-custom="mcq" data-question="${escape(q)}" data-options="${escape(opts)}" data-answer="${ans}" data-solution="${escape(sol)}"></div>\n\n`;
     });
+
+    // 9. Ad Slot shortcodes:
+    //    [[AD]]          — auto slot, cycles through article-mid-1, article-mid-2, ...
+    //    [AD: slotId]    — manual slot override (backward compatible)
+    let adCounter = 0;
+    const articleMidSlots = ['article-mid-1', 'article-mid-2', 'article-mid-1', 'article-mid-2'];
+    final = final.replace(/\[\[AD\]\]/gi, () => {
+      const slot = articleMidSlots[adCounter % articleMidSlots.length];
+      adCounter++;
+      return `<div data-custom="ad" data-slot="${slot}"></div>`;
+    });
+    // Manual override — [AD: slotId]
+    final = final.replace(/\[AD:\s*([^\]]+?)\s*\]/gi, '<div data-custom="ad" data-slot="$1"></div>');
 
     return formatDatesInText(final, includeTime);
   }, [content, includeTime]);
@@ -264,6 +278,11 @@ export default function MarkdownRenderer({
                   })}
                 </div>
               );
+            }
+            if (custom === 'ad') {
+              const slotId = props['data-slot'];
+              if (!slotId) return null;
+              return <ArticleAd slotId={slotId} />;
             }
             return <div {...props} />;
           },
