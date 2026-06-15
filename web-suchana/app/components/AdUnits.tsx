@@ -19,13 +19,20 @@ function getSlot(id: string): AdSlotConfig | undefined {
 // 3. No fixed min-height on the container — Google flags reserved blank space.
 // 4. Wrapped in a unique key at call-site to ensure fresh mount per slot.
 
-function AdSenseUnit({ slotId }: { slotId: string }) {
+function AdSenseUnit({
+  slotId,
+  onStatusChange,
+}: {
+  slotId: string;
+  onStatusChange: (status: "loading" | "filled" | "empty") => void;
+}) {
   const insRef = useRef<HTMLModElement>(null);
   const pushed = useRef(false);
 
   useEffect(() => {
     const el = insRef.current;
     if (!el || pushed.current) return;
+    let timerId: NodeJS.Timeout | null = null;
 
     // Only push when the <ins> is actually visible in the viewport
     const observer = new IntersectionObserver(
@@ -36,8 +43,20 @@ function AdSenseUnit({ slotId }: { slotId: string }) {
             // @ts-ignore — adsbygoogle is a global injected by the AdSense script
             (window.adsbygoogle = window.adsbygoogle || []).push({});
           } catch (_) {
-            // Silently fail — ad blocker present or script not yet loaded
+            onStatusChange("empty"); // Ad blocker present
           }
+
+          timerId = setTimeout(() => {
+            if (!el) return;
+            const hasIframe = el.querySelector("iframe");
+            const status = el.getAttribute("data-ad-status");
+            if (!hasIframe && status !== "filled") {
+              onStatusChange("empty");
+            } else {
+              onStatusChange("filled");
+            }
+          }, 3000); // 3 seconds timeout
+
           observer.disconnect();
         }
       },
@@ -45,8 +64,11 @@ function AdSenseUnit({ slotId }: { slotId: string }) {
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+    return () => {
+      observer.disconnect();
+      if (timerId) clearTimeout(timerId);
+    };
+  }, [onStatusChange]);
 
   return (
     <ins
@@ -92,12 +114,32 @@ function SponsorBannerUnit({
 
 // ─── Generic Slot Renderer ────────────────────────────────────────────────────
 
-function SlotRenderer({ config }: { config: AdSlotConfig }) {
+function SponsorBannerWrapper({
+  sponsor,
+  onStatusChange,
+}: {
+  sponsor: any;
+  onStatusChange: (status: "loading" | "filled" | "empty") => void;
+}) {
+  useEffect(() => {
+    onStatusChange("filled");
+  }, [onStatusChange]);
+
+  return <SponsorBannerUnit {...sponsor} />;
+}
+
+function SlotRenderer({
+  config,
+  onStatusChange,
+}: {
+  config: AdSlotConfig;
+  onStatusChange: (status: "loading" | "filled" | "empty") => void;
+}) {
   if (config.type === "adsense" && config.adsenseSlotId) {
-    return <AdSenseUnit slotId={config.adsenseSlotId} />;
+    return <AdSenseUnit slotId={config.adsenseSlotId} onStatusChange={onStatusChange} />;
   }
   if (config.type === "sponsor" && config.sponsor) {
-    return <SponsorBannerUnit {...config.sponsor} />;
+    return <SponsorBannerWrapper sponsor={config.sponsor} onStatusChange={onStatusChange} />;
   }
   return null;
 }
@@ -141,11 +183,14 @@ const adLabel = (
  */
 export function LeaderboardAd({ id }: { id?: string }) {
   const [mounted, setMounted] = useState(false);
+  const [status, setStatus] = useState<"loading" | "filled" | "empty">("loading");
   useEffect(() => setMounted(true), []);
 
   if (!id || !mounted) return null;
   const slot = getSlot(id);
   if (!slot) return null;
+
+  if (status === "empty") return null;
 
   return (
     <div
@@ -160,10 +205,12 @@ export function LeaderboardAd({ id }: { id?: string }) {
         padding: "0 0 2px",  // 2px bottom prevents layout collapse flash
         textAlign: "center",
         boxSizing: "border-box",
+        background: "transparent",
+        border: "none",
       }}
     >
       {adLabel}
-      <SlotRenderer config={slot} />
+      <SlotRenderer config={slot} onStatusChange={setStatus} />
     </div>
   );
 }
@@ -175,11 +222,14 @@ export function LeaderboardAd({ id }: { id?: string }) {
  */
 export function SidebarAd({ id, tall }: { id?: string; tall?: boolean }) {
   const [mounted, setMounted] = useState(false);
+  const [status, setStatus] = useState<"loading" | "filled" | "empty">("loading");
   useEffect(() => setMounted(true), []);
 
   if (!id || !mounted) return null;
   const slot = getSlot(id);
   if (!slot) return null;
+
+  if (status === "empty") return null;
 
   return (
     <div
@@ -192,10 +242,12 @@ export function SidebarAd({ id, tall }: { id?: string; tall?: boolean }) {
         minHeight: tall ? "615px" : "265px", // reserves space (600px/250px ad + 15px label & padding) to prevent CLS
         overflow: "hidden",
         textAlign: "center",
+        background: "transparent",
+        border: "none",
       }}
     >
       {adLabel}
-      <SlotRenderer config={slot} />
+      <SlotRenderer config={slot} onStatusChange={setStatus} />
     </div>
   );
 }
@@ -266,12 +318,15 @@ export function ArticleAd({
   label?: string;
 }) {
   const [mounted, setMounted] = useState(false);
+  const [status, setStatus] = useState<"loading" | "filled" | "empty">("loading");
   useEffect(() => setMounted(true), []);
 
   if (!ADS_CONFIG.enableAds) return null;
   if (placementKey && !ADS_CONFIG.placements[placementKey]) return null;
   const slot = getSlot(slotId);
   if (!slot || !mounted) return null;
+
+  if (status === "empty") return null;
 
   return (
     <div
@@ -293,7 +348,7 @@ export function ArticleAd({
       }}
     >
       {adLabel}
-      <SlotRenderer config={slot} />
+      <SlotRenderer config={slot} onStatusChange={setStatus} />
     </div>
   );
 }
