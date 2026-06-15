@@ -9886,3 +9886,10 @@ footer {
   display: none;
   /* Chrome, Safari and Opera */
 }
+
+/* Collapse empty/unfilled Google AdSense units automatically to avoid layout space jumps */
+.ad-leaderboard:has(ins.adsbygoogle[data-ad-status="unfilled"]),
+.ad-sidebar:has(ins.adsbygoogle[data-ad-status="unfilled"]),
+.article-ad-slot:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
+  display: none !important;
+}
