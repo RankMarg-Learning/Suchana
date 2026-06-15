@@ -4,13 +4,13 @@ import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
 import { fetchSeoPages } from '../lib/api';
 import LatestArticlesSection from './LatestArticlesSection';
-import { Share2, MessageCircle, FileText, Landmark, MapPin, Edit3, Calendar, Clock, Bookmark } from 'lucide-react';
+import { Share2, FileText, Landmark, MapPin, Edit3, Calendar, Clock, Bookmark } from 'lucide-react';
 import { SeoPage } from '../lib/types';
 import MarkdownRenderer from './MarkdownRenderer';
 import { cleanLabel } from '../lib/types';
 import FAQSection from './FAQSection';
 import { ImportantLinksWidget, RelatedArticlesWidget, ExamTimelineWidget, CategoryWidget } from './SidebarWidgets';
-import { ArticleAd } from './AdUnits';
+import { ArticleAd, SidebarAd } from './AdUnits';
 
 interface Props {
   page: SeoPage;
@@ -145,6 +145,7 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
 
             <ExamTimelineWidget exam={page.exam as any} />
             <RelatedArticlesWidget tags={page.tags} currentSlug={page.slug} />
+            <SidebarAd id="sidebar-ad-right-3" tall />
           </div>
         </div>
       </div>
