@@ -41,7 +41,7 @@ function AdSenseUnit({ slotId }: { slotId: string }) {
           observer.disconnect();
         }
       },
-      { threshold: 0.1 } // fire when at least 10% of the unit is visible
+      { threshold: 0 } // fire when any pixel of the unit is visible (critical for 0-height empty tags)
     );
 
     observer.observe(el);
@@ -52,7 +52,7 @@ function AdSenseUnit({ slotId }: { slotId: string }) {
     <ins
       ref={insRef}
       className="adsbygoogle"
-      style={{ display: "block" }}
+      style={{ display: "block", width: "100%" }}
       data-ad-client={ADS_CONFIG.googleAdSensePublisherId}
       data-ad-slot={slotId}
       data-ad-format="auto"
@@ -152,13 +152,13 @@ export function LeaderboardAd({ id }: { id?: string }) {
       className="ad-leaderboard"
       aria-label="Advertisement"
       style={{
+        display: "block",
         width: "100%",
-        // No max-width forced — let AdSense handle responsive sizing
+        height: "auto",
+        minHeight: "105px", // reserves 90px ad height + 15px label & padding to prevent CLS
         margin: "24px auto", // vertical clearance from surrounding content
         padding: "0 0 2px",  // 2px bottom prevents layout collapse flash
         textAlign: "center",
-        // Clearance from any clickable elements above/below (policy: no ads
-        // within 150px of interactive elements that could cause accidental clicks)
         boxSizing: "border-box",
       }}
     >
@@ -186,11 +186,12 @@ export function SidebarAd({ id, tall }: { id?: string; tall?: boolean }) {
       className="ad-sidebar"
       aria-label="Advertisement"
       style={{
+        display: "block",
         width: "100%",
         margin: tall ? "16px 0" : "12px 0",
-        // No min-height: reserved blank space is a policy violation.
-        // AdSense collapses the unit naturally if no ad fills.
+        minHeight: tall ? "615px" : "265px", // reserves space (600px/250px ad + 15px label & padding) to prevent CLS
         overflow: "hidden",
+        textAlign: "center",
       }}
     >
       {adLabel}
@@ -288,6 +289,7 @@ export function ArticleAd({
         borderTop: "1px solid rgba(0,0,0,0.06)",
         borderBottom: "1px solid rgba(0,0,0,0.06)",
         padding: "12px 0",
+        minHeight: "280px", // reserves space for in-article ads (~250px height + label/borders) to prevent CLS
       }}
     >
       {adLabel}
