@@ -8,6 +8,7 @@ import remarkBreaks from "remark-breaks";
 import rehypeRaw from "rehype-raw";
 import { ExternalLink, Info, AlertTriangle, Lightbulb, ArrowRight, Send, Calendar, MessageCircle, BookOpen, ChevronDown, CheckCircle } from "lucide-react";
 import { formatDatesInText, generateHeadingId } from "@/app/lib/types";
+import { ArticleAd } from "./AdUnits";
 
 interface MarkdownRendererProps {
   content: string;
@@ -57,6 +58,19 @@ export default function MarkdownRenderer({
       return `\n\n<div data-custom="mcq" data-question="${escape(q)}" data-options="${escape(opts)}" data-answer="${ans}" data-solution="${escape(sol)}"></div>\n\n`;
     });
 
+    // 9. Ad Slot shortcodes:
+    //    [[AD]]          — auto slot, cycles through article-mid-1, article-mid-2, ...
+    //    [AD: slotId]    — manual slot override (backward compatible)
+    let adCounter = 0;
+    const articleMidSlots = ['article-mid-1', 'article-mid-2', 'article-mid-1', 'article-mid-2'];
+    final = final.replace(/\[\[AD\]\]/gi, () => {
+      const slot = articleMidSlots[adCounter % articleMidSlots.length];
+      adCounter++;
+      return `<div data-custom="ad" data-slot="${slot}"></div>`;
+    });
+    // Manual override — [AD: slotId]
+    final = final.replace(/\[AD:\s*([^\]]+?)\s*\]/gi, '<div data-custom="ad" data-slot="$1"></div>');
+
     return formatDatesInText(final, includeTime);
   }, [content, includeTime]);
 
@@ -85,6 +99,15 @@ export default function MarkdownRenderer({
             const label = props['data-label'];
             const url = props['data-url'];
             const image = props['data-image'];
+            const className = props.className || '';
+
+            if (typeof className === 'string' && (className.includes('katex-display') || className.includes('math-display'))) {
+              return (
+                <div className="overflow-x-auto overflow-y-hidden max-w-full pb-2 hide-scrollbar">
+                  <div {...props} />
+                </div>
+              );
+            }
 
             if (custom === 'button') {
               const align = props['data-align']?.toLowerCase() || 'center';
@@ -256,7 +279,22 @@ export default function MarkdownRenderer({
                 </div>
               );
             }
+            if (custom === 'ad') {
+              const slotId = props['data-slot'];
+              if (!slotId) return null;
+              return <ArticleAd slotId={slotId} />;
+            }
             return <div {...props} />;
+          },
+          span: ({ node, className, children, ...props }: any) => {
+            if (typeof className === 'string' && (className.includes('katex-display') || className.includes('math-display'))) {
+              return (
+                <span className="overflow-x-auto overflow-y-hidden max-w-full pb-2 block hide-scrollbar">
+                  <span className={className} {...props}>{children}</span>
+                </span>
+              );
+            }
+            return <span className={className} {...props}>{children}</span>;
           },
           ul: ({ node, ...props }) => (
             <ul className="hb-list" style={{ marginBottom: '20px' }} {...props} />
@@ -303,12 +341,32 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
         {children}
       </a>
     ),
+    span: ({ node, className, children, ...props }: any) => {
+      if (typeof className === 'string' && (className.includes('katex-display') || className.includes('math-display'))) {
+        return (
+          <span className="overflow-x-auto overflow-y-hidden max-w-full pb-2 block hide-scrollbar">
+            <span className={className} {...props}>{children}</span>
+          </span>
+        );
+      }
+      return <span className={className} {...props}>{children}</span>;
+    },
+    div: ({ node, className, children, ...props }: any) => {
+      if (typeof className === 'string' && (className.includes('katex-display') || className.includes('math-display'))) {
+        return (
+          <div className="overflow-x-auto overflow-y-hidden max-w-full pb-2 hide-scrollbar">
+            <div className={className} {...props}>{children}</div>
+          </div>
+        );
+      }
+      return <div className={className} {...props}>{children}</div>;
+    },
   };
 
   return (
-    <div className="my-2 gap-2 text-left">
-      <div className="flex gap-0 mb-2">
-        <div className="text-base font-bold text-slate-900 leading-tight m-0">
+    <div className="my-2 gap-2 text-left mb-4 w-full">
+      <div className="flex gap-0 mb-2 w-full">
+        <div className="text-base font-bold text-slate-900 leading-tight m-0 min-w-0 w-full overflow-x-hidden">
           <ReactMarkdown
             remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
             rehypePlugins={[rehypeRaw, rehypeKatex]}
@@ -378,6 +436,7 @@ function MCQItem({ question, options, answerIndex, solution }: { question: strin
             <ReactMarkdown
               remarkPlugins={[remarkGfm, remarkBreaks, remarkMath]}
               rehypePlugins={[rehypeRaw, rehypeKatex]}
+              components={markdownComponents}
             >
               {solution}
             </ReactMarkdown>

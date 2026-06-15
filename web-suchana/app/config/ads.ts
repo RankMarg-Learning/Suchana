@@ -21,94 +21,110 @@ export const ADS_CONFIG: {
     feedTopLeaderboard: boolean;
     feedMidLeaderboard: boolean;
     inFeedNativeAds: boolean;
+    // Article page placements
+    articleTop: boolean;
+    articleMid: boolean;
+    articleBottom: boolean;
   };
   slots: Record<string, AdSlotConfig>;
   inFeedAds: SponsorBanner[];
   inFeedAdFrequency: number;
+  /**
+   * Auto-inject an ad every N paragraphs/headings inside article body.
+   * Set to 0 to disable auto-injection (manual [AD: slotId] only).
+   */
+  inArticleAdFrequency: number;
 } = {
   // Global Ad Settings
-  enableAds: false, // Master switch for all ads anywhere
-  googleAdSensePublisherId: "ca-pub-XXXXXXXXXXXXXXXX", // Your Master AdSense Publisher ID
+  enableAds: true, // Master switch for all ads anywhere
+  googleAdSensePublisherId: "ca-pub-6631120605146752",
 
   // Placement Feature Flags (Enable/Disable individual zones entirely)
   placements: {
-    sidebarLeft: false,
-    sidebarRight: false,
-    feedTopLeaderboard: false,
-    feedMidLeaderboard: false,
+    sidebarLeft: true,
+    sidebarRight: true,
+    feedTopLeaderboard: true,
+    feedMidLeaderboard: true,
     inFeedNativeAds: false, // Sponsored items inside the exams list feed
+    // Article page placements
+    articleTop: true,    // Banner just below the hero image
+    articleMid: true,    // Auto-injected mid-content ads
+    articleBottom: true, // Banner after article body, before FAQs
   },
 
   // Hybrid Ad Slots: Choose either "sponsor" (Custom Image) OR "adsense" (Google Ads) per slot!
   slots: {
-    // Feed Home Page IDs
+    // Feed Home Page IDs — Leaderboard
+    // Slot ID: 3262405422  |  Publisher: ca-pub-6631120605146752
     "top-leaderboard-ad": {
-      type: "sponsor",
-      adsenseSlotId: "1111111111",
-      sponsor: { imageUrl: "https://placehold.co/728x90/3b0764/fff?text=Sponsor+Leaderboard", link: "#", alt: "Sponsor Ad" }
+      type: "adsense",
+      adsenseSlotId: "3262405422",
     },
     "feed-mid-leaderboard": {
       type: "adsense",
-      adsenseSlotId: "2222222222",
+      adsenseSlotId: "3262405422",
     },
     "bottom-leaderboard-ad": {
-      type: "sponsor",
-      sponsor: { imageUrl: "https://placehold.co/728x90/3b0764/fff?text=Bottom+Leaderboard", link: "#", alt: "Sponsor Ad" }
+      type: "adsense",
+      adsenseSlotId: "3262405422",
     },
 
-    // Sidebar IDs
-    "sidebar-ad-left-1": {
-      type: "adsense",
-      adsenseSlotId: "3333333333",
-    },
-    "sidebar-ad-left-2": {
-      type: "sponsor",
-      sponsor: { imageUrl: "https://placehold.co/300x600/1e1e24/fff?text=Sponsor+Left+Tall", link: "#", alt: "Sponsor Ad" }
-    },
-    "sidebar-ad-right-1": {
-      type: "adsense",
-      adsenseSlotId: "4444444444",
-    },
-    "sidebar-ad-right-2": {
-      type: "sponsor",
-      sponsor: { imageUrl: "https://placehold.co/300x250/1e1e24/fff?text=Sponsor+Right+2", link: "#", alt: "Sponsor Ad" }
-    },
-    "sidebar-ad-right-3": {
-      type: "adsense",
-      adsenseSlotId: "5555555555",
-    },
+    // Sidebar IDs — Rectangle Ads  (300×250)
+    // Slot ID: 5246027788  |  Publisher: ca-pub-6631120605146752
+    "sidebar-ad-left-1": { type: "adsense", adsenseSlotId: "5246027788" },
+    "sidebar-ad-right-1": { type: "adsense", adsenseSlotId: "5246027788" },
+    "sidebar-ad-right-2": { type: "adsense", adsenseSlotId: "5246027788" },
 
-    // Detail Page IDs
-    "exam-top-leaderboard": { type: "adsense", adsenseSlotId: "6666666666" },
-    "detail-left-ad-1": { type: "sponsor", sponsor: { imageUrl: "https://placehold.co/300x250/3b0764/fff?text=Detail+Left", link: "#", alt: "Ad" } },
-    "detail-left-ad-2": { type: "adsense", adsenseSlotId: "7777777777" },
-    "detail-right-ad-1": { type: "adsense", adsenseSlotId: "8888888888" },
-    "detail-right-ad-2": { type: "sponsor", sponsor: { imageUrl: "https://placehold.co/300x250/1e1e24/fff?text=Detail+Right", link: "#", alt: "Ad" } },
-    "detail-right-ad-3": { type: "adsense", adsenseSlotId: "9999999999" },
-    "exam-bottom-leaderboard": { type: "adsense", adsenseSlotId: "0000000000" },
+    // Sidebar IDs — Left & Right Vertical Ads  (tall, 160×600 / auto)
+    // Slot ID: 5881607554  |  Publisher: ca-pub-6631120605146752
+    "sidebar-ad-left-2": { type: "adsense", adsenseSlotId: "5881607554" },
+    "sidebar-ad-right-3": { type: "adsense", adsenseSlotId: "5881607554" },
+
+    // General sidebar slot used by HomeSidebar & SeoExamPageLayout
+    "home-sidebar-ad": { type: "adsense", adsenseSlotId: "5881607554" },
+    "exam-sidebar-ad": { type: "adsense", adsenseSlotId: "5246027788" },
+
+    // Detail Page Sidebar IDs — Rectangle Ads (same slot)
+    "exam-top-leaderboard": { type: "adsense", adsenseSlotId: "5246027788" },
+    "detail-left-ad-1": { type: "adsense", adsenseSlotId: "5246027788" },
+    "detail-left-ad-2": { type: "adsense", adsenseSlotId: "5246027788" },
+    "detail-right-ad-1": { type: "adsense", adsenseSlotId: "5246027788" },
+    "detail-right-ad-2": { type: "adsense", adsenseSlotId: "5246027788" },
+    "detail-right-ad-3": { type: "adsense", adsenseSlotId: "5246027788" },
+    "exam-bottom-leaderboard": { type: "adsense", adsenseSlotId: "3262405422" },
+
+    // ── In-Article Slots ───────────────────────────────────────────────────────
+    // All use the same In-Article ad slot from Google AdSense.
+    // Slot ID: 3921303403  |  Publisher: ca-pub-6631120605146752
+    // Place [AD: article-mid-1] or [AD: article-mid-2] anywhere in Markdown.
+    "article-top": {
+      type: "adsense",
+      adsenseSlotId: "3921303403",
+    },
+    "article-mid-1": {
+      type: "adsense",
+      adsenseSlotId: "3921303403",
+    },
+    "article-mid-2": {
+      type: "adsense",
+      adsenseSlotId: "3921303403",
+    },
+    "article-bottom": {
+      type: "adsense",
+      adsenseSlotId: "3921303403",
+    },
   },
 
   // In-Feed Native Sponsored Content
   // These are inherently "sponsor" type since they blend into the feed. 
   // You can still leave this array empty to disable them.
   inFeedAds: [
-    {
-      imageUrl: "https://placehold.co/600x120/7c3aed/fff?text=UPSC+Masterclass",
-      link: "https://example.com/upsc",
-      alt: "Master UPSC in 6 Months",
-    },
-    {
-      imageUrl: "https://placehold.co/600x120/3b82f6/fff?text=RRB+Mock+Tests",
-      link: "https://example.com/rrb",
-      alt: "RRB Mock Tests 2025",
-    },
-    {
-      imageUrl: "https://placehold.co/600x120/10b981/fff?text=Banking+Exam+App",
-      link: "https://example.com/banking",
-      alt: "Banking Exam Prep App",
-    },
+
   ],
 
   // In-feed appearance frequency
   inFeedAdFrequency: 4, // Show an in-feed ad every 4 items
+
+  // In-article auto-injection frequency (0 = manual [AD:] shortcodes only)
+  inArticleAdFrequency: 0,
 };

@@ -173,8 +173,14 @@ export default function SeoExamPageLayout({
                     <div className="art-meta-item"><MapPin size={14} className="mr-1.5 opacity-70" /> <strong>{exam.state}</strong></div>
                   )}
                   {seoPage.author && (
-                    <div className="art-meta-item"><Edit3 size={14} className="mr-1.5 opacity-70" /> By <strong>{seoPage.author.name}</strong></div>
+                    <div className="art-meta-item">
+                      <Edit3 size={14} className="mr-1.5 opacity-70" /> By&nbsp;
+                      <Link href={`/author/${seoPage.author.slug}`} style={{ color: 'inherit', textDecoration: 'underline', fontWeight: 700 }}>
+                        {seoPage.author.name}
+                      </Link>
+                    </div>
                   )}
+
                   <div className="art-meta-item"><Calendar size={14} className="mr-1.5 opacity-70" /> <strong>{new Date(seoPage.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></div>
                 </div>
                 <div className="art-meta-right">

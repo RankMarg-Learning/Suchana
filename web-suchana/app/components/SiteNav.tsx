@@ -55,7 +55,7 @@ export default function SiteNav({ initialTickerExams = [] }: SiteNavProps) {
           <span className="tb-live">LIVE</span>
           <span>{mounted ? today : ''}</span>
           <Link href="/all-exams" className="flex items-center gap-1.5"><Megaphone size={14} className="opacity-80" /> All Exams Ongoing</Link>
-          <Link href="/s/admit-card" className="flex items-center gap-1.5"><Ticket size={14} className="opacity-80" /> Admit Cards Out</Link>
+          <Link href="/topic/admit-card" className="flex items-center gap-1.5"><Ticket size={14} className="opacity-80" /> Admit Cards Out</Link>
         </div>
         <div className="tb-right hidden md:flex">
           <Link href="/about">About Us</Link>

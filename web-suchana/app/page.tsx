@@ -67,7 +67,11 @@ export default async function HomePage() {
                             <div className="feat-cat flex items-center gap-1.5"><Activity size={14} className="text-red-500 animate-pulse" /> Breaking · {trendingNews[0]?.category?.replace(/_/g, ' ') || 'Notification'}</div>
                             <div className="feat-title">{trendingNews[0]?.title}</div>
                             <div className="feat-meta">
-                              <span className="flex items-center gap-1"><Folder size={12} className="opacity-80" /> {trendingNews[0]?.exam?.conductingBody || 'UPSC'}</span>
+                              {
+                                trendingNews[0]?.exam?.conductingBody && (
+                                  <span className="flex items-center gap-1"><Folder size={12} className="opacity-80" /> {trendingNews[0]?.exam?.conductingBody}</span>
+                                )
+                              }
                               <span className="flex items-center gap-1"><Clock size={12} className="opacity-80" /> {new Date(trendingNews[0].updatedAt).toLocaleDateString()}</span>
                             </div>
                           </div>

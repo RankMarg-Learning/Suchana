@@ -6799,7 +6799,8 @@ r .card-branding-icon-box {
   display: inline-block;
   width: 6px;
   height: 6px;
-  background: #10b981; /* Green live dot */
+  background: #10b981;
+  /* Green live dot */
   border-radius: 50%;
   margin-right: 8px;
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
@@ -6807,9 +6808,20 @@ r .card-branding-icon-box {
 }
 
 @keyframes pulse-dot {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.5; }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.5);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .tk-scroll {
@@ -6878,8 +6890,13 @@ r .card-branding-icon-box {
 }
 
 @keyframes scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
 }
 
 /* ─── LAYOUT ─── */
@@ -8053,7 +8070,7 @@ r .card-branding-icon-box {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
   gap: 28px;
-  padding: 2px 0 48px;
+  padding: 0px 0 48px;
   align-items: start;
 }
 
@@ -9324,7 +9341,7 @@ footer {
   }
 
   .wrap {
-    padding: 0 16px;
+    padding: 0 4px;
   }
 
   /* ─── Responsive Timeline ─── */
@@ -9383,7 +9400,7 @@ footer {
   }
 
   .art-body-wrap {
-    padding: 20px 18px;
+    padding: 20px 10px;
   }
 
   .cta-strip {
@@ -9856,4 +9873,16 @@ footer {
   .exam-card-modern .exam-row-title {
     font-size: 16px;
   }
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  /* IE and Edge */
+  scrollbar-width: none;
+  /* Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
 }

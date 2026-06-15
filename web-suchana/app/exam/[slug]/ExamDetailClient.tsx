@@ -38,7 +38,6 @@ import { trackFunnelStep, trackConversion } from "@/app/lib/telemetry";
 import { useScrollTracking } from "@/app/hooks/useScrollTracking";
 import FAQSection from "@/app/components/FAQSection";
 import SidebarAd from "@/app/components/ads/SidebarAd";
-import LeaderboardAd from "@/app/components/ads/LeaderboardAd";
 
 
 const STAGE_ICONS: Record<string, any> = {

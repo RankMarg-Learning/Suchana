@@ -241,7 +241,8 @@ export default function ExamListingClient({ title, category, status, conductingB
               <div className="sw-body">
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   {SIDEBAR_STATUSES.map(({ value, label }) => {
-                    const isActive = (status || "ALL") === value;
+                    const currentStatus = status || "ALL";
+                    const isActive = currentStatus === value || (currentStatus.includes(',') && currentStatus.split(',').includes(value));
                     const href = value === "ALL" ? "/all-exams" : `/s/${enumToSlug(value)}`;
                     return (
                       <Link

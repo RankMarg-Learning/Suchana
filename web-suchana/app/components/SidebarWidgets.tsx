@@ -1,19 +1,16 @@
-"use client";
-
-import React from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { fetchRelatedArticlesByTag, fetchTrendingContent } from '../lib/api';
-import { SeoPage, Exam, LifecycleEvent, getStageState, formatDate, CATEGORIES, slugify } from '../lib/types';
-import { ExternalLink, Link2, BookOpen, Clock, Calendar, TrendingUp, Grid, ChevronRight } from 'lucide-react';
+import { fetchRelatedArticlesByTag } from '../lib/api';
+import { Exam, getStageState, formatDate, CATEGORIES, slugify } from '../lib/types';
+import { ExternalLink, BookOpen, Calendar, ChevronRight } from 'lucide-react';
 
 /* ─── 1. Important Links Widget ─── */
 export function ImportantLinksWidget() {
   const links = [
-    { label: 'Latest Notifications', url: '/topics/notification', icon: <Calendar size={14} /> },
-    { label: 'Admit Cards', url: '/topics/admit-card', icon: <ExternalLink size={14} /> },
-    { label: 'Exam Results', url: '/topics/result', icon: <ExternalLink size={14} /> },
-    { label: 'Best Books', url: '/topics/books', icon: <BookOpen size={14} /> },
+    { label: 'Latest Notifications', url: '/topic/notification', icon: <Calendar size={14} /> },
+    { label: 'Admit Cards', url: '/topic/admit-card', icon: <ExternalLink size={14} /> },
+    { label: 'Exam Results', url: '/topic/result', icon: <ExternalLink size={14} /> },
+    { label: 'Best Books', url: '/topic/books', icon: <BookOpen size={14} /> },
   ];
 
   return (
