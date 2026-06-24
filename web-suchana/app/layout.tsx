@@ -220,6 +220,18 @@ export default async function RootLayout({
               `}
             </Script>
             <Script src="https://heeddialscary.com/7fd519d964a6db689dacc428394b9b02/invoke.js" strategy="afterInteractive" />
+            <Script id="adsterra-options-2" strategy="afterInteractive">
+              {`
+                window.atOptions = {
+                  'key' : 'c13cbe25abaca837d7f8cd69a4753719',
+                  'format' : 'iframe',
+                  'height' : 300,
+                  'width' : 160,
+                  'params' : {}
+                };
+              `}
+            </Script>
+            <Script src="https://heeddialscary.com/c13cbe25abaca837d7f8cd69a4753719/invoke.js" strategy="afterInteractive" />
 
 
           </>
