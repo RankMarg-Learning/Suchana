@@ -19,7 +19,6 @@ const spaceGrotesk = Space_Grotesk({
 });
 
 const currentYear = new Date().getFullYear();
-const nextYear = currentYear + 1;
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -207,22 +206,20 @@ export default async function RootLayout({
                 gtag('config', 'G-1SHT5DRT85');
               `}
             </Script>
-            <script src="https://heeddialscary.com/c6/c0/da/c6c0da39a12a63360ec1ace31f4acfb3.js"></script>
+            <Script src="https://heeddialscary.com/c6/c0/da/c6c0da39a12a63360ec1ace31f4acfb3.js" strategy="afterInteractive" />
 
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                  atOptions = {
-                    'key' : '7fd519d964a6db689dacc428394b9b02',
-                    'format' : 'iframe',
-                    'height' : 60,
-                    'width' : 468,
-                    'params' : {}
-                  };
-                `,
-              }}
-            />
-            <script src="https://heeddialscary.com/7fd519d964a6db689dacc428394b9b02/invoke.js"></script>
+            <Script id="adsterra-options" strategy="afterInteractive">
+              {`
+                window.atOptions = {
+                  'key' : '7fd519d964a6db689dacc428394b9b02',
+                  'format' : 'iframe',
+                  'height' : 60,
+                  'width' : 468,
+                  'params' : {}
+                };
+              `}
+            </Script>
+            <Script src="https://heeddialscary.com/7fd519d964a6db689dacc428394b9b02/invoke.js" strategy="afterInteractive" />
 
 
           </>
