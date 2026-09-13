@@ -12,7 +12,7 @@ COPY prisma ./prisma/
 
 # --ignore-scripts skips Prisma's postinstall binary download (avoids ECONNRESET);
 # prisma generate is run explicitly in the next step instead.
-RUN npm ci --ignore-scripts
+RUN npm install --ignore-scripts
 
 # Download Prisma engines & generate the typed client
 RUN npx prisma generate

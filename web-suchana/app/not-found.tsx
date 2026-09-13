@@ -19,7 +19,6 @@ export default function NotFound() {
     <div className="flex flex-col min-h-screen">
 
       <main className="flex-grow flex items-center justify-center pt-20 pb-12 relative overflow-hidden">
-        {/* Background Glows */}
         <div style={{ position: 'absolute', top: '15%', left: '15%', width: '400px', height: '400px', backgroundColor: 'rgba(124, 58, 237, 0.1)', borderRadius: '50%', filter: 'blur(120px)', zIndex: -1 }} />
         <div style={{ position: 'absolute', bottom: '15%', right: '15%', width: '400px', height: '400px', backgroundColor: 'rgba(59, 130, 246, 0.08)', borderRadius: '50%', filter: 'blur(120px)', zIndex: -1 }} />
 
