@@ -207,7 +207,7 @@ export default async function RootLayout({
               </div>
 
               {/* RIGHT GUTTER AD */}
-              <div className="hidden xl:block w-[160px] min-[1840px]:w-[300px] shrink-0 sticky top-20">
+              <div className="hidden 2xl:block w-[160px] min-[1840px]:w-[300px] shrink-0 sticky top-20">
                 <GutterAd side="right" />
               </div>
 
@@ -229,34 +229,6 @@ export default async function RootLayout({
                 gtag('config', 'G-1SHT5DRT85');
               `}
             </Script>
-            <Script src="https://heeddialscary.com/c6/c0/da/c6c0da39a12a63360ec1ace31f4acfb3.js" strategy="afterInteractive" />
-
-            <Script id="adsterra-options" strategy="afterInteractive">
-              {`
-                window.atOptions = {
-                  'key' : '7fd519d964a6db689dacc428394b9b02',
-                  'format' : 'iframe',
-                  'height' : 60,
-                  'width' : 468,
-                  'params' : {}
-                };
-              `}
-            </Script>
-            <Script src="https://heeddialscary.com/7fd519d964a6db689dacc428394b9b02/invoke.js" strategy="afterInteractive" />
-            <Script id="adsterra-options-2" strategy="afterInteractive">
-              {`
-                window.atOptions = {
-                  'key' : 'c13cbe25abaca837d7f8cd69a4753719',
-                  'format' : 'iframe',
-                  'height' : 300,
-                  'width' : 160,
-                  'params' : {}
-                };
-              `}
-            </Script>
-            <Script src="https://heeddialscary.com/c13cbe25abaca837d7f8cd69a4753719/invoke.js" strategy="afterInteractive" />
-
-
           </>
         )}
       </body>

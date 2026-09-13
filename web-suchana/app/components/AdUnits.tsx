@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { ADS_CONFIG, AdSlotConfig } from "@/app/config/ads";
+import { ADS_CONFIG, AdSlotConfig, AdsterraConfig } from "@/app/config/ads";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -92,6 +92,73 @@ function AdSenseUnit({
   );
 }
 
+// ─── Adsterra Unit ────────────────────────────────────────────────────────────
+
+function AdsterraUnit({
+  config,
+  onStatusChange,
+}: {
+  config: AdsterraConfig;
+  onStatusChange: (status: "loading" | "filled" | "empty") => void;
+}) {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    onStatusChange("filled"); // Adsterra typically fills
+    const el = iframeRef.current;
+    if (!el) return;
+
+    if (el.getAttribute('data-injected')) return;
+    el.setAttribute('data-injected', 'true');
+
+    const doc = el.contentWindow?.document;
+    if (doc) {
+      doc.open();
+      if (config.format === 'native') {
+        doc.write(`
+          <html>
+            <body style="margin:0;padding:0;">
+              <script async="async" data-cfasync="false" src="https://pl29872491.profitableratecpmnetwork.com/${config.key}/invoke.js"></script>
+              <div id="container-${config.key}"></div>
+            </body>
+          </html>
+        `);
+      } else {
+        doc.write(`
+          <html>
+            <body style="margin:0;padding:0;text-align:center;overflow:hidden;">
+              <script>
+                atOptions = {
+                  'key' : '${config.key}',
+                  'format' : 'iframe',
+                  'height' : ${config.height},
+                  'width' : ${config.width},
+                  'params' : {}
+                };
+              </script>
+              <script src="https://www.highrevenueformat.com/${config.key}/invoke.js"></script>
+            </body>
+          </html>
+        `);
+      }
+      doc.close();
+    }
+  }, [config, onStatusChange]);
+
+  return (
+    <iframe
+      ref={iframeRef}
+      width={config.width || "100%"}
+      height={config.height || (config.format === 'native' ? "250" : "auto")}
+      frameBorder="0"
+      scrolling="no"
+      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"
+      style={{ display: "block", margin: "0 auto", maxWidth: "100%", overflow: "hidden" }}
+      title={`Adsterra ${config.format}`}
+    />
+  );
+}
+
 // ─── Sponsor Banner ───────────────────────────────────────────────────────────
 
 function SponsorBannerUnit({
@@ -157,6 +224,9 @@ function SlotRenderer({
   }
   if (config.type === "sponsor" && config.sponsor) {
     return <SponsorBannerWrapper sponsor={config.sponsor} onStatusChange={onStatusChange} />;
+  }
+  if (config.type === "adsterra" && config.adsterra) {
+    return <AdsterraUnit config={config.adsterra} onStatusChange={onStatusChange} />;
   }
   return null;
 }
@@ -292,15 +362,19 @@ export function SidebarAd({ id, tall }: { id?: string; tall?: boolean }) {
  * Policy: must be visually distinct from editorial content.
  */
 export function InFeedAd({ id, index }: { id?: string; index?: number }) {
-  if (!ADS_CONFIG.enableAds || !ADS_CONFIG.placements.inFeedNativeAds) return null;
-  const ads = ADS_CONFIG.inFeedAds;
-  if (!ads || ads.length === 0) return null;
-  const ad = ads[(index ?? 0) % ads.length];
+  const [mounted, setMounted] = useState(false);
+  const [status, setStatus] = useState<"loading" | "filled" | "empty">("loading");
+  useEffect(() => setMounted(true), []);
+
+  if (!ADS_CONFIG.enableAds || !ADS_CONFIG.placements.inFeedNativeAds || !mounted) return null;
+  const slot = getSlot("in-feed-native");
+  if (!slot) return null;
+
   return (
     <div
       className="in-feed-ad"
       aria-label="Sponsored"
-      style={{ margin: "8px 0", border: "1px solid rgba(0,0,0,0.06)" }}
+      style={{ margin: "8px 0", border: "1px solid rgba(0,0,0,0.06)", minHeight: "100px" }}
     >
       {/* "Sponsored" label required for native ads to differentiate from content */}
       <p
@@ -318,7 +392,7 @@ export function InFeedAd({ id, index }: { id?: string; index?: number }) {
       >
         Sponsored
       </p>
-      <SponsorBannerUnit {...ad} />
+      <SlotRenderer config={slot} onStatusChange={setStatus} />
     </div>
   );
 }
@@ -441,8 +515,8 @@ export function MobileAnchorAd() {
 
   if (!ADS_CONFIG.enableAds || !mounted) return null;
 
-  // We can reuse the leaderboard slot ID for mobile anchors, or use a dedicated one.
-  const slot = getSlot("leaderboard-ad-top");
+  // Uses the dedicated mobile-anchor slot configured in ads.ts
+  const slot = getSlot("mobile-anchor");
   if (!slot) return null;
 
   // Only render container if not empty in prod
