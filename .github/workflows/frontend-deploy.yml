@@ -73,11 +73,11 @@ jobs:
             sudo docker pull $DOCKERHUB_REPO:latest
 
             echo "Stopping old frontend container..."
-            sudo docker stop suchana-frontend || true
-            sudo docker rm suchana-frontend || true
+            sudo docker stop web-suchana || true
+            sudo docker rm web-suchana || true
 
             echo "Starting new frontend container..."
-            sudo docker run -d --name suchana-frontend -p 3000:3000 --restart unless-stopped \
+            sudo docker run -d --name web-suchana -p 3000:3000 --restart unless-stopped \
               $DOCKERHUB_REPO:latest
 
             echo "Cleaning up old images..."
