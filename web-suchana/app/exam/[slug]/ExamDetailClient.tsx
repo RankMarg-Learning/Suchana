@@ -38,6 +38,7 @@ import { trackFunnelStep, trackConversion } from "@/app/lib/telemetry";
 import { useScrollTracking } from "@/app/hooks/useScrollTracking";
 import FAQSection from "@/app/components/FAQSection";
 import SidebarAd from "@/app/components/ads/SidebarAd";
+import { ArticleAd } from "@/app/components/AdUnits";
 
 
 const STAGE_ICONS: Record<string, any> = {
@@ -441,6 +442,8 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
 
 
 
+            <ArticleAd slotId="article-top" placementKey="articleTop" />
+
             {sorted.length > 0 && (
               <div className="art-body-wrap">
                 <h2 id="timeline-heading">Complete Exam Timeline</h2>
@@ -526,6 +529,8 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                 )}
               </div>
             )}
+
+            <ArticleAd slotId="article-bottom" placementKey="articleBottom" />
 
             {exam.faqs && exam.faqs.length > 0 && (
 

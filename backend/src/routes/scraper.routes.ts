@@ -15,6 +15,7 @@ import {
     updateStagedEventSchema,
     createStagedEventSchema,
     extractTextSchema,
+    extractJsonSchema,
 } from '../schemas/scraper.schema';
 
 
@@ -68,6 +69,8 @@ router.post('/test-direct', scraperController.testScraperDirect);
 // POST /api/v1/scraper/extract-text  → Extract from raw text (Synchronous, creates StagedExam)
 router.post('/extract-text', validate(extractTextSchema), scraperController.extractFromText);
 
+// POST /api/v1/scraper/extract-json  → Bypass AI and extract directly from JSON (Synchronous, creates StagedExam)
+router.post('/extract-json', validate(extractJsonSchema), scraperController.extractFromJson);
 
 // ─── Review pipeline ────────────────────────────────────────────
 // GET  /api/v1/scraper/staged?reviewStatus=PENDING&page=1

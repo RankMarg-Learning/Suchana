@@ -28,6 +28,7 @@ import { trackFunnelStep, trackConversion } from '../lib/telemetry';
 import { useScrollTracking } from '../hooks/useScrollTracking';
 import SidebarAd from './ads/SidebarAd';
 import LeaderboardAd from './ads/LeaderboardAd';
+import { ArticleAd } from './AdUnits';
 
 interface Props {
   exam: Exam;
@@ -239,9 +240,13 @@ export default function SeoExamPageLayout({
               </div>
             )}
 
+            <ArticleAd slotId="article-top" placementKey="articleTop" />
+
             <div className="art-body-wrap">
               <MarkdownRenderer content={seoPage.content} />
             </div>
+
+            <ArticleAd slotId="article-bottom" placementKey="articleBottom" />
 
             {seoPage.faqs && seoPage.faqs.length > 0 && (
 

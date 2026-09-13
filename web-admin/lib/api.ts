@@ -371,6 +371,10 @@ export const scraperService = {
         const response = await apiClient.post('/scraper/extract-text', data);
         return response.data;
     },
+    extractFromJson: async (data: { json: object; sourceUrl?: string }): Promise<ApiResponse<any>> => {
+        const response = await apiClient.post('/scraper/extract-json', data);
+        return response.data;
+    },
     clearCache: async (): Promise<ApiResponse<{ message: string }>> => {
 
         const response = await apiClient.post('/scraper/clear-cache');

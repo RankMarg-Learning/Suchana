@@ -195,5 +195,65 @@ export class ScraperService {
             return { sourceUrl, outcome: 'ERROR' as any, reason: err.message };
         }
     }
+
+    static async scrapeJson(extractedJson: any, sourceUrl: string): Promise<DeduplicationSummary> {
+        let source = await prisma.scrapeSource.findFirst({
+            where: { label: 'Manual JSON Input' }
+        });
+
+        if (!source) {
+            source = await prisma.scrapeSource.create({
+                data: {
+                    label: 'Manual JSON Input',
+                    url: 'https://manual-json.com',
+                    sourceType: 'DETAIL',
+                    isActive: true
+                }
+            });
+        }
+
+        const job = await prisma.scrapeJob.create({
+            data: {
+                scrapeSourceId: source.id,
+                status: ScrapeJobStatus.RUNNING
+            }
+        });
+
+        try {
+            const extracted = extractedJson;
+            extracted.sourceUrl = sourceUrl;
+            extracted.scrapedAt = new Date();
+
+            const dedup = await checkAndStage(job.id, extracted);
+            const candidatesFound = ['NEW_STAGED', 'LINKED_AS_UPDATE'].includes(dedup.outcome) ? 1 : 0;
+
+            await prisma.scrapeJob.update({
+                where: { id: job.id },
+                data: {
+                    status: ScrapeJobStatus.COMPLETED,
+                    candidatesFound,
+                    completedAt: new Date(),
+                    rawPayload: { mode: 'MANUAL_JSON', outcome: dedup.outcome } as any
+                }
+            });
+
+            return {
+                sourceUrl,
+                outcome: dedup.outcome,
+                stagedExamId: (dedup as any).stagedExamId,
+                existingExamId: (dedup as any).existingExamId,
+                canonicalStagedExamId: (dedup as any).canonicalStagedExamId,
+                reason: (dedup as any).reason,
+            } as DeduplicationSummary;
+
+        } catch (err: any) {
+            logger.error(`[Scraper] scrapeJson failed: ${err.message}`);
+            await prisma.scrapeJob.update({
+                where: { id: job.id },
+                data: { status: ScrapeJobStatus.FAILED, errorMessage: err.message, completedAt: new Date() }
+            });
+            return { sourceUrl, outcome: 'ERROR' as any, reason: err.message };
+        }
+    }
 }
 

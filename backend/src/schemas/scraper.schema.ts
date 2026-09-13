@@ -106,3 +106,9 @@ export const extractTextSchema = z.object({
 });
 export type ExtractTextDto = z.infer<typeof extractTextSchema>;
 
+export const extractJsonSchema = z.object({
+    json: z.record(z.unknown()),
+    sourceUrl: z.string().url().optional().default('https://manual-input.com'),
+});
+export type ExtractJsonDto = z.infer<typeof extractJsonSchema>;
+

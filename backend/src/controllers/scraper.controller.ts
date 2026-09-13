@@ -16,6 +16,7 @@ import type {
     UpdateStagedEventDto,
     CreateStagedEventDto,
     ExtractTextDto,
+    ExtractJsonDto,
 } from '../schemas/scraper.schema';
 import { ScraperService } from '../services/scraper/scraper.core';
 
@@ -276,6 +277,16 @@ export async function extractFromText(req: Request, res: Response, next: NextFun
     try {
         const { text, sourceUrl, hintCategory } = req.body as ExtractTextDto;
         const result = await ScraperService.scrapeText(text, sourceUrl, hintCategory);
+        sendSuccess(res, result);
+    } catch (err) {
+        next(err);
+    }
+}
+
+export async function extractFromJson(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { json, sourceUrl } = req.body as ExtractJsonDto;
+        const result = await ScraperService.scrapeJson(json, sourceUrl);
         sendSuccess(res, result);
     } catch (err) {
         next(err);

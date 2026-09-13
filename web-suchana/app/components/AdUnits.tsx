@@ -22,9 +22,17 @@ function getSlot(id: string): AdSlotConfig | undefined {
 function AdSenseUnit({
   slotId,
   onStatusChange,
+  format,
+  layout,
+  className = "adsbygoogle",
+  style = { display: "block", width: "100%" }
 }: {
   slotId: string;
   onStatusChange: (status: "loading" | "filled" | "empty") => void;
+  format?: string;
+  layout?: string;
+  className?: string;
+  style?: React.CSSProperties;
 }) {
   const insRef = useRef<HTMLModElement>(null);
   const pushed = useRef(false);
@@ -60,7 +68,7 @@ function AdSenseUnit({
           observer.disconnect();
         }
       },
-      { threshold: 0 } // fire when any pixel of the unit is visible (critical for 0-height empty tags)
+      { rootMargin: "400px 0px", threshold: 0 } // Pre-load ad 400px before it enters viewport to maximize CTR and Active View
     );
 
     observer.observe(el);
@@ -73,11 +81,12 @@ function AdSenseUnit({
   return (
     <ins
       ref={insRef}
-      className="adsbygoogle"
-      style={{ display: "block", width: "100%" }}
+      className={className}
+      style={style}
       data-ad-client={ADS_CONFIG.googleAdSensePublisherId}
       data-ad-slot={slotId}
-      data-ad-format="auto"
+      {...(format ? { "data-ad-format": format } : { "data-ad-format": "auto" })}
+      {...(layout ? { "data-ad-layout": layout } : {})}
       data-full-width-responsive="true"
     />
   );
@@ -131,12 +140,20 @@ function SponsorBannerWrapper({
 function SlotRenderer({
   config,
   onStatusChange,
+  format,
+  layout,
+  className,
+  style
 }: {
   config: AdSlotConfig;
   onStatusChange: (status: "loading" | "filled" | "empty") => void;
+  format?: string;
+  layout?: string;
+  className?: string;
+  style?: React.CSSProperties;
 }) {
   if (config.type === "adsense" && config.adsenseSlotId) {
-    return <AdSenseUnit slotId={config.adsenseSlotId} onStatusChange={onStatusChange} />;
+    return <AdSenseUnit slotId={config.adsenseSlotId} onStatusChange={onStatusChange} format={format} layout={layout} className={className} style={style} />;
   }
   if (config.type === "sponsor" && config.sponsor) {
     return <SponsorBannerWrapper sponsor={config.sponsor} onStatusChange={onStatusChange} />;
@@ -190,27 +207,34 @@ export function LeaderboardAd({ id }: { id?: string }) {
   const slot = getSlot(id);
   if (!slot) return null;
 
-  if (status === "empty") return null;
+  if (status === "empty") {
+    if (process.env.NODE_ENV === 'development') {
+      return (
+        <div style={{ width: "100%", minHeight: "105px", background: "#F5F2EB", border: "1px dashed #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center", margin: "24px auto", color: "#64748b", fontSize: "12px", fontFamily: "monospace" }}>
+          [LeaderboardAd: {id}] (Unfilled - Dev Mode)
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
     <div
-      className="ad-leaderboard"
+      className="ad-leaderboard ad-strict-728x90"
       aria-label="Advertisement"
       style={{
         display: "block",
-        width: "100%",
-        height: "auto",
-        minHeight: "105px", // reserves 90px ad height + 15px label & padding to prevent CLS
         margin: "24px auto", // vertical clearance from surrounding content
         padding: "0 0 2px",  // 2px bottom prevents layout collapse flash
         textAlign: "center",
         boxSizing: "border-box",
         background: "transparent",
         border: "none",
+        flexShrink: 0
       }}
     >
       {adLabel}
-      <SlotRenderer config={slot} onStatusChange={setStatus} />
+      <SlotRenderer config={slot} onStatusChange={setStatus} format="horizontal" />
     </div>
   );
 }
@@ -229,25 +253,35 @@ export function SidebarAd({ id, tall }: { id?: string; tall?: boolean }) {
   const slot = getSlot(id);
   if (!slot) return null;
 
-  if (status === "empty") return null;
+  if (status === "empty") {
+    if (process.env.NODE_ENV === 'development') {
+      return (
+        <div style={{ width: "100%", minHeight: tall ? "615px" : "265px", background: "#F5F2EB", border: "1px dashed #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center", margin: "24px 0", color: "#64748b", fontSize: "12px", fontFamily: "monospace" }}>
+          [SidebarAd: {id}] (Unfilled - Dev Mode)
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
     <div
-      className="ad-sidebar"
+      className={`ad-sidebar ${tall ? 'ad-strict-300x600' : 'ad-strict-300x250'}`}
       aria-label="Advertisement"
       style={{
         display: "block",
-        width: "100%",
-        margin: tall ? "16px 0" : "12px 0",
-        minHeight: tall ? "615px" : "265px", // reserves space (600px/250px ad + 15px label & padding) to prevent CLS
+        margin: "24px 0", // Safely space the ad from navigation links to avoid invalid click penalties
         overflow: "hidden",
         textAlign: "center",
         background: "transparent",
         border: "none",
+        flexShrink: 0,
+        position: tall ? "sticky" : "static",
+        top: tall ? "80px" : "auto", // Make tall ads sticky to follow user scroll
       }}
     >
       {adLabel}
-      <SlotRenderer config={slot} onStatusChange={setStatus} />
+      <SlotRenderer config={slot} onStatusChange={setStatus} format={tall ? "vertical" : "rectangle"} />
     </div>
   );
 }
@@ -326,7 +360,16 @@ export function ArticleAd({
   const slot = getSlot(slotId);
   if (!slot || !mounted) return null;
 
-  if (status === "empty") return null;
+  if (status === "empty") {
+    if (process.env.NODE_ENV === 'development') {
+      return (
+        <div style={{ width: "100%", minHeight: "280px", background: "#F5F2EB", border: "1px dashed #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center", margin: "28px 0", color: "#64748b", fontSize: "12px", fontFamily: "monospace" }}>
+          [ArticleAd: {slotId}] (Unfilled - Dev Mode)
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
     <div
@@ -334,21 +377,91 @@ export function ArticleAd({
       aria-label={label}
       style={{
         width: "100%",
-        // 28px vertical clearance — separates from paragraphs and table borders.
-        // This prevents accidental clicks when user scrolls through content.
         margin: "28px 0",
         display: "block",
-        clear: "both",      // never overlap floated images
+        clear: "both",
         overflow: "hidden",
-        // borderTop/Bottom give a visual break so ad is never confused with content
         borderTop: "1px solid rgba(0,0,0,0.06)",
         borderBottom: "1px solid rgba(0,0,0,0.06)",
         padding: "12px 0",
-        minHeight: "280px", // reserves space for in-article ads (~250px height + label/borders) to prevent CLS
+        minHeight: "280px",
+        flexShrink: 0
       }}
     >
       {adLabel}
-      <SlotRenderer config={slot} onStatusChange={setStatus} />
+      <SlotRenderer config={slot} onStatusChange={setStatus} format="fluid" layout="in-article" />
+    </div>
+  );
+}
+
+/**
+ * GutterAd — 160x600 sticky skyscraper ad for ultra-wide desktop screens.
+ * Uses slots: sidebar-ad-left-2 and sidebar-ad-right-3
+ */
+export function GutterAd({ side }: { side: "left" | "right" }) {
+  const [mounted, setMounted] = useState(false);
+  const [status, setStatus] = useState<"loading" | "filled" | "empty">("loading");
+
+  useEffect(() => setMounted(true), []);
+
+  if (!ADS_CONFIG.enableAds || !mounted) return null;
+
+  const slotId = side === "left" ? "sidebar-ad-left-2" : "sidebar-ad-right-3";
+  const slot = getSlot(slotId);
+
+  if (!slot) return null;
+
+  if (status === "empty") {
+    if (process.env.NODE_ENV === "development") {
+      return (
+        <div style={{ width: "100%", height: "600px", background: "#F5F2EB", border: "1px dashed #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: "12px", fontFamily: "monospace", textAlign: "center" }}>
+          [Gutter {side} 160x600]
+        </div>
+      );
+    }
+    return null;
+  }
+
+  return (
+    <div className="w-full flex justify-center" aria-label="Advertisement">
+      <SlotRenderer config={slot} onStatusChange={setStatus} format="vertical" />
+    </div>
+  );
+}
+
+/**
+ * MobileAnchorAd — Sticky 320x50 / 320x100 bottom anchor ad for Mobile devices.
+ * Highly visible ad format to boost mobile revenue.
+ */
+export function MobileAnchorAd() {
+  const [mounted, setMounted] = useState(false);
+  const [status, setStatus] = useState<"loading" | "filled" | "empty">("loading");
+
+  useEffect(() => setMounted(true), []);
+
+  if (!ADS_CONFIG.enableAds || !mounted) return null;
+
+  // We can reuse the leaderboard slot ID for mobile anchors, or use a dedicated one.
+  const slot = getSlot("leaderboard-ad-top");
+  if (!slot) return null;
+
+  // Only render container if not empty in prod
+  if (status === "empty" && process.env.NODE_ENV !== "development") {
+    return null;
+  }
+
+  return (
+    <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-gray-200 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] flex justify-center items-center safe-area-pb">
+      <div className="relative w-full max-w-[320px] min-h-[50px] flex items-center justify-center bg-gray-50">
+        {status === "empty" && process.env.NODE_ENV === "development" && (
+           <div style={{ width: "100%", height: "50px", background: "#F5F2EB", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: "10px", fontFamily: "monospace" }}>
+             [Mobile Anchor Ad]
+           </div>
+        )}
+        <div className={status === "empty" ? "hidden" : "w-full"}>
+           <SlotRenderer config={slot} onStatusChange={setStatus} format="horizontal" style={{ display: "inline-block", width: "320px", height: "50px" }} />
+        </div>
+      </div>
     </div>
   );
 }
