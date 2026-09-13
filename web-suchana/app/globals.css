@@ -6908,11 +6908,86 @@ r .card-branding-icon-box {
 
 .page-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 28px;
-  padding: 24px 0 40px;
+  grid-template-columns: minmax(0, 1fr) 292px;
+  gap: 12px;
+  padding: 2px 0 10px;
   align-items: start;
 }
+
+
+
+@media (max-width: 1200px) {
+  .home-3col-grid {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .home-3col-grid>.home-right-col {
+    display: none;
+  }
+}
+
+@media (max-width: 960px) {
+  .home-3col-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-3col-grid>.home-left-col {
+    display: none;
+  }
+
+  .home-3col-grid>.home-right-col {
+    display: block;
+  }
+}
+
+.dense-sw {
+  background: var(--ink2);
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.dense-sw-head {
+  background: var(--ink);
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dense-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.dense-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  transition: all 0.2s;
+  gap: 12px;
+}
+
+.dense-item:last-child {
+  border-bottom: none;
+}
+
+.dense-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+  color: #fff;
+}
+
+.dense-item-icon {
+  opacity: 0.6;
+}
+
 
 .content-col {
   display: flex;
@@ -8063,14 +8138,14 @@ r .card-branding-icon-box {
 .wrap {
   max-width: 1300px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 12px;
 }
 
 .article-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 28px;
-  padding: 0px 0 48px;
+  gap: 12px;
+  padding: 0px 0 18px;
   align-items: start;
 }
 
@@ -8078,8 +8153,35 @@ r .card-branding-icon-box {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  position: sticky;
-  top: 0;
+}
+
+/* ─── ADSENSE STRICT SIZING ─── */
+.ad-strict-300x250 {
+  width: 100%;
+  max-width: 300px;
+  min-height: 250px;
+}
+
+.ad-strict-300x600 {
+  width: 100%;
+  max-width: 300px;
+  min-height: 600px;
+}
+
+.ad-strict-728x90 {
+  width: 728px;
+  height: 90px;
+}
+
+@media (max-width: 768px) {
+
+  /* On mobile, fall back to responsive auto-sizing */
+  .ad-strict-300x250,
+  .ad-strict-300x600,
+  .ad-strict-728x90 {
+    width: 100% !important;
+    height: auto !important;
+  }
 }
 
 /* ─── ARTICLE HERO ─── */

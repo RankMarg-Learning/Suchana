@@ -54,6 +54,7 @@ export default function ScraperPage() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingSource, setEditingSource] = useState<ScrapeSource | null>(null);
     const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+    const [isManualJsonModalOpen, setIsManualJsonModalOpen] = useState(false);
 
 
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -181,6 +182,10 @@ export default function ScraperPage() {
                     <Button onClick={handleTriggerAll} variant="outline" className="gap-2">
                         <Play className="w-4 h-4" />
                         Run All
+                    </Button>
+                    <Button onClick={() => setIsManualJsonModalOpen(true)} variant="outline" className="gap-2 border-primary/20 hover:bg-primary/5">
+                        <FileText className="w-4 h-4 text-primary" />
+                        Submit JSON
                     </Button>
                     <Button onClick={() => setIsManualModalOpen(true)} variant="outline" className="gap-2 border-primary/20 hover:bg-primary/5">
                         <FileText className="w-4 h-4 text-primary" />
@@ -433,6 +438,13 @@ export default function ScraperPage() {
                     <ManualScrapeModal
                         isOpen={isManualModalOpen}
                         onClose={() => setIsManualModalOpen(false)}
+                        onSuccess={() => fetchData(true)}
+                    />
+                )}
+                {isManualJsonModalOpen && (
+                    <ManualJsonModal
+                        isOpen={isManualJsonModalOpen}
+                        onClose={() => setIsManualJsonModalOpen(false)}
                         onSuccess={() => fetchData(true)}
                     />
                 )}
@@ -699,3 +711,104 @@ function ManualScrapeModal({ isOpen, onClose, onSuccess }: { isOpen: boolean, on
     );
 }
 
+function ManualJsonModal({ isOpen, onClose, onSuccess }: { isOpen: boolean, onClose: () => void, onSuccess: () => void }) {
+    const [jsonText, setJsonText] = useState('');
+    const [sourceUrl, setSourceUrl] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmitJson = async () => {
+        if (!jsonText) {
+            toast.error('Please paste the JSON payload.');
+            return;
+        }
+
+        let parsedJson: any;
+        try {
+            parsedJson = JSON.parse(jsonText);
+        } catch (err) {
+            toast.error('Invalid JSON format. Please check and try again.');
+            return;
+        }
+
+        setIsSubmitting(true);
+        try {
+            const res = await scraperService.extractFromJson({
+                json: parsedJson,
+                sourceUrl: sourceUrl || undefined,
+            });
+
+            if (res.success) {
+                toast.success('JSON processed successfully!');
+                onSuccess();
+                onClose();
+            } else {
+                toast.error(res.error?.message || 'Failed to process JSON');
+            }
+        } catch (error: any) {
+            toast.error(error.response?.data?.error?.message || 'An error occurred during extraction');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onClose}>
+            <DialogContent className="sm:max-w-[700px] p-0 overflow-hidden rounded-2xl border-none shadow-2xl">
+                <DialogHeader className="p-6 pb-4 border-b">
+                    <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+                        <FileText className="w-5 h-5 text-primary" />
+                        Manual JSON Submission
+                    </DialogTitle>
+                    <DialogDescription className="text-xs">
+                        Paste the raw AiStructuredExam JSON payload directly. This bypasses the AI extraction.
+                    </DialogDescription>
+                </DialogHeader>
+
+                <div className="p-6 space-y-5 bg-background">
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label className="text-xs font-medium text-muted-foreground flex justify-between">
+                                Raw JSON Payload
+                            </Label>
+                            <Textarea
+                                value={jsonText}
+                                onChange={e => setJsonText(e.target.value)}
+                                placeholder='{\n  "title": "SSC CGL 2024",\n  ...\n}'
+                                className="min-h-[300px] rounded-lg text-sm font-mono leading-relaxed"
+                            />
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4">
+                            <div className="space-y-2">
+                                <Label className="text-xs font-medium text-muted-foreground">Reference URL (Optional)</Label>
+                                <Input
+                                    value={sourceUrl}
+                                    onChange={e => setSourceUrl(e.target.value)}
+                                    placeholder="https://example.com/notification.pdf"
+                                    className="h-10 rounded-lg text-sm"
+                                    type="url"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-2 border-t mt-4">
+                        <Button type="button" variant="ghost" onClick={onClose} className="rounded-lg h-10 px-6 text-sm">Cancel</Button>
+                        <Button
+                            onClick={handleSubmitJson}
+                            disabled={isSubmitting || !jsonText}
+                            className="rounded-lg h-10 px-8 text-sm shadow-md gap-2 bg-slate-900 hover:bg-slate-800 text-white"
+                        >
+                            {isSubmitting ? (
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                                <Zap className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                            )}
+                            Submit JSON
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+    );
+}

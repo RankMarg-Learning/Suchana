@@ -162,6 +162,7 @@ const organizationJsonLd = {
 };
 
 import Providers from "./components/Providers";
+import { GutterAd, MobileAnchorAd } from "./components/AdUnits";
 
 export default async function RootLayout({
   children,
@@ -191,8 +192,30 @@ export default async function RootLayout({
       <body className={`${hasLiveUpdate ? 'has-live-update ' : ''} ${inter.variable} ${spaceGrotesk.variable} antialiased`}>
         <Providers>
           <SiteNav initialTickerExams={tickerExams} />
-          {children}
+
+          <main className="relative z-10 w-full flex-1">
+            <div className="w-full max-w-[1920px] mx-auto flex justify-center items-start px-0 md:px-4 pt-0 md:pt-4 pb-8 gap-2 xl:gap-3">
+
+              {/* LEFT GUTTER AD */}
+              <div className="hidden xl:block w-[160px] min-[1840px]:w-[300px] shrink-0 sticky top-20">
+                <GutterAd side="left" />
+              </div>
+
+              {/* MAIN CONTENT */}
+              <div className="w-full max-w-[1300px] shrink min-w-0">
+                {children}
+              </div>
+
+              {/* RIGHT GUTTER AD */}
+              <div className="hidden xl:block w-[160px] min-[1840px]:w-[300px] shrink-0 sticky top-20">
+                <GutterAd side="right" />
+              </div>
+
+            </div>
+          </main>
+
           <SiteFooter />
+          <MobileAnchorAd />
         </Providers>
         {process.env.NODE_ENV === "production" && (
           <>
