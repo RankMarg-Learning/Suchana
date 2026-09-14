@@ -67,18 +67,16 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT || 22 }}
-          envs: DOCKERHUB_REPO
           script: |
-            echo "Pulling latest frontend image: $DOCKERHUB_REPO:latest"
-            sudo docker pull $DOCKERHUB_REPO:latest
+            echo "Pulling latest frontend image: ${{ env.DOCKERHUB_REPO }}:latest"
+            sudo docker pull ${{ env.DOCKERHUB_REPO }}:latest
 
             echo "Stopping old frontend container..."
             sudo docker stop web-suchana || true
             sudo docker rm web-suchana || true
 
             echo "Starting new frontend container..."
-            sudo docker run -d --name web-suchana -p 3000:3000 --restart unless-stopped \
-              $DOCKERHUB_REPO:latest
+            sudo docker run -d --name web-suchana -p 3000:3000 --restart unless-stopped ${{ env.DOCKERHUB_REPO }}:latest
 
             echo "Cleaning up old images..."
             sudo docker image prune -f

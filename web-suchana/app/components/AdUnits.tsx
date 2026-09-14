@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { ADS_CONFIG, AdSlotConfig, AdsterraConfig } from "@/app/config/ads";
+import { ADS_CONFIG, AdSlotConfig } from "@/app/config/ads";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -85,76 +85,10 @@ function AdSenseUnit({
       style={style}
       data-ad-client={ADS_CONFIG.googleAdSensePublisherId}
       data-ad-slot={slotId}
-      {...(format ? { "data-ad-format": format } : { "data-ad-format": "auto" })}
+      {...(format && format !== "fixed" ? { "data-ad-format": format } : {})}
+      {...(!format ? { "data-ad-format": "auto" } : {})}
       {...(layout ? { "data-ad-layout": layout } : {})}
-      data-full-width-responsive="true"
-    />
-  );
-}
-
-// ─── Adsterra Unit ────────────────────────────────────────────────────────────
-
-function AdsterraUnit({
-  config,
-  onStatusChange,
-}: {
-  config: AdsterraConfig;
-  onStatusChange: (status: "loading" | "filled" | "empty") => void;
-}) {
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  useEffect(() => {
-    onStatusChange("filled"); // Adsterra typically fills
-    const el = iframeRef.current;
-    if (!el) return;
-
-    if (el.getAttribute('data-injected')) return;
-    el.setAttribute('data-injected', 'true');
-
-    const doc = el.contentWindow?.document;
-    if (doc) {
-      doc.open();
-      if (config.format === 'native') {
-        doc.write(`
-          <html>
-            <body style="margin:0;padding:0;">
-              <script async="async" data-cfasync="false" src="https://pl29872491.profitableratecpmnetwork.com/${config.key}/invoke.js"></script>
-              <div id="container-${config.key}"></div>
-            </body>
-          </html>
-        `);
-      } else {
-        doc.write(`
-          <html>
-            <body style="margin:0;padding:0;text-align:center;overflow:hidden;">
-              <script>
-                atOptions = {
-                  'key' : '${config.key}',
-                  'format' : 'iframe',
-                  'height' : ${config.height},
-                  'width' : ${config.width},
-                  'params' : {}
-                };
-              </script>
-              <script src="https://www.highrevenueformat.com/${config.key}/invoke.js"></script>
-            </body>
-          </html>
-        `);
-      }
-      doc.close();
-    }
-  }, [config, onStatusChange]);
-
-  return (
-    <iframe
-      ref={iframeRef}
-      width={config.width || "100%"}
-      height={config.height || (config.format === 'native' ? "250" : "auto")}
-      frameBorder="0"
-      scrolling="no"
-      sandbox="allow-scripts allow-popups allow-popups-to-escape-sandbox allow-same-origin"
-      style={{ display: "block", margin: "0 auto", maxWidth: "100%", overflow: "hidden" }}
-      title={`Adsterra ${config.format}`}
+      {...(format !== "fixed" ? { "data-full-width-responsive": "true" } : {})}
     />
   );
 }
@@ -225,9 +159,7 @@ function SlotRenderer({
   if (config.type === "sponsor" && config.sponsor) {
     return <SponsorBannerWrapper sponsor={config.sponsor} onStatusChange={onStatusChange} />;
   }
-  if (config.type === "adsterra" && config.adsterra) {
-    return <AdsterraUnit config={config.adsterra} onStatusChange={onStatusChange} />;
-  }
+
   return null;
 }
 
@@ -533,7 +465,7 @@ export function MobileAnchorAd() {
            </div>
         )}
         <div className={status === "empty" ? "hidden" : "w-full"}>
-           <SlotRenderer config={slot} onStatusChange={setStatus} format="horizontal" style={{ display: "inline-block", width: "320px", height: "50px" }} />
+           <SlotRenderer config={slot} onStatusChange={setStatus} format="fixed" style={{ display: "inline-block", width: "320px", height: "50px" }} />
         </div>
       </div>
     </div>
