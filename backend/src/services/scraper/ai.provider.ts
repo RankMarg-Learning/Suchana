@@ -95,6 +95,10 @@ By looking exam process from internet and source dates set stageOrder. and make 
 - Missing array → []
 - Never invent data not present in source
 
+**R6 — FAQS**
+- Extract any frequently asked questions into the \`faqs\` array as objects with \`question\` and \`answer\`.
+- Keep the answers concise and properly formatted.
+
 
 **R7 — SHORT TITLE FORMAT (CRITICAL)**
 - \`shortTitle\` must follow format: "[Known Exam Name] [year]" (e.g., "Indian Navy MR Musician 2026", "SSC GD Constable 2025").
@@ -139,6 +143,12 @@ OUTPUT: Return only valid JSON — no markdown fences, no extra keys.
       "isTBD": "boolean",
       "actionUrl": "string|null",
       "actionLabel": "string|null"
+    }
+  ],
+  "faqs": [
+    {
+      "question": "string",
+      "answer": "string"
     }
   ]
 }`;

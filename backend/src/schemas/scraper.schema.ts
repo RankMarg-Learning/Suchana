@@ -67,6 +67,10 @@ const correctionsSchema = z.object({
     description: z.string().optional(),
     officialWebsite: z.string().url().optional(),
     notificationUrl: z.string().url().optional(),
+    faqs: z.array(z.object({
+        question: z.string(),
+        answer: z.string()
+    })).optional(),
 });
 
 export const reviewDecisionSchema = z.object({
