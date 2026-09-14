@@ -285,7 +285,10 @@ export async function extractFromText(req: Request, res: Response, next: NextFun
 
 export async function extractFromJson(req: Request, res: Response, next: NextFunction) {
     try {
-        const { json, sourceUrl } = req.body as ExtractJsonDto;
+        let { json, sourceUrl } = req.body as ExtractJsonDto;
+
+        json = ScraperUtils.cleanJsonUrls(json);
+
         const result = await ScraperService.scrapeJson(json, sourceUrl);
         sendSuccess(res, result);
     } catch (err) {

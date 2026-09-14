@@ -8,7 +8,7 @@ import { getStatusFromStage } from '../../constants/enums';
 import { SeoService } from '../seo.service';
 import { cacheService } from '../../utils/cache';
 
-export async function promoteStagedExam(stagedExamId: string, adminId: string): Promise<{ examId: string }> {
+export async function promoteStagedExam(stagedExamId: string, adminId: string, extraData?: { faqs?: any }): Promise<{ examId: string }> {
     const staged = await prisma.stagedExam.findUnique({
         where: { id: stagedExamId },
         include: { stagedEvents: { orderBy: { stageOrder: 'asc' } } },
@@ -86,6 +86,7 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                     additionalDetails: staged.additionalDetails ?? existing.additionalDetails,
                     officialWebsite: staged.officialWebsite ?? existing.officialWebsite,
                     notificationUrl: staged.notificationUrl ?? existing.notificationUrl,
+                    ...(extraData?.faqs && { faqs: extraData.faqs }),
                     sourceStagedExamId: staged.id,
                     status: derivedStatus,
                     isPublished: false,
@@ -146,6 +147,7 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string): 
                 additionalDetails: staged.additionalDetails ?? undefined,
                 officialWebsite: staged.officialWebsite ?? undefined,
                 notificationUrl: staged.notificationUrl ?? undefined,
+                faqs: extraData?.faqs ?? undefined,
                 deduplicationKey: deduplicationKey ?? undefined,
                 sourceStagedExamId: staged.id,
                 createdBy: adminId,

@@ -50,7 +50,7 @@ export async function reviewStagedExam(
             data: { reviewStatus: ReviewStatus.APPROVED },
         });
 
-        const { examId } = await promoteStagedExam(id, adminId);
+        const { examId } = await promoteStagedExam(id, adminId, { faqs: dto.corrections?.faqs });
         logger.info(`[Review] StagedExam ${id} promoted to Exam ${examId}`);
         return { stagedExam: updatedStaged, examId };
     }

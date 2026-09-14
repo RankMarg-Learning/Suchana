@@ -27,6 +27,7 @@ export interface AiStructuredExam {
     events?: AiStructuredEvent[];
     sourceUrl: string;
     scrapedAt: Date;
+    faqs?: { question: string; answer: string }[];
 }
 
 export interface AiStructuredEvent {
@@ -189,15 +190,15 @@ export async function checkAndStage(
             mergedSourceUrls: [exam.sourceUrl],
             sourceCount: 1,
             sourceUrl: exam.sourceUrl,
-            scrapedAt: exam.scrapedAt,
+            scrapedAt: exam.scrapedAt ? new Date(exam.scrapedAt) : new Date(),
             stagedEvents: {
                 create: (exam.events ?? []).map((ev, i) => ({
                     stage: ev.stage,
                     stageOrder: ev.stageOrder ?? (i + 1) * 10,
                     title: ev.title,
                     description: ev.description,
-                    startsAt: ev.startsAt,
-                    endsAt: ev.endsAt,
+                    startsAt: ev.startsAt ? new Date(ev.startsAt) : undefined,
+                    endsAt: ev.endsAt ? new Date(ev.endsAt) : undefined,
                     isTBD: ev.isTBD ?? false,
                     actionUrl: ev.actionUrl,
                     actionLabel: ev.actionLabel,

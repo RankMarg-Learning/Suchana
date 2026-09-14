@@ -167,6 +167,20 @@ export class ScraperService {
 
             const candidatesFound = ['NEW_STAGED', 'LINKED_AS_UPDATE'].includes(dedup.outcome) ? 1 : 0;
 
+            if (candidatesFound > 0) {
+                const reviewActionService = await import('../review/review-action.service');
+                const stagedExamId = (dedup as any).stagedExamId;
+                await reviewActionService.reviewStagedExam(
+                    stagedExamId,
+                    {
+                        decision: 'APPROVED' as any,
+                        reviewNote: 'Auto-approved from Manual Text',
+                        corrections: { faqs: extracted.faqs }
+                    },
+                    'system_auto_approve'
+                );
+            }
+
             await prisma.scrapeJob.update({
                 where: { id: job.id },
                 data: {
@@ -226,6 +240,20 @@ export class ScraperService {
 
             const dedup = await checkAndStage(job.id, extracted);
             const candidatesFound = ['NEW_STAGED', 'LINKED_AS_UPDATE'].includes(dedup.outcome) ? 1 : 0;
+
+            if (candidatesFound > 0) {
+                const reviewActionService = await import('../review/review-action.service');
+                const stagedExamId = (dedup as any).stagedExamId;
+                await reviewActionService.reviewStagedExam(
+                    stagedExamId,
+                    {
+                        decision: 'APPROVED' as any,
+                        reviewNote: 'Auto-approved from Manual JSON',
+                        corrections: { faqs: extracted.faqs }
+                    },
+                    'system_auto_approve'
+                );
+            }
 
             await prisma.scrapeJob.update({
                 where: { id: job.id },

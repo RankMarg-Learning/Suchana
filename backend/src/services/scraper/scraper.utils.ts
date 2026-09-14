@@ -269,4 +269,55 @@ export class ScraperUtils {
         };
         return text.replace(/&[a-z0-9#]+;/gi, (match) => entities[match] || match);
     }
+
+    static cleanJsonUrls(obj: any): any {
+        if (typeof obj === 'string') {
+            return this.extractUrlFromString(obj);
+        } else if (Array.isArray(obj)) {
+            return obj.map(item => this.cleanJsonUrls(item));
+        } else if (obj !== null && typeof obj === 'object') {
+            const cleaned: any = {};
+            for (const key in obj) {
+                if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                    cleaned[key] = this.cleanJsonUrls(obj[key]);
+                }
+            }
+            return cleaned;
+        }
+        return obj;
+    }
+
+    static extractUrlFromString(text: string): string {
+        if (!text || typeof text !== 'string') return text;
+        const originalText = text;
+        text = text.trim();
+        
+        // Match Markdown style link exactly: [Link Text](https://...)
+        const markdownLinkMatch = text.match(/^\[.*?\]\((https?:\/\/[^\s)]+)\)$/);
+        if (markdownLinkMatch && markdownLinkMatch[1]) {
+            return markdownLinkMatch[1];
+        }
+
+        // Match raw URL with optional leading '[' or '(' and optional trailing ']' or ')'
+        // This handles cases like:
+        // "[https://example.com"
+        // "https://example.com]"
+        // "[https://example.com]"
+        // "(https://example.com)"
+        const bracketMatch = text.match(/^\[?(https?:\/\/[^\s\])]+)[\])]?$/);
+        if (bracketMatch && bracketMatch[1]) {
+            return bracketMatch[1];
+        }
+
+        // In case there is a markdown link inside a string and it's the *only* thing (e.g., spaces around it)
+        const partialMarkdown = text.match(/\[.*?\]\((https?:\/\/[^\s)]+)\)/);
+        if (partialMarkdown && partialMarkdown[1]) {
+            const textWithoutLink = text.replace(partialMarkdown[0], '').trim();
+            if (textWithoutLink === '') {
+                return partialMarkdown[1];
+            }
+        }
+
+        return originalText;
+    }
 }
