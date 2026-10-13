@@ -71,27 +71,32 @@ jobs:
           script: |
             set -e
 
-            IMAGE_REPO="${DOCKERHUB_REPO:-${{ env.DOCKERHUB_REPO }}}"
+            # Sanitize inputs by stripping carriage returns, newlines, and surrounding whitespace
+            RAW_REPO="${DOCKERHUB_REPO:-${{ env.DOCKERHUB_REPO }}}"
+            IMAGE_REPO=$(echo "$RAW_REPO" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            DOCKERHUB_USER=$(echo "${DOCKERHUB_USERNAME:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+            DOCKERHUB_PW=$(echo "${DOCKERHUB_TOKEN:-}" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
             CONTAINER_NAME="suchana-backend"
+            FULL_IMAGE="${IMAGE_REPO}:latest"
 
             echo "=== [1/6] Validating Configuration ==="
             if [ -z "$IMAGE_REPO" ]; then
               echo "❌ Error: DOCKERHUB_REPO is empty! Check GitHub Actions vars.DOCKERHUB_REPO or secrets.DOCKERHUB_REPO."
               exit 1
             fi
-            echo "Target Image: ${IMAGE_REPO}:latest"
+            echo "Target Image: ${FULL_IMAGE}"
             echo "Container Name: ${CONTAINER_NAME}"
 
             echo "=== [2/6] Authenticating with Docker Hub on EC2 ==="
-            if [ -n "$DOCKERHUB_TOKEN" ] && [ -n "$DOCKERHUB_USERNAME" ]; then
-              echo "🔑 Logging into Docker Hub as $DOCKERHUB_USERNAME..."
-              echo "$DOCKERHUB_TOKEN" | sudo docker login -u "$DOCKERHUB_USERNAME" --password-stdin || echo "⚠️ Docker login warning, proceeding with pull attempt..."
+            if [ -n "$DOCKERHUB_PW" ] && [ -n "$DOCKERHUB_USER" ]; then
+              echo "🔑 Logging into Docker Hub as $DOCKERHUB_USER..."
+              echo "$DOCKERHUB_PW" | sudo docker login -u "$DOCKERHUB_USER" --password-stdin || echo "⚠️ Docker login warning, proceeding with pull attempt..."
             else
               echo "ℹ️ No Docker Hub credentials passed; attempting unauthenticated pull."
             fi
 
             echo "=== [3/6] Pulling Latest Image ==="
-            sudo docker pull "${IMAGE_REPO}:latest"
+            sudo docker pull "${FULL_IMAGE}"
 
             echo "=== [4/6] Replacing Container ==="
             ENV_FILE=""
@@ -121,7 +126,7 @@ jobs:
               -e PORT=3001 \
               --restart unless-stopped \
               $ENV_ARG \
-              "${IMAGE_REPO}:latest"
+              "${FULL_IMAGE}"
 
             echo "=== [5/6] Verifying Container Health ==="
             sleep 5
