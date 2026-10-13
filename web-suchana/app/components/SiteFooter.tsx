@@ -52,7 +52,7 @@ export default function SiteFooter() {
           .ft-grid { grid-template-columns: 1fr 1fr 1fr; }
         }
         @media(max-width: 768px) {
-          .footer-wrap { padding: 32px 16px 20px; }
+          .footer-wrap { padding: 32px 16px 76px; }
           .ft-grid { grid-template-columns: 1fr 1fr; gap: 24px 16px; }
           .ft-bottom { flex-direction: column; align-items: flex-start; gap: 12px; }
         }

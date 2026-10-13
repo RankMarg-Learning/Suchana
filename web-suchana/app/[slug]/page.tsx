@@ -176,9 +176,7 @@ export default async function DynamicSlugPage({ params }: Props) {
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
     return (
-      <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
-        <ExamListingClient title="Admit Cards Released Today" status="ADMIT_CARD_OUT" startDate={startOfToday.toISOString()} />
-      </div>
+      <ExamListingClient title="Admit Cards Released Today" status="ADMIT_CARD_OUT" startDate={startOfToday.toISOString()} />
     );
   }
 
@@ -186,9 +184,7 @@ export default async function DynamicSlugPage({ params }: Props) {
     const weekAgo = new Date();
     weekAgo.setDate(weekAgo.getDate() - 7);
     return (
-      <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
-        <ExamListingClient title="Upcoming Gov Exams This Week" status="NOTIFICATION,REGISTRATION_OPEN" startDate={weekAgo.toISOString()} />
-      </div>
+      <ExamListingClient title="Upcoming Gov Exams This Week" status="NOTIFICATION,REGISTRATION_OPEN" startDate={weekAgo.toISOString()} />
     );
   }
 
@@ -204,17 +200,13 @@ export default async function DynamicSlugPage({ params }: Props) {
         const endDate = targetMonthDate.toISOString();
 
         return (
-          <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
-            <ExamListingClient title={`Latest Exams ${formattedDate}`} startDate={startDate} endDate={endDate} />
-          </div>
+          <ExamListingClient title={`Latest Exams ${formattedDate}`} startDate={startDate} endDate={endDate} />
         );
       }
     } catch (e) { }
 
     return (
-      <div style={{ paddingTop: 'clamp(60px, 8vh, 80px)' }}>
-        <ExamListingClient title={`Latest Exams ${formattedDate}`} />
-      </div>
+      <ExamListingClient title={`Latest Exams ${formattedDate}`} />
     );
   }
 

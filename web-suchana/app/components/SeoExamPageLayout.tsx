@@ -306,6 +306,9 @@ export default function SeoExamPageLayout({
               </div>
             </div>
 
+            {/* STICKY TALL SKYSCRAPER AD */}
+            <SidebarAd className="ad-sidebar ad-s-120" />
+
           </div>
         </div>
       </div>

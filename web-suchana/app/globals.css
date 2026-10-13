@@ -8172,8 +8172,9 @@ r .card-branding-icon-box {
 }
 
 .ad-strict-728x90 {
-  width: 728px;
-  height: 90px;
+  width: 100%;
+  max-width: 970px;
+  min-height: 90px;
 }
 
 @media (max-width: 768px) {
@@ -9997,6 +9998,7 @@ footer {
 .ad-sidebar:has(ins.adsbygoogle[data-ad-status="unfilled"]),
 .article-ad-slot:has(ins.adsbygoogle[data-ad-status="unfilled"]),
 .in-feed-ad:has(ins.adsbygoogle[data-ad-status="unfilled"]),
+.gutter-ad:has(ins.adsbygoogle[data-ad-status="unfilled"]),
 .mobile-anchor-ad:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
   display: none !important;
 }

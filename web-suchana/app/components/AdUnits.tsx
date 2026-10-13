@@ -426,18 +426,18 @@ export function GutterAd({ side }: { side: "left" | "right" }) {
   if (!slot) return null;
 
   return (
-    <div className="w-full flex flex-col items-center justify-center" aria-label="Advertisement">
+    <div className="gutter-ad w-full flex flex-col items-center justify-center overflow-hidden" aria-label="Advertisement">
       {adLabel}
       {status === "empty" && process.env.NODE_ENV === "development" ? (
-        <div style={{ width: "160px", height: "600px", background: "#F5F2EB", border: "1px dashed #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: "12px", fontFamily: "monospace", textAlign: "center" }}>
-          [Gutter {side} 160x600]
+        <div style={{ width: "100%", maxWidth: "160px", height: "600px", background: "#F5F2EB", border: "1px dashed #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b", fontSize: "12px", fontFamily: "monospace", textAlign: "center" }}>
+          [Gutter {side} Skyscraper]
         </div>
       ) : (
         <SlotRenderer
           config={slot}
           onStatusChange={setStatus}
           format="vertical"
-          style={{ display: "inline-block", minWidth: "160px", minHeight: "600px" }}
+          style={{ display: "block", width: "100%", maxWidth: "300px", minHeight: "600px" }}
         />
       )}
     </div>

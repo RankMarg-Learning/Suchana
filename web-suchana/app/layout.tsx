@@ -162,7 +162,7 @@ const organizationJsonLd = {
 };
 
 import Providers from "./components/Providers";
-import { GutterAd, MobileAnchorAd } from "./components/AdUnits";
+import { GutterAd, MobileAnchorAd, LeaderboardAd } from "./components/AdUnits";
 
 export default async function RootLayout({
   children,
@@ -197,22 +197,33 @@ export default async function RootLayout({
           <SiteNav initialTickerExams={tickerExams} />
 
           <main className="relative z-10 w-full flex-1">
-            <div className="w-full max-w-[1920px] mx-auto flex justify-center items-start px-0 md:px-4 pt-0 md:pt-4 pb-8 gap-2 xl:gap-3">
+            <div className="w-full max-w-[1920px] mx-auto flex justify-center items-start px-0 md:px-2 xl:px-4 pt-0 md:pt-4 pb-8 gap-2 xl:gap-3">
 
-              {/* LEFT GUTTER AD */}
-              <div className="hidden min-[1600px]:block w-[160px] min-[1900px]:w-[300px] shrink-0 sticky top-20">
+              {/* LEFT GUTTER AD (Visible for 13", 15", 17" screens from 1200px+) */}
+              <aside
+                aria-label="Left Advertisement Sidebar"
+                className="hidden min-[1200px]:block w-[120px] min-[1320px]:w-[140px] min-[1440px]:w-[160px] min-[1800px]:w-[250px] min-[1920px]:w-[300px] shrink-0 sticky top-20 z-10"
+              >
                 <GutterAd side="left" />
-              </div>
+              </aside>
 
               {/* MAIN CONTENT */}
-              <div className="w-full max-w-[1300px] shrink min-w-0">
+              <div className="w-full max-w-[1280px] shrink min-w-0 flex-1">
                 {children}
+
+                {/* BOTTOM LEADERBOARD AD - HIGH-VIEWABILITY BANNER FOR ALL PAGES */}
+                <div className="w-full my-6 flex justify-center overflow-hidden">
+                  <LeaderboardAd id="bottom-leaderboard-ad" />
+                </div>
               </div>
 
-              {/* RIGHT GUTTER AD */}
-              <div className="hidden min-[1600px]:block w-[160px] min-[1900px]:w-[300px] shrink-0 sticky top-20">
+              {/* RIGHT GUTTER AD (Visible for 13", 15", 17" screens from 1200px+) */}
+              <aside
+                aria-label="Right Advertisement Sidebar"
+                className="hidden min-[1200px]:block w-[120px] min-[1320px]:w-[140px] min-[1440px]:w-[160px] min-[1800px]:w-[250px] min-[1920px]:w-[300px] shrink-0 sticky top-20 z-10"
+              >
                 <GutterAd side="right" />
-              </div>
+              </aside>
 
             </div>
           </main>

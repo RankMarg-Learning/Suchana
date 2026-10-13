@@ -453,6 +453,8 @@ export default function CategoryFeedClient({
               </div>
             </div>
 
+            {/* STICKY SKYSCRAPER AD FOR LONG FEED BROWSING */}
+            <SidebarAd id="sidebar-ad-right-3" tall />
 
           </div>
 
