@@ -38,7 +38,7 @@ import { trackFunnelStep, trackConversion } from "@/app/lib/telemetry";
 import { useScrollTracking } from "@/app/hooks/useScrollTracking";
 import FAQSection from "@/app/components/FAQSection";
 import SidebarAd from "@/app/components/ads/SidebarAd";
-import { ArticleAd } from "@/app/components/AdUnits";
+import { ArticleAd, LeaderboardAd } from "@/app/components/AdUnits";
 
 
 const STAGE_ICONS: Record<string, any> = {
@@ -337,7 +337,7 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
   ];
 
   return (
-    <main className="min-h-screen">
+    <div className="exam-detail-page min-h-screen">
       <div className="breadcrumb-bar">
         <div className="breadcrumb">
           {breadcrumbs.map((crumb, i) => (
@@ -353,7 +353,9 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
         </div>
       </div>
 
-      <div className="wrap" style={{ margin: '16px' }}>
+      <div className="wrap" style={{ margin: '16px auto', width: '100%' }}>
+        {/* TOP LEADERBOARD AD */}
+        <LeaderboardAd id="exam-top-leaderboard" />
 
         <div className="article-grid">
           <div className="fade-up">
@@ -618,6 +620,6 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
           </div>
         </div>
       </div>
-    </main>
+    </div>
   );
 }

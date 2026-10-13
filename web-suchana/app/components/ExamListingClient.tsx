@@ -5,7 +5,7 @@ import { ChevronDown, RefreshCw, Zap, Search, X, Layers, Filter, Wrench } from "
 import { Exam, enumToSlug } from "../lib/types";
 import { ExamCategory, ExamStatus } from "../lib/enums";
 import { fetchExamsFromAPI } from "../lib/api";
-import { InFeedAd, SidebarAd } from "./AdUnits";
+import { InFeedAd, SidebarAd, LeaderboardAd } from "./AdUnits";
 import { ADS_CONFIG } from "../config/ads";
 import { ExamListRow, SkeletonRow } from "./ExamCard";
 import { trackFunnelStep } from "../lib/telemetry";
@@ -104,6 +104,9 @@ export default function ExamListingClient({ title, category, status, conductingB
   return (
     <>
       <div className="wrap-home home-body" style={{ marginTop: '24px', marginBottom: '60px' }}>
+        {/* TOP LEADERBOARD AD */}
+        <LeaderboardAd id="top-leaderboard-ad" />
+
         <div className="page-grid">
 
           {/* CONTENT COL */}

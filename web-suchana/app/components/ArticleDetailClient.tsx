@@ -10,7 +10,7 @@ import MarkdownRenderer from './MarkdownRenderer';
 import { cleanLabel } from '../lib/types';
 import FAQSection from './FAQSection';
 import { ImportantLinksWidget, RelatedArticlesWidget, ExamTimelineWidget, CategoryWidget } from './SidebarWidgets';
-import { ArticleAd, SidebarAd } from './AdUnits';
+import { ArticleAd, SidebarAd, LeaderboardAd } from './AdUnits';
 
 interface Props {
   page: SeoPage;
@@ -62,6 +62,8 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
       {/* Breadcrumb could go here if we wanted */}
 
       <div className="wrap" style={{ paddingTop: "10px" }}>
+        {/* TOP LEADERBOARD AD */}
+        <LeaderboardAd id="top-leaderboard-ad" />
 
         <div className="article-grid">
           {/* ARTICLE COLUMN */}
@@ -140,9 +142,7 @@ export default function ArticleDetailClient({ page, articleJsonLd }: Props) {
           <div className="sidebar-col">
             <ImportantLinksWidget />
             <CategoryWidget />
-
-
-
+            <SidebarAd id="sidebar-ad-right-1" />
             <ExamTimelineWidget exam={page.exam as any} />
             <RelatedArticlesWidget tags={page.tags} currentSlug={page.slug} />
             <SidebarAd id="sidebar-ad-right-3" tall />
