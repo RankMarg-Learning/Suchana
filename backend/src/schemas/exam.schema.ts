@@ -18,7 +18,7 @@ export const createExamSchema = z.object({
     officialWebsite: z.string().url().or(z.literal('')).optional().nullable(),
     notificationUrl: z.string().url().or(z.literal('')).optional().nullable(),
     status: z.nativeEnum(ExamStatus).default(ExamStatus.NOTIFICATION),
-    isPublished: z.boolean().default(false),
+    isPublished: z.boolean().default(true),
     isTrending: z.boolean().default(false),
     createdAt: z.string().optional().nullable(),
     authorId: z.string().optional().nullable(),

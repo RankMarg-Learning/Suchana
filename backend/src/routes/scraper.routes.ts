@@ -16,6 +16,8 @@ import {
     createStagedEventSchema,
     extractTextSchema,
     extractJsonSchema,
+    triggerSarkariResultPipelineSchema,
+    parseSarkariResultUrlSchema,
 } from '../schemas/scraper.schema';
 
 
@@ -71,6 +73,68 @@ router.post('/extract-text', validate(extractTextSchema), scraperController.extr
 
 // POST /api/v1/scraper/extract-json  → Bypass AI and extract directly from JSON (Synchronous, creates StagedExam)
 router.post('/extract-json', validate(extractJsonSchema), scraperController.extractFromJson);
+
+// ─── SarkariResult Dedicated Pipeline ───────────────────────────
+// POST /api/v1/scraper/sarkariresult/pipeline        → async (fire-and-forget, 202)
+router.post(
+    '/sarkariresult/pipeline',
+    sensitiveActionsLimiter,
+    validate(triggerSarkariResultPipelineSchema),
+    scraperController.triggerSarkariResultPipeline,
+);
+
+// POST /api/v1/scraper/sarkariresult/pipeline/sync   → synchronous (waits for summary, 200)
+router.post(
+    '/sarkariresult/pipeline/sync',
+    sensitiveActionsLimiter,
+    validate(triggerSarkariResultPipelineSchema),
+    scraperController.triggerSarkariResultPipelineSync,
+);
+
+// POST /api/v1/scraper/sarkariresult/parse-url       → direct URL parse via JSON rules (No LLM)
+router.post(
+    '/sarkariresult/parse-url',
+    validate(parseSarkariResultUrlSchema),
+    scraperController.parseSarkariResultUrl,
+);
+
+// GET /api/v1/scraper/sarkariresult/preview-home     → preview home page entries & DB status
+router.get(
+    '/sarkariresult/preview-home',
+    scraperController.previewSarkariResultHome,
+);
+
+// GET /api/v1/scraper/sarkariresult/rules            → fetch current JSON rules
+router.get(
+    '/sarkariresult/rules',
+    scraperController.getSarkariResultRules,
+);
+
+// PUT /api/v1/scraper/sarkariresult/rules            → update JSON rules
+router.put(
+    '/sarkariresult/rules',
+    scraperController.updateSarkariResultRules,
+);
+
+// POST /api/v1/scraper/sarkariresult/sample-random   → sample balanced random 10 exams via in-memory queue
+router.post(
+    '/sarkariresult/sample-random',
+    sensitiveActionsLimiter,
+    scraperController.runSarkariResultRandomSample,
+);
+
+// GET /api/v1/scraper/internal-queue/stats           → get in-memory queue status & stats (NO REDIS)
+router.get(
+    '/internal-queue/stats',
+    scraperController.getInternalQueueStats,
+);
+
+// POST /api/v1/scraper/trending/sync                 → auto-evaluate, add & remove trending exams
+router.post(
+    '/trending/sync',
+    sensitiveActionsLimiter,
+    scraperController.syncTrendingExamsHandler,
+);
 
 // ─── Review pipeline ────────────────────────────────────────────
 // GET  /api/v1/scraper/staged?reviewStatus=PENDING&page=1

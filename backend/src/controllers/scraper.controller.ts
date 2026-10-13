@@ -17,8 +17,16 @@ import type {
     CreateStagedEventDto,
     ExtractTextDto,
     ExtractJsonDto,
+    TriggerSarkariResultPipelineDto,
+    ParseSarkariResultUrlDto,
 } from '../schemas/scraper.schema';
 import { ScraperService } from '../services/scraper/scraper.core';
+import { SarkariResultPipeline } from '../services/scraper/sarkariResult.pipeline';
+import { SarkariResultParser } from '../services/scraper/sarkariResult.parser';
+import { RuleEngineService } from '../services/scraper/rules/ruleEngine.service';
+import { internalScraperQueue } from '../services/scraper/internalQueue.service';
+import { TrendingService } from '../services/scraper/trending.service';
+import prisma from '../config/database';
 
 
 
@@ -295,4 +303,171 @@ export async function extractFromJson(req: Request, res: Response, next: NextFun
         next(err);
     }
 }
+
+// ─── SarkariResult Pipeline Controllers ─────────────────────────
+
+// POST /api/v1/scraper/sarkariresult/pipeline (Async, 202)
+export async function triggerSarkariResultPipeline(req: Request, res: Response, next: NextFunction) {
+    try {
+        const body = (req.body || {}) as TriggerSarkariResultPipelineDto;
+        logger.info('[Scraper] Triggered SarkariResult Home Pipeline (Async)');
+
+        const pipelinePromise = SarkariResultPipeline.runPipeline(body);
+
+        res.status(202).json({
+            success: true,
+            data: {
+                message: 'SarkariResult Home scraping and deduplication pipeline started.',
+                options: body,
+            },
+        });
+
+        pipelinePromise.catch((err) => {
+            logger.error(`[Scraper] SarkariResult background pipeline failed: ${err.message}`);
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+// POST /api/v1/scraper/sarkariresult/pipeline/sync (Sync, 200)
+export async function triggerSarkariResultPipelineSync(req: Request, res: Response, next: NextFunction) {
+    try {
+        const body = (req.body || {}) as TriggerSarkariResultPipelineDto;
+        logger.info('[Scraper] Triggered SarkariResult Home Pipeline (Sync)');
+        const summary = await SarkariResultPipeline.runPipeline(body);
+        sendSuccess(res, summary, 200);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// POST /api/v1/scraper/sarkariresult/parse-url (Direct URL Test, No LLM)
+export async function parseSarkariResultUrl(req: Request, res: Response, next: NextFunction) {
+    try {
+        const { url, sectionHint } = req.body as ParseSarkariResultUrlDto;
+        logger.info(`[Scraper] Parsing SarkariResult URL without LLM: ${url}`);
+        const html = await ScraperUtils.fetchHtml(url);
+        const structured = await SarkariResultParser.parseDetailPage(html, url, sectionHint);
+        sendSuccess(res, structured, 200);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// GET /api/v1/scraper/sarkariresult/preview-home (Preview sections with DB deduplication status)
+export async function previewSarkariResultHome(req: Request, res: Response, next: NextFunction) {
+    try {
+        const sectionsParam = req.query.sections as string | undefined;
+        const filterSections = sectionsParam ? sectionsParam.split(',').map((s) => s.trim()) : undefined;
+        const scope = (req.query.scope as 'HOME' | 'SECTIONS' | 'ALL') || 'ALL';
+
+        const entries = await SarkariResultPipeline.scrapeAllListingEntries({
+            sourceScope: scope,
+            sections: filterSections,
+        });
+
+        // Check deduplication state for preview
+        const slugs = entries.map((e) => e.slug);
+        const existingExams = await prisma.exam.findMany({
+            where: { slug: { in: slugs } },
+            select: { id: true, slug: true, status: true, title: true },
+        });
+        const existingStaged = await prisma.stagedExam.findMany({
+            where: { slug: { in: slugs } },
+            select: { id: true, slug: true, reviewStatus: true, title: true },
+        });
+
+        const examMap = new Map(existingExams.map((e) => [e.slug, e]));
+        const stagedMap = new Map(existingStaged.map((s) => [s.slug, s]));
+
+        const preview = entries.map((entry) => {
+            const approved = examMap.get(entry.slug);
+            const staged = stagedMap.get(entry.slug);
+
+            let statusInDb: 'APPROVED_EXAM' | 'PENDING_STAGED' | 'NEW' = 'NEW';
+            if (approved) statusInDb = 'APPROVED_EXAM';
+            else if (staged) statusInDb = 'PENDING_STAGED';
+
+            return {
+                ...entry,
+                statusInDb,
+                existingExamId: approved?.id,
+                stagedExamId: staged?.id,
+            };
+        });
+
+        sendSuccess(res, {
+            totalEntries: preview.length,
+            scope,
+            sectionsScanned: ['results', 'admit_cards', 'latest_jobs', 'answer_key'],
+            entries: preview,
+        });
+    } catch (err) {
+        next(err);
+    }
+}
+
+// GET /api/v1/scraper/sarkariresult/rules
+export async function getSarkariResultRules(req: Request, res: Response, next: NextFunction) {
+    try {
+        const rules = RuleEngineService.getRules();
+        sendSuccess(res, rules);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// PUT /api/v1/scraper/sarkariresult/rules
+export async function updateSarkariResultRules(req: Request, res: Response, next: NextFunction) {
+    try {
+        const newRules = req.body;
+        if (!newRules || typeof newRules !== 'object') {
+            sendError(res, 400, 'BAD_REQUEST', 'Invalid rules JSON payload');
+            return;
+        }
+        RuleEngineService.updateRules(newRules);
+        sendSuccess(res, { message: 'SarkariResult rules successfully updated and reloaded' });
+    } catch (err) {
+        next(err);
+    }
+}
+
+// POST /api/v1/scraper/sarkariresult/sample-random (Sample balanced random exams via internal queue)
+export async function runSarkariResultRandomSample(req: Request, res: Response, next: NextFunction) {
+    try {
+        const count = typeof req.body?.count === 'number' ? req.body.count : 10;
+        const autoPromote = typeof req.body?.autoPromote === 'boolean' ? req.body.autoPromote : true;
+
+        logger.info(`[Scraper] Executing random sample of ${count} exams (autoPromote: ${autoPromote}) via internal queue`);
+        const result = await SarkariResultPipeline.runRandomSample(count, autoPromote);
+        sendSuccess(res, result, 200);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// GET /api/v1/scraper/internal-queue/stats (In-memory queue stats and history)
+export async function getInternalQueueStats(req: Request, res: Response, next: NextFunction) {
+    try {
+        const stats = internalScraperQueue.getStats();
+        const history = internalScraperQueue.getHistory(30);
+        sendSuccess(res, { stats, recentTasks: history }, 200);
+    } catch (err) {
+        next(err);
+    }
+}
+
+// POST /api/v1/scraper/trending/sync (Evaluate & sync trending exams)
+export async function syncTrendingExamsHandler(req: Request, res: Response, next: NextFunction) {
+    try {
+        const count = typeof req.body?.count === 'number' ? req.body.count : 12;
+        const result = await TrendingService.syncTrendingExams(count);
+        sendSuccess(res, result, 200);
+    } catch (err) {
+        next(err);
+    }
+}
+
+
 

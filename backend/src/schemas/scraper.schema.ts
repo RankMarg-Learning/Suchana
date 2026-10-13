@@ -116,3 +116,21 @@ export const extractJsonSchema = z.object({
 });
 export type ExtractJsonDto = z.infer<typeof extractJsonSchema>;
 
+// ─── SarkariResult Pipeline ─────────────────────────────────────
+export const triggerSarkariResultPipelineSchema = z.object({
+    maxEntries: z.number().int().min(1).max(500).optional().default(60),
+    sections: z.array(z.string()).optional(),
+    sourceScope: z.enum(['HOME', 'SECTIONS', 'ALL']).optional().default('ALL'),
+    minDelayMs: z.number().int().min(50).max(10000).optional().default(600),
+    maxDelayMs: z.number().int().min(100).max(15000).optional().default(1400),
+    delayMs: z.number().int().min(0).max(5000).optional().default(500),
+    autoPromoteNew: z.boolean().optional().default(true),
+});
+export type TriggerSarkariResultPipelineDto = z.infer<typeof triggerSarkariResultPipelineSchema>;
+
+export const parseSarkariResultUrlSchema = z.object({
+    url: z.string().url('Must be a valid URL'),
+    sectionHint: z.string().optional(),
+});
+export type ParseSarkariResultUrlDto = z.infer<typeof parseSarkariResultUrlSchema>;
+

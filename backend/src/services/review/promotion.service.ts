@@ -8,7 +8,7 @@ import { getStatusFromStage } from '../../constants/enums';
 import { SeoService } from '../seo.service';
 import { cacheService } from '../../utils/cache';
 
-export async function promoteStagedExam(stagedExamId: string, adminId: string, extraData?: { faqs?: any }): Promise<{ examId: string }> {
+export async function promoteStagedExam(stagedExamId: string, adminId: string, extraData?: { faqs?: any; isPublished?: boolean }): Promise<{ examId: string }> {
     const staged = await prisma.stagedExam.findUnique({
         where: { id: stagedExamId },
         include: { stagedEvents: { orderBy: { stageOrder: 'asc' } } },
@@ -86,10 +86,11 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string, e
                     additionalDetails: staged.additionalDetails ?? existing.additionalDetails,
                     officialWebsite: staged.officialWebsite ?? existing.officialWebsite,
                     notificationUrl: staged.notificationUrl ?? existing.notificationUrl,
+                    examYear: staged.examYear ?? existing.examYear,
                     ...(extraData?.faqs && { faqs: extraData.faqs }),
                     sourceStagedExamId: staged.id,
                     status: derivedStatus,
-                    isPublished: false,
+                    isPublished: extraData?.isPublished ?? true,
                     publishedAt: existing.publishedAt ?? new Date(),
                     updatedAt: new Date(),
                 },
@@ -147,12 +148,13 @@ export async function promoteStagedExam(stagedExamId: string, adminId: string, e
                 additionalDetails: staged.additionalDetails ?? undefined,
                 officialWebsite: staged.officialWebsite ?? undefined,
                 notificationUrl: staged.notificationUrl ?? undefined,
+                examYear: staged.examYear ?? undefined,
                 faqs: extraData?.faqs ?? undefined,
                 deduplicationKey: deduplicationKey ?? undefined,
                 sourceStagedExamId: staged.id,
                 createdBy: adminId,
                 status: derivedStatus,
-                isPublished: false,
+                isPublished: extraData?.isPublished ?? true,
                 publishedAt: new Date(),
                 lifecycleEvents: eventRows.length > 0 ? { create: eventRows } : undefined,
             },
