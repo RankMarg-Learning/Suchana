@@ -466,6 +466,9 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
               </div>
             )}
 
+            {/* High-CTR Mid-Content Ad between Timeline and Eligibility */}
+            <ArticleAd slotId="article-mid-1" placementKey="articleMid" />
+
             {(exam.salary || exam.age || exam.qualificationCriteria || exam.applicationFee) && (
               <div className="art-body-wrap">
                 {exam.salary && (
@@ -575,6 +578,9 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
               </div>
             </div>
 
+            {/* High-CTR Rectangle Ad right after Official Links */}
+            <SidebarAd className="ad-sidebar ad-s-250" />
+
             {exam.seoPages && exam.seoPages.length > 0 && (
               <div className="sw">
                 <div className="sw-head">📚 Related Guides</div>
@@ -607,7 +613,8 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
               </div>
             </div>
 
-            <SidebarAd />
+            {/* Sticky skyscraper ad for maximum Active View viewability */}
+            <SidebarAd className="ad-sidebar ad-s-120" />
           </div>
         </div>
       </div>

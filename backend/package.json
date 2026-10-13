@@ -4,7 +4,7 @@
   "description": "Government Exam Execution Platform — Backend API",
   "main": "dist/server.js",
   "scripts": {
-    "build": "rimraf dist && tsc",
+    "build": "rimraf dist && tsc && mkdir -p dist/config/rules && cp src/config/rules/*.json dist/config/rules/ 2>/dev/null || true",
     "dev": "ts-node-dev --respawn --transpile-only --exit-child src/server.ts",
     "dev:bun": "bun --watch src/server.ts",
     "start": "node dist/server.js",

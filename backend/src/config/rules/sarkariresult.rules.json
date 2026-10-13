@@ -1,0 +1,494 @@
+{
+  "site": "sarkariresult.com.cm",
+  "name": "Sarkari Result Rule Engine",
+  "version": "1.0.0",
+  "description": "Rules for cleaning, processing, structuring, and deduplicating exam data from sarkariresult.com.cm without LLM APIs",
+  "homePage": {
+    "url": "https://sarkariresult.com.cm/",
+    "sections": [
+      {
+        "id": "results",
+        "name": "Results",
+        "url": "https://sarkariresult.com.cm/result/",
+        "headerPatterns": ["^Results?$"],
+        "stageHint": "RESULT",
+        "statusHint": "RESULT_DECLARED",
+        "priority": 10
+      },
+      {
+        "id": "admit_cards",
+        "name": "Admit Cards",
+        "url": "https://sarkariresult.com.cm/admit-card/",
+        "headerPatterns": ["^Admit Cards?$"],
+        "stageHint": "ADMIT_CARD",
+        "statusHint": "ADMIT_CARD_OUT",
+        "priority": 20
+      },
+      {
+        "id": "latest_jobs",
+        "name": "Latest Jobs",
+        "url": "https://sarkariresult.com.cm/latest-jobs/",
+        "headerPatterns": ["^Latest Jobs?$"],
+        "stageHint": "REGISTRATION",
+        "statusHint": "REGISTRATION_OPEN",
+        "priority": 30
+      },
+      {
+        "id": "answer_key",
+        "name": "Answer Key",
+        "url": "https://sarkariresult.com.cm/answer-key/",
+        "headerPatterns": ["^Answer Keys?$"],
+        "stageHint": "ANSWER_KEY",
+        "statusHint": "ANSWER_KEY_OUT",
+        "priority": 40
+      }
+    ],
+    "linkFilters": {
+      "includeSlugRegex": "^[a-z0-9]+(?:-[a-z0-9]+)+$",
+      "excludeSlugList": [
+        "privacy-policy",
+        "disclaimer",
+        "contact-us",
+        "about-us",
+        "terms-conditions",
+        "dmca",
+        "result",
+        "admit-card",
+        "latest-jobs",
+        "answer-key",
+        "syllabus",
+        "admission",
+        "certificate-verification",
+        "important"
+      ],
+      "excludeUrlPatterns": [
+        "^https?:\\/\\/sarkariresult\\.com\\.cm\\/?$",
+        "\\/tag\\/",
+        "\\/category\\/",
+        "\\/page\\/",
+        "\\/contact",
+        "\\/about",
+        "\\/privacy",
+        "\\/disclaimer",
+        "\\/result\\/$",
+        "\\/admit-card\\/$",
+        "\\/latest-jobs\\/$",
+        "\\/syllabus\\/$",
+        "\\/answer-key\\/$",
+        "\\/admission\\/$"
+      ]
+    }
+  },
+  "cleaning": {
+    "noiseSelectors": [
+      "script",
+      "style",
+      "noscript",
+      "iframe",
+      ".ad",
+      ".advertisement",
+      ".social-buttons",
+      ".social-share",
+      ".social",
+      ".sidebar",
+      "#sidebar",
+      "header",
+      "footer",
+      "nav",
+      "#comments",
+      ".comments",
+      ".code-block",
+      ".wp-block-buttons"
+    ],
+    "brandKeywordsToRemove": [
+      "Sarkari Result",
+      "SarkariResult.com.cm",
+      "SarkariResult",
+      "SarkariExam",
+      "Bharat Result",
+      "Up Police Result",
+      "Bihar Police Result",
+      "Join Our WhatsApp Channel",
+      "Join Our Telegram Channel",
+      "Join Sarkari Result WhatsApp Channel",
+      "Join Sarkari Result Telegram Channel",
+      "Follow Our Instagram Channel",
+      "Follow Now",
+      "Download SarkariResult App Now",
+      "Download English Vocab App",
+      "Download SarkariResult App",
+      "Official Sarkari Result Website",
+      "Check Sarkari Result",
+      "Click Here",
+      "Sarkari Result @X",
+      "Sarkari Result @Telegram",
+      "Sarkari Result @WhatsApp",
+      "Sarkari Result @Instagram",
+      "Sarkari Result @Facebook",
+      "Sarkari Result @YouTube",
+      "Sarkari Result @Mobile App",
+      "Visit SarkariResult.com.cm",
+      "Rozgar Result"
+    ],
+    "blacklistedLinkDomains": [
+      "sarkariresult.com.cm",
+      "sarkariexam.com",
+      "whatsapp.com",
+      "t.me",
+      "telegram.org",
+      "telegram.me",
+      "instagram.com",
+      "facebook.com",
+      "youtube.com",
+      "youtu.be",
+      "twitter.com",
+      "x.com",
+      "play.google.com"
+    ]
+  },
+  "detailExtraction": {
+    "title": {
+      "primarySelectors": [
+        "h1.gb-headline",
+        "h1.entry-title",
+        "h1"
+      ],
+      "removePatterns": [
+        "\\s*\\(.*?Posts?\\)",
+        "\\s*Online Form \\d{4}",
+        "\\s*Recruitment \\d{4}",
+        "\\s*Bharti \\d{4}",
+        "\\s*–\\s*Last Date Today",
+        "\\s*–\\s*Out",
+        "\\s*–\\s*Postponed"
+      ]
+    },
+    "dateFields": {
+      "registrationStart": {
+        "stage": "REGISTRATION",
+        "isStart": true,
+        "patterns": [
+          "Online Apply Start Date",
+          "Apply Start Date",
+          "Application Begin",
+          "Registration Start"
+        ]
+      },
+      "registrationEnd": {
+        "stage": "REGISTRATION",
+        "isStart": false,
+        "patterns": [
+          "Online Apply Last Date",
+          "Apply Last Date",
+          "Last Date For Apply",
+          "Application Last Date",
+          "Registration Last Date",
+          "Last Date For Online Application"
+        ]
+      },
+      "feePayment": {
+        "stage": "REGISTRATION",
+        "isStart": false,
+        "isMeta": true,
+        "metaKey": "feePaymentLastDate",
+        "patterns": [
+          "Last Date For Fee Payment",
+          "Fee Payment Last Date",
+          "Last Date Pay Exam Fee"
+        ]
+      },
+      "correctionWindow": {
+        "stage": "CORRECTION_WINDOW",
+        "patterns": [
+          "Correction Date",
+          "Correction Form",
+          "Correction / Edit Form",
+          "Edit Form Date",
+          "Online Correction Date"
+        ]
+      },
+      "examCity": {
+        "stage": "EXAM_CITY",
+        "patterns": [
+          "Exam City Details?",
+          "Tier-?I Exam City Details?",
+          "Tier-?II Exam City Details?",
+          "City Slip Release Date"
+        ]
+      },
+      "admitCard": {
+        "stage": "ADMIT_CARD",
+        "patterns": [
+          "Admit Card",
+          "Tier-?I Admit Card",
+          "Tier-?II Admit Card",
+          "Admit Card Release Date",
+          "Download Admit Card"
+        ]
+      },
+      "slotSelection": {
+        "stage": "EXAM",
+        "isMeta": true,
+        "metaKey": "slotSelectionDate",
+        "patterns": [
+          "Slot Selection",
+          "Online Slot Selection"
+        ]
+      },
+      "examDate": {
+        "stage": "EXAM",
+        "patterns": [
+          "Exam Date",
+          "Tier-?I Exam Date",
+          "Tier-?II Exam Date",
+          "Stage-?I Exam Date",
+          "CBT Exam Date",
+          "CBT-?1 Exam Date",
+          "CBT-?2 Exam Date",
+          "Tentative Exam Date"
+        ]
+      },
+      "answerKey": {
+        "stage": "ANSWER_KEY",
+        "patterns": [
+          "Answer Key",
+          "Answer Key Date",
+          "Provisional Answer Key",
+          "Final Answer Key"
+        ]
+      },
+      "resultDate": {
+        "stage": "RESULT",
+        "patterns": [
+          "Result Date",
+          "Result Declared",
+          "Tier-?I Result",
+          "Tier-?II Result",
+          "Final Result Date"
+        ]
+      }
+    },
+    "relativeDateKeywords": [
+      "notify later",
+      "notified later",
+      "to be announced",
+      "to be notified",
+      "tba",
+      "tbd",
+      "before exam",
+      "available soon",
+      "will be update",
+      "update soon",
+      "shortly"
+    ],
+    "linkClassification": {
+      "applyOnline": {
+        "patterns": [
+          "apply online link",
+          "apply online",
+          "registration",
+          "online form",
+          "register online"
+        ],
+        "stage": "REGISTRATION",
+        "actionLabel": "Apply Online"
+      },
+      "admitCard": {
+        "patterns": [
+          "download admit card",
+          "download tier-?i admit card",
+          "download tier-?ii admit card",
+          "admit card"
+        ],
+        "stage": "ADMIT_CARD",
+        "actionLabel": "Download Admit Card"
+      },
+      "examCity": {
+        "patterns": [
+          "download exam city details",
+          "check exam city details",
+          "exam city details notice",
+          "tier-?i exam city details"
+        ],
+        "stage": "EXAM_CITY",
+        "actionLabel": "Check Exam City"
+      },
+      "result": {
+        "patterns": [
+          "download result",
+          "check result",
+          "final result",
+          "stage-?ii result",
+          "merit list",
+          "list-?i",
+          "list-?ii",
+          "list-?iii",
+          "list-?iv"
+        ],
+        "stage": "RESULT",
+        "actionLabel": "Download Result"
+      },
+      "cutoff": {
+        "patterns": [
+          "download cutoff",
+          "check cutoff",
+          "cut off marks"
+        ],
+        "stage": "RESULT",
+        "actionLabel": "Download Cutoff"
+      },
+      "answerKey": {
+        "patterns": [
+          "download answer key",
+          "check answer key",
+          "answer key notice"
+        ],
+        "stage": "ANSWER_KEY",
+        "actionLabel": "Download Answer Key"
+      },
+      "notification": {
+        "patterns": [
+          "check official notification",
+          "download official notification",
+          "official notification",
+          "check short notice",
+          "download notification"
+        ],
+        "stage": "NOTIFICATION",
+        "actionLabel": "Official Notification",
+        "isNotificationUrl": true
+      },
+      "examDateNotice": {
+        "patterns": [
+          "download exam date notice",
+          "check exam date notice",
+          "check exam date change notice",
+          "exam postponed notice"
+        ],
+        "stage": "EXAM",
+        "actionLabel": "Exam Date Notice"
+      },
+      "correction": {
+        "patterns": [
+          "online correction link",
+          "check form correction notice",
+          "correction / edit form"
+        ],
+        "stage": "CORRECTION_WINDOW",
+        "actionLabel": "Correction Form"
+      },
+      "officialWebsite": {
+        "patterns": [
+          "official website",
+          "commission website",
+          "board website",
+          "rrb official website",
+          "ssc official website",
+          "upsc official website"
+        ],
+        "isOfficialWebsite": true
+      }
+    },
+    "taxonomies": {
+      "categories": [
+        {
+          "pattern": "rrb|railway|ntpc|loco pilot|alp|group d",
+          "category": "RAILWAY_JOBS",
+          "conductingBody": "Railway Recruitment Board (RRB)",
+          "examLevel": "NATIONAL"
+        },
+        {
+          "pattern": "ssc|cgl|chsl|mts|cpo|gd constable|selection phase|stenographer",
+          "category": "SSC",
+          "conductingBody": "Staff Selection Commission (SSC)",
+          "examLevel": "NATIONAL"
+        },
+        {
+          "pattern": "upsc|civil services|ias|ips|nda|cds|capf|cms|ies",
+          "category": "UPSC",
+          "conductingBody": "Union Public Service Commission (UPSC)",
+          "examLevel": "NATIONAL"
+        },
+        {
+          "pattern": "bpsc|bihar public service",
+          "category": "STATE_PSC",
+          "conductingBody": "Bihar Public Service Commission (BPSC)",
+          "state": "Bihar",
+          "examLevel": "STATE"
+        },
+        {
+          "pattern": "upsssc|up subordinate",
+          "category": "STATE_PSC",
+          "conductingBody": "Uttar Pradesh Subordinate Services Selection Commission (UPSSSC)",
+          "state": "Uttar Pradesh",
+          "examLevel": "STATE"
+        },
+        {
+          "pattern": "mppsc|mp public service",
+          "category": "STATE_PSC",
+          "conductingBody": "Madhya Pradesh Public Service Commission (MPPSC)",
+          "state": "Madhya Pradesh",
+          "examLevel": "STATE"
+        },
+        {
+          "pattern": "rpsc|rajasthan public service",
+          "category": "STATE_PSC",
+          "conductingBody": "Rajasthan Public Service Commission (RPSC)",
+          "state": "Rajasthan",
+          "examLevel": "STATE"
+        },
+        {
+          "pattern": "police|constable|sub inspector|\\bsi\\b|daroga|head constable",
+          "category": "POLICE_JOBS",
+          "conductingBody": "Police Recruitment Board",
+          "examLevel": "STATE"
+        },
+        {
+          "pattern": "teacher|tet|ctet|prt|tgt|pgt|bpsc tre|upessc|ugc net|csir net",
+          "category": "TEACHING_ELIGIBILITY",
+          "conductingBody": "Education Service Selection Commission"
+        },
+        {
+          "pattern": "bank|ibps|sbi|rbi|nabard|cooperative bank",
+          "category": "BANKING_JOBS",
+          "conductingBody": "Institute of Banking Personnel Selection (IBPS)"
+        },
+        {
+          "pattern": "army|navy|air force|airforce|defence|coast guard|agniveer",
+          "category": "DEFENCE_JOBS",
+          "conductingBody": "Ministry of Defence / Indian Armed Forces",
+          "examLevel": "NATIONAL"
+        },
+        {
+          "pattern": "aiims|norcet|ruhs|medical officer|paramedical|nurse|nursing",
+          "category": "MEDICAL_EXAM",
+          "conductingBody": "Medical Health Services Examination Board"
+        },
+        {
+          "pattern": "high court|district court|judiciary|judicial|hjs",
+          "category": "LAW_EXAM",
+          "conductingBody": "High Court Examination Cell",
+          "examLevel": "STATE"
+        },
+        {
+          "pattern": "engineering|junior engineer|\\bje\\b|isro|gate|drdo",
+          "category": "ENGINEERING_EXAM",
+          "conductingBody": "Engineering Recruitment Board"
+        }
+      ],
+      "stateKeywords": [
+        { "name": "Uttar Pradesh", "patterns": ["uttar pradesh", "up ", "upsssc", "up police", "upessc", "up board"] },
+        { "name": "Bihar", "patterns": ["bihar", "bpsc", "csbc", "bihar police", "bseb"] },
+        { "name": "Rajasthan", "patterns": ["rajasthan", "rpsc", "rssb", "ruhs", "rajasthan police"] },
+        { "name": "Madhya Pradesh", "patterns": ["madhya pradesh", "mpesb", "mppsc", "mp police"] },
+        { "name": "Uttarakhand", "patterns": ["uttarakhand", "ukpsc", "uksssc", "utet"] },
+        { "name": "Haryana", "patterns": ["haryana", "hssc", "hpsc"] },
+        { "name": "Delhi", "patterns": ["delhi", "dsssb", "delhi police", "delhi high court"] },
+        { "name": "Jharkhand", "patterns": ["jharkhand", "jpsc", "jssc"] },
+        { "name": "West Bengal", "patterns": ["west bengal", "wbpsc", "wb police"] },
+        { "name": "Maharashtra", "patterns": ["maharashtra", "mpsc"] },
+        { "name": "Punjab", "patterns": ["punjab", "ppsc", "psssb"] }
+      ]
+    }
+  }
+}

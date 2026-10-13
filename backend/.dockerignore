@@ -1,24 +1,40 @@
 node_modules
 dist
 .env
+.env*
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 .git
+.github
 .vscode
+.idea
+.DS_Store
 .dockerignore
 Dockerfile
-docker-compose.yml
+docker-compose*.yml
 prisma/migrations
 
-# Scratch and check scripts
+# Scripts, scratch files, and utilities
+scripts/
 check_db_users.js
 check_db.js
 check_event_types.js
 check_events.js
 verify_links.js
 
-# Documentation and env example
+# Credentials, keys, and lockfiles
+exam-suchana-*.json
+*.pem
+*.key
+bun.lock
+
+# Documentation, coverage and build artifacts
 README.md
 .env.example
+coverage/
+*.tsbuildinfo
+tmp/
+temp/

@@ -179,6 +179,8 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
     const exam = await prisma.exam.create({
         data: {
             ...baseDto,
+            shortTitle: dto.shortTitle ?? dto.title,
+            isPublished: dto.isPublished ?? true,
             createdAt: dto.createdAt ? new Date(dto.createdAt) : undefined,
             qualificationCriteria: dto.qualificationCriteria,
             applicationFee: dto.applicationFee,
@@ -187,7 +189,7 @@ export async function createExam(dto: CreateExamDto, adminId: string) {
             additionalDetails: dto.additionalDetails,
             slug,
             createdBy: adminId,
-            publishedAt: dto.isPublished ? new Date() : null,
+            publishedAt: (dto.isPublished ?? true) ? new Date() : null,
             authorId: dto.authorId,
             faqs: faqs ?? undefined,
         },

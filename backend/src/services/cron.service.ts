@@ -132,5 +132,32 @@ export class CronService {
         }
 
         logger.info(`[CRON] Updated ${updates.length}/${totalProcessed} exams:\n${auditLogs.join('\n')}`);
+
+        // Automatically sync trending exams based on fresh dates and active stages
+        try {
+            const { TrendingService } = await import('./scraper/trending.service');
+            await TrendingService.syncTrendingExams();
+        } catch (trendErr: any) {
+            logger.warn(`[CRON] Trending sync failed: ${trendErr.message}`);
+        }
+    }
+
+    static async runSarkariResultPipeline(): Promise<void> {
+        logger.info('[CRON] Scheduled SarkariResult pipeline run starting (every 2 hours)...');
+        try {
+            const { SarkariResultPipeline } = await import('./scraper/sarkariResult.pipeline');
+            const summary = await SarkariResultPipeline.runPipeline({
+                maxEntries: 60,
+                delayMs: 800,
+                autoPromoteNew: true, // Auto-promotes properly validated exams to main Exam table!
+            });
+            logger.info(
+                `[CRON] SarkariResult pipeline completed. Scanned: ${summary.totalScanned}, ` +
+                `New: ${summary.newStagedCount}, Promoted: ${summary.promotedCount}, ` +
+                `Updated: ${summary.updatedCount}, UpToDate: ${summary.upToDateCount}, Skipped: ${summary.skippedCount}`,
+            );
+        } catch (err: any) {
+            logger.error(`[CRON] SarkariResult pipeline failed: ${err.message}`);
+        }
     }
 }

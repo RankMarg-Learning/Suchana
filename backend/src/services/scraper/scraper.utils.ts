@@ -1,17 +1,117 @@
 import * as cheerio from 'cheerio';
 import { getSiteConfig } from '../../config/scraperConfig';
 
+export interface FetchHtmlOptions {
+    referer?: string;
+    minDelayMs?: number;
+    maxDelayMs?: number;
+    enableJitter?: boolean;
+    timeoutMs?: number;
+    maxRetries?: number;
+    headers?: Record<string, string>;
+}
+
+const REALISTIC_BROWSER_PROFILES = [
+    {
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+        secChUa: '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
+        platform: '"macOS"',
+    },
+    {
+        userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+        secChUa: '"Chromium";v="130", "Google Chrome";v="130", "Not?A_Brand";v="99"',
+        platform: '"Windows"',
+    },
+    {
+        userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15',
+        secChUa: '"Safari";v="17", "AppleWebKit";v="605", "Not?A_Brand";v="99"',
+        platform: '"macOS"',
+    },
+    {
+        userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+        secChUa: '"Chromium";v="129", "Google Chrome";v="129", "Not?A_Brand";v="99"',
+        platform: '"Linux"',
+    },
+];
+
 export class ScraperUtils {
-    static async fetchHtml(url: string): Promise<string> {
-        const res = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            },
-            signal: AbortSignal.timeout(20000),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status} [${url}]: ${res.statusText}`);
-        return res.text();
+    /**
+     * Polite randomized human jitter delay.
+     * Simulates natural human reading and pause between page clicks.
+     */
+    static async humanDelay(minMs = 600, maxMs = 1400): Promise<number> {
+        const min = Math.max(50, minMs);
+        const max = Math.max(min, maxMs);
+        const delay = Math.floor(Math.random() * (max - min + 1)) + min;
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return delay;
+    }
+
+    /**
+     * High-fidelity, human-like HTML fetcher.
+     * Emits authentic browser personas, client hints, and natural navigational headers.
+     */
+    static async fetchHtml(url: string, options: FetchHtmlOptions = {}): Promise<string> {
+        const maxRetries = options.maxRetries ?? 3;
+        const timeoutMs = options.timeoutMs ?? 20000;
+
+        // Human-like polite jitter delay if enabled
+        if (options.enableJitter) {
+            await this.humanDelay(options.minDelayMs ?? 600, options.maxDelayMs ?? 1400);
+        }
+
+        const profile = REALISTIC_BROWSER_PROFILES[Math.floor(Math.random() * REALISTIC_BROWSER_PROFILES.length)];
+        const referer = options.referer || (url.includes('sarkariresult') ? 'https://sarkariresult.com.cm/' : undefined);
+
+        let attempt = 0;
+        while (attempt < maxRetries) {
+            attempt++;
+            try {
+                const res = await fetch(url, {
+                    headers: {
+                        'User-Agent': profile.userAgent,
+                        'Sec-Ch-Ua': profile.secChUa,
+                        'Sec-Ch-Ua-Mobile': '?0',
+                        'Sec-Ch-Ua-Platform': profile.platform,
+                        'Sec-Fetch-Dest': 'document',
+                        'Sec-Fetch-Mode': 'navigate',
+                        'Sec-Fetch-Site': 'same-origin',
+                        'Sec-Fetch-User': '?1',
+                        'Upgrade-Insecure-Requests': '1',
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+                        'Accept-Language': 'en-US,en;q=0.9,hi;q=0.8',
+                        'Accept-Encoding': 'gzip, deflate, br',
+                        'Cache-Control': 'max-age=0',
+                        ...(referer ? { 'Referer': referer } : {}),
+                        ...(options.headers || {}),
+                    },
+                    signal: AbortSignal.timeout(timeoutMs),
+                });
+
+                // Polite backoff on rate-limiting / server busy
+                if (res.status === 429 || res.status === 503 || res.status === 502) {
+                    if (attempt < maxRetries) {
+                        const backoff = Math.pow(2, attempt) * 1000 + Math.floor(Math.random() * 500);
+                        await new Promise((r) => setTimeout(r, backoff));
+                        continue;
+                    }
+                }
+
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status} [${url}]: ${res.statusText}`);
+                }
+
+                return await res.text();
+            } catch (err: any) {
+                if (attempt >= maxRetries) {
+                    throw new Error(`fetchHtml failed for ${url} after ${attempt} attempts: ${err.message}`);
+                }
+                const backoff = Math.pow(2, attempt) * 800 + Math.floor(Math.random() * 400);
+                await new Promise((r) => setTimeout(r, backoff));
+            }
+        }
+
+        throw new Error(`fetchHtml failed for ${url}`);
     }
 
     static cleanHtml(html: string, url: string): { text: string; charCount: number; extractedLinks?: Record<string, string> } {

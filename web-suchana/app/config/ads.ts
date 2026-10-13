@@ -49,6 +49,18 @@ export const ADS_CONFIG: {
   },
 
   slots: {
+    // Event Detail Slots
+    "event-top-leaderboard": { type: "adsense", adsenseSlotId: "3262405422" },
+    "event-left-ad-1": { type: "adsense", adsenseSlotId: "5881607554" },
+    "event-right-ad-1": { type: "adsense", adsenseSlotId: "5881607554" },
+    "event-right-ad-2": { type: "adsense", adsenseSlotId: "5246027788" },
+    "event-infeed-ad": { type: "adsense", adsenseSlotId: "3921303403" },
+
+    // Syllabus Slots
+    "syllabus-top": { type: "adsense", adsenseSlotId: "3262405422" },
+    "syllabus-left-1": { type: "adsense", adsenseSlotId: "5881607554" },
+    "syllabus-right-1": { type: "adsense", adsenseSlotId: "5881607554" },
+
     // Leaderboards
     "top-leaderboard-ad": { type: "adsense", adsenseSlotId: "3262405422" },
     "feed-mid-leaderboard": { type: "adsense", adsenseSlotId: "3262405422" },
@@ -71,12 +83,14 @@ export const ADS_CONFIG: {
     "exam-sidebar-ad": { type: "adsense", adsenseSlotId: "5246027788" },
 
     // Detail Page Sidebar
-    "exam-top-leaderboard": { type: "adsense", adsenseSlotId: "5246027788" },
+    "exam-top-leaderboard": { type: "adsense", adsenseSlotId: "3262405422" },
     "detail-left-ad-1": { type: "adsense", adsenseSlotId: "5246027788" },
     "detail-left-ad-2": { type: "adsense", adsenseSlotId: "5246027788" },
+    "detail-right-1": { type: "adsense", adsenseSlotId: "5246027788" },
+    "detail-right-2": { type: "adsense", adsenseSlotId: "5881607554" },
     "detail-right-ad-1": { type: "adsense", adsenseSlotId: "5246027788" },
     "detail-right-ad-2": { type: "adsense", adsenseSlotId: "5246027788" },
-    "detail-right-ad-3": { type: "adsense", adsenseSlotId: "5246027788" },
+    "detail-right-ad-3": { type: "adsense", adsenseSlotId: "5881607554" },
     "exam-bottom-leaderboard": { type: "adsense", adsenseSlotId: "3262405422" },
 
     // In-Article Slots
@@ -91,5 +105,31 @@ export const ADS_CONFIG: {
 
   inFeedAds: [],
   inFeedAdFrequency: 4,
-  inArticleAdFrequency: 0,
+  inArticleAdFrequency: 3,
 };
+
+/**
+ * Intelligent slot resolver: guarantees that if an ad unit calls for a slot
+ * not directly registered in ADS_CONFIG.slots, it gracefully falls back to the
+ * appropriate verified AdSense slot rather than returning undefined and failing.
+ */
+export function getAdSlotConfig(id: string): AdSlotConfig | undefined {
+  if (!ADS_CONFIG.enableAds) return undefined;
+  if (ADS_CONFIG.slots[id]) return ADS_CONFIG.slots[id];
+
+  const lower = id.toLowerCase();
+  if (lower.includes("leaderboard") || lower.includes("top") || lower.includes("bottom")) {
+    return ADS_CONFIG.slots["top-leaderboard-ad"] || { type: "adsense", adsenseSlotId: "3262405422" };
+  }
+  if (lower.includes("tall") || lower.includes("gutter") || lower.includes("skyscraper") || lower.includes("ad-s-120")) {
+    return ADS_CONFIG.slots["sidebar-ad-right-3"] || { type: "adsense", adsenseSlotId: "5881607554" };
+  }
+  if (lower.includes("sidebar") || lower.includes("right") || lower.includes("left") || lower.includes("detail")) {
+    return ADS_CONFIG.slots["sidebar-ad-right-1"] || { type: "adsense", adsenseSlotId: "5246027788" };
+  }
+  if (lower.includes("anchor") || lower.includes("mobile")) {
+    return ADS_CONFIG.slots["mobile-anchor"] || { type: "adsense", adsenseSlotId: "5758558240" };
+  }
+  // Default fallback for any in-article / in-feed / general slot
+  return ADS_CONFIG.slots["article-top"] || { type: "adsense", adsenseSlotId: "3921303403" };
+}

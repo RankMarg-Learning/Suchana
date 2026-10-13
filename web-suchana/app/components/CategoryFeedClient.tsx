@@ -250,6 +250,9 @@ export default function CategoryFeedClient({
               </div>
             </div>
 
+            {/* LEADERBOARD BANNER */}
+            <LeaderboardAd id="top-leaderboard-ad" />
+
             {/* MAIN FEED LIST */}
             {status === "pending" ? (
               <div className="article-skeleton-list" style={{ marginTop: '20px' }}>
@@ -424,8 +427,8 @@ export default function CategoryFeedClient({
               </div>
             </div>
 
-
-
+            {/* HIGH VIEWABILITY SIDEBAR RECTANGLE */}
+            <SidebarAd id="sidebar-ad-right-1" />
 
             {/* ASPIRANT TOOLSET WIDGET */}
             <div className="sw">

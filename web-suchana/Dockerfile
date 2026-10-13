@@ -2,16 +2,19 @@
 # Stage 1 — deps: install all dependencies
 # ────────────────────────────────────────────────
 FROM node:20-alpine AS deps
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
-COPY package*.json ./
-RUN npm install
+
+COPY package.json package-lock.json ./
+
+# Deterministic fast dependency install
+RUN npm ci --no-audit
 
 # ────────────────────────────────────────────────
 # Stage 2 — builder: build the Next.js app
 # ────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 WORKDIR /app
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
@@ -30,7 +33,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 # ────────────────────────────────────────────────
-# Stage 3 — runner: lean production image
+# Stage 3 — runner: lean production image (< 180MB)
 # ────────────────────────────────────────────────
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -43,18 +46,17 @@ ENV HOSTNAME="0.0.0.0"
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # Run as non-root for container security
-RUN addgroup -S appgroup \
-    && adduser -S appuser -G appgroup
+RUN addgroup -S -g 1001 appgroup && \
+    adduser -S -u 1001 -G appgroup appuser
 
-# Set correct permission for prerender cache
-RUN mkdir .next \
-    && chown appuser:appgroup .next
+# Set correct permission for prerender and ISR cache
+RUN mkdir -p .next/cache && \
+    chown -R appuser:appgroup .next
 
-# Copy public directory and static build files
-COPY --from=builder /app/public ./public
+# Copy public directory and static build files with non-root ownership
+COPY --from=builder --chown=appuser:appgroup /app/public ./public
 
-# Automatically leverage output traces to reduce image size
-# https://nextjs.org/docs/advanced-features/output-file-tracing
+# Automatically leverage output traces to reduce image size (< 100MB standalone)
 COPY --from=builder --chown=appuser:appgroup /app/.next/standalone ./
 COPY --from=builder --chown=appuser:appgroup /app/.next/static ./.next/static
 
