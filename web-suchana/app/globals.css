@@ -2642,14 +2642,12 @@ body::before {
 .ad-leaderboard {
   position: relative;
   width: 100%;
-  height: 90px;
-  background: var(--bg-card);
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  min-height: 90px;
+  height: auto;
+  background: transparent;
+  border: none;
+  overflow: visible;
+  display: block;
 }
 
 .ad-label {
@@ -3460,7 +3458,8 @@ body::before {
   }
 
   .ad-leaderboard {
-    height: 60px;
+    min-height: 50px;
+    height: auto;
   }
 
   .ad-infeed-cta {
@@ -3479,7 +3478,11 @@ body::before {
   }
 
   .ad-leaderboard {
-    display: none;
+    display: block;
+    min-height: 50px;
+    height: auto;
+    width: 100%;
+    margin: 12px auto;
   }
 
   .nav-links {
@@ -9992,6 +9995,8 @@ footer {
 /* Collapse empty/unfilled Google AdSense units automatically to avoid layout space jumps */
 .ad-leaderboard:has(ins.adsbygoogle[data-ad-status="unfilled"]),
 .ad-sidebar:has(ins.adsbygoogle[data-ad-status="unfilled"]),
-.article-ad-slot:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
+.article-ad-slot:has(ins.adsbygoogle[data-ad-status="unfilled"]),
+.in-feed-ad:has(ins.adsbygoogle[data-ad-status="unfilled"]),
+.mobile-anchor-ad:has(ins.adsbygoogle[data-ad-status="unfilled"]) {
   display: none !important;
 }

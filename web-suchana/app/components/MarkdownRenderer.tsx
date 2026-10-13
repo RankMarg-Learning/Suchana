@@ -9,6 +9,7 @@ import rehypeRaw from "rehype-raw";
 import { ExternalLink, Info, AlertTriangle, Lightbulb, ArrowRight, Send, Calendar, MessageCircle, BookOpen, ChevronDown, CheckCircle } from "lucide-react";
 import { formatDatesInText, generateHeadingId } from "@/app/lib/types";
 import { ArticleAd } from "./AdUnits";
+import { ADS_CONFIG } from "@/app/config/ads";
 
 interface MarkdownRendererProps {
   content: string;
@@ -70,6 +71,25 @@ export default function MarkdownRenderer({
     });
     // Manual override — [AD: slotId]
     final = final.replace(/\[AD:\s*([^\]]+?)\s*\]/gi, '<div data-custom="ad" data-slot="$1"></div>');
+
+    // 10. Auto-inject mid-article ads when no shortcodes exist and article has sufficient content depth
+    if (
+      ADS_CONFIG.enableAds &&
+      ADS_CONFIG.placements.articleMid &&
+      !final.includes('data-custom="ad"') &&
+      ADS_CONFIG.inArticleAdFrequency > 0
+    ) {
+      const h2Sections = final.split(/\n(?=## )/g);
+      if (h2Sections.length >= 3) {
+        // Inject after 2nd H2 section
+        h2Sections[1] += `\n\n<div data-custom="ad" data-slot="article-mid-1"></div>\n\n`;
+        if (h2Sections.length >= 5) {
+          // Inject after 4th H2 section
+          h2Sections[3] += `\n\n<div data-custom="ad" data-slot="article-mid-2"></div>\n\n`;
+        }
+        final = h2Sections.join("\n");
+      }
+    }
 
     return formatDatesInText(final, includeTime);
   }, [content, includeTime]);

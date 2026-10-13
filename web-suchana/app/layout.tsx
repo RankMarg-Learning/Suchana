@@ -177,9 +177,12 @@ export default async function RootLayout({
       <head>
         <meta name="theme-color" content="#7c3aed" />
         <meta name="google-adsense-account" content="ca-pub-6631120605146752" />
-        {/* JSON-LD Structured Data */}
-        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6631120605146752"
-          crossOrigin="anonymous"></script>
+        <Script
+          id="google-adsense"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6631120605146752"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
@@ -197,7 +200,7 @@ export default async function RootLayout({
             <div className="w-full max-w-[1920px] mx-auto flex justify-center items-start px-0 md:px-4 pt-0 md:pt-4 pb-8 gap-2 xl:gap-3">
 
               {/* LEFT GUTTER AD */}
-              <div className="hidden min-[1200px]:block w-[120px] min-[1400px]:w-[140px] min-[1600px]:w-[160px] min-[1840px]:w-[300px] shrink-0 sticky top-20">
+              <div className="hidden min-[1600px]:block w-[160px] min-[1900px]:w-[300px] shrink-0 sticky top-20">
                 <GutterAd side="left" />
               </div>
 
@@ -207,7 +210,7 @@ export default async function RootLayout({
               </div>
 
               {/* RIGHT GUTTER AD */}
-              <div className="hidden min-[1200px]:block w-[120px] min-[1400px]:w-[140px] min-[1600px]:w-[160px] min-[1840px]:w-[300px] shrink-0 sticky top-20">
+              <div className="hidden min-[1600px]:block w-[160px] min-[1900px]:w-[300px] shrink-0 sticky top-20">
                 <GutterAd side="right" />
               </div>
 

@@ -159,6 +159,9 @@ export default async function HomePage() {
                 </div>
               </div>
 
+              {/* MID-FEED LEADERBOARD AD */}
+              <LeaderboardAd slotId="feed-mid-leaderboard" />
+
               {/* CATEGORIES HUB */}
               <div className="fade-up d3">
                 <div className="sh">

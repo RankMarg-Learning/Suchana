@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  DOCKERHUB_REPO: ${{ vars.DOCKERHUB_FRONTEND_REPO }}
+  DOCKERHUB_REPO: ${{ vars.DOCKERHUB_FRONTEND_REPO || secrets.DOCKERHUB_FRONTEND_REPO }}
 
 jobs:
   build-and-push:
@@ -62,26 +62,68 @@ jobs:
     steps:
       - name: SSH and deploy on EC2
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          DOCKERHUB_REPO: ${{ env.DOCKERHUB_REPO }}
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: ${{ secrets.EC2_PORT || 22 }}
+          envs: DOCKERHUB_REPO,DOCKERHUB_USERNAME,DOCKERHUB_TOKEN
           script: |
-            echo "Pulling latest frontend image: ${{ env.DOCKERHUB_REPO }}:latest"
-            sudo docker pull ${{ env.DOCKERHUB_REPO }}:latest
+            set -e
 
-            echo "Stopping old frontend container..."
-            sudo docker stop web-suchana || true
-            sudo docker rm web-suchana || true
+            IMAGE_REPO="${DOCKERHUB_REPO:-${{ env.DOCKERHUB_REPO }}}"
+            CONTAINER_NAME="web-suchana"
 
-            echo "Starting new frontend container..."
-            sudo docker run -d --name web-suchana -p 3000:3000 --restart unless-stopped ${{ env.DOCKERHUB_REPO }}:latest
+            echo "=== [1/6] Validating Configuration ==="
+            if [ -z "$IMAGE_REPO" ]; then
+              echo "❌ Error: DOCKERHUB_REPO is empty! Check GitHub Actions vars.DOCKERHUB_FRONTEND_REPO or secrets.DOCKERHUB_FRONTEND_REPO."
+              exit 1
+            fi
+            echo "Target Image: ${IMAGE_REPO}:latest"
+            echo "Container Name: ${CONTAINER_NAME}"
 
-            echo "Cleaning up old images..."
-            sudo docker image prune -f
+            echo "=== [2/6] Authenticating with Docker Hub on EC2 ==="
+            if [ -n "$DOCKERHUB_TOKEN" ] && [ -n "$DOCKERHUB_USERNAME" ]; then
+              echo "🔑 Logging into Docker Hub as $DOCKERHUB_USERNAME..."
+              echo "$DOCKERHUB_TOKEN" | sudo docker login -u "$DOCKERHUB_USERNAME" --password-stdin || echo "⚠️ Docker login warning, proceeding with pull attempt..."
+            else
+              echo "ℹ️ No Docker Hub credentials passed; attempting unauthenticated pull."
+            fi
 
-            echo "Restarting Nginx..."
-            sudo systemctl restart nginx || true
+            echo "=== [3/6] Pulling Latest Image ==="
+            sudo docker pull "${IMAGE_REPO}:latest"
 
-            echo "🚀 Frontend deployment successful!"
+            echo "=== [4/6] Replacing Container ==="
+            echo "Stopping and removing existing container (if present)..."
+            sudo docker stop "$CONTAINER_NAME" 2>/dev/null || true
+            sudo docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+
+            echo "Starting new container..."
+            sudo docker run -d \
+              --name "$CONTAINER_NAME" \
+              -p 3000:3000 \
+              --restart unless-stopped \
+              "${IMAGE_REPO}:latest"
+
+            echo "=== [5/6] Verifying Container Health ==="
+            sleep 5
+            CONTAINER_RUNNING="$(sudo docker inspect -f '{{.State.Running}}' "$CONTAINER_NAME" 2>/dev/null || echo "false")"
+            if [ "$CONTAINER_RUNNING" != "true" ]; then
+              echo "❌ ERROR: Container failed to start or crashed on launch! Recent logs:"
+              sudo docker logs --tail 50 "$CONTAINER_NAME" 2>&1 || true
+              exit 1
+            fi
+            echo "✅ Container is up and running healthy."
+
+            echo "=== [6/6] Cleanup & Nginx Reload ==="
+            sudo docker image prune -af --filter "until=72h" 2>/dev/null || sudo docker image prune -f 2>/dev/null || true
+
+            if command -v systemctl >/dev/null 2>&1; then
+              sudo systemctl reload nginx 2>/dev/null || sudo systemctl restart nginx 2>/dev/null || true
+            fi
+
+            echo "🚀 Frontend deployment completed successfully!"

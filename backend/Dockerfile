@@ -1,42 +1,59 @@
 # ────────────────────────────────────────────────
-# Stage 1 — builder: install all deps & compile TS
+# Stage 1 — builder: compile TypeScript & generate Prisma
 # ────────────────────────────────────────────────
 FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat openssl
+RUN apk add --no-cache openssl
 
-COPY package*.json ./
+COPY package.json package-lock.json ./
 COPY prisma ./prisma/
 
-# --ignore-scripts skips Prisma's postinstall binary download (avoids ECONNRESET);
-# prisma generate is run explicitly in the next step instead.
-RUN npm install --ignore-scripts
+# Fast deterministic install from lockfile
+RUN npm ci --ignore-scripts --no-audit
 
-# Download Prisma engines & generate the typed client
+# Generate Prisma client for linux-musl-openssl-3.0.x
 RUN npx prisma generate
 
-COPY . .
+# Copy source code and config
+COPY tsconfig.json ./
+COPY src ./src/
 
-RUN npm run build
+# Compile TypeScript to dist/ and ensure config assets are present
+RUN npm run build && \
+    mkdir -p dist/config/rules && \
+    cp src/config/rules/*.json dist/config/rules/ 2>/dev/null || true
 
 # ────────────────────────────────────────────────
-# Stage 2 — deps: prune devDependencies
+# Stage 2 — deps: production dependencies only
 # ────────────────────────────────────────────────
 FROM node:20-alpine AS deps
 
 WORKDIR /app
 
-COPY --from=builder /app/node_modules ./node_modules
-COPY package*.json ./
+COPY package.json package-lock.json ./
 
-# Remove devDependencies (TypeScript, ts-node, @types/*, rimraf, etc.)
-# Cuts node_modules from ~600 MB to ~200 MB
-RUN npm prune --production
+# Install ONLY production dependencies (clean, no devDependencies, no ts-node/tsc)
+RUN npm ci --omit=dev --ignore-scripts --no-audit && \
+    npm cache clean --force
+
+# Copy generated Prisma Client & engine from builder
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+
+# Prune documentation, markdown, type definitions, source maps, and test folders from node_modules
+RUN find node_modules -type f \( \
+      -name "*.md" -o -name "*.markdown" -o -name "*.d.ts" -o -name "*.map" -o \
+      -name "LICENSE*" -o -name "CHANGELOG*" -o -name ".npmignore" -o \
+      -name ".eslintrc*" -o -name "tsconfig.json" \
+    \) -delete && \
+    find node_modules -type d \( \
+      -name "test" -o -name "tests" -o -name "__tests__" -o \
+      -name "example" -o -name "examples" -o -name ".github" \
+    \) -exec rm -rf {} + 2>/dev/null || true
 
 # ────────────────────────────────────────────────
-# Stage 3 — runner: lean production image
+# Stage 3 — runner: lean production image (~160-200MB)
 # ────────────────────────────────────────────────
 FROM node:20-alpine AS runner
 
@@ -45,20 +62,18 @@ ENV PORT=8080
 
 WORKDIR /app
 
-RUN apk add --no-cache libc6-compat openssl \
-    # Run as non-root for container security
-    && addgroup -S appgroup \
-    && adduser  -S appuser -G appgroup
+# openssl is required for Prisma runtime on Alpine
+RUN apk add --no-cache openssl && \
+    addgroup -S -g 1001 appgroup && \
+    adduser  -S -u 1001 -G appgroup appuser
 
-# Only production node_modules (no devDeps)
-COPY --from=deps    /app/node_modules    ./node_modules
-# Compiled JS output
-COPY --from=builder /app/dist           ./dist
-# Prisma schema (needed by db push at runtime)
-COPY --from=builder /app/prisma         ./prisma
-COPY package*.json ./
+# Copy production artifacts with non-root ownership
+COPY --from=deps    --chown=appuser:appgroup /app/node_modules ./node_modules
+COPY --from=builder --chown=appuser:appgroup /app/dist         ./dist
+COPY --from=builder --chown=appuser:appgroup /app/prisma       ./prisma
+COPY --chown=appuser:appgroup package.json ./
 
-COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+COPY --chown=appuser:appgroup docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 USER appuser
@@ -67,5 +82,4 @@ EXPOSE 8080
 
 ENTRYPOINT ["docker-entrypoint.sh"]
 
-# Call node directly — avoids npm process overhead at startup
 CMD ["node", "dist/server.js"]
