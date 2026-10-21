@@ -109,14 +109,15 @@ export default async function HomePage() {
                     let stages: any[] = [];
                     if (exam.lifecycleEvents && exam.lifecycleEvents.length > 0) {
                       let reachedActive = false;
-                      stages = exam.lifecycleEvents.slice(0, 6).map((e: any) => {
+                      stages = exam.lifecycleEvents.slice(0, 6).map((e: any, idx: number, arr: any[]) => {
                         const isTBD = !!e.isTBD;
                         let isDone = false;
                         let isActive = false;
 
                         if (!isTBD) {
                           const now = new Date();
-                          const endsAtDate = e.endsAt ? new Date(e.endsAt) : null;
+                          const nextEv = arr.slice(idx + 1).find((ne: any) => ne.startsAt && !ne.isTBD);
+                          const endsAtDate = e.endsAt ? new Date(e.endsAt) : (nextEv?.startsAt ? new Date(nextEv.startsAt) : null);
                           const startsAtDate = e.startsAt ? new Date(e.startsAt) : null;
 
                           isDone = !reachedActive && !!endsAtDate && endsAtDate < now;

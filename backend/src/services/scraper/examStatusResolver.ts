@@ -138,7 +138,14 @@ export class ExamStatusResolver {
         if (examEv?.startsAt) {
             const examEnd = toDayEnd(new Date(examEv.startsAt), examEv.endsAt ? new Date(examEv.endsAt) : null);
             if (examEnd < nowMs) {
-                return ExamStatus.RESULT_COMING_SOON;
+                const resultEv = events.find((e) => e.stage === LifecycleStage.RESULT);
+                if (resultEv?.startsAt && !resultEv.isTBD) {
+                    const daysToResult = (toDayStart(new Date(resultEv.startsAt)) - nowMs) / (1000 * 60 * 60 * 24);
+                    if (daysToResult <= 14 && daysToResult >= 0) {
+                        return ExamStatus.RESULT_COMING_SOON;
+                    }
+                }
+                return ExamStatus.EXAM_COMPLETED;
             }
         }
 

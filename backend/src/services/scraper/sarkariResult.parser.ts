@@ -602,6 +602,10 @@ export class SarkariResultParser {
 
         // 1. Notification Event
         const notifUrl = officialLinks.notificationUrl || officialLinks.actionLinks[LifecycleStage.NOTIFICATION]?.url;
+        const regStart = dates.registrationStart;
+        const notifStart = dates.notificationDate?.startsAt ?? (regStart?.startsAt && regStart.startsAt > new Date() ? new Date() : regStart?.startsAt);
+        const notifEnd = regStart?.startsAt ?? undefined;
+
         events.push({
             stage: LifecycleStage.NOTIFICATION,
             stageOrder: STAGE_ORDER_MAP.NOTIFICATION,
@@ -609,15 +613,14 @@ export class SarkariResultParser {
             description: notifUrl
                 ? `Official recruitment notification and guidelines published.\n[View Official Notification](${notifUrl})`
                 : 'Official recruitment notification and guidelines published.',
-            startsAt: dates.registrationStart?.startsAt ?? undefined,
-            endsAt: undefined,
-            isTBD: !dates.registrationStart?.startsAt,
+            startsAt: notifStart ?? undefined,
+            endsAt: notifEnd ?? undefined,
+            isTBD: !notifStart && !notifUrl,
             actionUrl: notifUrl,
             actionLabel: notifUrl ? 'Official Notification' : undefined,
         });
 
         // 2. Registration Event
-        const regStart = dates.registrationStart;
         const regEnd = dates.registrationEnd;
         const feeEnd = dates.feePayment;
         const regAction = officialLinks.actionLinks[LifecycleStage.REGISTRATION];
@@ -712,13 +715,22 @@ export class SarkariResultParser {
         // 6. Exam Event
         const exam = dates.examDate;
         const examAction = officialLinks.actionLinks[LifecycleStage.EXAM];
+        const examStart = exam?.startsAt ?? undefined;
+        let examEnd = exam?.endsAt ?? undefined;
+        if (examStart && !examEnd) {
+            // Single day exam: ends at the end of that day (23:59:59 UTC)
+            const d = new Date(examStart);
+            d.setUTCHours(23, 59, 59, 999);
+            examEnd = d;
+        }
+
         events.push({
             stage: LifecycleStage.EXAM,
             stageOrder: STAGE_ORDER_MAP.EXAM,
             title: `Examination for ${shortTitle}`,
             description: exam?.rawText || 'Written Examination / Computer Based Test (CBT).',
-            startsAt: exam?.startsAt ?? undefined,
-            endsAt: exam?.endsAt ?? exam?.startsAt ?? undefined,
+            startsAt: examStart,
+            endsAt: examEnd,
             isTBD: exam ? exam.isTBD : true,
             actionUrl: examAction?.url,
             actionLabel: examAction?.label || (examAction?.url ? 'Exam Schedule' : undefined),
@@ -795,7 +807,64 @@ export class SarkariResultParser {
             actionLabel: resultAction?.label || (allResultLinks.length > 1 ? `Download Result (${allResultLinks[0].label})` : resultAction?.url ? 'Check Result' : undefined),
         });
 
-        return events.sort((a, b) => (a.stageOrder ?? 0) - (b.stageOrder ?? 0));
+        const sorted = events.sort((a, b) => (a.stageOrder ?? 0) - (b.stageOrder ?? 0));
+
+        // Connect each stage's endsAt to the next chronological event's startsAt
+        // so that active phases (Notification, Exam City, Admit Card, Answer Key)
+        // stay active throughout their real-world duration and do not stop prematurely.
+        for (let i = 0; i < sorted.length - 1; i++) {
+            const current = sorted[i];
+            const nextEventWithDate = sorted.slice(i + 1).find((e) => e.startsAt && !e.isTBD);
+            if (!nextEventWithDate?.startsAt) continue;
+
+            const nextStart = new Date(nextEventWithDate.startsAt);
+
+            // 1. NOTIFICATION: stays active until next event (e.g. REGISTRATION) starts
+            if (current.stage === LifecycleStage.NOTIFICATION) {
+                current.endsAt = nextStart;
+                if (!current.startsAt) {
+                    current.startsAt = new Date();
+                    current.isTBD = false;
+                } else if (new Date(current.startsAt).getTime() >= nextStart.getTime()) {
+                    if (nextStart.getTime() > Date.now()) {
+                        current.startsAt = new Date();
+                    }
+                }
+            }
+
+            // 2. EXAM_CITY: stays active until ADMIT_CARD or EXAM starts
+            else if (current.stage === LifecycleStage.EXAM_CITY) {
+                if (!current.endsAt || current.endsAt.getTime() <= (current.startsAt ? new Date(current.startsAt).getTime() : 0)) {
+                    current.endsAt = nextStart;
+                }
+            }
+
+            // 3. ADMIT_CARD: stays active right up until the EXAM date ("admit card event show till the exam date")
+            else if (current.stage === LifecycleStage.ADMIT_CARD) {
+                const examEvent = sorted.slice(i + 1).find((e) => e.stage === LifecycleStage.EXAM && e.startsAt && !e.isTBD);
+                const targetExamStart = examEvent?.startsAt ? new Date(examEvent.startsAt) : nextStart;
+                if (!current.endsAt || current.endsAt.getTime() <= (current.startsAt ? new Date(current.startsAt).getTime() : 0)) {
+                    current.endsAt = targetExamStart;
+                }
+            }
+
+            // 4. ANSWER_KEY: stays active until RESULT declaration
+            else if (current.stage === LifecycleStage.ANSWER_KEY) {
+                const resultEvent = sorted.slice(i + 1).find((e) => e.stage === LifecycleStage.RESULT && e.startsAt && !e.isTBD);
+                if (resultEvent?.startsAt && (!current.endsAt || current.endsAt.getTime() <= (current.startsAt ? new Date(current.startsAt).getTime() : 0))) {
+                    current.endsAt = new Date(resultEvent.startsAt);
+                }
+            }
+
+            // 5. Fallback for other intermediate stages (except REGISTRATION and EXAM which have their own closing dates)
+            else if (!current.endsAt && current.stage !== LifecycleStage.REGISTRATION && current.stage !== LifecycleStage.EXAM) {
+                if (current.startsAt && new Date(current.startsAt).getTime() < nextStart.getTime()) {
+                    current.endsAt = nextStart;
+                }
+            }
+        }
+
+        return sorted;
     }
 
     private static deriveExamStatus(events: AiStructuredEvent[], sectionHint?: string): string {

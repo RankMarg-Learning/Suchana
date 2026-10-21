@@ -164,6 +164,17 @@
       ]
     },
     "dateFields": {
+      "notificationDate": {
+        "stage": "NOTIFICATION",
+        "isStart": true,
+        "patterns": [
+          "Notification Released?",
+          "Notification Date",
+          "Short Notice Date",
+          "Notification Available",
+          "Notice Date"
+        ]
+      },
       "registrationStart": {
         "stage": "REGISTRATION",
         "isStart": true,
