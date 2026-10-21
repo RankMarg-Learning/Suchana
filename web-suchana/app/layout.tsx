@@ -229,7 +229,7 @@ export default async function RootLayout({
           </main>
 
           <SiteFooter />
-          <MobileAnchorAd />
+          {/* <MobileAnchorAd /> */}
         </Providers>
         {process.env.NODE_ENV === "production" && (
           <>

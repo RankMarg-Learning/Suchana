@@ -4311,6 +4311,40 @@ body::before {
 
 .tl-markdown {
   font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.tl-markdown p {
+  margin: 4px 0;
+}
+
+.tl-markdown strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.tl-markdown a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  margin: 3px 4px 3px 0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  color: var(--accent-light);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.tl-markdown a:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
 
 .tl-more-btn {

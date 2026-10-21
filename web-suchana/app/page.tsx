@@ -19,7 +19,7 @@ import {
   Newspaper
 } from "lucide-react";
 import HomeSidebar from "./components/home/HomeSidebar";
-import { STAGE_LABELS, cleanLabel } from "./lib/types";
+import { STAGE_LABELS, cleanLabel, getStatusBadgeConfig } from "./lib/types";
 import LeaderboardAd from "./components/ads/LeaderboardAd";
 import MidContentAd from "./components/ads/MidContentAd";
 
@@ -30,7 +30,7 @@ export default async function HomePage() {
     caArticles,
     closingSoon
   ] = await Promise.all([
-    fetchTrendingContent(6),
+    fetchTrendingContent(12),
     fetchHomeTrendingNews(4, 1),
     fetchHomeArticles(6),
     fetchHomeClosingSoon(5)
@@ -104,19 +104,20 @@ export default async function HomePage() {
                   <Link href="/all-exams" className="sh-link">ALL EXAMS →</Link>
                 </div>
                 <div className="timeline-board">
-
-                  {trendingExams.slice(0, 5).map((exam: any) => {
+                  {trendingExams.slice(0, 10).map((exam: any) => {
+                    const badge = getStatusBadgeConfig(exam.status);
                     let stages: any[] = [];
                     if (exam.lifecycleEvents && exam.lifecycleEvents.length > 0) {
                       let reachedActive = false;
-                      stages = exam.lifecycleEvents.slice(0, 6).map((e: any) => {
+                      stages = exam.lifecycleEvents.slice(0, 6).map((e: any, idx: number, arr: any[]) => {
                         const isTBD = !!e.isTBD;
                         let isDone = false;
                         let isActive = false;
 
                         if (!isTBD) {
                           const now = new Date();
-                          const endsAtDate = e.endsAt ? new Date(e.endsAt) : null;
+                          const nextEv = arr.slice(idx + 1).find((ne: any) => ne.startsAt && !ne.isTBD);
+                          const endsAtDate = e.endsAt ? new Date(e.endsAt) : (nextEv?.startsAt ? new Date(nextEv.startsAt) : null);
                           const startsAtDate = e.startsAt ? new Date(e.startsAt) : null;
 
                           isDone = !reachedActive && !!endsAtDate && endsAtDate < now;
@@ -134,7 +135,14 @@ export default async function HomePage() {
 
                     return (
                       <Link href={`/exam/${exam.slug}`} key={exam.id} className="tl-exam">
-                        <div>
+                        <div style={{ minWidth: '180px', maxWidth: '300px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                            {exam.category && (
+                              <span style={{ fontSize: '9px', fontWeight: 800, padding: '1px 5px', borderRadius: '3px', background: 'var(--bg-secondary)', border: '1px solid var(--border)', color: 'var(--text-muted)', letterSpacing: '0.04em' }}>
+                                {exam.category.replace(/_/g, ' ')}
+                              </span>
+                            )}
+                          </div>
                           <div className="tl-name">{exam.title}</div>
                           <div className="tl-org">{exam.conductingBody}</div>
                         </div>
@@ -149,9 +157,26 @@ export default async function HomePage() {
                             </div>
                           ))}
                         </div>
-                        <div className="tl-action">
+                        <div className="tl-action" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '6px' }}>
+                          <span
+                            className="tl-days"
+                            style={{
+                              display: 'inline-block',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              letterSpacing: '0.04em',
+                              textTransform: 'uppercase',
+                              color: badge.color,
+                              background: badge.bg,
+                              border: `1px solid ${badge.border}`,
+                              whiteSpace: 'nowrap'
+                            }}
+                          >
+                            {badge.label}
+                          </span>
                           <button className="tl-cta cta-gold">View Details ↗</button>
-                          <span className="tl-days days-soon">{exam.status?.replace(/_/g, ' ')}</span>
                         </div>
                       </Link>
                     );

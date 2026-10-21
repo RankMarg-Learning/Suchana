@@ -137,17 +137,27 @@ function TimelineItem({
           </div>
 
           {event.description && (
-            <div className="tl-description-container">
+            <div className="tl-description-container" style={{ marginTop: '8px' }}>
               <div
                 style={{
                   display: "-webkit-box",
-                  WebkitLineClamp: isExpanded ? "unset" : 3,
+                  WebkitLineClamp: isExpanded ? "unset" : 4,
                   WebkitBoxOrient: "vertical",
                   overflow: "hidden"
                 }}
               >
                 <MarkdownRenderer content={event.description} className="tl-markdown" variant="fact" />
               </div>
+              {event.description.length > 100 && (
+                <button
+                  type="button"
+                  className="tl-more-btn"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer', marginTop: '6px' }}
+                >
+                  {isExpanded ? "Show Less ↑" : "Show More Details ↓"}
+                </button>
+              )}
             </div>
           )}
 
@@ -576,6 +586,22 @@ export default function ExamDetailClient({ slug, category }: { slug: string; cat
                       <span className="doc-badge" style={{ background: 'var(--ink)', color: 'var(--gold-lt)' }}>PDF</span>
                     </a>
                   )}
+                  {exam.lifecycleEvents && exam.lifecycleEvents
+                    .filter((ev: any) => ev.actionUrl && ev.actionUrl !== exam.notificationUrl && ev.actionUrl !== exam.officialWebsite)
+                    .map((ev: any) => (
+                      <a
+                        key={ev.id || ev.stage}
+                        href={ev.actionUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="doc-item"
+                        onClick={() => trackConversion('lifecycle_action_click', { exam_slug: exam.slug, stage: ev.stage })}
+                      >
+                        <span className="doc-icon">⚡</span>
+                        <span className="doc-name">{ev.actionLabel || ev.title || cleanLabel(ev.stage)}</span>
+                        <span className="doc-badge" style={{ background: '#dcfce7', color: '#166534' }}>DIRECT</span>
+                      </a>
+                    ))}
                 </div>
               </div>
             </div>
