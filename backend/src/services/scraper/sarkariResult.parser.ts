@@ -323,19 +323,30 @@ export class SarkariResultParser {
                         const urlObj = new URL(cleanHref);
                         const hostname = urlObj.hostname.toLowerCase();
 
-                        // Blacklist check
-                        if (blacklistedDomains.some((d) => hostname.includes(d))) return;
+                        // Allow genuine uploaded documents/PDFs even if hosted on the scraped site
+                        const isDocumentFile = cleanHref.includes('/wp-content/uploads/') || /\.(pdf|doc|docx|zip)$/i.test(cleanHref);
+                        if (!isDocumentFile && blacklistedDomains.some((d) => hostname.includes(d))) return;
 
                         if (seenUrls.has(cleanHref)) return;
                         seenUrls.add(cleanHref);
 
-                        let anchorText = $(a).text().replace(/\s+/g, ' ').trim();
-                        anchorText = this.cleanBrandedText(anchorText, brandKeywords);
+                        let rawAnchorText = $(a).text().replace(/\s+/g, ' ').trim();
+                        // Extract specific indicator if present (e.g. List-I, List 1, Part 1, Server 1, Cutoff)
+                        let specificText = '';
+                        const listMatch = rawAnchorText.match(/\b(List\s*[-–—]?\s*[IVX0-9]+|Part\s*[-–—]?\s*[IVX0-9]+|Server\s*[-–—]?\s*[0-9]+|Cut\s*off|Notice|Score\s*Card|Marks)\b/i);
+                        if (listMatch) {
+                            specificText = listMatch[0].trim().replace(/\s+/g, ' ');
+                        }
+
+                        let anchorText = this.cleanBrandedText(rawAnchorText, brandKeywords);
+                        if (!anchorText && specificText) {
+                            anchorText = specificText;
+                        }
                         const cleanLabel = this.cleanBrandedText(label, brandKeywords);
 
                         safeLinks.push({
-                            label: cleanLabel || anchorText || 'Official Link',
-                            text: anchorText || 'Link',
+                            label: cleanLabel || anchorText || specificText || 'Official Link',
+                            text: specificText || anchorText || 'Link',
                             url: cleanHref,
                         });
                     } catch { }
@@ -351,16 +362,24 @@ export class SarkariResultParser {
             try {
                 const urlObj = new URL(href.trim());
                 const hostname = urlObj.hostname.toLowerCase();
-                if (blacklistedDomains.some((d) => hostname.includes(d))) return;
+                const isDocumentFile = href.includes('/wp-content/uploads/') || /\.(pdf|doc|docx|zip)$/i.test(href);
+                if (!isDocumentFile && blacklistedDomains.some((d) => hostname.includes(d))) return;
                 if (seenUrls.has(href.trim())) return;
                 seenUrls.add(href.trim());
 
-                const anchorText = this.cleanBrandedText($(a).text().replace(/\s+/g, ' ').trim(), brandKeywords);
+                let rawAnchorText = $(a).text().replace(/\s+/g, ' ').trim();
+                let specificText = '';
+                const listMatch = rawAnchorText.match(/\b(List\s*[-–—]?\s*[IVX0-9]+|Part\s*[-–—]?\s*[IVX0-9]+|Server\s*[-–—]?\s*[0-9]+|Cut\s*off|Notice|Score\s*Card|Marks)\b/i);
+                if (listMatch) {
+                    specificText = listMatch[0].trim().replace(/\s+/g, ' ');
+                }
+
+                const anchorText = this.cleanBrandedText(rawAnchorText, brandKeywords);
                 const parentText = this.cleanBrandedText($(a).parent().text().replace(/\s+/g, ' ').trim(), brandKeywords);
 
                 safeLinks.push({
-                    label: parentText || anchorText || 'Official Link',
-                    text: anchorText || 'Link',
+                    label: parentText || anchorText || specificText || 'Official Link',
+                    text: specificText || anchorText || 'Link',
                     url: href.trim(),
                 });
             } catch { }
@@ -505,10 +524,12 @@ export class SarkariResultParser {
         officialWebsite?: string;
         notificationUrl?: string;
         actionLinks: Record<string, { url: string; label: string }>;
+        stageLinks: Record<string, { url: string; label: string }[]>;
     } {
         let officialWebsite: string | undefined;
         let notificationUrl: string | undefined;
         const actionLinks: Record<string, { url: string; label: string }> = {};
+        const stageLinks: Record<string, { url: string; label: string }[]> = {};
 
         for (const link of links) {
             const labelLower = `${link.label} ${link.text}`.toLowerCase();
@@ -522,11 +543,31 @@ export class SarkariResultParser {
                     if (classDef.isNotificationUrl && !notificationUrl) {
                         notificationUrl = link.url;
                     }
-                    if (classDef.stage && !actionLinks[classDef.stage]) {
-                        actionLinks[classDef.stage] = {
-                            url: link.url,
-                            label: classDef.actionLabel || link.text,
-                        };
+                    if (classDef.stage) {
+                        const stage = classDef.stage;
+                        if (!stageLinks[stage]) {
+                            stageLinks[stage] = [];
+                        }
+
+                        // Determine a specific label (e.g. List-I, List-II, Cutoff, Server 1, Notice)
+                        let linkLabel = link.text && link.text !== 'Link' && !/^click here$/i.test(link.text.trim())
+                            ? link.text
+                            : link.label || classDef.actionLabel || 'Official Link';
+                        if (!stageLinks[stage].some((l) => l.url === link.url)) {
+                            stageLinks[stage].push({
+                                url: link.url,
+                                label: linkLabel,
+                            });
+                        }
+
+                        // Set or refine primary actionLink (prefer official gov domain or first link)
+                        const isGov = link.url.includes('.gov.in') || link.url.includes('.nic.in');
+                        if (!actionLinks[stage] || (isGov && !actionLinks[stage].url.includes('.gov.in') && !actionLinks[stage].url.includes('.nic.in'))) {
+                            actionLinks[stage] = {
+                                url: link.url,
+                                label: classDef.actionLabel || linkLabel,
+                            };
+                        }
                     }
                     break;
                 }
@@ -544,28 +585,35 @@ export class SarkariResultParser {
             }
         }
 
-        return { officialWebsite, notificationUrl, actionLinks };
+        return { officialWebsite, notificationUrl, actionLinks, stageLinks };
     }
 
     private static buildLifecycleEvents(
         dates: Record<string, ParsedDateResult>,
-        officialLinks: { actionLinks: Record<string, { url: string; label: string }>; notificationUrl?: string },
+        officialLinks: {
+            actionLinks: Record<string, { url: string; label: string }>;
+            stageLinks?: Record<string, { url: string; label: string }[]>;
+            notificationUrl?: string;
+        },
         shortTitle: string,
         sectionHint?: string
     ): AiStructuredEvent[] {
         const events: AiStructuredEvent[] = [];
 
         // 1. Notification Event
+        const notifUrl = officialLinks.notificationUrl || officialLinks.actionLinks[LifecycleStage.NOTIFICATION]?.url;
         events.push({
             stage: LifecycleStage.NOTIFICATION,
             stageOrder: STAGE_ORDER_MAP.NOTIFICATION,
             title: `Notification Released for ${shortTitle}`,
-            description: 'Official recruitment notification and guidelines published.',
+            description: notifUrl
+                ? `Official recruitment notification and guidelines published.\n[View Official Notification](${notifUrl})`
+                : 'Official recruitment notification and guidelines published.',
             startsAt: dates.registrationStart?.startsAt ?? undefined,
             endsAt: undefined,
             isTBD: !dates.registrationStart?.startsAt,
-            actionUrl: officialLinks.notificationUrl,
-            actionLabel: officialLinks.notificationUrl ? 'Official Notification' : undefined,
+            actionUrl: notifUrl,
+            actionLabel: notifUrl ? 'Official Notification' : undefined,
         });
 
         // 2. Registration Event
@@ -573,10 +621,17 @@ export class SarkariResultParser {
         const regEnd = dates.registrationEnd;
         const feeEnd = dates.feePayment;
         const regAction = officialLinks.actionLinks[LifecycleStage.REGISTRATION];
+        const allRegLinks = officialLinks.stageLinks?.[LifecycleStage.REGISTRATION] || [];
 
         let regDesc = 'Online application and fee payment window.';
         if (feeEnd?.startsAt) {
             regDesc += ` Fee payment last date: ${feeEnd.rawText}.`;
+        }
+        if (allRegLinks.length > 1) {
+            const linksMd = allRegLinks.map((l) => `[${l.label}](${l.url})`).join(' | ');
+            regDesc += `\n\nApply Online\n${linksMd}`;
+        } else if (regAction?.url) {
+            regDesc += `\n\nApply Online\n[Apply Online](${regAction.url})`;
         }
 
         events.push({
@@ -587,7 +642,7 @@ export class SarkariResultParser {
             startsAt: regStart?.startsAt ?? undefined,
             endsAt: regEnd?.startsAt ?? regEnd?.endsAt ?? undefined,
             isTBD: !regStart?.startsAt && !regEnd?.startsAt,
-            actionUrl: regAction?.url,
+            actionUrl: regAction?.url || (allRegLinks.length > 0 ? allRegLinks[0].url : undefined),
             actionLabel: regAction?.label || (regAction?.url ? 'Apply Online' : undefined),
         });
 
@@ -628,17 +683,29 @@ export class SarkariResultParser {
         // 5. Admit Card Event
         const admit = dates.admitCard;
         const admitAction = officialLinks.actionLinks[LifecycleStage.ADMIT_CARD];
+        const allAdmitLinks = officialLinks.stageLinks?.[LifecycleStage.ADMIT_CARD] || [];
         const isAdmitFromSection = sectionHint === 'ADMIT_CARDS';
+        const hasAdmitLiveLink = Boolean(admitAction?.url || allAdmitLinks.length > 0);
+
+        let admitDesc = '';
+        if (allAdmitLinks.length > 1) {
+            const linksMd = allAdmitLinks.map((l) => `[${l.label}](${l.url})`).join(' | ');
+            admitDesc = `Download Admit Card\n${linksMd}`;
+        } else if (allAdmitLinks.length === 1 && allAdmitLinks[0].label && allAdmitLinks[0].label !== 'Link') {
+            admitDesc = `Download Admit Card\n[${allAdmitLinks[0].label}](${allAdmitLinks[0].url})`;
+        } else {
+            admitDesc = admit?.rawText || (isAdmitFromSection ? 'Admit Card released. Download hall ticket.' : 'Admit card will be released before the exam date.');
+        }
 
         events.push({
             stage: LifecycleStage.ADMIT_CARD,
             stageOrder: STAGE_ORDER_MAP.ADMIT_CARD,
             title: `Admit Card Release for ${shortTitle}`,
-            description: admit?.rawText || (isAdmitFromSection ? 'Admit Card released. Download hall ticket.' : 'Admit card will be released before the exam date.'),
-            startsAt: admit?.startsAt ?? undefined,
+            description: admitDesc,
+            startsAt: admit?.startsAt ?? (hasAdmitLiveLink ? new Date() : undefined),
             endsAt: admit?.endsAt ?? undefined,
-            isTBD: !admit?.startsAt && !isAdmitFromSection,
-            actionUrl: admitAction?.url,
+            isTBD: !admit?.startsAt && !hasAdmitLiveLink && !isAdmitFromSection,
+            actionUrl: admitAction?.url || (allAdmitLinks.length > 0 ? allAdmitLinks[0].url : undefined),
             actionLabel: admitAction?.label || (admitAction?.url ? 'Download Admit Card' : undefined),
         });
 
@@ -660,17 +727,30 @@ export class SarkariResultParser {
         // 7. Answer Key Event (if mentioned or hinted)
         const answer = dates.answerKey;
         const answerAction = officialLinks.actionLinks[LifecycleStage.ANSWER_KEY];
+        const allAnswerLinks = officialLinks.stageLinks?.[LifecycleStage.ANSWER_KEY] || [];
         const isAnswerFromSection = sectionHint === 'ANSWER_KEY';
-        if (answer || answerAction || isAnswerFromSection) {
+        const hasAnswerLiveLink = Boolean(answerAction?.url || allAnswerLinks.length > 0);
+
+        if (answer || answerAction || hasAnswerLiveLink || isAnswerFromSection) {
+            let answerDesc = '';
+            if (allAnswerLinks.length > 1) {
+                const linksMd = allAnswerLinks.map((l) => `[${l.label}](${l.url})`).join(' | ');
+                answerDesc = `Download Answer Key\n${linksMd}`;
+            } else if (allAnswerLinks.length === 1 && allAnswerLinks[0].label && allAnswerLinks[0].label !== 'Link') {
+                answerDesc = `Download Answer Key\n[${allAnswerLinks[0].label}](${allAnswerLinks[0].url})`;
+            } else {
+                answerDesc = answer?.rawText || 'Provisional / Final Answer Key and response sheet.';
+            }
+
             events.push({
                 stage: LifecycleStage.ANSWER_KEY,
                 stageOrder: STAGE_ORDER_MAP.ANSWER_KEY,
                 title: `Answer Key for ${shortTitle}`,
-                description: answer?.rawText || 'Provisional / Final Answer Key and response sheet.',
-                startsAt: answer?.startsAt ?? undefined,
+                description: answerDesc,
+                startsAt: answer?.startsAt ?? (hasAnswerLiveLink ? new Date() : undefined),
                 endsAt: answer?.endsAt ?? undefined,
-                isTBD: !answer?.startsAt && !isAnswerFromSection,
-                actionUrl: answerAction?.url,
+                isTBD: !answer?.startsAt && !hasAnswerLiveLink && !isAnswerFromSection,
+                actionUrl: answerAction?.url || (allAnswerLinks.length > 0 ? allAnswerLinks[0].url : undefined),
                 actionLabel: answerAction?.label || (answerAction?.url ? 'Download Answer Key' : undefined),
             });
         }
@@ -678,18 +758,41 @@ export class SarkariResultParser {
         // 8. Result Event
         const result = dates.resultDate;
         const resultAction = officialLinks.actionLinks[LifecycleStage.RESULT];
+        const allResultLinks = officialLinks.stageLinks?.[LifecycleStage.RESULT] || [];
         const isResultFromSection = sectionHint === 'RESULTS';
+        const hasResultLiveLink = Boolean(resultAction?.url || allResultLinks.length > 0);
+
+        let resultDesc = '';
+        if (allResultLinks.length > 1) {
+            // Multi-link markdown format matching user requirement:
+            // Download Result
+            // [List-I](...) | [List-II](...) | [List-III](...) | [List-IV](...)
+            const linksMd = allResultLinks.map((l) => `[${l.label}](${l.url})`).join(' | ');
+            resultDesc = `Download Result\n${linksMd}`;
+        } else if (allResultLinks.length === 1) {
+            const l = allResultLinks[0];
+            const displayLabel = l.label && l.label !== 'Link' ? l.label : 'Download Result';
+            resultDesc = `Download Result\n[${displayLabel}](${l.url})`;
+        } else if (result?.rawText) {
+            resultDesc = result.rawText;
+        } else if (resultAction?.url) {
+            resultDesc = `Download Result\n[Check Result](${resultAction.url})`;
+        } else if (isResultFromSection) {
+            resultDesc = 'Result announced. Check merit list / score card.';
+        } else {
+            resultDesc = 'Official result announcement.';
+        }
 
         events.push({
             stage: LifecycleStage.RESULT,
             stageOrder: STAGE_ORDER_MAP.RESULT,
             title: `Result Declaration for ${shortTitle}`,
-            description: result?.rawText || (isResultFromSection ? 'Result announced. Check merit list / cutoff.' : 'Official result announcement.'),
-            startsAt: result?.startsAt ?? undefined,
+            description: resultDesc,
+            startsAt: result?.startsAt ?? (hasResultLiveLink ? new Date() : undefined),
             endsAt: undefined,
-            isTBD: !result?.startsAt && !isResultFromSection,
-            actionUrl: resultAction?.url,
-            actionLabel: resultAction?.label || (resultAction?.url ? 'Check Result' : undefined),
+            isTBD: !result?.startsAt && !hasResultLiveLink && !isResultFromSection,
+            actionUrl: resultAction?.url || (allResultLinks.length > 0 ? allResultLinks[0].url : undefined),
+            actionLabel: resultAction?.label || (allResultLinks.length > 1 ? `Download Result (${allResultLinks[0].label})` : resultAction?.url ? 'Check Result' : undefined),
         });
 
         return events.sort((a, b) => (a.stageOrder ?? 0) - (b.stageOrder ?? 0));

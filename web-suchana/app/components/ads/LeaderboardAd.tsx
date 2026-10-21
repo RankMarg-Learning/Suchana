@@ -4,8 +4,10 @@ import { LeaderboardAd as AdUnitsLeaderboardAd } from "../AdUnits";
 
 interface LeaderboardAdProps {
   slotId?: string;
+  id?: string;
 }
 
-export default function LeaderboardAd({ slotId = "top-leaderboard-ad" }: LeaderboardAdProps) {
-  return <AdUnitsLeaderboardAd id={slotId} />;
+export default function LeaderboardAd({ slotId, id }: LeaderboardAdProps) {
+  const targetId = id || slotId || "top-leaderboard-ad";
+  return <AdUnitsLeaderboardAd id={targetId} />;
 }

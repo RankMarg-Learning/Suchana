@@ -279,12 +279,12 @@ export class SarkariResultPipeline {
      * Detects if any new dates, action links, or lifecycle stages were added.
      */
     static diffEvents(
-        existingEvents: { stage: string; startsAt?: Date | null; endsAt?: Date | null; isTBD?: boolean; actionUrl?: string | null }[],
+        existingEvents: { stage: string; startsAt?: Date | null; endsAt?: Date | null; isTBD?: boolean; actionUrl?: string | null; description?: string | null }[],
         newEvents: AiStructuredEvent[]
     ): { hasChanges: boolean; diffs: string[] } {
         const diffs: string[] = [];
 
-        const existingMap = new Map<string, { startsAt?: Date | null; endsAt?: Date | null; isTBD?: boolean; actionUrl?: string | null }>();
+        const existingMap = new Map<string, { startsAt?: Date | null; endsAt?: Date | null; isTBD?: boolean; actionUrl?: string | null; description?: string | null }>();
         for (const ev of existingEvents) {
             existingMap.set(ev.stage, ev);
         }
@@ -322,6 +322,11 @@ export class SarkariResultPipeline {
             // Check actionUrl addition (e.g. Admit card download link or Result link went live!)
             if (nev.actionUrl && (!old.actionUrl || old.actionUrl !== nev.actionUrl)) {
                 diffs.push(`Stage [${nev.stage}] actionUrl added/updated: ${nev.actionUrl}.`);
+            }
+
+            // Check description update (e.g. Multi-links like List-I, List-II, Cutoffs added)
+            if (nev.description && (!old.description || old.description !== nev.description)) {
+                diffs.push(`Stage [${nev.stage}] description updated.`);
             }
         }
 

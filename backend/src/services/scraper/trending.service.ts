@@ -53,6 +53,10 @@ export class TrendingService {
             case ExamStatus.RESULT_DECLARED: {
                 // Check if result was announced recently (<= 14 days)
                 const resultEv = exam.lifecycleEvents.find((e) => e.stage === LifecycleStage.RESULT);
+                if (!resultEv?.actionUrl && !resultEv?.startsAt) {
+                    score = 0;
+                    return 0;
+                }
                 const resultDateMs = resultEv?.startsAt ? new Date(resultEv.startsAt).getTime() : new Date(exam.updatedAt).getTime();
                 const daysSinceResult = (nowMs - resultDateMs) / (24 * 60 * 60 * 1000);
 

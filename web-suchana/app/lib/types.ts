@@ -159,6 +159,40 @@ export function cleanLabel(s: string): string {
   return s.replace(/_/g, " ").toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+export function getStatusBadgeConfig(status: string): {
+  label: string;
+  color: string;
+  bg: string;
+  border: string;
+} {
+  switch (status) {
+    case 'REGISTRATION_OPEN':
+      return { label: 'Registration Live', color: '#047857', bg: '#ecfdf5', border: '#a7f3d0' };
+    case 'ADMIT_CARD_OUT':
+      return { label: 'Admit Card Out', color: '#1d4ed8', bg: '#eff6ff', border: '#bfdbfe' };
+    case 'ANSWER_KEY_OUT':
+      return { label: 'Answer Key Out', color: '#b45309', bg: '#fffbeb', border: '#fde68a' };
+    case 'RESULT_DECLARED':
+      return { label: 'Result Declared', color: '#be185d', bg: '#fdf2f8', border: '#fbcfe8' };
+    case 'EXAM_ONGOING':
+      return { label: 'Exam Ongoing', color: '#b91c1c', bg: '#fef2f2', border: '#fecaca' };
+    case 'RESULT_COMING_SOON':
+      return { label: 'Result Soon', color: '#c2410c', bg: '#fff7ed', border: '#fed7aa' };
+    case 'ADMIT_CARD_COMING_SOON':
+      return { label: 'Admit Card Soon', color: '#0369a1', bg: '#f0f9ff', border: '#bae6fd' };
+    case 'EXAM_COMPLETED':
+      return { label: 'Exam Completed', color: '#6d28d9', bg: '#f5f3ff', border: '#ddd6fe' };
+    case 'REGISTRATION_CLOSED':
+      return { label: 'Registration Closed', color: '#475569', bg: '#f8fafc', border: '#e2e8f0' };
+    case 'NOTIFICATION':
+      return { label: 'Notification', color: '#0f766e', bg: '#f0fdfa', border: '#99f6e4' };
+    case 'ARCHIVED':
+      return { label: 'Concluded', color: '#64748b', bg: '#f1f5f9', border: '#cbd5e1' };
+    default:
+      return { label: cleanLabel(status || 'Active'), color: '#334155', bg: '#f1f5f9', border: '#cbd5e1' };
+  }
+}
+
 export function slugToEnum(slug: string): string {
   return slug.toUpperCase().replace(/-/g, "_");
 }
